@@ -67,7 +67,8 @@ EC8Class = Enum([
     "Undefined"
 ])
 """
-Ground type according to Eurocode 8 (EC8 § 3.1.2, Table 3.1), based on the velocityS30Value and geotechnical description
+Ground type according to Eurocode 8 (EC8 § 3.1.2, Table 3.1), 
+based on the velocityS30Value and geotechnical description
 Allowed values are:
 
 * ``"A"``
@@ -158,8 +159,9 @@ def _sitexml_check_type(value, expected_type, param_name="value", allow_none=Fal
         return value  # Allow None if specified
 
     if not isinstance(value, expected_type):
-        raise TypeError(f"Expected '{param_name}' to be of type {expected_type.__name__}, "
-                        f"but got {type(value).__name__} instead.")
+        raise TypeError(f"Expected '{param_name}' to be \
+                        of type {expected_type.__name__}, \
+                        but got {type(value).__name__} instead.")
 
     return value  # Return the value if the type is correct
 
@@ -180,14 +182,79 @@ def _sitexml_check_enum(value, enum_type, param_name="value", allow_none=False):
     
     if value not in enum_type:
         valid_values = [e for e in enum_type]  # Get all valid Enum names
-        raise ValueError(f"\nInvalid value for '{param_name}'. Expected one of {valid_values}, but got '{value}'.")
+        raise ValueError(f"\nInvalid value for '{param_name}'. \
+                         Expected one of {valid_values}, but got '{value}'.")
     return value  # Return the value if it's valid
 
 def _pretty_str(obj):
     return ", ".join(
-        f"{key}='{value}'" for key, value in vars(obj).items() if value is not None
+        f"{key}='{value}'" for key, value in vars(obj).items() 
+        if value is not None
     )
 
-#        if self.topologyA not in TopographySchemaA:
-#            msg = ("topologyA must contain one of the following allowed values: ", ', '.join([x for x in TopographySchemaA]))
-#            raise ValueError(msg)
+def _wrapped_property(attr_name, wrapper_type):
+    """
+    Method to produce getter/setter functions 
+    and wrap argument values into the appropriate type.
+    """
+    private_name = f"_{attr_name}"
+
+    def getter(self):
+        return getattr(self, private_name)
+
+    def setter(self, value):
+        if value is None or isinstance(value, wrapper_type):
+            setattr(self, private_name, value)
+        else:
+            try:
+                setattr(self, private_name, wrapper_type(value))
+            except Exception as e:
+                raise TypeError(f"Could not convert {value} \
+                                to {wrapper_type.__name__}: {e}")
+
+    return property(getter, setter)
+
+def _validate_list_of_vwu(self, name, value):
+    """
+    Validates and standardizes a list of ValueWithUncertainty objects.
+    Converts numbers to ValueWithUncertainty, keeps None, raises on bad types.
+    """
+    if value is None:
+        return []
+
+    if not hasattr(value, "__iter__") or isinstance(value, (str, bytes)):
+        raise ValueError(f"{name} must be an iterable \
+                    (e.g., a list of floats or ValueWithUncertainty).")
+
+    validated = []
+    for i, item in enumerate(value):
+        if item is None:
+            validated.append(None)
+        elif isinstance(item, ValueWithUncertainty):
+            validated.append(item)
+        elif isinstance(item, (int, float)):
+            validated.append(ValueWithUncertainty(item))
+        else:
+            raise TypeError(f"{name}[{i}] is not a valid type \
+                    (expected float, ValueWithUncertainty, or None): {item}")
+    
+    return validated
+
+def vwu_list_properties(*attributes):
+    def decorator(cls):
+        cls._validate_list_of_vwu = _validate_list_of_vwu
+
+        for attr_name in attributes:
+            private_name = f"_{attr_name}"
+
+            def getter(self, name=private_name):
+                return getattr(self, name)
+
+            def setter(self, value, name=private_name, attr=attr_name):
+                validated = self._validate_list_of_vwu(attr, value)
+                setattr(self, name, validated)
+
+            setattr(cls, attr_name, property(getter, setter))
+
+        return cls
+    return decorator

@@ -17,347 +17,17 @@ from obspy.core.util.base import ComparingObject
 from obspy.io.sitexml.util import (TopographySchemaA, TopographySchemaB, EC8Class, 
                                    ResonanceFrequencyMethod, VelocityS30Method,
                                     _sitexml_check_type, _sitexml_check_enum, _pretty_str,
-                                    _wrapped_property)
+                                    _wrapped_property, vwu_list_properties)
 from obspy.core.inventory.util import (Latitude, Longitude, Distance, ExternalReference)
 
-class SERASite(ComparingObject):
-    """
-    This is the parent class for the siteXML object tree.
-    """
-    def __init__(self, station_code=None, site_owner=None, site_description=None, site_characterization_parameters=None, overall_quality_index=None):
-        """
-        :type station_code: str
-        :param station_code: Not used in SiteXML, but is needed in order to correlate with the Station Object
-        :type site_description: :class:`~obspy.core.io.sitexml.SiteDescription`
-        :param site_description: The site description parameters (H800, Bedrock depth, EC8 class, geological unit, morphology, topology)
-        :type site_characterization_parameters: :class:`~obspy.core.io.sitexml.SiteCharacterizationParameters`
-        :param site_characterization_parameters: The site characterization parameters (VS30, resonance frequency, velocity profiles)
-        :type overall_quality_index: float
-        :param overall_quality_index: The overall quality index of the site characterization parameters.
-        """
-        self.station_code = station_code
-
-        self.site_owner = site_owner
-        
-        self.site_description = _sitexml_check_type(
-            site_description, SiteDescription, "site_description", True)
-
-        self.site_characterization_parameters = _sitexml_check_type(
-            site_characterization_parameters, SiteCharacterizationParameters, "site_characterization_parameters", True)
-        
-        # TO CHECK: If this one is calculated it should be removed from the parameters 
-        self.overall_quality_index = overall_quality_index
-       
-class SiteDescription(ComparingObject):
-    def __init__(self, latitude, longitude, altitude=None, min_distance_from_station=None, max_distance_from_station=None, 
-                 ec8=None, bedrock_depth=None, h800=None, geological_unit=None, morphology=None, topologyA=None, topologyB=None):
-        """
-        :type latitude: :class:`~obspy.core.inventory.util.Latitude`
-        :param latitude: The latitude of the site
-        :type longitude: :class:`~obspy.core.inventory.util.Longitude`
-        :param longitude: The longitude of the site
-        :type altitude: :class:`~obspy.core.inventory.util.Distance`
-        :param altitude: Elevation of ground with respect to sea level (m)
-        :type min_distance_from_station: :class:`~obspy.core.inventory.util.Distance`
-        :param min_distance_from_station: Minimum distance between the permanent seismological station and 
-            site characterization measurement. Should be used only when representative latitude and longitude 
-            of site characterization measurements cannot be provided.
-        :type max_distance_from_station: :class:`~obspy.core.inventory.util.Distance`
-        :param max_distance_from_station: Maximum distance between the permanent seismological station and 
-            site characterization measurement. Should be used only when representative latitude and longitude 
-            of site characterization measurements cannot be provided.
-        :type ec8: :class:`~obspy.io.sitexml.core.EC8`
-        :param ec8: Ground type according to Eurocode 8, based on the velocity S30 value and geotechnical description
-        :type h800: :class:`~obspy.io.sitexml.core.H800`
-        :param h800: Engineering depth. Depth beyond which the shear-wave velocity Vs exceeds 800 m/s.
-        :type bedrock_depth: :class:`~obspy.io.sitexml.core.BedrockDepth`
-        :param bedrock_depth: Seismological bedrock depth
-        :type geological_unit: :class:`~obspy.io.sitexml.core.GeologicalUnit`
-        :param geological_unit: Brief description of the surface geology (free text)
-        :type morphology: str
-        :param morphology: Qualitative description of the shape of the earth's surface (free text)
-        :type topologyA: str
-        :param topologyA: Quantitative description of the surface according to the Italian Code 
-            (detailed description of the scheme in SERA Deliverable D7.1 - Appendix I).
-            See :class:`~obspy.io.sitexml.util.TopographySchemaA` for allowed values.
-        :type topologyB: str
-        :param topologyB: Quantitative description of the shape of the earth's surface according to 
-            Burjanek et al, 2014 (detailed description of the scheme in SERA Deliverable D7.1 - Appendix I). 
-            See :class:`~obspy.io.sitexml.util.TopographySchemaB` for allowed values.
-        """
-        # Topology and topography have the same meaning ?
-        self.latitude = latitude
-        self.longitude = longitude
-        self.altitude = altitude
-        self.min_distance_from_station = min_distance_from_station
-        self.max_distance_from_station = max_distance_from_station
-
-        self.ec8 = ec8
-        self.h800 = h800
-        self.bedrock_depth = bedrock_depth
-        self.geological_unit = geological_unit
-        
-        self.morphology = morphology
-        self.topologyA = topologyA
-        self.topologyB = topologyB
-    
-    @property
-    def longitude(self):
-        return self._longitude
-
-    @longitude.setter
-    def longitude(self, value):
-        if isinstance(value, Longitude):
-            self._longitude = value
-        else:
-            self._longitude = Longitude(value)
-
-    @property
-    def latitude(self):
-        return self._latitude
-
-    @latitude.setter
-    def latitude(self, value):
-        if isinstance(value, Latitude):
-            self._latitude = value
-        else:
-            self._latitude = Latitude(value)
-
-    @property
-    def altitude(self):
-        return self._altitude
-
-    @altitude.setter
-    def altitude(self, value):
-        if value is None:
-            self._altitude = None
-        elif isinstance(value, Distance):
-            self._altitude = value
-        else:
-            self._altitude = Distance(value)
-
-    @property
-    def min_distance_from_station(self):
-        return self._min_distance_from_station
-
-    @min_distance_from_station.setter
-    def min_distance_from_station(self, value):
-        if value is None:
-            self._min_distance_from_station = None
-        elif isinstance(value, Distance):
-            self._min_distance_from_station = value
-        else:
-            self._min_distance_from_station = Distance(value)
-
-    @property
-    def max_distance_from_station(self):
-        return self._max_distance_from_station
-
-    @max_distance_from_station.setter
-    def max_distance_from_station(self, value):
-        if value is None:
-            self._max_distance_from_station = None
-        elif isinstance(value, Distance):
-            self._max_distance_from_station = value
-        else:
-            self._max_distance_from_station = Distance(value)
-
-    @property
-    def ec8(self):
-        return self._ec8
-
-    @ec8.setter
-    def ec8(self, value):
-        if value is None:
-            self._ec8 = None
-        elif isinstance(value, EC8):
-            self._ec8 = value
-        else:
-            self._ec8 = EC8(value)
-
-    @property
-    def h800(self):
-        return self._h800
-
-    @h800.setter
-    def h800(self, value):
-        if value is None:
-            self._h800 = None
-        elif isinstance(value, H800):
-            self._h800 = value
-        else:
-            self._h800 = H800(value)
-
-    @property
-    def bedrock_depth(self):
-        return self._bedrock_depth
-
-    @bedrock_depth.setter
-    def bedrock_depth(self, value):
-        if value is None:
-            self._bedrock_depth = None
-        elif isinstance(value, BedrockDepth):
-            self._bedrock_depth = value
-        else:
-            self._bedrock_depth = BedrockDepth(value)
-
-    @property
-    def geological_unit(self):
-        return self._geological_unit
-
-    @geological_unit.setter
-    def geological_unit(self, value):
-        if value is None:
-            self._geological_unit = None
-        elif isinstance(value, GeologicalUnit):
-            self._geological_unit = value
-        else:
-            self._geological_unit = GeologicalUnit(value)
-
-    @property
-    def topologyA(self):
-        return self._topologyA
-
-    @topologyA.setter
-    def topologyA(self, value):
-        if value is None:
-            self._topologyA = None
-        elif value in TopographySchemaA:
-            self._topologyA = value
-        else:
-            valid_values = [e for e in TopographySchemaA]  # Get all valid Enum names
-            raise ValueError(f"\nInvalid value for 'topologyA'. Expected one of {valid_values}, but got '{value}'.")    
-
-    @property
-    def topologyB(self):
-        return self._topologyB
-
-    @topologyB.setter
-    def topologyB(self, value):
-        if value is None:
-            self._topologyB = None
-        elif value in TopographySchemaB:
-            self._topologyB = value
-        else:
-            valid_values = [e for e in TopographySchemaB]  # Get all valid Enum names
-            raise ValueError(f"\nInvalid value for 'topologyB'. Expected one of {valid_values}, but got '{value}'.")    
-
-    def __str__(self):
-        ret = ("Site Description parameters:\n"
-               "\tLatitude {lat:.4f}, Longitude: {lng:.4f}, Altitude {alt} m,\n"
-               "\tMorphology: {morphology},\n"
-               "\tTopology A: {topoA},\n"
-               "\tTopology B: {topoB},\n"
-               "\tEC8 class: {ec8},\n"
-               "\tH800: {h800} m,\n"
-               "\tBedrock depth: {bdepth} m,\n"
-               "\tGeological Unit: {gunit}\n")
-        ret = ret.format(
-            lat=self.latitude, lng=self.longitude, alt=self.altitude,
-            morphology = self.morphology,
-            topoA = self.topologyA, topoB = self.topologyB,
-            ec8=self.ec8.value if self.ec8 else "None",
-            h800=self.h800.value if self.h800 else "None",
-            bdepth=self.bedrock_depth.value if self.bedrock_depth else "None",
-            gunit=self.geological_unit.value if self.geological_unit else "None")
-        return ret
-
-class SiteCharacterizationParameters(ComparingObject):
-    def __init__(self, publicID=None, analysis_publicID=None, resonance_frequency=None, velocity_s30=None, 
-                 velocity_profile_count=None, velocity_profile=None, velocity_profile_qindex=None, 
-                 velocity_profile_reference=None, spt_logs_count=None, cpt_logs_count=None, 
-                 borehole_logs_count=None):
-        """
-        :type publicID: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
-        :param publicID: All channels belonging to this station.
-        :type analysis_publicID: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
-        :param analysis_publicID: The lexical description of the site
-        :type resonance_frequency: :class:`~obspy.io.sitexml.core.ResonanceFrequency`
-        :param resonance_frequency: The Resonance frequency of the soil column 
-        :type velocity_s30: :class:`~obspy.io.sitexml.core.velocityS30`
-        :param velocity_s30: Average shear-wave velocity between 0 and 30 meters depth
-        :type velocity_profile_count: int
-        :param velocity_profile_count: Number of available velocity profiles
-        :type velocity_profile: :class:`~obspy.io.sitexml.core.VelocityProfile`
-        :param velocity_profile: Velocity Profile
-        :type spt_logs_count: int
-        :param spt_logs_count: Number of available SPT profile(s)
-        :type cpt_logs_count: int
-        :param cpt_logs_count: Number of available CPT profile(s)
-        :type borehole_logs_count: int
-        :param borehole_logs_count: Number of available borehole log profile(s)
-       """
-        self.publicID = publicID        
-        self.analysis_publicID = analysis_publicID   
-        self.resonance_frequency = resonance_frequency
-        self.velocity_s30 = velocity_s30
-        self.spt_logs_count = spt_logs_count
-        self.cpt_logs_count = cpt_logs_count
-        self.borehole_logs_count = borehole_logs_count
-        self.velocity_profile_count = velocity_profile_count
-        self.velocity_profile = velocity_profile
-
-    @property
-    def resonance_frequency(self):
-        return self._resonance_frequency
-
-    @resonance_frequency.setter
-    def resonance_frequency(self, value):
-        if value is None:
-            self._resonance_frequency = None
-        elif isinstance(value, ResonanceFrequency):
-            self._resonance_frequency = value
-        else:
-            self._resonance_frequency = ResonanceFrequency(value)
-
-    @property
-    def velocity_s30(self):
-        return self._velocity_s30
-
-    @velocity_s30.setter
-    def velocity_s30(self, value):
-        if value is None:
-            self._velocity_s30 = None
-        elif isinstance(value, VelocityS30):
-            self._velocity_s30 = value
-        else:
-            self._velocity_s30 = VelocityS30(value)
-    
-    @property
-    def velocity_profile(self):
-        return self._velocity_profile
-
-    @velocity_profile.setter
-    def velocity_profile(self, value):
-        if value is None:
-            self._velocity_profile = None
-        elif isinstance(value, VelocityProfile):
-            self._velocity_profile = value
-        else:
-            self._velocity_profile = VelocityProfile(value)
-
-    def __str__(self):
-        ret = ("Site Characterization parameters:\n"
-               "\tResonance Frequency {rfreq},\n"
-               "\tVelocity S30: {vs30},\n"
-               "\tVelocity Profiles count: {vp_count},\n"
-               "\tSPT Logs count: {spt_logs_count},\n"
-               "\tCPT Logs count: {cpt_logs_count},\n"
-               "\tBorehole Logs count: {bh_logs_count} \n")
-        ret = ret.format(
-            rfreq = self.resonance_frequency.value if self.resonance_frequency else "None",
-            vs30 = self.velocity_s30.value if self.velocity_s30 else "None",
-            vp_count = self.velocity_profile_count, 
-            spt_logs_count = self.spt_logs_count, 
-            cpt_logs_count = self.cpt_logs_count, 
-            bh_logs_count = self.borehole_logs_count)
-        return ret
 
 class SiteIndicator(ComparingObject):
-    def __init__(self, name, value, uncertainty=None, methods=None, quality_index=None, literature_source=None, file_resource=None):
+    def __init__(self, name, value, uncertainty=None, methods=None, 
+                 quality_index=None, literature_source=None, file_resource=None):
         """
         :type name: str
-        :param name: Indicator type. One of: "ec8", "h800", "bedrock_depth", "geological_unit", "velocity_s30", "resonance_frequency"
+        :param name: Indicator type. One of: "ec8", "h800", "bedrock_depth", 
+                    "geological_unit", "velocity_s30", "resonance_frequency", "VP"
         :type value: str / int / float
         :param value: Value of the indicator
         :type uncertainty: int / float
@@ -409,11 +79,14 @@ class SiteIndicator(ComparingObject):
     # This needs more work if value is allowed to be <0 
     def _validate_value_uncertainty(self, valid_type):
         if not isinstance(self.value, valid_type) or self.value <= 0:
-            raise ValueError(f"Value of {self.name} must be a positive {valid_type}")
+            raise ValueError(f"Value of {self.name} \
+                             must be a positive {valid_type}")
         
         if self.uncertainty is not None:
-            if not isinstance(self.uncertainty, valid_type) or self.uncertainty <= 0:
-                raise ValueError(f"Uncertainty of {self.name} must be a positive {valid_type} or None")
+            if (not isinstance(self.uncertainty, valid_type) or 
+                self.uncertainty <= 0):
+                raise ValueError(f"Uncertainty of {self.name} \
+                                 must be a positive {valid_type} or None")
 
     def __str__(self):
         ret = ("{name} parameters:\n"
@@ -586,14 +259,24 @@ class VelocityProfile(SiteIndicator):
             )
         self._velocity_profile_data = vp_data
 
+@vwu_list_properties("density", "velocityP", "velocityS", "top_depth", "bottom_depth")
 class VelocityProfileData(ComparingObject):
     def __init__(self, layer_count, density=None, velocityP=None, velocityS=None, 
                  top_depth=None, bottom_depth=None):
         """
         :type layer_count: int
         :param layer_count: Number of layers in velocity profile.
-        :type vp_layer_data: :class:`~obspy.io.sitexml.core.VelocityProfileLayer`
-        :param vp_layer_data: List of Velocity Profiles.
+        :type density: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param density: List of ValueWithUncertainty objects. 
+                        Length of list should be equal to layer_count.
+        :type velocityP: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param velocityP: List of ValueWithUncertainty objects.
+        :type velocityS: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param velocityS: List of ValueWithUncertainty objects.
+        :type top_depth: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param top_depth: List of ValueWithUncertainty objects.
+        :type bottom_depth: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param bottom_depth: List of ValueWithUncertainty objects.
         """
         self.layer_count = layer_count
         self.density = density or []
@@ -601,7 +284,18 @@ class VelocityProfileData(ComparingObject):
         self.velocityS = velocityS or []
         self.top_depth = top_depth or []
         self.bottom_depth = bottom_depth or []
-        
+    
+    @property
+    def layer_count(self):
+        return self._layer_count
+
+    @layer_count.setter
+    def layer_count(self, value):
+        if value is not None and value > 0:
+            self._layer_count = value
+        else:
+            raise ValueError("layer_count must be a positive value.")
+
     def __str__(self):
         def format_vwu(obj):
             if obj is None or obj.value is None:
@@ -639,77 +333,7 @@ class VelocityProfileData(ComparingObject):
         ] + [format_row(row) for row in rows]
 
         return "\n".join(lines)
-
-    def _validate_list_of_vwu(self, name, value):
-        """
-        Validates and standardizes a list of ValueWithUncertainty objects.
-        Converts numbers to ValueWithUncertainty, keeps None, raises on bad types.
-        """
-        if value is None:
-            return []
-
-        if not hasattr(value, "__iter__") or isinstance(value, (str, bytes)):
-            raise ValueError(f"{name} must be an iterable (e.g., a list of floats or ValueWithUncertainty).")
-
-        validated = []
-        for i, item in enumerate(value):
-            if item is None:
-                validated.append(None)
-            elif isinstance(item, ValueWithUncertainty):
-                validated.append(item)
-            elif isinstance(item, (int, float)):
-                validated.append(ValueWithUncertainty(item))
-            else:
-                raise TypeError(f"{name}[{i}] is not a valid type (expected float, ValueWithUncertainty, or None): {item}")
-        
-        return validated
-
-    @property
-    def layer_count(self):
-        return self._layer_count
-
-    @layer_count.setter
-    def layer_count(self, value):
-        if value is not None and value > 0:
-            self._layer_count = value
-        else:
-            raise ValueError("layer_count must be a positive value.")
-
-    @property
-    def density(self):
-        return self._density
-    @density.setter
-    def density(self, value):
-        self._density = self._validate_list_of_vwu("density", value)
-
-    @property
-    def velocityP(self):
-        return self._velocityP
-    @velocityP.setter
-    def velocityP(self, value):
-        self._velocityP = self._validate_list_of_vwu("velocityP", value)
-
-    @property
-    def velocityS(self):
-        return self._velocityS
-    @velocityS.setter
-    def velocityS(self, value):
-        self._velocityS = self._validate_list_of_vwu("velocityS", value)
-
-    @property
-    def top_depth(self):
-        return self._top_depth
-    @top_depth.setter
-    def velocityS(self, value):
-        self._top_depth = self._validate_list_of_vwu("top_depth", value)
-
-    @property
-    def bottom_depth(self):
-        return self._bottom_depth
-    @bottom_depth.setter
-    def velocityS(self, value):
-        self._bottom_depth = self._validate_list_of_vwu("bottom_depth", value)
- 
+    
 class ValueWithUncertainty():
     def __init__(self, value, uncertainty=None):
         self.value = value
@@ -785,6 +409,213 @@ class SERASiteOwner(ComparingObject):
         
         return ret
     
+class SiteDescription(ComparingObject):
+    latitude = _wrapped_property("latitude", Latitude)
+    longitude = _wrapped_property("longitude", Longitude)
+    altitude = _wrapped_property("altitude", Distance)
+    min_distance_from_station = _wrapped_property("min_distance_from_station", Distance)
+    max_distance_from_station = _wrapped_property("max_distance_from_station", Distance)
+    bedrock_depth = _wrapped_property("bedrock_depth", BedrockDepth)
+    h800 = _wrapped_property("h800", H800)
+    ec8 = _wrapped_property("ec8", EC8)
+    geological_unit = _wrapped_property("geological_unit", GeologicalUnit)
+
+    def __init__(self, latitude, longitude, altitude=None, min_distance_from_station=None, max_distance_from_station=None, 
+                 ec8=None, bedrock_depth=None, h800=None, geological_unit=None, morphology=None, topologyA=None, topologyB=None):
+        """
+        :type latitude: :class:`~obspy.core.inventory.util.Latitude`
+        :param latitude: The latitude of the site
+        :type longitude: :class:`~obspy.core.inventory.util.Longitude`
+        :param longitude: The longitude of the site
+        :type altitude: :class:`~obspy.core.inventory.util.Distance`
+        :param altitude: Elevation of ground with respect to sea level (m)
+        :type min_distance_from_station: :class:`~obspy.core.inventory.util.Distance`
+        :param min_distance_from_station: Minimum distance between the permanent seismological station and 
+            site characterization measurement. Should be used only when representative latitude and longitude 
+            of site characterization measurements cannot be provided.
+        :type max_distance_from_station: :class:`~obspy.core.inventory.util.Distance`
+        :param max_distance_from_station: Maximum distance between the permanent seismological station and 
+            site characterization measurement. Should be used only when representative latitude and longitude 
+            of site characterization measurements cannot be provided.
+        :type ec8: :class:`~obspy.io.sitexml.core.EC8`
+        :param ec8: Ground type according to Eurocode 8, based on the velocity S30 value and geotechnical description
+        :type h800: :class:`~obspy.io.sitexml.core.H800`
+        :param h800: Engineering depth. Depth beyond which the shear-wave velocity Vs exceeds 800 m/s.
+        :type bedrock_depth: :class:`~obspy.io.sitexml.core.BedrockDepth`
+        :param bedrock_depth: Seismological bedrock depth
+        :type geological_unit: :class:`~obspy.io.sitexml.core.GeologicalUnit`
+        :param geological_unit: Brief description of the surface geology (free text)
+        :type morphology: str
+        :param morphology: Qualitative description of the shape of the earth's surface (free text)
+        :type topologyA: str
+        :param topologyA: Quantitative description of the surface according to the Italian Code 
+            (detailed description of the scheme in SERA Deliverable D7.1 - Appendix I).
+            See :class:`~obspy.io.sitexml.util.TopographySchemaA` for allowed values.
+        :type topologyB: str
+        :param topologyB: Quantitative description of the shape of the earth's surface according to 
+            Burjanek et al, 2014 (detailed description of the scheme in SERA Deliverable D7.1 - Appendix I). 
+            See :class:`~obspy.io.sitexml.util.TopographySchemaB` for allowed values.
+        """
+        # Topology and topography have the same meaning ?
+        self.latitude = latitude
+        self.longitude = longitude
+        self.altitude = altitude
+        self.min_distance_from_station = min_distance_from_station
+        self.max_distance_from_station = max_distance_from_station
+
+        self.ec8 = ec8
+        self.h800 = h800
+        self.bedrock_depth = bedrock_depth
+        self.geological_unit = geological_unit
+        
+        self.morphology = morphology
+        self.topologyA = topologyA
+        self.topologyB = topologyB
+    
+    @property
+    def topologyA(self):
+        return self._topologyA
+
+    @topologyA.setter
+    def topologyA(self, value):
+        if value is None:
+            self._topologyA = None
+        elif value in TopographySchemaA:
+            self._topologyA = value
+        else:
+            valid_values = [e for e in TopographySchemaA]  # Get all valid Enum names
+            raise ValueError(f"\nInvalid value for 'topologyA'. Expected one of {valid_values}, but got '{value}'.")    
+
+    @property
+    def topologyB(self):
+        return self._topologyB
+
+    @topologyB.setter
+    def topologyB(self, value):
+        if value is None:
+            self._topologyB = None
+        elif value in TopographySchemaB:
+            self._topologyB = value
+        else:
+            valid_values = [e for e in TopographySchemaB]  # Get all valid Enum names
+            raise ValueError(f"\nInvalid value for 'topologyB'. Expected one of {valid_values}, but got '{value}'.")    
+
+    def __str__(self):
+        ret = ("Site Description parameters:\n"
+               "\tLatitude {lat:.4f}, Longitude: {lng:.4f}, Altitude {alt} m,\n"
+               "\tMorphology: {morphology},\n"
+               "\tTopology A: {topoA},\n"
+               "\tTopology B: {topoB},\n"
+               "\tEC8 class: {ec8},\n"
+               "\tH800: {h800} m,\n"
+               "\tBedrock depth: {bdepth} m,\n"
+               "\tGeological Unit: {gunit}\n")
+        ret = ret.format(
+            lat=self.latitude, lng=self.longitude, alt=self.altitude,
+            morphology = self.morphology,
+            topoA = self.topologyA, topoB = self.topologyB,
+            ec8=self.ec8.value if self.ec8 else "None",
+            h800=self.h800.value if self.h800 else "None",
+            bdepth=self.bedrock_depth.value if self.bedrock_depth else "None",
+            gunit=self.geological_unit.value if self.geological_unit else "None")
+        return ret
+
+class SiteCharacterizationParameters(ComparingObject):
+    resonance_frequency = _wrapped_property("resonance_frequency", ResonanceFrequency)
+    velocity_s30 = _wrapped_property("velocity_s30", VelocityS30)
+
+    def __init__(self, publicID=None, analysis_publicID=None, resonance_frequency=None, velocity_s30=None, 
+                 velocity_profile_count=None, velocity_profile=None, velocity_profile_qindex=None, 
+                 velocity_profile_reference=None, spt_logs_count=None, cpt_logs_count=None, 
+                 borehole_logs_count=None):
+        """
+        :type publicID: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :param publicID: All channels belonging to this station.
+        :type analysis_publicID: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :param analysis_publicID: The lexical description of the site
+        :type resonance_frequency: :class:`~obspy.io.sitexml.core.ResonanceFrequency`
+        :param resonance_frequency: The Resonance frequency of the soil column 
+        :type velocity_s30: :class:`~obspy.io.sitexml.core.velocityS30`
+        :param velocity_s30: Average shear-wave velocity between 0 and 30 meters depth
+        :type velocity_profile_count: int
+        :param velocity_profile_count: Number of available velocity profiles
+        :type velocity_profile: :class:`~obspy.io.sitexml.core.VelocityProfile`
+        :param velocity_profile: Velocity Profile
+        :type spt_logs_count: int
+        :param spt_logs_count: Number of available SPT profile(s)
+        :type cpt_logs_count: int
+        :param cpt_logs_count: Number of available CPT profile(s)
+        :type borehole_logs_count: int
+        :param borehole_logs_count: Number of available borehole log profile(s)
+       """
+        self.publicID = publicID        
+        self.analysis_publicID = analysis_publicID   
+        self.resonance_frequency = resonance_frequency
+        self.velocity_s30 = velocity_s30
+        self.spt_logs_count = spt_logs_count
+        self.cpt_logs_count = cpt_logs_count
+        self.borehole_logs_count = borehole_logs_count
+        self.velocity_profile_count = velocity_profile_count
+        self.velocity_profile = velocity_profile
+    
+    @property
+    def velocity_profile(self):
+        return self._velocity_profile
+
+    @velocity_profile.setter
+    def velocity_profile(self, value):
+        if value is None:
+            self._velocity_profile = None
+        elif isinstance(value, VelocityProfile):
+            self._velocity_profile = value
+        else:
+            self._velocity_profile = VelocityProfile(value)
+
+    def __str__(self):
+        ret = ("Site Characterization parameters:\n"
+               "\tResonance Frequency {rfreq},\n"
+               "\tVelocity S30: {vs30},\n"
+               "\tVelocity Profiles count: {vp_count},\n"
+               "\tSPT Logs count: {spt_logs_count},\n"
+               "\tCPT Logs count: {cpt_logs_count},\n"
+               "\tBorehole Logs count: {bh_logs_count} \n")
+        ret = ret.format(
+            rfreq = self.resonance_frequency.value if self.resonance_frequency else "None",
+            vs30 = self.velocity_s30.value if self.velocity_s30 else "None",
+            vp_count = self.velocity_profile_count, 
+            spt_logs_count = self.spt_logs_count, 
+            cpt_logs_count = self.cpt_logs_count, 
+            bh_logs_count = self.borehole_logs_count)
+        return ret
+    
+class SERASite(ComparingObject):
+    """
+    This is the parent class for the siteXML object tree.
+    """
+    def __init__(self, station_code=None, site_owner=None, site_description=None, site_characterization_parameters=None, overall_quality_index=None):
+        """
+        :type station_code: str
+        :param station_code: Not used in SiteXML, but is needed in order to correlate with the Station Object
+        :type site_description: :class:`~obspy.core.io.sitexml.SiteDescription`
+        :param site_description: The site description parameters (H800, Bedrock depth, EC8 class, geological unit, morphology, topology)
+        :type site_characterization_parameters: :class:`~obspy.core.io.sitexml.SiteCharacterizationParameters`
+        :param site_characterization_parameters: The site characterization parameters (VS30, resonance frequency, velocity profiles)
+        :type overall_quality_index: float
+        :param overall_quality_index: The overall quality index of the site characterization parameters.
+        """
+        self.station_code = station_code
+
+        self.site_owner = site_owner
+        
+        self.site_description = _sitexml_check_type(
+            site_description, SiteDescription, "site_description", True)
+
+        self.site_characterization_parameters = _sitexml_check_type(
+            site_characterization_parameters, SiteCharacterizationParameters, "site_characterization_parameters", True)
+        
+        # TO CHECK: If this one is calculated it should be removed from the parameters 
+        self.overall_quality_index = overall_quality_index
+       
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
