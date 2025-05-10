@@ -17,7 +17,7 @@ from obspy.core.util.base import ComparingObject
 from obspy.io.sitexml.util import (TopographySchemaA, TopographySchemaB, EC8Class, 
                                    ResonanceFrequencyMethod, VelocityS30Method,
                                     _sitexml_check_type, _sitexml_check_enum, _pretty_str,
-                                    _wrapped_property, vwu_list_properties)
+                                    _wrapped_property, vwu_list_properties, _enum_property)
 from obspy.core.inventory.util import (Latitude, Longitude, Distance, ExternalReference)
 
 
@@ -216,15 +216,19 @@ class VelocityS30(SiteIndicator):
             quality_index=quality_index, literature_source=literature_source, 
             file_resource=file_resource)
 
-"""
-class VelocityProfile(SiteIndicator): 
-"""
 class VelocityProfile(SiteIndicator):
     def __init__(self, velocity_profile_data=None, quality_index=None, 
                  literature_source=None, file_resource=None):
         """
         :type velocity_profile_data: :class:`~obspy.io.sitexml.core.VelocityProfileData`
         :param velocity_profile_data: List of Velocity Profiles.
+        :type quality_index: float
+        :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
+            Calculated according to the guidelines of the SERA D7.2 Deliverable.
+        :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`
+        :param literature_source: The literature source related with the provided site indicator value
+        :type file_resource: :class:`~obspy.core.inventory.util.ExternalReference` ????
+        :param file_resource: A public URL for the literature_source
         """
         self.velocity_profile_data = velocity_profile_data  # triggers setter/validation
         super().__init__(
@@ -419,9 +423,13 @@ class SiteDescription(ComparingObject):
     h800 = _wrapped_property("h800", H800)
     ec8 = _wrapped_property("ec8", EC8)
     geological_unit = _wrapped_property("geological_unit", GeologicalUnit)
+    topologyA = _enum_property("topologyA", TopographySchemaA)
+    topologyB = _enum_property("topologyB", TopographySchemaB)
 
-    def __init__(self, latitude, longitude, altitude=None, min_distance_from_station=None, max_distance_from_station=None, 
-                 ec8=None, bedrock_depth=None, h800=None, geological_unit=None, morphology=None, topologyA=None, topologyB=None):
+    def __init__(self, latitude, longitude, altitude=None, 
+                 min_distance_from_station=None, max_distance_from_station=None, 
+                 ec8=None, bedrock_depth=None, h800=None, geological_unit=None, 
+                 morphology=None, topologyA=None, topologyB=None):
         """
         :type latitude: :class:`~obspy.core.inventory.util.Latitude`
         :param latitude: The latitude of the site
@@ -472,34 +480,6 @@ class SiteDescription(ComparingObject):
         self.topologyA = topologyA
         self.topologyB = topologyB
     
-    @property
-    def topologyA(self):
-        return self._topologyA
-
-    @topologyA.setter
-    def topologyA(self, value):
-        if value is None:
-            self._topologyA = None
-        elif value in TopographySchemaA:
-            self._topologyA = value
-        else:
-            valid_values = [e for e in TopographySchemaA]  # Get all valid Enum names
-            raise ValueError(f"\nInvalid value for 'topologyA'. Expected one of {valid_values}, but got '{value}'.")    
-
-    @property
-    def topologyB(self):
-        return self._topologyB
-
-    @topologyB.setter
-    def topologyB(self, value):
-        if value is None:
-            self._topologyB = None
-        elif value in TopographySchemaB:
-            self._topologyB = value
-        else:
-            valid_values = [e for e in TopographySchemaB]  # Get all valid Enum names
-            raise ValueError(f"\nInvalid value for 'topologyB'. Expected one of {valid_values}, but got '{value}'.")    
-
     def __str__(self):
         ret = ("Site Description parameters:\n"
                "\tLatitude {lat:.4f}, Longitude: {lng:.4f}, Altitude {alt} m,\n"

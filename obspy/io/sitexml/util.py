@@ -192,6 +192,27 @@ def _pretty_str(obj):
         if value is not None
     )
 
+def _enum_property(attr_name, enum_type):
+    """
+    Method to produce getter/setter functions 
+    and validate enum type values.
+    """
+    private_name = f"_{attr_name}"
+
+    def getter(self):
+        return getattr(self, private_name)
+
+    def setter(self, value):
+        if value is None or value in enum_type:
+            setattr(self, private_name, value)
+        else:
+            valid_values = [e for e in enum_type]
+            raise ValueError(
+                f"\nInvalid value for '{attr_name}'. \
+                    Expected one of {valid_values}, but got '{value}'."
+            )
+    return property(getter, setter)
+
 def _wrapped_property(attr_name, wrapper_type):
     """
     Method to produce getter/setter functions 
@@ -236,7 +257,7 @@ def _validate_list_of_vwu(self, name, value):
             validated.append(ValueWithUncertainty(item))
         else:
             raise TypeError(f"{name}[{i}] is not a valid type \
-                    (expected float, ValueWithUncertainty, or None): {item}")
+                    (expected int, float, ValueWithUncertainty, or None): {item}")
     
     return validated
 
