@@ -17,6 +17,12 @@ attributeFormDefault="unqualified" version="1.2">
 						<xs:documentation><example>1.2</example></xs:documentation>
 					</xs:annotation>
 				</xs:element>
+				<xs:element name="created" type="xs:dateTime">
+					<xs:annotation>
+						<xs:documentation>Date that this document was generated.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
 				<!--   ************** SITE OWNER *************************     -->
 				<xs:element name="siteOwner">
 					<xs:annotation>

@@ -7,6 +7,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 <SERA_quakeml xmlns="http://www.orfeus-eu.org/xml/site/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     schemaVersion="1.2" xsi:schemaLocation="http://www.orfeus-eu.org/xml/site/1 http://www.orfeus-eu.org/xml/site/1/QuakeML-SERA-1.2.xsd">
 	<schemaVersion>1.2</schemaVersion>
+	<created>2025-05-05T16:15:28</created>
 	<siteOwner publicID="quakeml:isterre.fr/siteOwner/001">
 		<codeName>ISTERRE</codeName>
 		<fullName>Institut des Sciences de la Terre</fullName>
@@ -5113,8 +5114,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 				</FileResource>
 			</h800Reference>
 <!-- Surface geology (more detailed than in <Geology> element of StationXML  -->			
-			<geologicalUnit>Recent alluvial and lacustrine deposits valley overlying deep
-Jurassic limestones</geologicalUnit>
+			<geologicalUnit>Recent alluvial and lacustrine deposits valley overlying deep Jurassic limestones</geologicalUnit>
 			<geologicalUnitQindex1>
 				<value>0.25</value>
 			</geologicalUnitQindex1>
