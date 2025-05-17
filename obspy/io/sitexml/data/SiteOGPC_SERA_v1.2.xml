@@ -72,7 +72,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 					<url></url>
 				</FileResource>
 			</resonanceFrequencyReference>
-<!-- Vs30 -->			
+			<!-- Vs30 -->			
 			<velocityS30>
 				<value>620</value>
 				<uncertainty>18</uncertainty>
@@ -80,7 +80,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 			<velocityS30Qindex1>
 				<value>0.5</value>
 			</velocityS30Qindex1>
-<!-- Additional information needed for EGD -->			
+			<!-- Additional information needed for EGD -->			
 			<velocityS30Method>Active non-invasive S-wave methods</velocityS30Method>
 			<velocityS30Method>Passive non-invasive S-wave methods</velocityS30Method>
 			<velocityS30MethodCombIndex>1.2</velocityS30MethodCombIndex>
@@ -102,7 +102,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 					<url>https://doi.org/10.1007/s10518-017-0135-5/</url>
 				</FileResource>
 			</velocityS30Reference>
-<!-- Additional information needed for EGD -->				
+			<!-- Additional information needed for EGD -->				
 			<velocityProfileCount>
 				<value>33</value>
 			</velocityProfileCount>
@@ -116,7 +116,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 				<value>0</value>
 			</boreholeLogsCount>
 		</Analysis>
-<!-- Velocity profiles  -->
+		<!-- Velocity profiles  -->
 		<!--  velocity profile # 1 -->
 		<VelocityProfile>
 			<layerCount>
@@ -5023,7 +5023,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 		</velocityProfileReference>
 	</siteCharacterizationParameters>
 	<siteDescription>
-<!-- Latitude and logitude (central location) of site characterization measurements -->	
+		<!-- Latitude and logitude (central location) of site characterization measurements -->	
 		<latitude>
 			<value>45.137174</value>
 		</latitude>
@@ -5040,7 +5040,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 			<value></value>
 		</maxDistanceFromStation>
 		<siteMorphology>
-<!-- EC8 ground type -->				
+			<!-- EC8 ground type -->				
 			<siteClassEC8>B</siteClassEC8>
 			<siteClassEC8Qindex1>
 				<value>1</value>
@@ -5062,7 +5062,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 					<url>https://doi.org/10.1007/s10518-017-0135-5/</url>
 				</FileResource>
 			</siteClassEC8Reference>
-<!-- Seismological bedrock depth -->			
+			<!-- Seismological bedrock depth -->			
 			<bedrockDepth>
 				<value></value>
 				<uncertainty></uncertainty>
@@ -5087,7 +5087,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 					<url></url>
 				</FileResource>
 			</bedrockDepthReference>
-<!-- Engineering bedrock depth  -->			
+			<!-- Engineering bedrock depth  -->			
 			<h800>
 				<value>10</value>
 				<uncertainty></uncertainty>
@@ -5113,7 +5113,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 					<url></url>
 				</FileResource>
 			</h800Reference>
-<!-- Surface geology (more detailed than in <Geology> element of StationXML  -->			
+			<!-- Surface geology (more detailed than in <Geology> element of StationXML  -->			
 			<geologicalUnit>Recent alluvial and lacustrine deposits valley overlying deep Jurassic limestones</geologicalUnit>
 			<geologicalUnitQindex1>
 				<value>0.25</value>
@@ -5137,10 +5137,10 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 					<url>https://doi.org/10.1007/s10518-017-0135-5</url>
 				</FileResource>
 			</geologicalUnitReference>
-<!-- Morphology - see EGD description  -->			
+			<!-- Morphology - see EGD description  -->			
 			<morphology>Valley</morphology>
 		</siteMorphology>
-<!-- topology - see EGD description  -->			
+		<!-- topology - see EGD description  -->			
 		<siteTopology>
 			<schemeA>T1</schemeA>
 			<schemeB>Valley</schemeB>
