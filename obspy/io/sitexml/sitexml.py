@@ -51,7 +51,7 @@ def _get_version_from_xmldoc(xmldoc):
         return None
     return version
 
-def validate_stationxml(path_or_object):
+def validate_sitexml(path_or_object):
     """
     Checks if the given path is a valid StationXML file.
 
@@ -102,22 +102,29 @@ def _read_sitexml(path_or_file_object):
 
     #namespace = "http://www.orfeus-eu.org/xml/site/1"
 
+    created = obspy.UTCDateTime(xmldoc.find(_ns("created")).text)
+
     site_owner_element = xmldoc.find(_ns("siteOwner"))
     if site_owner_element is not None:
         site_owner = _read_site_owner(site_owner_element)
 
-    site_description_element = xmldoc.find(_ns("siteDescription"))
+    site_description_element = xmldoc.find(_ns(
+        "siteDescription"))
     if site_description_element is not None:
-        site_description = _read_site_description(site_description_element)
+        site_description = _read_site_description(
+            site_description_element)
     
-    site_characterization_element = xmldoc.find(_ns("siteCharacterizationParameters"))
+    site_characterization_element = xmldoc.find(
+        _ns("siteCharacterizationParameters"))
     if site_characterization_element is not None:
-        site_characterization = _read_site_characterization(site_characterization_element)
+        site_characterization = _read_site_characterization(
+            site_characterization_element)
      
     sera_site = SERASite(station_code="ARG1",
                          site_owner=site_owner, 
                          site_description=site_description, 
-                         site_characterization_parameters=site_characterization)
+                         site_characterization=site_characterization,
+                         created=created)
 
     return sera_site
 
@@ -180,6 +187,10 @@ def _read_site_owner(owner_element):
     site_owner.institution_mbox = _tag2obj(institution_element, _ns("mbox"), str) 
     site_owner.institution_phone = _tag2obj(institution_element, _ns("phone"), str)
     site_owner.institution_homepage = _tag2obj(institution_element, _ns("homepage"), str)
+
+    identifier_element = institution_element.find(_ns("identifier"))
+    site_owner.institution_ID = _tag2obj(identifier_element, _ns("resourceID"), str) 
+    #resourceID_element = identifier_element.find(_ns("identifier"))
     #site_owner.institution_ID = institution_ID,
 
     # Read postalAddress element
@@ -215,7 +226,8 @@ def _read_site_description(site_description_element):
         - siteClassEC8, siteClassEC8Qindex1, siteClassEC8Reference
         - bedrockDepth, bedrockDepthQindex1, bedrockDepthReference
         - h800, h800Qindex1, h800Reference
-        - geologicalUnit, geologicalUnitQindex1, geologicalUnitReference, geologicalMapScale, geologicalUnitOGE
+        - geologicalUnit, geologicalUnitQindex1, geologicalUnitReference, 
+        - geologicalMapScale, geologicalUnitOGE
     """
 
     # SERA SiteXML allows latitude and longitude to be missing.
@@ -224,12 +236,15 @@ def _read_site_description(site_description_element):
     longitude = _read_value(site_description_element, "longitude", float)
     if latitude is None or longitude is None:
         warnings.warn("Missing latitude or longitude value. " \
-                    "Processing of site description element will be skipped.", UserWarning)
+                    "Processing of site description element " \
+                    "will be skipped.", UserWarning)
         return None
     
     altitude = _read_value(site_description_element, "altitude", float)
-    min_distance_from_station = _read_value(site_description_element, "minDistanceFromStation", float)
-    max_distance_from_station = _read_value(site_description_element, "maxDistanceFromStation", float)
+    min_distance_from_station = _read_value(site_description_element, 
+                                            "minDistanceFromStation", float)
+    max_distance_from_station = _read_value(site_description_element, 
+                                            "maxDistanceFromStation", float)
 
     site_description = SiteDescription(latitude=latitude, 
                                        longitude=longitude, 
@@ -261,17 +276,20 @@ def _read_site_description(site_description_element):
     ec8_value = _tag2obj(morphology_element, _ns("siteClassEC8"), str)
     if ec8_value is not None: 
         ec8_qindex = _read_value(morphology_element, "siteClassEC8Qindex1", float)
-        [ec8_literature_source, ec8_file_resource] = _read_reference(morphology_element, "siteClassEC8Reference")
+        [ec8_literature_source, ec8_file_resource] = _read_reference(
+            morphology_element, "siteClassEC8Reference")
         site_description.ec8 = EC8(value = ec8_value,
                             quality_index = ec8_qindex,
                             literature_source = ec8_literature_source, 
                             file_resource = ec8_file_resource)
 
     # H800
-    [h800_value, h800_uncertainty] = _read_value_with_uncertainty(morphology_element, "h800", int)
+    [h800_value, h800_uncertainty] = _read_value_with_uncertainty(
+        morphology_element, "h800", int)
     if h800_value is not None: 
         h800_qindex = _read_value(morphology_element, "h800Qindex1", float)
-        [h800_literature_source, h800_file_resource] = _read_reference(morphology_element, "h800Reference")
+        [h800_literature_source, h800_file_resource] = _read_reference(
+            morphology_element, "h800Reference")
         site_description.h800 = H800(value = h800_value,
                         uncertainty = h800_uncertainty, 
                         quality_index = h800_qindex,
@@ -279,10 +297,12 @@ def _read_site_description(site_description_element):
                         file_resource = h800_file_resource)
 
     # Bedrock Depth
-    [bdepth_value, bdepth_uncertainty] = _read_value_with_uncertainty(morphology_element, "bedrockDepth", int)
+    [bdepth_value, bdepth_uncertainty] = _read_value_with_uncertainty(
+        morphology_element, "bedrockDepth", int)
     if bdepth_value is not None: 
         bdepth_qindex = _read_value(morphology_element, "bedrockDepthQindex1", float)
-        [bdepth_literature_source, bdepth_file_resource] = _read_reference(morphology_element, "bedrockDepthReference")
+        [bdepth_literature_source, bdepth_file_resource] = _read_reference(
+            morphology_element, "bedrockDepthReference")
         site_description.bedrock_depth = BedrockDepth(value = bdepth_value,
                         uncertainty = bdepth_uncertainty,
                         quality_index = bdepth_qindex,
@@ -295,7 +315,8 @@ def _read_site_description(site_description_element):
         gunit_qindex = _read_value(morphology_element, "geologicalUnitQindex1", float)
         gunit_map_scale = _tag2obj(morphology_element, _ns("geologicalMapScale"), str)
         gunit_oge = _tag2obj(morphology_element, _ns("geologicalUnitOGE"), str)
-        [gunit_literature_source, gunit_file_resource] = _read_reference(morphology_element, "geologicalUnitReference")
+        [gunit_literature_source, gunit_file_resource] = _read_reference(
+            morphology_element, "geologicalUnitReference")
         site_description.geological_unit = GeologicalUnit(value = gunit_value, 
                         quality_index = gunit_qindex,
                         geological_map_scale = gunit_map_scale,
@@ -312,8 +333,10 @@ def _read_site_characterization(site_char_element):
     - PublicID (attr)
     - Analysis
         - PublicID (attr)
-        - resonanceFrequency, resonanceFrequencyQIndex1, resonanceFrequencyReference, resonanceFrequencyMethod
-        - velocityS30, velocityS30Qindex1, velocityS30Reference, velocityS30Method, velocityS30ManualIndex, velocityS30MethodCombIndex
+        - resonanceFrequency, resonanceFrequencyQIndex1, 
+        - resonanceFrequencyReference, resonanceFrequencyMethod
+        - velocityS30, velocityS30Qindex1, velocityS30Reference, 
+        - velocityS30Method, velocityS30ManualIndex, velocityS30MethodCombIndex
         - velocityProfileCount
         - sptLogsCount
         - cptLogsCount
@@ -481,19 +504,21 @@ def _read_velocity_profile_data(vp_data_element, vp_data, vp_no):
          return
 
     for layer in range(0, layer_count):
-        #vp_data.velocity_profile_layer.append(VelocityProfileLayer())
-
+        
         density_value = _tag2obj(density_list[layer], _ns("value"), float)
         density_uncertainty = _tag2obj(density_list[layer], _ns("uncertainty"), float)
-        vp_data.density.append(ValueWithUncertainty(density_value, density_uncertainty))
+        if density_value:
+            vp_data.density.append(ValueWithUncertainty(density_value, density_uncertainty))
 
         velocityP_value = _tag2obj(velocityP_list[layer], _ns("value"), float)
         velocityP_uncertainty = _tag2obj(velocityP_list[layer], _ns("uncertainty"), float)
-        vp_data.velocityP.append(ValueWithUncertainty(velocityP_value, velocityP_uncertainty))
+        if velocityP_value:
+            vp_data.velocityP.append(ValueWithUncertainty(velocityP_value, velocityP_uncertainty))
 
         velocityS_value = _tag2obj(velocityS_list[layer], _ns("value"), float)
         velocityS_uncertainty = _tag2obj(velocityS_list[layer], _ns("uncertainty"), float)
-        vp_data.velocityS.append(ValueWithUncertainty(velocityS_value, velocityS_uncertainty))
+        if velocityS_value:
+            vp_data.velocityS.append(ValueWithUncertainty(velocityS_value, velocityS_uncertainty))
 
         [top_depth_value, top_depth_uncer] = \
             _read_value_with_uncertainty(layerThickness_list[layer], 
@@ -528,10 +553,13 @@ def _read_reference(parent, tag):
     return literature_source, file_resource
 
 def _read_literature_source(literature_source_element):
-
+    """
+    Read a literatureSource element.
+    Return an object only if title or doi is provided
+    """
     title = _tag2obj(literature_source_element, _ns("title"), str)
-    firstAuthor = _tag2obj(literature_source_element, _ns("firstAuthor"), str)
-    secondaryAuthors = _tag2obj(literature_source_element, _ns("secondaryAuthors"), str)
+    first_author = _tag2obj(literature_source_element, _ns("firstAuthor"), str)
+    secondary_authors = _tag2obj(literature_source_element, _ns("secondaryAuthors"), str)
     year = _tag2obj(literature_source_element, _ns("year"), str)
     booktitle = _tag2obj(literature_source_element, _ns("booktitle"), str)
     doi = _tag2obj(literature_source_element, _ns("DOI"), str)
@@ -540,27 +568,39 @@ def _read_literature_source(literature_source_element):
     if language_element is not None:
         language = _tag2obj(language_element, _ns("code"), str)
 
-    literature_source = LiteratureSource(title=title, 
-                                         firstAuthor=firstAuthor, 
-                                         secondaryAuthors=secondaryAuthors,
-                                         year=year,
-                                         booktitle=booktitle,
-                                         language=language,
-                                         doi=doi)
-    return literature_source
+    if title or doi:
+        return LiteratureSource(title=title, 
+                                first_author=first_author, 
+                                secondary_authors=secondary_authors,
+                                year=year,
+                                booktitle=booktitle,
+                                language=language,
+                                doi=doi)
+    else:
+        return None
 
 def _read_file_resource(file_resource_element):
-
+    """
+    Read a fileResource element.
+    Return an object only if uri is provided
+    """
     uri = _tag2obj(file_resource_element, _ns("url"), str)
     description = _tag2obj(file_resource_element, _ns("description"), str)
 
-    return ExternalReference(uri=uri, description=description)
+    if uri:
+        return ExternalReference(uri=uri, description=description)
+    else:
+        return None
 
 def _read_value(parent, tag, type):
     """
-    Function used to read a value from an element of the following structure
-    <xs:element name="tag">
-		<xs:element name="value" type="type"/>
+    Method used to read a value 
+    from an element of the following structure
+    
+    <xs:element name="parent">
+        <xs:element name="tag">
+		    <xs:element name="value" type="type"/>
+        </xs:element>
 	</xs:element>
     """
     element = parent.find(_ns(tag))
@@ -570,11 +610,15 @@ def _read_value(parent, tag, type):
 
 def _read_value_with_uncertainty(parent, tag, type):
     """
-    Function used to read a value / uncertainty pair from an element of the following structure
-    <xs:element name="tag">
-		<xs:element name="value" type="type"/>
-        <xs:element name="uncertainty" type="type"/>
-	</xs:element>
+    Method used to read a value / uncertainty pair 
+    from an element of the following structure
+    
+    <xs:element name="parent">
+        <xs:element name="tag">
+            <xs:element name="value" type="type"/>
+            <xs:element name="uncertainty" type="type"/>
+        </xs:element>
+    </xs:element>
     """
     element = parent.find(_ns(tag))
     if element is None:
@@ -585,28 +629,3 @@ def _read_value_with_uncertainty(parent, tag, type):
     uncertainty = _tag2obj(element, _ns("uncertainty"), type)
 
     return value, uncertainty
-
-"""
-def _read_floattype(parent, tag):
-    elem = parent.find(tag)
-    if elem is None:
-        return None
-
-    # Catch non convertible numbers.
-    try:
-        convert = float(elem.text)
-    except Exception:
-        warnings.warn(
-            "'%s' could not be converted to a float. Will be skipped. Please "
-            "contact to report this issue." % etree.tostring(elem),
-            UserWarning)
-        return None
-    
-    # Catch NaNs.
-    if math.isnan(convert):
-        warnings.warn("Tag '%s' has a value of NaN. It will be skipped." %
-                      tag, UserWarning)
-        return None
-    
-    return convert
-"""
