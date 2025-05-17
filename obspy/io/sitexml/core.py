@@ -11,8 +11,8 @@ Provides the SiteCharacterization class.
 """
 
 from obspy.core.util.base import ComparingObject
-#from obspy.core.util.obspy_types import (ObsPyException, ZeroSamplingRate,
-#                                         FloatWithUncertaintiesAndUnit)
+from obspy.core.util.obspy_types import CustomFloat
+        #(ObsPyException, ZeroSamplingRate, FloatWithUncertaintiesAndUnit)
 #from obspy.core.event import ResourceIdentifier
 from obspy.io.sitexml.util import (TopographySchemaA, TopographySchemaB, EC8Class, 
                                    ResonanceFrequencyMethod, VelocityS30Method,
@@ -27,7 +27,7 @@ class SiteIndicator(ComparingObject):
         """
         :type name: str
         :param name: Indicator type. One of: "ec8", "h800", "bedrock_depth", 
-                    "geological_unit", "velocity_s30", "resonance_frequency", "VP"
+                    "geological_unit", "velocity_s30", "resonance_frequency", "VelocityProfile"
         :type value: str / int / float
         :param value: Value of the indicator
         :type uncertainty: int / float
@@ -98,7 +98,7 @@ class SiteIndicator(ComparingObject):
                "\tFile resource: {fresource},\n")
         ret = ret.format(
             name=self.name, 
-            value=self.value if self.name != "VP" else "None",
+            value=self.value if self.name != "VelocityProfile" else "None",
             uncertainty=self.uncertainty,
             methods = self.methods,     # iterate over methods for printing
             qindex = self.quality_index,
@@ -122,7 +122,7 @@ class EC8(SiteIndicator):
         # Maybe here I should also use setter / getter
         if ( _sitexml_check_enum(value, EC8Class, "EC8") ):
             super(EC8, self).__init__(
-                name="ec8", value=value, uncertainty=None, methods=None, 
+                name="siteClassEC8", value=value, uncertainty=None, methods=None, 
                 quality_index=quality_index, literature_source=literature_source, 
                 file_resource=file_resource)
 
@@ -166,7 +166,7 @@ class BedrockDepth(SiteIndicator):
         :param file_resource: A public URL for the literature_source
         """
         super(BedrockDepth, self).__init__(
-            name="bedrock_depth", value=value, uncertainty=uncertainty, methods=None, 
+            name="bedrockDepth", value=value, uncertainty=uncertainty, methods=None, 
             quality_index=quality_index, literature_source=literature_source, 
             file_resource=file_resource)
         
@@ -193,7 +193,7 @@ class GeologicalUnit(SiteIndicator):
         self.geological_map_scale = geological_map_scale
         self.geological_unit_OGE = geological_unit_OGE
         super(GeologicalUnit, self).__init__(
-            name="geological_unit", value=value, quality_index=quality_index, 
+            name="geologicalUnit", value=value, quality_index=quality_index, 
                 literature_source=literature_source, file_resource=file_resource)
         
 class ResonanceFrequency(SiteIndicator):
@@ -232,7 +232,7 @@ class VelocityProfile(SiteIndicator):
         """
         self.velocity_profile_data = velocity_profile_data  # triggers setter/validation
         super().__init__(
-            name="VP", value=self.velocity_profile_data,
+            name="VelocityProfile", value=self.velocity_profile_data,
             quality_index=quality_index,
             literature_source=literature_source,
             file_resource=file_resource)
@@ -338,16 +338,17 @@ class VelocityProfileData(ComparingObject):
 
         return "\n".join(lines)
     
-class ValueWithUncertainty():
+class ValueWithUncertainty():    
     def __init__(self, value, uncertainty=None):
         self.value = value
         self.uncertainty = uncertainty
 
 class LiteratureSource(ComparingObject):
-    def __init__(self, title, firstAuthor=None, secondaryAuthors=None, year=None, booktitle=None, language=None, doi=None):
+    def __init__(self, title, first_author=None, secondary_authors=None, 
+                 year=None, booktitle=None, language=None, doi=None):
         self.title = title
-        self.firstAuthor = firstAuthor
-        self.secondaryAuthors = secondaryAuthors
+        self.first_author = first_author
+        self.secondary_authors = secondary_authors
         self.year = year
         self.booktitle = booktitle
         self.language = language
@@ -572,26 +573,34 @@ class SERASite(ComparingObject):
     """
     This is the parent class for the siteXML object tree.
     """
-    def __init__(self, station_code=None, site_owner=None, site_description=None, site_characterization_parameters=None, overall_quality_index=None):
+    def __init__(self, station_code=None, site_owner=None, site_description=None, 
+                 site_characterization=None, overall_quality_index=None,
+                 created=None):
         """
         :type station_code: str
-        :param station_code: Not used in SiteXML, but is needed in order to correlate with the Station Object
+        :param station_code: Not used in SiteXML, but is needed in order to 
+                            correlate with the Station Object
         :type site_description: :class:`~obspy.core.io.sitexml.SiteDescription`
-        :param site_description: The site description parameters (H800, Bedrock depth, EC8 class, geological unit, morphology, topology)
-        :type site_characterization_parameters: :class:`~obspy.core.io.sitexml.SiteCharacterizationParameters`
-        :param site_characterization_parameters: The site characterization parameters (VS30, resonance frequency, velocity profiles)
+        :param site_description: The site description parameters (H800, Bedrock depth, 
+                            EC8 class, geological unit, morphology, topology)
+        :type site_characterization: :class:`~obspy.core.io.sitexml.SiteCharacterizationParameters`
+        :param site_characterization: The site characterization parameters 
+                            (VS30, resonance frequency, velocity profiles)
         :type overall_quality_index: float
         :param overall_quality_index: The overall quality index of the site characterization parameters.
+        :type created: datetime
+        :param created: DateTime the SiteXML file was generated
         """
         self.station_code = station_code
+        self.created = created
 
         self.site_owner = site_owner
         
         self.site_description = _sitexml_check_type(
             site_description, SiteDescription, "site_description", True)
 
-        self.site_characterization_parameters = _sitexml_check_type(
-            site_characterization_parameters, SiteCharacterizationParameters, "site_characterization_parameters", True)
+        self.site_characterization = _sitexml_check_type(
+            site_characterization, SiteCharacterizationParameters, "site_characterization", True)
         
         # TO CHECK: If this one is calculated it should be removed from the parameters 
         self.overall_quality_index = overall_quality_index
