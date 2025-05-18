@@ -278,10 +278,11 @@ def _read_site_description(site_description_element):
         ec8_qindex = _read_value(morphology_element, "siteClassEC8Qindex1", float)
         [ec8_literature_source, ec8_file_resource] = _read_reference(
             morphology_element, "siteClassEC8Reference")
-        site_description.ec8 = EC8(value = ec8_value,
-                            quality_index = ec8_qindex,
-                            literature_source = ec8_literature_source, 
-                            file_resource = ec8_file_resource)
+        site_description.ec8 = EC8(
+                value = ec8_value,
+                quality_index = ec8_qindex,
+                literature_source = ec8_literature_source, 
+                file_resource = ec8_file_resource)
 
     # H800
     [h800_value, h800_uncertainty] = _read_value_with_uncertainty(
@@ -290,11 +291,11 @@ def _read_site_description(site_description_element):
         h800_qindex = _read_value(morphology_element, "h800Qindex1", float)
         [h800_literature_source, h800_file_resource] = _read_reference(
             morphology_element, "h800Reference")
-        site_description.h800 = H800(value = h800_value,
-                        uncertainty = h800_uncertainty, 
-                        quality_index = h800_qindex,
-                        literature_source = h800_literature_source, 
-                        file_resource = h800_file_resource)
+        site_description.h800 = H800(
+                value = ValueWithUncertainty(h800_value, h800_uncertainty), 
+                quality_index = h800_qindex,
+                literature_source = h800_literature_source, 
+                file_resource = h800_file_resource)
 
     # Bedrock Depth
     [bdepth_value, bdepth_uncertainty] = _read_value_with_uncertainty(
@@ -303,11 +304,11 @@ def _read_site_description(site_description_element):
         bdepth_qindex = _read_value(morphology_element, "bedrockDepthQindex1", float)
         [bdepth_literature_source, bdepth_file_resource] = _read_reference(
             morphology_element, "bedrockDepthReference")
-        site_description.bedrock_depth = BedrockDepth(value = bdepth_value,
-                        uncertainty = bdepth_uncertainty,
-                        quality_index = bdepth_qindex,
-                        literature_source = bdepth_literature_source,
-                        file_resource = bdepth_file_resource)
+        site_description.bedrock_depth = BedrockDepth(
+                value = ValueWithUncertainty(bdepth_value, bdepth_uncertainty),
+                quality_index = bdepth_qindex,
+                literature_source = bdepth_literature_source,
+                file_resource = bdepth_file_resource)
     
     # Geological Unit
     gunit_value = _tag2obj(morphology_element, _ns("geologicalUnit"), str)
@@ -317,12 +318,13 @@ def _read_site_description(site_description_element):
         gunit_oge = _tag2obj(morphology_element, _ns("geologicalUnitOGE"), str)
         [gunit_literature_source, gunit_file_resource] = _read_reference(
             morphology_element, "geologicalUnitReference")
-        site_description.geological_unit = GeologicalUnit(value = gunit_value, 
-                        quality_index = gunit_qindex,
-                        geological_map_scale = gunit_map_scale,
-                        geological_unit_OGE = gunit_oge,
-                        literature_source = gunit_literature_source,
-                        file_resource = gunit_file_resource)
+        site_description.geological_unit = GeologicalUnit(
+                value = gunit_value, 
+                quality_index = gunit_qindex,
+                geological_map_scale = gunit_map_scale,
+                geological_unit_OGE = gunit_oge,
+                literature_source = gunit_literature_source,
+                file_resource = gunit_file_resource)
     
     return site_description
 
@@ -403,12 +405,12 @@ def _read_analysis(analysis_element, site_char_obj):
         [rfreq_literature_source, rfreq_file_resource] = \
             _read_reference(analysis_element, "resonanceFrequencyReference")
 
-        site_char_obj.resonance_frequency = ResonanceFrequency(value = rfreq_value,
-                        uncertainty = rfreq_uncertainty,
-                        methods = rfreq_methods,
-                        quality_index = rfreq_qindex,
-                        literature_source = rfreq_literature_source,
-                        file_resource = rfreq_file_resource)
+        site_char_obj.resonance_frequency = ResonanceFrequency(
+                value = ValueWithUncertainty(rfreq_value, rfreq_uncertainty),
+                quality_index = rfreq_qindex,
+                methods = rfreq_methods,
+                literature_source = rfreq_literature_source,
+                file_resource = rfreq_file_resource)
 
     # Velocity S30
     [vs30_value, vs30_uncertainty] = \
@@ -421,14 +423,14 @@ def _read_analysis(analysis_element, site_char_obj):
         [vs30_literature_source, vs30_file_resource] = \
             _read_reference(analysis_element, "velocityS30Reference")
 
-        site_char_obj.velocity_s30 = VelocityS30(value = vs30_value,
-                        uncertainty = vs30_uncertainty,
-                        quality_index = vs30_qindex,
-                        methods = vs30_methods,
-                        method_combined_quality_index = vs30_methods_index,
-                        manual_quality_index = vs30_manual_index,
-                        literature_source = vs30_literature_source,
-                        file_resource = vs30_file_resource)
+        site_char_obj.velocity_s30 = VelocityS30(
+                value = ValueWithUncertainty(vs30_value, vs30_uncertainty),
+                quality_index = vs30_qindex,
+                methods = vs30_methods,
+                method_combined_quality_index = vs30_methods_index,
+                manual_quality_index = vs30_manual_index,
+                literature_source = vs30_literature_source,
+                file_resource = vs30_file_resource)
 
     site_char_obj.velocity_profile_count = \
         _read_value(analysis_element, "velocityProfileCount", int)
@@ -501,6 +503,7 @@ def _read_velocity_profile_data(vp_data_element, vp_data, vp_no):
                     "density: '%s', velocityP: '%s', velocityS: '%s', layerThickness: '%s'" 
                     % (layer_count, vp_no, len(density_list), len(velocityP_list), 
                     len(velocityS_list), len(layerThickness_list)), UserWarning)
+         # Set layer_count to match the max among all length values
          return
 
     for layer in range(0, layer_count):

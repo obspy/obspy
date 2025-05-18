@@ -20,18 +20,42 @@ from obspy.io.sitexml.util import (TopographySchemaA, TopographySchemaB, EC8Clas
                                     _wrapped_property, vwu_list_properties, _enum_property)
 from obspy.core.inventory.util import (Latitude, Longitude, Distance, ExternalReference)
 
+# Update Site indicator so that some indicatos have a simple / str value
+# and other have valuewithuncertainty
+
+class ValueWithUncertainty():    
+    def __init__(self, value, uncertainty=None):
+        """
+        :type value: int / float
+        :param value: Value of the indicator.
+        :type uncertainty: int / float
+        :param uncertainty: Uncertainty related with the provided site indicator value
+        """
+        self.value = value
+        self.uncertainty = uncertainty
+
+    # This needs more work if value is allowed to be <0 
+    # It is not working very well 
+    def _validate_value_uncertainty(self, indicator_name, valid_type):
+        if not isinstance(self.value, valid_type) or self.value <= 0:
+            raise ValueError(f"Value of {indicator_name} \
+                             must be a positive {valid_type}")
+        
+        if self.uncertainty is not None:
+            if (not isinstance(self.uncertainty, valid_type) or 
+                self.uncertainty <= 0):
+                raise ValueError(f"Uncertainty of {indicator_name} \
+                                 must be a positive {valid_type} or None")
 
 class SiteIndicator(ComparingObject):
-    def __init__(self, name, value, uncertainty=None, methods=None, 
+    def __init__(self, name, value, methods=None, 
                  quality_index=None, literature_source=None, file_resource=None):
         """
         :type name: str
         :param name: Indicator type. One of: "ec8", "h800", "bedrock_depth", 
                     "geological_unit", "velocity_s30", "resonance_frequency", "VelocityProfile"
-        :type value: str / int / float
-        :param value: Value of the indicator
-        :type uncertainty: int / float
-        :param uncertainty: Uncertainty related with the provided site indicator value
+        :type value: str / ValueWithUncertainty / VelocityProfileData
+        :param value: Value of the indicator. Type depends on the indicator.
         :type methods: list of str
         :param methods: Methods used for the estimation / calculation of the site indicator
         :type quality_index: float
@@ -44,7 +68,6 @@ class SiteIndicator(ComparingObject):
         """
         self.name = name
         self.value = value
-        self.uncertainty = uncertainty
         self.methods = methods or []
         self.quality_index = quality_index  # Maybe this is internal only??
         self.literature_source = literature_source
@@ -76,18 +99,6 @@ class SiteIndicator(ComparingObject):
         else:
             self._literature_source = LiteratureSource(value)
 
-    # This needs more work if value is allowed to be <0 
-    def _validate_value_uncertainty(self, valid_type):
-        if not isinstance(self.value, valid_type) or self.value <= 0:
-            raise ValueError(f"Value of {self.name} \
-                             must be a positive {valid_type}")
-        
-        if self.uncertainty is not None:
-            if (not isinstance(self.uncertainty, valid_type) or 
-                self.uncertainty <= 0):
-                raise ValueError(f"Uncertainty of {self.name} \
-                                 must be a positive {valid_type} or None")
-
     def __str__(self):
         ret = ("{name} parameters:\n"
                "\t{name} value: {value},\n"
@@ -98,8 +109,11 @@ class SiteIndicator(ComparingObject):
                "\tFile resource: {fresource},\n")
         ret = ret.format(
             name=self.name, 
-            value=self.value if self.name != "VelocityProfile" else "None",
-            uncertainty=self.uncertainty,
+            value = self.value.value 
+                    if isinstance(self.value, ValueWithUncertainty) else
+            self.value if self.name != "VelocityProfile" else "None",
+            uncertainty = self.value.uncertainty 
+                    if isinstance(self.value, ValueWithUncertainty) else "None",
             methods = self.methods,     # iterate over methods for printing
             qindex = self.quality_index,
             lit_source=self.literature_source if self.literature_source else "None",
@@ -122,18 +136,17 @@ class EC8(SiteIndicator):
         # Maybe here I should also use setter / getter
         if ( _sitexml_check_enum(value, EC8Class, "EC8") ):
             super(EC8, self).__init__(
-                name="siteClassEC8", value=value, uncertainty=None, methods=None, 
-                quality_index=quality_index, literature_source=literature_source, 
-                file_resource=file_resource)
+                name="siteClassEC8", value=value, quality_index=quality_index, 
+                literature_source=literature_source, file_resource=file_resource)
 
 class H800(SiteIndicator):
-    def __init__(self, value, uncertainty=None, quality_index=None, literature_source=None, 
+    value = _wrapped_property("value", ValueWithUncertainty)
+    def __init__(self, value, quality_index=None, literature_source=None, 
                  file_resource=None):
         """
-        :type value: int        
-        :param value: Engineering depth. Depth beyond which the shear-wave velocity Vs exceeds 800 m/s.
-        :type uncertainty: int
-        :param uncertainty: Uncertainty related with the provided site indicator value
+        :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`        
+        :param value: Engineering depth. Depth beyond which the shear-wave 
+                        velocity Vs exceeds 800 m/s. Expecting Integer value.
         :type quality_index: float
         :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
             Calculated according to the guidelines of the SERA D7.2 Deliverable.
@@ -143,20 +156,18 @@ class H800(SiteIndicator):
         :param file_resource: A public URL for the literature_source
         """
         super(H800, self).__init__(
-                name="h800", value=value, uncertainty=uncertainty, methods=None, 
-                quality_index=quality_index, literature_source=literature_source, 
-                file_resource=file_resource)
+                name="h800", value=value, quality_index=quality_index, 
+                literature_source=literature_source, file_resource=file_resource)
         
-        self._validate_value_uncertainty(int)
+        self.value._validate_value_uncertainty(self.name, int)
 
 class BedrockDepth(SiteIndicator):
-    def __init__(self, value, uncertainty=None, quality_index=None, literature_source=None, 
+    value = _wrapped_property("value", ValueWithUncertainty)
+    def __init__(self, value, quality_index=None, literature_source=None, 
                  file_resource=None):
         """
-        :type value: int        
-        :param value: Seismological bedrock depth.
-        :type uncertainty: int
-        :param uncertainty: Uncertainty related with the provided site indicator value
+        :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`           
+        :param value: Seismological bedrock depth. Expecting Integer values.
         :type quality_index: float
         :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
             Calculated according to the guidelines of the SERA D7.2 Deliverable.
@@ -166,11 +177,10 @@ class BedrockDepth(SiteIndicator):
         :param file_resource: A public URL for the literature_source
         """
         super(BedrockDepth, self).__init__(
-            name="bedrockDepth", value=value, uncertainty=uncertainty, methods=None, 
-            quality_index=quality_index, literature_source=literature_source, 
-            file_resource=file_resource)
+            name="bedrockDepth", value=value, quality_index=quality_index, 
+            literature_source=literature_source, file_resource=file_resource)
         
-        self._validate_value_uncertainty(int)
+        self.value._validate_value_uncertainty(self.name, int)
 
 class GeologicalUnit(SiteIndicator):
     def __init__(self, value, quality_index=None, geological_map_scale=None, 
@@ -197,24 +207,59 @@ class GeologicalUnit(SiteIndicator):
                 literature_source=literature_source, file_resource=file_resource)
         
 class ResonanceFrequency(SiteIndicator):
-    def __init__(self, value, uncertainty=None, methods=None, 
-                 quality_index=None, literature_source=None, 
-                 file_resource=None):
+    value = _wrapped_property("value", ValueWithUncertainty)
+    def __init__(self, value, quality_index=None, methods=None, 
+                 literature_source=None, file_resource=None):
+        """
+        :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`           
+        :param value: Resonance Frequency (f0). Expecting float values.
+        :type quality_index: float
+        :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
+            Calculated according to the guidelines of the SERA D7.2 Deliverable.
+        :type methods: List of <str>
+        :param methods: Methods used for the estimation of ResonanceFrequency
+        :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`
+        :param literature_source: The literature source related with the provided site indicator value
+        :type file_resource: :class:`~obspy.core.inventory.util.ExternalReference` ????
+        :param file_resource: A public URL for the literature_source
+        """
         super(ResonanceFrequency, self).__init__(
-            name="resonance_frequency", value=value, uncertainty=uncertainty, methods=methods, 
+            name="resonance_frequency", value=value, methods=methods, 
             quality_index=quality_index, literature_source=literature_source, 
             file_resource=file_resource)
         
+        self.value._validate_value_uncertainty(self.name, float)
+        
 class VelocityS30(SiteIndicator):
-    def __init__(self, value, uncertainty=None, methods=None, 
-                 quality_index=None, literature_source=None, 
-                 file_resource=None, method_combined_quality_index=None, manual_quality_index=None):
+    value = _wrapped_property("value", ValueWithUncertainty)
+    def __init__(self, value, quality_index=None, methods=None,
+                 method_combined_quality_index=None, manual_quality_index=None, 
+                 literature_source=None, file_resource=None):
+        """
+        :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`           
+        :param value: Velocity S30. Expecting float values.
+        :type quality_index: float
+        :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
+            Calculated according to the guidelines of the SERA D7.2 Deliverable.
+        :type methods: List of <str>
+        :param methods: Methods used for the estimation of Velocity S30
+        :type method_combined_quality_index: float
+        :param method_combined_quality_index: 
+        :type manual_quality_index: float
+        :param manual_quality_index: 
+        :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`
+        :param literature_source: The literature source related with the provided site indicator value
+        :type file_resource: :class:`~obspy.core.inventory.util.ExternalReference` ????
+        :param file_resource: A public URL for the literature_source
+        """
         self.method_combined_quality_index = method_combined_quality_index
         self.manual_quality_index = manual_quality_index
         super(VelocityS30, self).__init__(
-            name="velocity_s30", value=value, uncertainty=uncertainty, methods=methods, 
-            quality_index=quality_index, literature_source=literature_source, 
+            name="velocity_s30", value=value, quality_index=quality_index, 
+            methods=methods, literature_source=literature_source, 
             file_resource=file_resource)
+        
+        self.value._validate_value_uncertainty(self.name, float)
 
 class VelocityProfile(SiteIndicator):
     def __init__(self, velocity_profile_data=None, quality_index=None, 
@@ -338,10 +383,7 @@ class VelocityProfileData(ComparingObject):
 
         return "\n".join(lines)
     
-class ValueWithUncertainty():    
-    def __init__(self, value, uncertainty=None):
-        self.value = value
-        self.uncertainty = uncertainty
+
 
 class LiteratureSource(ComparingObject):
     def __init__(self, title, first_author=None, secondary_authors=None, 

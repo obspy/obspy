@@ -170,25 +170,20 @@ def _write_site_description(parent, site_description):
 
 	site_description_elem = etree.SubElement(parent, "siteDescription")
 
-	_write_value_with_uncertainty(site_description_elem, 
-								  "latitude", 
-								  site_description.latitude)
+	_write_value(site_description_elem, "latitude", 
+				site_description.latitude)
 	
-	_write_value_with_uncertainty(site_description_elem, 
-								  "longitude", 
-								  site_description.longitude)
+	_write_value(site_description_elem, "longitude", 
+				site_description.longitude)
 
-	_write_value_with_uncertainty(site_description_elem, 
-								  "altitude", 
-								  site_description.altitude)
+	_write_value(site_description_elem, "altitude", 
+				site_description.altitude)
 
-	_write_value_with_uncertainty(site_description_elem, 
-								  "minDistanceFromStation", 
-								  site_description.min_distance_from_station)
+	_write_value(site_description_elem, "minDistanceFromStation", 
+				site_description.min_distance_from_station)
 	
-	_write_value_with_uncertainty(site_description_elem, 
-								  "maxDistanceFromStation", 
-								  site_description.max_distance_from_station)
+	_write_value(site_description_elem, "maxDistanceFromStation", 
+				site_description.max_distance_from_station)
 	
 	site_morphology_elem = etree.SubElement(site_description_elem, "siteMorphology")
 	_obj2tag(site_morphology_elem, "morphology", site_description.morphology)
@@ -232,19 +227,20 @@ def _write_site_characterization(parent, site_characterization):
 	_obj2tag(analysis_elem, 
 		  "boreholeLogsCount", 
 		  site_characterization.borehole_logs_count)
-	
+
 	if site_characterization.velocity_profile:
 		_write_velocity_profile(site_characterization_elem, 
 						  site_characterization.velocity_profile)
-
+	
 def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
 
 	if site_indicator_obj:
-		# Update to write value with uncertainty in some cases 
-		# or value / uncertainty subelements
-		# ec8 doesn't have a value sub-element !!
-		
-		etree.SubElement(parent, site_indicator_name).text = \
+
+		# ec8 / geological_unit don't have a value sub-element !!
+		if isinstance(site_indicator_obj.value, ValueWithUncertainty):
+			_write_value_with_uncertainty(parent, site_indicator_name, site_indicator_obj.value)
+		else:
+			etree.SubElement(parent, site_indicator_name).text = \
 				str(site_indicator_obj.value)
 		
 		_write_value(parent, site_indicator_name + "Qindex1", site_indicator_obj.quality_index)
@@ -262,18 +258,41 @@ def _write_velocity_profile(parent, vp_obj):
 	_write_reference(parent, vp_obj)
 
 	for vp_data in vp_obj.velocity_profile_data:
+		index = vp_obj.velocity_profile_data.index(vp_data)
+		comment = etree.Comment(f" Velocity profile # {index+1} ")
+		parent.append(comment)
+
 		vp_elem = etree.SubElement(parent, "VelocityProfile")
+		
 		_write_value(vp_elem, "layerCount", vp_data.layer_count)
 		vp_data_elem = etree.SubElement(vp_elem, "velocityProfileData")
-		#for i in range(vp_data.layer_count):
+		
+		# Σε συνδυασμό  με το read_Site_xml να γίνει κατάλληλος έλεγχος 
+		# και διαχείριση της περίπτωσης που
+		# το layer_count δεν είναι ίσο με το μέγεθος της λίστας των μεγεθών.
+		# for i in range(vp_data.layer_count):
+		# Important: We need to have only one loope!!!
+		
 		for i in range(len(vp_data.density)):
 			_write_value_with_uncertainty(vp_data_elem, 
 								  "density", 
-								  vp_data.density[i].value)
+								  vp_data.density[i])
+		for i in range(len(vp_data.velocityP)):	
+			_write_value_with_uncertainty(vp_data_elem, 
+								  "velocityP", 
+								  vp_data.velocityP[i])
 		for i in range(len(vp_data.velocityS)):	
 			_write_value_with_uncertainty(vp_data_elem, 
 								  "velocityS", 
-								  vp_data.velocityS[i].value)
+								  vp_data.velocityS[i])
+		for i in range(len(vp_data.top_depth)):	
+			_write_value_with_uncertainty(vp_data_elem, 
+								  "layerTopDepth", 
+								  vp_data.top_depth[i])
+		for i in range(len(vp_data.bottom_depth)):	
+			_write_value_with_uncertainty(vp_data_elem, 
+								  "layerBottomDepth", 
+								  vp_data.bottom_depth[i])
 			#_obj2tag(vp_data_elem, "density", vp_data.density[i])
 	
 
@@ -330,7 +349,7 @@ def _write_value(parent, tag, value):
 		element = etree.SubElement(parent, tag)
 		etree.SubElement(element, "value").text = str(value)
 	
-def _write_value_with_uncertainty(parent, tag, value, uncertainty=None):
+def _write_value_with_uncertainty(parent, tag, value):
 	"""
 	Method used to write a value / uncertainty pair 
 	to an element of the following structure
@@ -341,12 +360,19 @@ def _write_value_with_uncertainty(parent, tag, value, uncertainty=None):
 			<xs:element name="uncertainty" type="type"/>
 		</xs:element>
 	</xs:element>
+
+	:type parent: str
+	:param parent: Name of parent element
+	:type tag: str
+	:param tag: Name of element to be created
+	:type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+	:param value: Object with value / uncertainty values.
 	"""
-	if value:
+	if isinstance(value, ValueWithUncertainty):
 		element = etree.SubElement(parent, tag)
-		etree.SubElement(element, "value").text = str(value)
-		if uncertainty:
-			etree.SubElement(element, "uncertainty").text = str(uncertainty)
+		etree.SubElement(element, "value").text = str(value.value)
+		if value.uncertainty:
+			etree.SubElement(element, "uncertainty").text = str(value.uncertainty)
 			
 def _obj2tag(parent, tag_name, tag_value):
 	"""
