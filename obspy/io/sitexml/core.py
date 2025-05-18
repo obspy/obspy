@@ -46,6 +46,14 @@ class ValueWithUncertainty():
                 self.uncertainty <= 0):
                 raise ValueError(f"Uncertainty of {indicator_name} \
                                  must be a positive {valid_type} or None")
+            
+    def __str__(self):
+        if self is None or self.value is None:
+            return "N/A"
+        if self.uncertainty is not None:
+            return f"{self.value:.2f} ± {self.uncertainty:.2f}"
+        else:
+            return f"{self.value:.2f}"
 
 class SiteIndicator(ComparingObject):
     def __init__(self, name, value, methods=None, 
@@ -102,18 +110,13 @@ class SiteIndicator(ComparingObject):
     def __str__(self):
         ret = ("{name} parameters:\n"
                "\t{name} value: {value},\n"
-               "\tUncertainty: {uncertainty},\n"
                "\tMethods: {methods},\n"
                "\tQuality index: {qindex},\n"
                "\tLiterature source: {lit_source},\n"
                "\tFile resource: {fresource},\n")
         ret = ret.format(
             name=self.name, 
-            value = self.value.value 
-                    if isinstance(self.value, ValueWithUncertainty) else
-            self.value if self.name != "VelocityProfile" else "None",
-            uncertainty = self.value.uncertainty 
-                    if isinstance(self.value, ValueWithUncertainty) else "None",
+            value = self.value if self.name != "VelocityProfile" else "None",
             methods = self.methods,     # iterate over methods for printing
             qindex = self.quality_index,
             lit_source=self.literature_source if self.literature_source else "None",
