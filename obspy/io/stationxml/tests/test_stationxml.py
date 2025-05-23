@@ -21,7 +21,8 @@ import obspy.io.stationxml.core
 from obspy import UTCDateTime
 from obspy.core.util import AttribDict, CatchAndAssertWarnings
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
-from obspy.core.inventory import (Inventory, Network, ResponseStage)
+from obspy.core.inventory import (
+    Inventory, Network, ResponseStage, Response, Channel, Station)
 from obspy.core.inventory.util import DataAvailability
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.stationxml.core import _read_stationxml
@@ -1256,3 +1257,39 @@ class TestStationXML():
         assert stage.decimation_factor == 2
         assert stage.decimation_input_sample_rate == 1024000.0
         assert stage.decimation_offset == 1
+
+    def test_do_not_write_None_IO_units(self):
+        """
+        Regression test for #3572
+
+        Makes sure that in InputUnits and OutputUnits if the optional unit
+        description is None we do not write a tag with text value "None"
+        """
+        resp = Response.from_paz(
+            [], [], 2000, input_units='m/s', output_units='count')
+        channels = [Channel('LHZ', '00', 0, 0, 0, 0, response=resp, dip=-90)]
+        stations = [Station('STA', 0, 0, 0, channels=channels)]
+        networks = [Network('XX', stations=stations)]
+        inv = Inventory(networks=networks)
+        with io.BytesIO() as bio:
+            inv.write(bio, format='STATIONXML')
+            bio.seek(0)
+            xml = etree.parse(bio)
+        namespaces = {'ns': 'http://www.fdsn.org/xml/station/1'}
+        # xpath will return an empty list if the given tag is missing or has a
+        # NULL value (i.e.empty tag "<Description/>")
+        matches = xml.xpath(
+            '/ns:FDSNStationXML/ns:Network/ns:Station/ns:Channel/ns:Response/'
+            'ns:InstrumentSensitivity/ns:InputUnits/ns:Description',
+            namespaces=namespaces)
+        # element should not be present, i.e. matches an empty list.
+        assert not matches
+        matches = xml.xpath(
+            '/ns:FDSNStationXML/ns:Network/ns:Station/ns:Channel/ns:Response/'
+            'ns:InstrumentSensitivity/ns:OutputUnits/ns:Description',
+            namespaces=namespaces)
+        # element should not be present, i.e. matches an empty list.
+        assert not matches
+        # if it is present, at least it should have empty value, but let's just
+        # make sure it's not present at all for now
+        # assert matches[0].text is None
