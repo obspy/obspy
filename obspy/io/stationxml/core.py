@@ -1240,13 +1240,11 @@ def _write_io_units(parent, obj):
     sub = etree.SubElement(parent, "InputUnits")
     etree.SubElement(sub, "Name").text = \
         str(obj.input_units)
-    etree.SubElement(sub, "Description").text = \
-        str(obj.input_units_description)
+    _obj2tag(sub, "Description", obj.input_units_description)
     sub = etree.SubElement(parent, "OutputUnits")
     etree.SubElement(sub, "Name").text = \
         str(obj.output_units)
-    etree.SubElement(sub, "Description").text = \
-        str(obj.output_units_description)
+    _obj2tag(sub, "Description", obj.output_units_description)
     _write_extra(parent, obj)
 
 
