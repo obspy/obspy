@@ -22,20 +22,21 @@ from obspy.core.inventory.util import (Latitude, Longitude, Distance, ExternalRe
 
 # Update Site indicator so that some indicatos have a simple / str value
 # and other have valuewithuncertainty
-
+"""
 class ValueWithUncertainty():    
     def __init__(self, value, uncertainty=None):
-        """
+        
         :type value: int / float
         :param value: Value of the indicator.
         :type uncertainty: int / float
         :param uncertainty: Uncertainty related with the provided site indicator value
-        """
+        
         self.value = value
         self.uncertainty = uncertainty
-
+           
     # This needs more work if value is allowed to be <0 
     # It is not working very well 
+    # Convert this to a setter
     def _validate_value_uncertainty(self, indicator_name, valid_type):
         if not isinstance(self.value, valid_type) or self.value <= 0:
             raise ValueError(f"Value of {indicator_name} \
@@ -47,6 +48,58 @@ class ValueWithUncertainty():
                 raise ValueError(f"Uncertainty of {indicator_name} \
                                  must be a positive {valid_type} or None")
             
+    def __str__(self):
+        if self is None or self.value is None:
+            return "N/A"
+        if self.uncertainty is not None:
+            return f"{self.value:.2f} ± {self.uncertainty:.2f}"
+        else:
+            return f"{self.value:.2f}"
+"""
+class ValueWithUncertainty:
+    def __init__(self, value, uncertainty=None, valid_type=float):
+        """
+        :param value: int or float, the main value.
+        :param uncertainty: int, float, or None, representing uncertainty.
+        :param indicator_name: str, for meaningful error messages.
+        :param valid_type: type, expected numeric type (e.g., float, int).
+        """
+        self.valid_type = valid_type
+        #self.indicator_name = indicator_name
+        self.value = value
+        self.uncertainty = uncertainty
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, val):
+        try:
+            val = self.valid_type(val)
+        except (ValueError, TypeError):
+            raise ValueError(f"Value must be convertible to {self.valid_type.__name__}")
+        #if val <= 0:
+        #    raise ValueError(f"Value of {self.indicator_name} must be positive.")
+        self._value = val
+
+    @property
+    def uncertainty(self):
+        return self._uncertainty
+
+    @uncertainty.setter
+    def uncertainty(self, val):
+        if val is None:
+            self._uncertainty = None
+            return
+        try:
+            val = self.valid_type(val)
+        except (ValueError, TypeError):
+            raise ValueError(f"Uncertainty must be convertible to {self.valid_type.__name__} or None")
+        #if val <= 0:
+        #    raise ValueError(f"Uncertainty of {self.indicator_name} must be positive.")
+        self._uncertainty = val
+
     def __str__(self):
         if self is None or self.value is None:
             return "N/A"
@@ -143,7 +196,6 @@ class EC8(SiteIndicator):
                 literature_source=literature_source, file_resource=file_resource)
 
 class H800(SiteIndicator):
-    value = _wrapped_property("value", ValueWithUncertainty)
     def __init__(self, value, quality_index=None, literature_source=None, 
                  file_resource=None):
         """
@@ -158,14 +210,17 @@ class H800(SiteIndicator):
         :type file_resource: :class:`~obspy.core.inventory.util.ExternalReference` ????
         :param file_resource: A public URL for the literature_source
         """
+        if isinstance(value, ValueWithUncertainty):
+            wrapped_value = value
+        else:
+            wrapped_value = ValueWithUncertainty(value=value, valid_type=int)
+        
         super(H800, self).__init__(
-                name="h800", value=value, quality_index=quality_index, 
+                name="h800", value=wrapped_value, quality_index=quality_index, 
                 literature_source=literature_source, file_resource=file_resource)
         
-        self.value._validate_value_uncertainty(self.name, int)
 
 class BedrockDepth(SiteIndicator):
-    value = _wrapped_property("value", ValueWithUncertainty)
     def __init__(self, value, quality_index=None, literature_source=None, 
                  file_resource=None):
         """
@@ -179,11 +234,14 @@ class BedrockDepth(SiteIndicator):
         :type file_resource: :class:`~obspy.core.inventory.util.ExternalReference` ????
         :param file_resource: A public URL for the literature_source
         """
-        super(BedrockDepth, self).__init__(
-            name="bedrockDepth", value=value, quality_index=quality_index, 
-            literature_source=literature_source, file_resource=file_resource)
+        if isinstance(value, ValueWithUncertainty):
+            wrapped_value = value
+        else:
+            wrapped_value = ValueWithUncertainty(value=value, valid_type=int)
         
-        self.value._validate_value_uncertainty(self.name, int)
+        super(BedrockDepth, self).__init__(
+            name="bedrockDepth", value=wrapped_value, quality_index=quality_index, 
+            literature_source=literature_source, file_resource=file_resource)
 
 class GeologicalUnit(SiteIndicator):
     def __init__(self, value, quality_index=None, geological_map_scale=None, 
@@ -210,7 +268,6 @@ class GeologicalUnit(SiteIndicator):
                 literature_source=literature_source, file_resource=file_resource)
         
 class ResonanceFrequency(SiteIndicator):
-    value = _wrapped_property("value", ValueWithUncertainty)
     def __init__(self, value, quality_index=None, methods=None, 
                  literature_source=None, file_resource=None):
         """
@@ -226,15 +283,18 @@ class ResonanceFrequency(SiteIndicator):
         :type file_resource: :class:`~obspy.core.inventory.util.ExternalReference` ????
         :param file_resource: A public URL for the literature_source
         """
+        if isinstance(value, ValueWithUncertainty):
+            wrapped_value = value
+        else:
+            wrapped_value = ValueWithUncertainty(value=value, valid_type=float)
+
         super(ResonanceFrequency, self).__init__(
-            name="resonance_frequency", value=value, methods=methods, 
+            name="resonance_frequency", value=wrapped_value, methods=methods, 
             quality_index=quality_index, literature_source=literature_source, 
             file_resource=file_resource)
         
-        self.value._validate_value_uncertainty(self.name, float)
-        
 class VelocityS30(SiteIndicator):
-    value = _wrapped_property("value", ValueWithUncertainty)
+    #value = _wrapped_property("value", ValueWithUncertainty)
     def __init__(self, value, quality_index=None, methods=None,
                  method_combined_quality_index=None, manual_quality_index=None, 
                  literature_source=None, file_resource=None):
@@ -255,14 +315,19 @@ class VelocityS30(SiteIndicator):
         :type file_resource: :class:`~obspy.core.inventory.util.ExternalReference` ????
         :param file_resource: A public URL for the literature_source
         """
+        if isinstance(value, ValueWithUncertainty):
+            wrapped_value = value
+        else:
+            wrapped_value = ValueWithUncertainty(value=value, valid_type=float)
+
         self.method_combined_quality_index = method_combined_quality_index
         self.manual_quality_index = manual_quality_index
         super(VelocityS30, self).__init__(
-            name="velocity_s30", value=value, quality_index=quality_index, 
+            name="velocity_s30", value=wrapped_value, quality_index=quality_index, 
             methods=methods, literature_source=literature_source, 
             file_resource=file_resource)
         
-        self.value._validate_value_uncertainty(self.name, float)
+        #self.value._validate_value_uncertainty(self.name, float)
 
 class VelocityProfile(SiteIndicator):
     def __init__(self, velocity_profile_data=None, quality_index=None, 
@@ -389,7 +454,7 @@ class VelocityProfileData(ComparingObject):
 
 
 class LiteratureSource(ComparingObject):
-    def __init__(self, title, first_author=None, secondary_authors=None, 
+    def __init__(self, title=None, first_author=None, secondary_authors=None, 
                  year=None, booktitle=None, language=None, doi=None):
         self.title = title
         self.first_author = first_author
@@ -403,7 +468,7 @@ class LiteratureSource(ComparingObject):
         return _pretty_str(self)
        
 class SERASiteOwner(ComparingObject):
-    def __init__(self, owner_codename, owner_fullname, ownerID=None, 
+    def __init__(self, owner_codename=None, owner_fullname=None, ownerID=None, 
                  person_firstname=None, person_lastname=None, person_mbox=None, person_homepage=None, personID=None, 
                  institution_name=None, institution_mbox=None, institution_phone=None, institution_homepage=None, institution_ID=None,
                  address_street=None, address_locality=None, address_postal_code=None, address_country=None, address_country_code=None,
@@ -472,7 +537,7 @@ class SiteDescription(ComparingObject):
     topologyA = _enum_property("topologyA", TopographySchemaA)
     topologyB = _enum_property("topologyB", TopographySchemaB)
 
-    def __init__(self, latitude, longitude, altitude=None, 
+    def __init__(self, latitude=0, longitude=0, altitude=None, 
                  min_distance_from_station=None, max_distance_from_station=None, 
                  ec8=None, bedrock_depth=None, h800=None, geological_unit=None, 
                  morphology=None, topologyA=None, topologyB=None):
@@ -561,7 +626,7 @@ class SiteCharacterizationParameters(ComparingObject):
         :param analysis_publicID: The lexical description of the site
         :type resonance_frequency: :class:`~obspy.io.sitexml.core.ResonanceFrequency`
         :param resonance_frequency: The Resonance frequency of the soil column 
-        :type velocity_s30: :class:`~obspy.io.sitexml.core.velocityS30`
+        :type velocity_s30: :class:`~obspy.io.sitexml.core.VelocityS30`
         :param velocity_s30: Average shear-wave velocity between 0 and 30 meters depth
         :type velocity_profile_count: int
         :param velocity_profile_count: Number of available velocity profiles
