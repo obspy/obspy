@@ -527,7 +527,7 @@ def _read_velocity_profile_data(vp_data_element, vp_data, vp_no):
         [top_depth_value, top_depth_uncer] = \
             _read_value_with_uncertainty(layerThickness_list[layer], 
                                          "layerTopDepth", float)
-        if top_depth_value:
+        if top_depth_value != None:
             vp_data.top_depth.append(ValueWithUncertainty(top_depth_value, top_depth_uncer, float))
 
         [bottom_depth_value, bottom_depth_uncer] = \
@@ -536,6 +536,8 @@ def _read_velocity_profile_data(vp_data_element, vp_data, vp_no):
         #print(top_depth_value, bottom_depth_value)
         if bottom_depth_value:
             vp_data.bottom_depth.append(ValueWithUncertainty(bottom_depth_value, bottom_depth_uncer, float))
+
+    #print(vp_data)
         #print(top_depth_value, bottom_depth_value)
         #print(vp_data.top_depth[layer].value, vp_data.bottom_depth[layer].value)
 
