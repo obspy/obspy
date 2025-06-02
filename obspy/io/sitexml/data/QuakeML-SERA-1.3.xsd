@@ -1,0 +1,301 @@
+<?xml version="1.0"?>
+<!-- edited with XMLSpy v2020 rel. 2 (x64) (http://www.altova.com) by cornou (ISTERRE) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.orfeus-eu.org/xml/site/1"
+targetNamespace="http://www.orfeus-eu.org/xml/site/1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.3">
+	<xs:annotation>
+		<xs:documentation>
+			This .xml file has been created to exchange information on site charactterization information. 
+			The content of the .kml file is based on QuakeML description and fulfills required information by the European Geotechnical Database (EGD) and by EU-SERA.
+		</xs:documentation>
+	</xs:annotation>
+
+	<xs:complexType name="LanguageType">		<!-- Maybe replace this with a simple language_code element -->
+		<xs:sequence>
+		<xs:element name="code" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="LiteratureSourceType">
+		<xs:sequence>
+			<xs:element name="title" type="xs:string"/>
+			<xs:element name="firstAuthor" type="xs:string"/>
+			<xs:element name="secondaryAuthors" type="xs:string"/>
+			<xs:element name="year" type="xs:string"/>
+			<xs:element name="booktitle" type="xs:string"/>
+			<xs:element name="language" type="LanguageType"/>
+			<xs:element name="DOI" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="FileResourceType">
+		<xs:sequence>
+		<xs:element name="description" type="xs:string"/>
+		<xs:element name="url" type="xs:anyURI"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="ReferenceType">
+		<xs:sequence>
+		<xs:element name="literatureSource" type="LiteratureSourceType"/>
+		<xs:element name="FileResource" type="FileResourceType"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="RealValueWithUncertaintyType">
+		<xs:sequence>
+			<xs:element name="value" type="xs:double"/>		<!-- This element is required if the parent element exists-->
+			<xs:element name="uncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="RealValueType">
+  		<xs:sequence>
+    		<xs:element name="value" type="xs:double"/> 	<!-- This element is required if the parent element exists-->
+  		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="IntValueWithUncertaintyType">
+		<xs:sequence>
+			<xs:element name="value" type="xs:int"/>		<!-- This element is required if the parent element exists-->
+			<xs:element name="uncertainty" type="xs:int" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="IntValueType">
+  		<xs:sequence>
+    		<xs:element name="value" type="xs:int"/> 	<!-- This element is required if the parent element exists-->
+  		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="SiteIndicatorType">
+		<xs:sequence>
+		<xs:element name="value" type="xs:double" minOccurs="1" maxOccurs="1"/>
+		<xs:element name="uncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:element name="SERA_quakeml">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="schemaVersion" type="xs:decimal">
+					<xs:annotation>
+						<xs:documentation>The SiteXML schema version of this document.</xs:documentation>
+						<xs:documentation><example>1.2</example></xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="created" type="xs:dateTime">
+					<xs:annotation>
+						<xs:documentation>Date that this document was generated.
+						</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<!--   ************** SITE OWNER *************************     -->
+				<xs:element name="siteOwner">
+					<xs:annotation>
+						<xs:documentation>siteOwner is not defined in QuakeML 2.0 draft</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="codeName" type="xs:string"/>
+							<xs:element name="fullName" type="xs:string"/>
+							<xs:element name="contact">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="person">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="firstname" type="xs:string"/>
+													<xs:element name="lastname" type="xs:string"/>
+													<xs:element name="mbox" type="xs:string"/>
+													<xs:element name="homepage" type="xs:anyURI"/>
+												</xs:sequence>
+												<xs:attribute name="personID" type="xs:string"/>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="affiliation">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="institution">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="identifier">
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="resourceID" type="xs:string"/>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="name" type="xs:string"/>
+																<xs:element name="mbox" type="xs:string"/>
+																<xs:element name="phone" type="xs:string"/>
+																<xs:element name="homepage" type="xs:anyURI"/>
+																<xs:element name="postalAddress">
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="streetAddress" type="xs:string"/>
+																			<xs:element name="locality" type="xs:string"/>
+																			<xs:element name="postalCode" type="xs:string"/>
+																			<xs:element name="country">
+																				<xs:complexType>
+																					<xs:sequence>
+																						<xs:element name="code" type="xs:string"/>
+																						<xs:element name="country" type="xs:string"/>
+																					</xs:sequence>
+																				</xs:complexType>
+																			</xs:element>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="department" type="xs:string"/>
+													<xs:element name="function" type="xs:string"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="publicID" type="xs:string"/>
+					</xs:complexType>
+				</xs:element>
+				<!--   ************** SITE CONDITION INDICATORS **********     -->
+				<xs:element name="siteCharacterizationParameters">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Analysis">
+								<xs:complexType mixed="true">
+									<xs:sequence>
+										<!--   ************** RESONANCE FREQUENCY  **********     -->
+										<xs:element name="resonanceFrequency" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="resonanceFrequencyQindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="resonanceFrequencyMethod" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+										<xs:element name="resonanceFrequencyReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+										<!--   ************** VS30   **********     -->
+										<xs:element name="velocityS30" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="velocityS30Qindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="velocityS30Method" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+										<xs:element name="velocityS30MethodCombIndex" type="xs:string" minOccurs="0" maxOccurs="1"/>		<!-- This should be double? -->
+										<xs:element name="velocityS30ManualIndex" type="xs:string" minOccurs="0" maxOccurs="1"/>			<!-- This should be double? -->
+										<xs:element name="velocityS30Reference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+										<!--  **************** OTHER PARAMETERS REQUESTED BY EGD ******* -->
+										<xs:element name="velocityProfileCount" type="IntValueType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="sptLogsCount" type="IntValueType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="cptLogsCount" type="IntValueType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="boreholeLogsCount" type="IntValueType" minOccurs="0" maxOccurs="1"/>
+									</xs:sequence>
+									<xs:attribute name="publicID" type="xs:string"/>
+								</xs:complexType>
+							</xs:element>
+							<!-- **************** VELOCITY PROFILE *********************** -->
+							<xs:element name="VelocityProfile" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:choice minOccurs="0" maxOccurs="unbounded">
+											<xs:element name="layerCount" type="IntValueType" minOccurs="0" maxOccurs="1"/>
+											<xs:element name="velocityProfileData">
+												<xs:complexType>
+													<xs:sequence>
+														<xs:choice minOccurs="0" maxOccurs="unbounded">
+															<xs:element name="density" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
+															<xs:element name="velocityP" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
+															<xs:element name="velocityS" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
+															<xs:element name="layerThickness" minOccurs="0" maxOccurs="1">
+																<xs:complexType>
+																	<xs:sequence>
+																		<xs:element name="layerTopDepth" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
+																		<xs:element name="layerBottomDepth" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
+																	</xs:sequence>
+																</xs:complexType>
+															</xs:element>
+														</xs:choice>
+													</xs:sequence>
+												</xs:complexType>
+											</xs:element>
+										</xs:choice>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="velocityProfileQindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
+							<xs:element name="velocityProfileReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+						</xs:sequence>
+						<xs:attribute name="publicID" type="xs:string"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="siteDescription">
+					<xs:complexType>
+						<xs:sequence>
+							<!-- Option 1: Use a RealValueType if extensibility is needed -->
+							<xs:element name="latitude" type="RealValueType"/>		<!-- Must exist exactly one time -->
+							<xs:element name="longitude" type="RealValueType"/>	
+							<xs:element name="altitude" type="RealValueType" minOccurs="0" maxOccurs="1"/>
+							<xs:element name="minDistanceFromStation" type="RealValueType" minOccurs="0" maxOccurs="1"/>
+							<xs:element name="maxDistanceFromStation" type="RealValueType" minOccurs="0" maxOccurs="1"/>
+							<!-- Option 2: Use a simple element statement if no extra metadata is needed and don't expect to extent it in the future
+							<xs:element name="minDistanceFromStation" type="xs:double" minOccurs="0" maxOccurs="1"/>
+							<xs:element name="maxDistanceFromStation" type="xs:double" minOccurs="0" maxOccurs="1"/>
+							-->
+							<xs:element name="siteMorphology"> <!-- Is this optional ? -->
+								<xs:complexType>
+									<xs:sequence>
+										<!-- ***************** EC8 CLASS **************************    -->
+										<xs:element name="siteClassEC8" type="xs:string" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="siteClassEC8Qindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="siteClassEC8Reference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+										<!-- ***************** SEISMOLOGICAL BEDROCK DEPTH **************************    -->
+										<xs:element name="bedrockDepth" type="IntValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="bedrockDepthQindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="bedrockDepthReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+										<!-- ***************** ENGINEERING  BEDROCK DEPTH **************************    -->
+										<xs:element name="h800" type="IntValueWithUncertaintyType" minOccurs="0" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>This is not included in the QuakeML 2.0 draft</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="h800Qindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="h800Reference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+										<!-- ***************** GEOLOGY **************************    -->
+										<xs:element name="geologicalUnit" minOccurs="0" maxOccurs="1">
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:maxLength value="255"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<xs:element name="geologicalUnitQindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="geologicalMapScale" type="xs:string" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="geologicalUnitOGE" type="xs:string" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="geologicalUnitReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="morphology" type="xs:string" minOccurs="0" maxOccurs="1">
+											<xs:annotation>
+												<xs:documentation>This in not included in the QuakeML 2.0 draft</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="siteTopology">		<!-- We mean Topography ? / Is this optional ? -->
+								<xs:annotation>
+									<xs:documentation>or respective code, eg B2</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="schemeA" type="xs:string">
+											<xs:annotation>
+												<xs:documentation>This is not included in 2.0</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="schemeB" type="xs:string"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="OverallQindex" type="RealValueType" minOccurs="0" maxOccurs="1"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
