@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Functions dealing with reading and writing SiteXML.
+Functions dealing with reading SiteXML.
+Metadata is stored in a SERASite object.
 
 :copyright:
     ORFEUS, 2025
@@ -292,7 +293,7 @@ def _read_site_description(site_description_element):
         [h800_literature_source, h800_file_resource] = _read_reference(
             morphology_element, "h800Reference")
         site_description.h800 = H800(
-                value = ValueWithUncertainty(h800_value, h800_uncertainty), 
+                value = ValueWithUncertainty(h800_value, h800_uncertainty, int), 
                 quality_index = h800_qindex,
                 literature_source = h800_literature_source, 
                 file_resource = h800_file_resource)
@@ -305,7 +306,7 @@ def _read_site_description(site_description_element):
         [bdepth_literature_source, bdepth_file_resource] = _read_reference(
             morphology_element, "bedrockDepthReference")
         site_description.bedrock_depth = BedrockDepth(
-                value = ValueWithUncertainty(bdepth_value, bdepth_uncertainty),
+                value = ValueWithUncertainty(bdepth_value, bdepth_uncertainty, int),
                 quality_index = bdepth_qindex,
                 literature_source = bdepth_literature_source,
                 file_resource = bdepth_file_resource)
@@ -406,7 +407,7 @@ def _read_analysis(analysis_element, site_char_obj):
             _read_reference(analysis_element, "resonanceFrequencyReference")
 
         site_char_obj.resonance_frequency = ResonanceFrequency(
-                value = ValueWithUncertainty(rfreq_value, rfreq_uncertainty),
+                value = ValueWithUncertainty(rfreq_value, rfreq_uncertainty, float),
                 quality_index = rfreq_qindex,
                 methods = rfreq_methods,
                 literature_source = rfreq_literature_source,
@@ -424,7 +425,7 @@ def _read_analysis(analysis_element, site_char_obj):
             _read_reference(analysis_element, "velocityS30Reference")
 
         site_char_obj.velocity_s30 = VelocityS30(
-                value = ValueWithUncertainty(vs30_value, vs30_uncertainty),
+                value = ValueWithUncertainty(vs30_value, vs30_uncertainty, float),
                 quality_index = vs30_qindex,
                 methods = vs30_methods,
                 method_combined_quality_index = vs30_methods_index,
@@ -511,28 +512,33 @@ def _read_velocity_profile_data(vp_data_element, vp_data, vp_no):
         density_value = _tag2obj(density_list[layer], _ns("value"), float)
         density_uncertainty = _tag2obj(density_list[layer], _ns("uncertainty"), float)
         if density_value:
-            vp_data.density.append(ValueWithUncertainty(density_value, density_uncertainty))
+            vp_data.density.append(ValueWithUncertainty(density_value, density_uncertainty, float))
 
         velocityP_value = _tag2obj(velocityP_list[layer], _ns("value"), float)
         velocityP_uncertainty = _tag2obj(velocityP_list[layer], _ns("uncertainty"), float)
         if velocityP_value:
-            vp_data.velocityP.append(ValueWithUncertainty(velocityP_value, velocityP_uncertainty))
+            vp_data.velocityP.append(ValueWithUncertainty(velocityP_value, velocityP_uncertainty, float))
 
         velocityS_value = _tag2obj(velocityS_list[layer], _ns("value"), float)
         velocityS_uncertainty = _tag2obj(velocityS_list[layer], _ns("uncertainty"), float)
         if velocityS_value:
-            vp_data.velocityS.append(ValueWithUncertainty(velocityS_value, velocityS_uncertainty))
+            vp_data.velocityS.append(ValueWithUncertainty(velocityS_value, velocityS_uncertainty, float))
 
         [top_depth_value, top_depth_uncer] = \
             _read_value_with_uncertainty(layerThickness_list[layer], 
                                          "layerTopDepth", float)
-        vp_data.top_depth.append(ValueWithUncertainty(top_depth_value, top_depth_uncer))
+        if top_depth_value:
+            vp_data.top_depth.append(ValueWithUncertainty(top_depth_value, top_depth_uncer, float))
 
         [bottom_depth_value, bottom_depth_uncer] = \
             _read_value_with_uncertainty(layerThickness_list[layer],
                                          "layerBottomDepth", float)
         #print(top_depth_value, bottom_depth_value)
-        vp_data.bottom_depth.append(ValueWithUncertainty(bottom_depth_value, bottom_depth_uncer))
+        if bottom_depth_value:
+            vp_data.bottom_depth.append(ValueWithUncertainty(bottom_depth_value, bottom_depth_uncer, float))
+        #print(top_depth_value, bottom_depth_value)
+        #print(vp_data.top_depth[layer].value, vp_data.bottom_depth[layer].value)
+
 
 def _read_reference(parent, tag):
     reference_element = parent.find(_ns(tag))
