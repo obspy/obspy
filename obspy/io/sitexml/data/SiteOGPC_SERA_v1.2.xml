@@ -4194,7 +4194,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
           <!-- velocity profile # 29 -->
 		<VelocityProfile>
 			<layerCount>
-				<value>6</value>
+				<value>7</value>
 			</layerCount>
 			<velocityProfileData>
 				<density>
@@ -4356,7 +4356,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
          <!-- velocity profile # 30 -->
 		<VelocityProfile>
 			<layerCount>
-				<value>6</value>
+				<value>7</value>
 			</layerCount>
 			<velocityProfileData>
 				<density>
@@ -4518,7 +4518,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
          <!-- velocity profile # 31 -->
 		<VelocityProfile>
 			<layerCount>
-				<value>6</value>
+				<value>7</value>
 			</layerCount>
 			<velocityProfileData>
 				<density>
@@ -4680,7 +4680,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
          <!-- velocity profile # 32 -->
 		<VelocityProfile>
 			<layerCount>
-				<value>6</value>
+				<value>7</value>
 			</layerCount>
 			<velocityProfileData>
 				<density>
@@ -4842,7 +4842,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
         <!-- velocity profile # 33 -->
 		<VelocityProfile>
 			<layerCount>
-				<value>6</value>
+				<value>7</value>
 			</layerCount>
 			<velocityProfileData>
 				<density>
@@ -5064,7 +5064,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 			</siteClassEC8Reference>
 			<!-- Seismological bedrock depth -->			
 			<bedrockDepth>
-				<value></value>
+				<value>20</value>
 				<uncertainty></uncertainty>
 			</bedrockDepth>
 			<bedrockDepthQindex1>
@@ -5090,7 +5090,7 @@ information by the European Geotechnical Database (EGD) and by EU-SERA. -->
 			<!-- Engineering bedrock depth  -->			
 			<h800>
 				<value>10</value>
-				<uncertainty></uncertainty>
+				<uncertainty>1</uncertainty>
 			</h800>
 			<h800Qindex1>
 				<value>0.43</value>
