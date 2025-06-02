@@ -9,7 +9,6 @@ Functions dealing with reading and writing SiteXML.
 	(https://www.gnu.org/copyleft/lesser.html)
 """
 
-import inspect
 from pathlib import Path
 import re
 import warnings
@@ -17,13 +16,8 @@ import io
 
 from lxml import etree
 
-import obspy
-from obspy.io.stationxml.core import _tag2obj, _attr2obj, _tags2obj
 from obspy.core.inventory.util import ExternalReference
-from obspy.io.sitexml.core import (SERASite, SiteDescription, SiteCharacterizationParameters, SERASiteOwner, 
-								   EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency, VelocityS30, 
-								   VelocityProfile, VelocityProfileData, ValueWithUncertainty,
-								   LiteratureSource)
+from obspy.io.sitexml.core import ValueWithUncertainty
 from obspy.io.sitexml.sitexml import validate_sitexml
 
 # Define some constants for writing SiteXML files.
@@ -32,7 +26,7 @@ NAMESPACE = "http://www.orfeus-eu.org/xml/site/1"
 #READABLE_VERSIONS = ("1.0", "1.1", "1.2")
 
 def _write_sitexml(sera_site, file_or_file_object, validate=False,
-					  nsmap=None, level="response", **kwargs):
+					  nsmap=None):
 	"""
 	Writes an inventory object to a buffer.
 
@@ -62,30 +56,6 @@ def _write_sitexml(sera_site, file_or_file_object, validate=False,
 	
 	etree.SubElement(root, "schemaVersion").text = SCHEMA_VERSION
 	etree.SubElement(root, "created").text = str(sera_site.created)
-
-	"""
-	etree.SubElement(root, "Source").text = inventory.source
-	if inventory.sender:
-		etree.SubElement(root, "Sender").text = inventory.sender
-
-	# Undocumented flag that does not write the module flags. Useful for
-	# testing. It is undocumented because it should not be used publicly.
-	if kwargs.get("_suppress_module_tags", False):
-		pass
-	else:
-		etree.SubElement(root, "Module").text = inventory.module
-		etree.SubElement(root, "ModuleURI").text = inventory.module_uri
-	
-
-	if level not in ["network", "station", "channel", "response"]:
-		raise ValueError("Requested stationXML write level is unsupported.")
-
-	for network in inventory.networks:
-		_write_network(root, network, level)
-
-	# Add custom namespace tags to root element
-	_write_extra(root, inventory)
-	"""
 
 	if sera_site.site_owner:
 		_write_site_owner(root, sera_site.site_owner)
@@ -131,14 +101,14 @@ def _get_base_node_attributes(element):
 def _write_site_owner(parent, site_owner):
 
 	#attribs = _get_base_node_attributes(site_owner)
-	attribs = {"publicID": site_owner.ownerID}
+	attribs = {"publicID": site_owner.ownerID} if site_owner.ownerID else None
 	site_owner_elem = etree.SubElement(parent, "siteOwner", attribs)
 	_obj2tag(site_owner_elem, "codeName", site_owner.owner_codename)
 	_obj2tag(site_owner_elem, "fullName", site_owner.owner_fullname)
 	
 	contact_elem = etree.SubElement(site_owner_elem, "contact")
 
-	attribs = {"personID": site_owner.personID}
+	attribs = {"personID": site_owner.personID} if site_owner.personID else None
 	person_elem = etree.SubElement(contact_elem, "person", attribs)
 	_obj2tag(person_elem, "firstname", site_owner.person_firstname)
 	_obj2tag(person_elem, "lastname", site_owner.person_lastname)
@@ -201,11 +171,11 @@ def _write_site_description(parent, site_description):
 
 def _write_site_characterization(parent, site_characterization):
 
-	attribs = {"publicID": site_characterization.publicID}
+	attribs = {"publicID": site_characterization.publicID} if site_characterization.publicID else None
 	site_characterization_elem = etree.SubElement(parent, 
 						"siteCharacterizationParameters", attribs)
 	
-	attribs = {"publicID": site_characterization.analysis_publicID}
+	attribs = {"publicID": site_characterization.analysis_publicID} if site_characterization.analysis_publicID else None
 	analysis_elem = etree.SubElement(site_characterization_elem, "Analysis", attribs)
 
 	_write_site_indicator(analysis_elem, 
@@ -271,28 +241,36 @@ def _write_velocity_profile(parent, vp_obj):
 		# και διαχείριση της περίπτωσης που
 		# το layer_count δεν είναι ίσο με το μέγεθος της λίστας των μεγεθών.
 		# for i in range(vp_data.layer_count):
-		# Important: We need to have only one loope!!!
+		# Important: We need to have only one loop!!!
 		
-		for i in range(len(vp_data.density)):
-			_write_value_with_uncertainty(vp_data_elem, 
+		for i in range(0, vp_data.layer_count):
+			if len(vp_data.density) > i:
+				_write_value_with_uncertainty(vp_data_elem, 
 								  "density", 
 								  vp_data.density[i])
-		for i in range(len(vp_data.velocityP)):	
-			_write_value_with_uncertainty(vp_data_elem, 
+			if len(vp_data.velocityP) > i:
+				_write_value_with_uncertainty(vp_data_elem, 
 								  "velocityP", 
 								  vp_data.velocityP[i])
-		for i in range(len(vp_data.velocityS)):	
-			_write_value_with_uncertainty(vp_data_elem, 
+			if len(vp_data.velocityS) > i:
+				_write_value_with_uncertainty(vp_data_elem, 
 								  "velocityS", 
 								  vp_data.velocityS[i])
-		for i in range(len(vp_data.top_depth)):	
-			_write_value_with_uncertainty(vp_data_elem, 
+			if len(vp_data.top_depth) > i:
+				_write_value_with_uncertainty(vp_data_elem, 
 								  "layerTopDepth", 
 								  vp_data.top_depth[i])
-		for i in range(len(vp_data.bottom_depth)):	
-			_write_value_with_uncertainty(vp_data_elem, 
+			if len(vp_data.bottom_depth) > i:
+				_write_value_with_uncertainty(vp_data_elem, 
 								  "layerBottomDepth", 
 								  vp_data.bottom_depth[i])
+		"""
+		for i in range(len(vp_data.density)):
+		for i in range(len(vp_data.velocityP)):	
+		for i in range(len(vp_data.velocityS)):	
+		for i in range(len(vp_data.top_depth)):	
+		for i in range(len(vp_data.bottom_depth)):	
+		"""
 			#_obj2tag(vp_data_elem, "density", vp_data.density[i])
 	
 
@@ -381,7 +359,7 @@ def _obj2tag(parent, tag_name, tag_value):
 	"""
 	if tag_value:
 		if isinstance(tag_value, float):
-			text = _float_to_str(tag_value)
+			text = str(tag_value)
 		else:
 			text = str(tag_value)
 		etree.SubElement(parent, tag_name).text = text
