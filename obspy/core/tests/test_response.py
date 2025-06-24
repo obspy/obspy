@@ -110,7 +110,7 @@ class TestResponse:
             output_units='V',
             normalization_frequency=0.02,
         )
-        # Test for radians/second — use normalization_factor=1.0 (default)
+        # (1) Test for radians/second — use normalization_factor=1.0 (default)
         paz_sts1_rads = PolesZerosResponseStage(
             pz_transfer_function_type='LAPLACE (RADIANS/SECOND)',
             poles=[
@@ -125,7 +125,7 @@ class TestResponse:
         np.testing.assert_allclose(  # Calculation is run below
             paz_sts1_rads.calculate_normalization_factor(), 3948.58, rtol=1e-5
         )
-        # Test for hertz — use normalization_factor=None, triggers calculation
+        # (2) Test for hertz — use normalization_factor=None to calculate it
         paz_sts1_hz = PolesZerosResponseStage(
             pz_transfer_function_type='LAPLACE (HERTZ)',
             poles=[
@@ -141,6 +141,15 @@ class TestResponse:
         np.testing.assert_allclose(  # Just accessing the calculated attribute
             paz_sts1_hz.normalization_factor, 100.01869, rtol=1e-5
         )
+        # (3) Test for an unsupported transfer function type (use dummy paz)
+        paz_dummy = PolesZerosResponseStage(
+            pz_transfer_function_type='DIGITAL (Z-TRANSFORM)',
+            poles=[],
+            zeros=[],
+            **_paz_sts1_kwargs,
+        )
+        with pytest.raises(NotImplementedError):
+            paz_dummy.calculate_normalization_factor()
 
     def test_pitick2latex(self):
         assert _pitick2latex(3 * pi / 2) == r'$\frac{3\pi}{2}$'
