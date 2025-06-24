@@ -95,6 +95,53 @@ class TestResponse:
                 expected = [seed_response[i_] for i_ in indices]
                 np.testing.assert_allclose(got, expected, rtol=1E-5)
 
+    def test_calculate_normalization_factor(self):
+        """
+        Test calculation of the normalization factor for pole–zero stages given in both
+        radians/second and hertz. The test values "A0 normalization" are taken from:
+        https://docs.fdsn.org/projects/stationxml/en/latest/response.html#stage-1-the-analog-sensor
+        """
+        # Streckeisen STS-1 poles and zeros from:
+        # https://docs.fdsn.org/projects/stationxml/en/latest/response.html#stage-1-the-analog-sensor
+        _paz_sts1_kwargs = dict(
+            stage_sequence_number=1,
+            stage_gain=2400,
+            stage_gain_frequency=0.02,
+            input_units='M/S',
+            output_units='V',
+            normalization_frequency=0.02,
+        )
+        # Test for radians/second
+        paz_sts1_rads = PolesZerosResponseStage(
+            pz_transfer_function_type='LAPLACE (RADIANS/SECOND)',
+            poles=[
+                -0.01234 + 0.01234j,
+                -0.01234 - 0.01234j,
+                -39.18 + 49.12j,
+                -39.18 - 49.12j,
+            ],
+            zeros=[0j, 0j],
+            **_paz_sts1_kwargs,
+        )
+        np.testing.assert_allclose(
+            paz_sts1_rads.calculate_normalization_factor(), 3948.58  # [rad/s]
+        )
+        # Test for hertz
+        paz_sts1_hz = PolesZerosResponseStage(
+            pz_transfer_function_type='LAPLACE (HERTZ)',
+            poles=[
+                -0.0019639 + 0.0019639j,
+                -0.0019639 - 0.0019639j,
+                -6.2357 + 7.8177j,
+                -6.2357 - 7.8177j,
+            ],
+            zeros=[0j, 0j],
+            **_paz_sts1_kwargs,
+        )
+        np.testing.assert_allclose(
+            paz_sts1_hz.calculate_normalization_factor(), 100.01869  # [Hz]
+        )
+
     def test_pitick2latex(self):
         assert _pitick2latex(3 * pi / 2) == r'$\frac{3\pi}{2}$'
         assert _pitick2latex(2 * pi / 2) == r'$\pi$'
