@@ -97,8 +97,9 @@ class TestResponse:
 
     def test_calculate_normalization_factor(self):
         """
-        Test calculation of the normalization factor for pole–zero stages given in both
-        radians/second and hertz. The test values "A0 normalization" are taken from:
+        Test calculation of the normalization factor for pole–zero stages given
+        in both radians/second and hertz. The test values "A0 normalization"
+        are taken from:
         https://docs.fdsn.org/projects/stationxml/en/latest/response.html#stage-1-the-analog-sensor
         """
         # Streckeisen STS-1 poles and zeros from:

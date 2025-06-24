@@ -204,8 +204,8 @@ class PolesZerosResponseStage(ResponseStage):
     :type poles: list[complex]
     :param poles: All poles of the stage.
     :type normalization_factor: float or None, optional
-    :param normalization_factor: Normalization factor. If None, it will be calculated
-        from the poles and zeros.
+    :param normalization_factor: Normalization factor. If None, it will be
+        calculated from the poles and zeros.
     """
     def __init__(self, stage_sequence_number, stage_gain,
                  stage_gain_frequency, input_units, output_units,
@@ -354,8 +354,9 @@ class PolesZerosResponseStage(ResponseStage):
 
     def calculate_normalization_factor(self):
         """
-        Calculate the normalization factor, which normalizes the pole–zero expansion to
-        unity at the normalization frequency, from the response stage poles and zeros.
+        Calculate the normalization factor, which normalizes the pole–zero
+        expansion to unity at the normalization frequency, from the response
+        stage poles and zeros.
 
         More reading here:
         https://docs.fdsn.org/projects/stationxml/en/latest/response.html#poles-and-zeros
@@ -372,7 +373,10 @@ class PolesZerosResponseStage(ResponseStage):
                 f'"{self.pz_transfer_function_type}"'
             )
             raise NotImplementedError(msg)
-        return abs((s - np.array(self.poles)).prod() / (s - np.array(self.zeros)).prod())
+        return abs(
+            (s - np.array(self.poles)).prod() /
+            (s - np.array(self.zeros)).prod()
+        )
 
 
 class CoefficientsTypeResponseStage(ResponseStage):
