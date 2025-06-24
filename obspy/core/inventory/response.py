@@ -348,6 +348,26 @@ class PolesZerosResponseStage(ResponseStage):
                    f"'LAPLACE (RADIANS/SECOND)'")
             raise ValueError(msg)
 
+    def calculate_normalization_factor(self):
+        """
+        Calculate the normalization factor, which normalizes the pole–zero expansion to
+        unity at the normalization frequency, from the response stage poles and zeros.
+
+        More reading here:
+        https://docs.fdsn.org/projects/stationxml/en/latest/response.html#poles-and-zeros
+        """
+        if self.pz_transfer_function_type == 'LAPLACE (RADIANS/SECOND)':
+            s = 2j * np.pi * self.normalization_frequency
+        elif self.pz_transfer_function_type == 'LAPLACE (HERTZ)':
+            s = 1j * self.normalization_frequency
+        else:
+            msg = (
+                'Cannot calculate normalization factor for type '
+                f'"{self.pz_transfer_function_type}"'
+            )
+            raise NotImplementedError(msg)
+        return abs((s - np.array(self.poles)).prod() / (s - np.array(self.zeros)).prod())
+
 
 class CoefficientsTypeResponseStage(ResponseStage):
     """
