@@ -98,12 +98,10 @@ class TestResponse:
     def test_calculate_normalization_factor(self):
         """
         Test calculation of the normalization factor for pole–zero stages given
-        in both radians/second and hertz. The test values "A0 normalization"
-        are taken from:
+        in both radians/second and hertz. Streckeisen STS-1 poles and zeros and
+        baseline values ("A0 normalization") are taken from:
         https://docs.fdsn.org/projects/stationxml/en/latest/response.html#stage-1-the-analog-sensor
         """
-        # Streckeisen STS-1 poles and zeros from:
-        # https://docs.fdsn.org/projects/stationxml/en/latest/response.html#stage-1-the-analog-sensor
         _paz_sts1_kwargs = dict(
             stage_sequence_number=1,
             stage_gain=2400,
@@ -112,7 +110,7 @@ class TestResponse:
             output_units='V',
             normalization_frequency=0.02,
         )
-        # Test for radians/second
+        # Test for radians/second — use normalization_factor=1.0 (default)
         paz_sts1_rads = PolesZerosResponseStage(
             pz_transfer_function_type='LAPLACE (RADIANS/SECOND)',
             poles=[
@@ -124,10 +122,10 @@ class TestResponse:
             zeros=[0j, 0j],
             **_paz_sts1_kwargs,
         )
-        np.testing.assert_allclose(
+        np.testing.assert_allclose(  # Calculation is run below
             paz_sts1_rads.calculate_normalization_factor(), 3948.58, rtol=1e-5
         )
-        # Test for hertz
+        # Test for hertz — use normalization_factor=None, which triggers calculation
         paz_sts1_hz = PolesZerosResponseStage(
             pz_transfer_function_type='LAPLACE (HERTZ)',
             poles=[
@@ -137,10 +135,11 @@ class TestResponse:
                 -6.2357 - 7.8177j,
             ],
             zeros=[0j, 0j],
+            normalization_factor=None,  # Will be calculated at initialization time
             **_paz_sts1_kwargs,
         )
-        np.testing.assert_allclose(
-            paz_sts1_hz.calculate_normalization_factor(), 100.01869, rtol=1e-5
+        np.testing.assert_allclose(  # Just accessing the calculated attribute below
+            paz_sts1_hz.normalization_factor, 100.01869, rtol=1e-5
         )
 
     def test_pitick2latex(self):
