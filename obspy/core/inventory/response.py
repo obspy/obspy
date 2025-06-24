@@ -354,12 +354,15 @@ class PolesZerosResponseStage(ResponseStage):
 
     def calculate_normalization_factor(self):
         """
-        Calculate the normalization factor, which normalizes the pole–zero
-        expansion to unity at the normalization frequency, from the response
-        stage poles and zeros.
+        Calculate normalization factor from response stage poles and zeros.
 
-        More reading here:
+        This factor normalizes the pole–zero expansion to unity at the
+        normalization frequency. More reading here:
         https://docs.fdsn.org/projects/stationxml/en/latest/response.html#poles-and-zeros
+
+        :returns: The calculated normalization factor (returns None if the
+            response stage normalization frequency is None)
+        :rtype: float or None
         """
         if not self.normalization_frequency:
             return None
