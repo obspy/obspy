@@ -125,7 +125,7 @@ class TestResponse:
         np.testing.assert_allclose(  # Calculation is run below
             paz_sts1_rads.calculate_normalization_factor(), 3948.58, rtol=1e-5
         )
-        # Test for hertz — use normalization_factor=None, which triggers calculation
+        # Test for hertz — use normalization_factor=None, triggers calculation
         paz_sts1_hz = PolesZerosResponseStage(
             pz_transfer_function_type='LAPLACE (HERTZ)',
             poles=[
@@ -135,10 +135,10 @@ class TestResponse:
                 -6.2357 - 7.8177j,
             ],
             zeros=[0j, 0j],
-            normalization_factor=None,  # Will be calculated at initialization time
+            normalization_factor=None,  # Calculated at initialization time
             **_paz_sts1_kwargs,
         )
-        np.testing.assert_allclose(  # Just accessing the calculated attribute below
+        np.testing.assert_allclose(  # Just accessing the calculated attribute
             paz_sts1_hz.normalization_factor, 100.01869, rtol=1e-5
         )
 
