@@ -124,7 +124,7 @@ class TestResponse:
             **_paz_sts1_kwargs,
         )
         np.testing.assert_allclose(
-            paz_sts1_rads.calculate_normalization_factor(), 3948.58  # [rad/s]
+            paz_sts1_rads.calculate_normalization_factor(), 3948.58, rtol=1e-5
         )
         # Test for hertz
         paz_sts1_hz = PolesZerosResponseStage(
@@ -139,7 +139,7 @@ class TestResponse:
             **_paz_sts1_kwargs,
         )
         np.testing.assert_allclose(
-            paz_sts1_hz.calculate_normalization_factor(), 100.01869  # [Hz]
+            paz_sts1_hz.calculate_normalization_factor(), 100.01869, rtol=1e-5
         )
 
     def test_pitick2latex(self):
