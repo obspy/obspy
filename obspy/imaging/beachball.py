@@ -69,7 +69,7 @@ def mopad_fallback(func, *args, **kwargs):
 @mopad_fallback
 def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
-          zorder=100, axes=None):
+          plot_zerotrace=False, zorder=100, axes=None):
     """
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection).
@@ -106,6 +106,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to ``100``.
     :param nofill: Do not fill the beach ball, but only plot the planes.
+    :param plot_zerotrace: If True, ignore the isotropic component. Default is False.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
     :type axes: :class:`matplotlib.axes.Axes`
@@ -146,7 +147,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
             colors, p = plot_dc(np1, size, xy=xy, width=width)
         else:
             colors, p = plot_mt(t, n, p, size,
-                                plot_zerotrace=True, xy=xy, width=width)
+                                plot_zerotrace=plot_zerotrace, xy=xy, width=width)
             plot_dc_used = False
     else:
         colors, p = plot_dc(np1, size=size, xy=xy, width=width)
@@ -194,7 +195,8 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
 def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
               alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
-              zorder=100, outfile=None, format=None, fig=None):
+              plot_zerotrace=False,zorder=100, outfile=None, format=None,
+              fig=None):
     """
     Draws a beach ball diagram of an earthquake focal mechanism.
 
@@ -226,6 +228,7 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to ``100``.
     :param nofill: Do not fill the beach ball, but only plot the planes.
+    :param plot_zerotrace: If True, ignore the isotropic component. Default is False.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
     :param outfile: Output file string. Also used to automatically
@@ -259,7 +262,8 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     collection = beach(fm, linewidth=linewidth, facecolor=facecolor,
                        edgecolor=edgecolor, bgcolor=bgcolor,
                        alpha=alpha, nofill=nofill, xy=xy,
-                       width=plot_width, size=size, zorder=zorder)
+                       width=plot_width, size=size, zorder=zorder,
+                       plot_zerotrace=plot_zerotrace)
     ax.add_collection(collection)
 
     ax.autoscale_view(tight=False, scalex=True, scaley=True)
@@ -279,7 +283,7 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         return fig
 
 
-def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
+def plot_mt(T, N, P, size=200, plot_zerotrace=False,  # noqa
             x0=0, y0=0, xy=(0, 0), width=200):
     """
     Uses a principal axis T, N and P to draw a beach ball plot.
@@ -351,34 +355,58 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
             colors.append('w')
         return colors, collect
 
-    if np.fabs(v[0]) >= np.fabs(v[2]):
-        d = 0
-        m = 2
-    else:
-        d = 2
-        m = 0
-
     if (plot_zerotrace):
         vi = 0.
 
+    # Test to choose the dominant eigenvalue
+    isotestv0 = 0
+    isotestv2 = 0
+
+    for ii in range(0,360):
+        fir = ii * D2R
+
+        f = -v[1] / v[0]
+        iso = vi / v[0]
+        with np.errstate(divide='ignore'):
+            s2alphan = (2. + 2. * iso) / \
+            float(3. + (1. - 2. * f) * np.cos(2. * fir))
+        if s2alphan > 1.:
+            isotestv0 += 1
+
+        f = -v[1] / v[2]
+        iso = vi / v[2]
+        with np.errstate(divide='ignore'):
+            s2alphan = (2. + 2. * iso) / \
+            float(3. + (1. - 2. * f) * np.cos(2. * fir))
+        if s2alphan > 1.:
+            isotestv2 += 1
+
+    if isotestv0 == 0:
+        d = 0
+        m = 2
+    elif isotestv2 == 0:
+        d = 2
+        m = 0
+        
     f = -v[1] / float(v[d])
     iso = vi / float(v[d])
-
+    
     # Cliff Frohlich, Seismological Research letters,
     # Vol 7, Number 1, January-February, 1996
     # Unless the isotropic parameter lies in the range
-    # between -1 and 1 - f there will be no nodes whatsoever
+    # between -1 and 1 - f there will be no (P) nodes whatsoever
 
-    if iso < -1:
-        cir = patches.Ellipse(xy, width=width[0], height=width[1])
-        collect.append(cir)
-        colors.append('w')
-        return colors, collect
-    elif iso > 1 - f:
-        cir = patches.Ellipse(xy, width=width[0], height=width[1])
-        collect.append(cir)
-        colors.append('b')
-        return colors, collect
+    if iso <= -1 or iso >= 1 - f:
+        if vi < 0:
+            cir = patches.Ellipse(xy, width=width[0], height=width[1])
+            collect.append(cir)
+            colors.append('w')
+            return colors, collect
+        if vi > 0:
+            cir = patches.Ellipse(xy, width=width[0], height=width[1])
+            collect.append(cir)
+            colors.append('b')
+            return colors, collect
 
     spd = np.sin(p[d] * D2R)
     cpd = np.cos(p[d] * D2R)
@@ -395,7 +423,8 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
 
     for i in range(0, 360):
         fir = i * D2R
-        s2alphan = (2. + 2. * iso) / \
+        with np.errstate(divide='ignore'):
+            s2alphan = (2. + 2. * iso) / \
             float(3. + (1. - 2. * f) * np.cos(2. * fir))
         if s2alphan > 1.:
             big_iso += 1
@@ -435,7 +464,8 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
                 y[i] = y0 + radius_size * r * co
                 azp = az
             else:
-                if np.fabs(np.fabs(az - azp) - np.pi) < D2R * 10.:
+                # If there is a big enough gap between points, start a new segment
+                if np.fabs(np.fabs(az - azp) - np.pi) < D2R * 10. and takeoff > 80. * D2R:
                     azi[n][1] = azp
                     n += 1
                     azi[n][0] = az
@@ -458,8 +488,7 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
                     j3 += 1
                 azp = az
     azi[n][1] = az
-
-    if v[1] < 0.:
+    if N.val < 0:
         rgb1 = 'b'
         rgb2 = 'w'
     else:
@@ -469,11 +498,29 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
     cir = patches.Ellipse(xy, width=width[0], height=width[1])
     collect.append(cir)
     colors.append(rgb2)
+
     if n == 0:
         collect.append(xy2patch(x[0:360], y[0:360], res, xy))
         colors.append(rgb1)
         return colors, collect
     elif n == 1:
+        if big_iso > 0:
+            for i in range(0, j2):
+                xp1[i] = x[i]
+                yp1[i] = y[i]
+            for ii in range(0, j):
+                xp1[i] = x2[ii]
+                i += 1
+                yp1[i] = y2[ii]
+            ii = j2 - 1
+            while ii >= 0:
+                xp1[i] = x2[ii]
+                i += 1
+                yp1[i] = y2[ii]
+                ii -= 1
+            collect.append(xy2patch(xp1[0:i], yp1[0:i], res, xy))
+            colors.append(rgb1)
+            return colors, collect
         for i in range(0, j):
             xp1[i] = x[i]
             yp1[i] = y[i]
@@ -537,7 +584,7 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
             xp1[i] = x[ii]
             i += 1
             yp1[i] = y[ii]
-        if big_iso:
+        if big_iso > 0:
             ii = j2 - 1
             while ii >= 0:
                 xp1[i] = x2[ii]
