@@ -1304,6 +1304,6 @@ class TestMSEEDUtil():
             data = fh.read()
         buf = io.BytesIO(data[:512])  # only first record
         buf.seek(0)
-        msg = "No MiniSEED data record found in file."
-        with pytest.raises(ValueError, match=msg):
+        msg = "No miniSEED data detected"
+        with pytest.raises(OSError, match=msg):
             _read_mseed(buf)

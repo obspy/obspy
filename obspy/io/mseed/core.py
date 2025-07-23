@@ -4,7 +4,9 @@ MSEED bindings to ObsPy core module.
 """
 import ctypes as C  # NOQA
 import io
+import sys
 import os
+import struct
 import traceback
 import warnings
 from pathlib import Path
@@ -13,6 +15,7 @@ from struct import pack
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core.util import AttribDict
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import NATIVE_BYTEORDER
 from . import (util, InternalMSEEDError, ObsPyMSEEDFilesizeTooSmallError,
@@ -566,12 +569,45 @@ def extract_mseed_metadata(record, stats):
     if hasattr(record, 'samplecnt'):
         stats.npts = record.samplecnt
 
-    # 3. Sample encoding
+    # # 3. Sample encoding
     if hasattr(record, 'sampletype'):
         stats.mseed['encoding'] = record.sampletype
 
-    # 4. Byte order (usually big-endian for MSEED) TODO IT's NOT THE CASE for all files!!!
-    stats.mseed['byteorder'] = '>'  # Default to big-endian for MSEED
+    # 4. Byte order (extracted from MSEED record)
+    try:
+        # Extract byte order from the actual MSEED record
+        # The record object should have byte order information
+        if hasattr(record, 'byteorder'):
+            stats.mseed['byteorder'] = record.byteorder
+        elif hasattr(record, 'byte_order'):
+            stats.mseed['byteorder'] = record.byte_order
+        elif hasattr(record, 'header') and hasattr(record.header, 'byteorder'):
+            stats.mseed['byteorder'] = record.header.byteorder
+        else:
+            # Try to determine from record data/header structure
+            # If record has raw data, examine the header bytes directly
+            if hasattr(record, 'data') and len(record.data) >= 22:
+                from struct import unpack
+
+                # Check year field in MSEED header (bytes 20-21)
+                year_be = unpack('>H', record.data[20:22])[0]  # big-endian
+                year_le = unpack('<H', record.data[20:22])[0]  # little-endian
+
+                # The year should be reasonable (1970-2070 range)
+                if 1970 <= year_be <= 2070:
+                    stats.mseed['byteorder'] = '>'
+                elif 1970 <= year_le <= 2070:
+                    stats.mseed['byteorder'] = '<'
+                else:
+                    # Default fallback
+                    stats.mseed['byteorder'] = '>'
+            else:
+                # Final fallback
+                stats.mseed['byteorder'] = '>'
+
+    except (AttributeError, IndexError, struct.error):
+        # Fallback to big-endian if detection fails
+        stats.mseed['byteorder'] = '>'  # Default to big-endian for MSEED
 
     # 5. Data quality indicator
     if hasattr(record, 'quality'):
@@ -677,7 +713,28 @@ def extract_mseed_metadata(record, stats):
     return stats
 
 
-def _read_mseed(filename , starttime=None, endtime=None, headonly=False,
+def _matches_sourcename(sourceid, sourcename):
+    """Check if sourceid matches the sourcename pattern."""
+    if sourcename is None:
+        return True
+
+    # Convert FDSN format to standard SEED format for comparison
+    if sourceid.startswith("FDSN:"):
+        parts = sourceid[5:].split('_')
+        if len(parts) >= 4:
+            seed_id = f"{parts[0]}.{parts[1]}.{parts[2]}.{parts[3]}{parts[4]}{parts[5]}"
+        else:
+            seed_id = sourceid
+    else:
+        # Convert underscores to dots
+        seed_id = sourceid.replace('_', '.')
+
+    # Use fnmatch for wildcard matching
+    import fnmatch
+    return fnmatch.fnmatch(seed_id, sourcename)
+
+
+def _read_mseed(filename, starttime=None, endtime=None, headonly=False,
                 sourcename=None, reclen=None, details=False,
                 header_byteorder=None, verbose=None, **kwargs):
     """
@@ -690,28 +747,108 @@ def _read_mseed(filename , starttime=None, endtime=None, headonly=False,
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: An ObsPy Stream object containing the data.
     """
-    # print(dir(filename))
+    # Enhanced validation with proper error types
+    if reclen is not None:
+        if not isinstance(reclen, int) or reclen not in VALID_RECORD_LENGTHS:
+            import warnings
+            warnings.warn('Invalid record length. Autodetection will be used.')
+            reclen = None
+
+    # Process and normalize header_byteorder parameter
+    processed_header_byteorder = None
+    if header_byteorder is not None:
+        if header_byteorder == "=":
+            processed_header_byteorder = NATIVE_BYTEORDER
+        elif header_byteorder in [0, "0", "<", "little"]:
+            processed_header_byteorder = "<"
+        elif header_byteorder in [1, "1", ">", "big"]:
+            processed_header_byteorder = ">"
+        else:
+            import warnings
+            warnings.warn(f"Invalid header_byteorder '{header_byteorder}', using autodetection")
+            processed_header_byteorder = None
+
+    try:
+        # More robust file size detection with better error handling
+        if hasattr(filename, "read"):
+            # File-like object - handle various types more safely
+            cur_pos = filename.tell()
+            try:
+                if hasattr(filename, "getbuffer"):  # BytesIO
+                    length = filename.getbuffer().nbytes - cur_pos
+                elif hasattr(filename, "fileno"):  # Real file objects
+                    file_stat = os.fstat(filename.fileno())
+                    length = file_stat.st_size - cur_pos
+                else:  # Fallback for other file-like objects
+                    filename.seek(0, 2)
+                    length = filename.tell() - cur_pos
+                    filename.seek(cur_pos, 0)
+            except (OSError, IOError, AttributeError) as e:
+                # If we can't determine size, let the library handle it
+                length = None
+        else:
+            # File path - more robust path handling
+            try:
+                if isinstance(filename, (str, bytes, os.PathLike)):
+                    length = os.path.getsize(filename)
+                else:
+                    raise TypeError(f"Invalid filename type: {type(filename)}")
+            except (OSError, IOError) as e:
+                raise IOError(f"Cannot access file {filename}: {str(e)}")
+
+        # Only check size if we could determine it
+        if length is not None:
+            if length < 128:
+                msg = ("The smallest possible mini-SEED record is made up of 128 "
+                       "bytes. The passed buffer or file contains only %i." % length)
+                raise ObsPyMSEEDFilesizeTooSmallError(msg)
+
+    except (OSError, IOError):
+        raise
+    except Exception as e:
+        raise IOError(f"Error accessing file {filename}: {str(e)}")
+
     # Handle different types of input
     temp_file = None
+    input_filename = None
+
     try:
-        # Get appropriate input file for mseedlib
         input_filename = _get_mseed_input_file(filename)
 
-        # Use MSTraceList to read the file
-        mstracelist = MSTraceList(input_filename, unpack_data=True, record_list=True,)
+        # Add validation that the file was properly created/accessed
+        if not input_filename or not os.path.exists(input_filename):
+            raise IOError("Failed to prepare input file for reading")
+
+        # Initialize with better error context
+        try:
+            mstracelist = MSTraceList(input_filename, unpack_data=not headonly, record_list=True)
+        except Exception as e:
+            # More specific error classification
+            error_msg = str(e).lower()
+            if any(phrase in error_msg for phrase in ['not a valid', 'invalid format', 'corrupt']):
+                raise ObsPyMSEEDError('Not a valid (Mini-)SEED file')
+            elif 'permission' in error_msg or 'access' in error_msg:
+                raise IOError(f"Permission denied accessing file: {filename}")
+            elif 'memory' in error_msg or 'allocation' in error_msg:
+                raise MemoryError(f"Insufficient memory to read file: {filename}")
+            elif 'No miniSEED data detected' in error_msg:
+                raise IOError(f"No MiniSEED data record found in file. {filename}")
+            else:
+                raise IOError(f"Error reading MSEED file: {str(e)}")
+
+    except (ObsPyMSEEDError, IOError, MemoryError):
+        raise
     except Exception as e:
-        raise IOError(f"Error reading MSEED file: {str(e)}")
+        raise IOError(f"Unexpected error reading MSEED file {filename}: {str(e)}")
 
-
-    # print("*"*50)
-    # print(filename)
     traces = []
 
     # Iterate through each trace ID in the trace list
     for traceid in mstracelist.traceids():
         # Parse network, station, location, channel from sourceid
-        # FDSN:XX_TEST__B_S_0 format or other sourceid formats
         sourceid = traceid.sid.decode("utf8")
+        if not _matches_sourcename(sourceid, sourcename):
+            continue
 
         # Try to parse FDSN ID format: FDSN:NET_STA_LOC_CHAN
         if sourceid.startswith("FDSN:"):
@@ -735,11 +872,9 @@ def _read_mseed(filename , starttime=None, endtime=None, headonly=False,
             else:
                 # Default when can't parse
                 network, station, location, channel = "", "", "", sourceid
-        # print('traceid', traceid)
-        # Process each segment for this trace ID
 
+        # Process each segment for this trace ID
         for segment in traceid.segments():
-            # print(segment)
             # Create Stats object
             stats = Stats()
             stats.network = network
@@ -748,32 +883,85 @@ def _read_mseed(filename , starttime=None, endtime=None, headonly=False,
             stats.channel = channel
 
             # Set timing information - convert from nanoseconds to UTCDateTime
-            # mseedlib uses nanoseconds since Unix epoch
             start_ns = segment.starttime
             start_sec = start_ns / 1_000_000_000
             stats.starttime = UTCDateTime(start_sec)
 
-
             # Set sampling rate
             stats.sampling_rate = segment.samprate
 
-            i = 0
-            for rec in segment.recordlist.records():
-                stats = extract_mseed_metadata(rec.msr, stats)
-                # Mimic previous behaviour: (missing case 33!)
-                stats.mseed["encoding"] = ENCODINGS[rec.msr.encoding][0]
+            # Initialize mseed stats with defaults
+            stats.mseed = AttribDict()
 
-                # Would be good to have the real name as stored in libmseed?
-                # stats.mseed["encodingstr"] = rec.msr.encoding_str()
-                i += 1
-            stats.mseed["number_of_records"] = i
-            # dataquality flags have been REMOVED from the data model
-            # breakpoint()
-            # stats.mseed["dataquality"] = "R"
-            # stats.mseed["filesize"] = 8192
-            with open(input_filename, 'rb') as f:
-                f.seek(0, 2)
-                stats.mseed["filesize"] = (f.tell()-0)
+            # Process records to extract metadata and determine byteorder
+            record_count = 0
+            detected_byteorder = None
+            record_length = None
+
+            for rec in segment.recordlist.records():
+                record_count += 1
+
+                # Extract metadata from MSRecord
+                stats = extract_mseed_metadata(rec.msr, stats)
+
+                # Get byteorder from the first record
+                if record_count == 1:
+                    # Try to get byteorder from MSRecord structure
+                    if hasattr(rec.msr, 'byteorder'):
+                        # MSRecord byteorder: 0 = little-endian, 1 = big-endian
+                        detected_byteorder = '<' if rec.msr.byteorder == 0 else '>'
+                    elif hasattr(rec.msr, 'Blkt1000'):
+                        # Extract from Blockette 1000 if available
+                        blkt1000 = rec.msr.Blkt1000
+                        if blkt1000:
+                            # Blockette 1000 word order: 0 = little, 1 = big
+                            word_order = getattr(blkt1000, 'word_order', None)
+                            if word_order is not None:
+                                detected_byteorder = '<' if word_order == 0 else '>'
+
+                    # Get record length from first record
+                    if hasattr(rec.msr, 'reclen'):
+                        record_length = rec.msr.reclen
+
+                # Validate encoding
+                encoding_code = rec.msr.encoding
+                if encoding_code not in ENCODINGS:
+                    if encoding_code in UNSUPPORTED_ENCODINGS:
+                        msg = ("Encoding '%s' (%i) is not supported by ObsPy. Please send "
+                               "the file to the ObsPy developers so that we can add "
+                               "support for it.") % (UNSUPPORTED_ENCODINGS[encoding_code], encoding_code)
+                        raise ValueError(msg)
+                    else:
+                        msg = "Encoding '%i' is not a valid MiniSEED encoding." % encoding_code
+                        raise ValueError(msg)
+
+                # Store encoding from first record
+                if record_length:
+                    stats.mseed["encoding"] = ENCODINGS[rec.msr.encoding][0]
+
+            # Set MSeed metadata
+            stats.mseed["number_of_records"] = record_count
+
+            # Determine final byteorder to use
+            # Handle byteorder precedence: user specified takes priority
+            if processed_header_byteorder is not None:
+                # User specified byteorder overrides detected one
+                stats.mseed["byteorder"] = processed_header_byteorder
+            # If no byteorder was set by extract_mseed_metadata, set a default
+            elif "byteorder" not in stats.mseed:
+                stats.mseed["byteorder"] = NATIVE_BYTEORDER
+
+            # Store record length if detected
+            if record_length is not None:
+                stats.mseed["record_length"] = record_length
+
+            # Get file size
+            try:
+                with open(input_filename, 'rb') as f:
+                    f.seek(0, 2)
+                    stats.mseed["filesize"] = f.tell()
+            except Exception:
+                stats.mseed["filesize"] = 0
 
             # If headonly, create an empty trace
             if headonly:
@@ -785,29 +973,67 @@ def _read_mseed(filename , starttime=None, endtime=None, headonly=False,
             # Get the data samples
             if segment.numsamples:
                 data = np.array(segment.datasamples)
-
             else:
                 # If no data samples but we know the count, create zeros
                 sample_count = segment.samplecnt if hasattr(segment, 'samplecnt') else 0
                 data = np.zeros(sample_count)
 
+            # Handle data byteorder properly
+            if len(data) > 0:
+                # Get the original data byteorder
+                original_data_byteorder = data.dtype.byteorder
+                if original_data_byteorder == '=':
+                    original_data_byteorder = NATIVE_BYTEORDER
+
+                # If user specified a byteorder that differs from data, we may need to swap
+                if processed_header_byteorder is not None and processed_header_byteorder != original_data_byteorder:
+                    # Convert data to the requested byteorder
+                    if processed_header_byteorder == '<' and original_data_byteorder == '>':
+                        data = data.byteswap().newbyteorder('<')
+                    elif processed_header_byteorder == '>' and original_data_byteorder == '<':
+                        data = data.byteswap().newbyteorder('>')
+
+                # Always ensure data is in native byte order for processing
+                if data.dtype.byteorder not in ('=', NATIVE_BYTEORDER):
+                    data = data.astype(data.dtype.newbyteorder('='))
+
             trace = Trace(data=data, header=stats)
-            trace.stats.mseed['byteorder'] = trace.data.dtype.byteorder
             trace.stats.npts = len(data)
 
-            # should this always be applied??
-            dtype = trace.data.dtype.newbyteorder('native')
-            trace.data = np.require(trace.data, dtype=dtype)
-            trace.stats.mseed['byteorder'] = trace.data.dtype.byteorder
+            if details:
+                # Extract detailed information from records
+                timing_quality = False  # Default
+                calibration_type = False  # Default
+
+                # Try to extract from MSRecord if available
+                for rec in segment.recordlist.records():
+                    # Extract blockette information if present
+                    if hasattr(rec.msr, 'timing_quality'):
+                        timing_quality = rec.msr.timing_quality
+                        if timing_quality == 0xFF:
+                            timing_quality = False
+                        break  # Use first record's timing quality
+
+                    if hasattr(rec.msr, 'calibration_type'):
+                        cal_type = rec.msr.calibration_type
+                        calibration_type = cal_type if cal_type != -1 else False
+
+                # Store detailed information
+                if 'blkt1001' not in trace.stats.mseed:
+                    trace.stats.mseed['blkt1001'] = AttribDict()
+                trace.stats.mseed['blkt1001']['timing_quality'] = timing_quality
+                trace.stats.mseed['calibration_type'] = calibration_type
 
             traces.append(trace)
 
     stream = Stream(traces=traces)
-    # TODO ugly way of doing, but for testing now
+
+    # Apply time window filtering if specified
     if starttime or endtime:
         stream.trim(starttime=starttime, endtime=endtime)
 
     return stream.sort()
+
 
 def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
                  sequence_number=None, flush=True, verbose=0, **_kwargs):
