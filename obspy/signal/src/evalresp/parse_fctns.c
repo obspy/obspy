@@ -19,7 +19,7 @@
 #include <stdlib.h>
 
 #include "./evresp.h"
-double atof();
+double atof(const char *nptr);
 
 /* parse_pref:  used to parse the prefix from a non-comment RESP file line (returns the blockette
                 number and starting field number for that line as arguments, return values are -1
