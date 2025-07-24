@@ -667,7 +667,7 @@ class PPSD(object):
                         except Exception as e:
                             msg = (f"Could not get response for {seed_id}"
                                    f"- {channel.start_date},"
-                                   f"errror {e.with_traceback()}")
+                                   f"errror {e}")
                             warnings.warn(msg)
                             continue
             return result
@@ -719,7 +719,7 @@ class PPSD(object):
                                                       output="VEL")[0]
             except Exception as e:
                 msg = (f"Could not get response: "
-                       f"error {e.with_traceback()}")
+                       f"error {e}")
                 warnings.warn(msg)
                 response = None
             result.append({"seed_id": self.id,
