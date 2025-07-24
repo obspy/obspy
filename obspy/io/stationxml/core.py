@@ -13,6 +13,7 @@ import copy
 import inspect
 import io
 import math
+import pdb
 from pathlib import Path
 import re
 import warnings
@@ -1245,7 +1246,7 @@ def _write_io_units(parent, obj):
     etree.SubElement(sub, "Name").text = \
         str(obj.output_units)
     _obj2tag(sub, "Description", obj.output_units_description)
-    _write_extra(parent, obj)
+    _write_extra(sub, obj)
 
 
 def _write_polynomial_common_fields(element, polynomial):
@@ -1463,7 +1464,7 @@ def _write_equipment(parent, equipment, tag="Equipment"):
     for calibration_date in equipment.calibration_dates:
         etree.SubElement(equipment_elem, "CalibrationDate").text = \
             str(calibration_date)
-    _write_extra(parent, equipment)
+    _write_extra(equipment_elem, equipment)
 
 
 def _write_site(parent, site):
@@ -1475,7 +1476,7 @@ def _write_site(parent, site):
     _obj2tag(site_elem, "County", site.county)
     _obj2tag(site_elem, "Region", site.region)
     _obj2tag(site_elem, "Country", site.country)
-    _write_extra(parent, site)
+    _write_extra(site_elem, site)
 
 
 def _write_comment(parent, comment):
@@ -1494,7 +1495,7 @@ def _write_comment(parent, comment):
             str(comment.end_effective_time)
     for author in comment.authors:
         _write_person(comment_elem, author, "Author")
-    _write_extra(parent, comment)
+    _write_extra(comment_elem, comment)
 
 
 def _write_data_availability(parent, data_availability):
@@ -1541,7 +1542,7 @@ def _write_person(parent, person, tag_name):
         etree.SubElement(person_elem, "Email").text = email
     for phone in person.phones:
         _write_phone(person_elem, phone)
-    _write_extra(parent, person)
+    _write_extra(person_elem, person)
 
 
 def _write_phone(parent, phone):
@@ -1554,7 +1555,7 @@ def _write_phone(parent, phone):
             str(phone.country_code)
     etree.SubElement(phone_elem, "AreaCode").text = str(phone.area_code)
     etree.SubElement(phone_elem, "PhoneNumber").text = phone.phone_number
-    _write_extra(parent, phone)
+    _write_extra(phone_elem, phone)
 
 
 def _write_element(parent, element, name):
