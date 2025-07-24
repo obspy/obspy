@@ -13,7 +13,7 @@
     'obspy.io.xseed.scripts.xseed2dataless': 'obspy-xseed2dataless',
     'obspy.io.xseed.scripts.dataless2resp': 'obspy-dataless2resp'
 } -%}
-{%- set command_name = command_mapping.get(fullname, 'obspy-' + objname.split('.')[-1]) -%}
+{%- set command_name = command_mapping.get(fullname) -%}
 
 {{ fullname }}
 {{ underline }}
