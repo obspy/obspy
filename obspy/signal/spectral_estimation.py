@@ -43,7 +43,7 @@ from obspy.imaging.util import _set_xaxis_obspy_dates
 from obspy.io.xseed import Parser
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.util import prev_pow_2
-from obspy.signal.invsim import paz_to_freq_resp, evalresp
+from obspy.signal.invsim import paz_to_freq_resp
 
 
 dtiny = np.finfo(0.0).tiny
