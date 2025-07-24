@@ -653,12 +653,17 @@ class PPSD(object):
                         if seed_id != self.id:
                             continue
                         try:
-                            resp = inv.get_response(seed_id, channel.start_date + 10)
+                            resp = inv.get_response(seed_id,
+                                                    channel.start_date + 10)
                             result.append({
                                 "seed_id": seed_id,
-                                "start_time": channel.start_date or UTCDateTime("1900-01-01"),
-                                "end_time": channel.end_date or UTCDateTime("2099-01-01"),
-                                "response": resp.get_evalresp_response(t_samp=self.delta, nfft=self.nfft, output="VEL")[0]
+                                "start_time": channel.start_date or
+                                              UTCDateTime("1900-01-01"),
+                                "end_time": channel.end_date or
+                                            UTCDateTime("2099-01-01"),
+                                "response": resp.get_evalresp_response(
+                                    t_samp=self.delta, nfft=self.nfft,
+                                    output="VEL")[0]
                             })
                         except:
                             import traceback
@@ -685,8 +690,10 @@ class PPSD(object):
                                 network=self.network, locid=self.location,
                                 units="VEL", freq=False, debug=False)
                 result.append({"seed_id": channel["channel_id"],
-                               "start_time": channel["start_date"] or UTCDateTime("1900-01-01"),
-                               "end_time": channel["end_date"] or UTCDateTime("2099-01-01") ,
+                               "start_time": channel["start_date"]
+                                             or UTCDateTime("1900-01-01"),
+                               "end_time": channel["end_date"]
+                                           or UTCDateTime("2099-01-01") ,
                                "response": resp})
             return result
         elif isinstance(self.metadata, dict):
@@ -695,16 +702,20 @@ class PPSD(object):
             result.append({ "seed_id": self.id,
                             "start_time": UTCDateTime("1900-01-01"),
                             "end_time": UTCDateTime("2099-01-01"),
-                            "response": paz_to_freq_resp(paz['poles'], paz['zeros'],
-                                paz['gain'] * paz['sensitivity'],
-                                self.delta, nfft=self.nfft)
-                            })
+                            "response": paz_to_freq_resp(paz['poles'],
+                                                         paz['zeros'],
+                                                         paz['gain'] *
+                                                         paz['sensitivity'],
+                                                         self.delta,
+                                                         nfft=self.nfft)})
             return result
         elif isinstance(self.metadata, Response):
             resp = self.metadata
             result = []
             try:
-                response = resp.get_evalresp_response(t_samp=self.delta, nfft=self.nfft, output="VEL")[0]
+                response = resp.get_evalresp_response(t_samp=self.delta,
+                                                      nfft=self.nfft,
+                                                      output="VEL")[0]
             except:
                 response = None
             result.append({"seed_id": self.id,
