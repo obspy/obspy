@@ -19,6 +19,7 @@ Various Routines Related to Spectral Estimation
 """
 import bisect
 import glob
+from io import BytesIO
 import math
 from pathlib import Path
 import warnings
@@ -639,9 +640,11 @@ class PPSD(object):
 
     def _preload_responses(self):
         result = []
-        if isinstance(self.metadata, (Inventory, str)):
+        if isinstance(self.metadata, (Inventory, str, Parser)):
             if isinstance(self.metadata, str):
                 inv = read_inventory(self.metadata)
+            elif isinstance(self.metadata, Parser):
+                inv = read_inventory(BytesIO(self.metadata.get_seed()))
             else:
                 inv = self.metadata
             for network in inv.networks:
@@ -670,33 +673,7 @@ class PPSD(object):
                                    f"errror {e}")
                             warnings.warn(msg)
                             continue
-            return result
-        elif isinstance(self.metadata, Parser):
-            parser = self.metadata
-            result = []
-            for channel in parser.get_inventory()["channels"]:
-                if channel["channel_id"] != self.id:
-                    continue
-                resp_key = "RESP." + channel["channel_id"]
-                for key, resp_file in parser.get_resp():
-                    if key == resp_key:
-                        break
-                else:
-                    msg = f"Response for {self.id} not found in Parser"
-                    continue
-                resp_file.seek(0, 0)
-                resp = evalresp(t_samp=self.delta, nfft=self.nfft,
-                                filename=resp_file, date=channel["start_date"],
-                                station=self.station, channel=self.channel,
-                                network=self.network, locid=self.location,
-                                units="VEL", freq=False, debug=False)
-                result.append({"seed_id": channel["channel_id"],
-                               "start_time": channel["start_date"] or
-                               UTCDateTime("1900-01-01"),
-                               "end_time": channel["end_date"] or
-                               UTCDateTime("2099-01-01"),
-                               "response": resp})
-            return result
+
         elif isinstance(self.metadata, dict):
             paz = self.metadata
             result = []
@@ -709,7 +686,7 @@ class PPSD(object):
                                                         paz['sensitivity'],
                                                         self.delta,
                                                         nfft=self.nfft)})
-            return result
+
         elif isinstance(self.metadata, Response):
             resp = self.metadata
             result = []
@@ -726,10 +703,12 @@ class PPSD(object):
                            "start_time": UTCDateTime("1900-01-01"),
                            "end_time": UTCDateTime("2099-01-01"),
                            "response": response})
-            return result
+
         else:
             msg = f"Unexpected type for `metadata`: {type(self.metadata)}"
             raise TypeError(msg)
+
+        return result
 
     def _setup_period_binning(self, period_smoothing_width_octaves,
                               period_step_octaves, period_limits):
