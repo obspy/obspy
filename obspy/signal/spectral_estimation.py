@@ -30,6 +30,7 @@ from matplotlib.ticker import FormatStrFormatter
 from matplotlib.patheffects import withStroke
 
 from obspy import Stream, Trace, UTCDateTime, __version__
+from obspy import read_inventory
 from obspy.core import Stats
 from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory, Response
@@ -640,16 +641,14 @@ class PPSD(object):
         result = []
         if isinstance(self.metadata, (Inventory, str)):
             if isinstance(self.metadata, str):
-                from obspy import read_inventory
                 inv = read_inventory(self.metadata)
             else:
                 inv = self.metadata
             for network in inv.networks:
                 for station in network.stations:
                     for channel in station.channels:
-                        seed_id = "%s.%s.%s.%s" % (network.code, station.code,
-                                                   channel.location_code,
-                                                   channel.code)
+                        seed_id = (f"{network.code}.{station.code}."
+                                   f"{channel.location_code}.{channel.code}")
                         if seed_id != self.id:
                             continue
                         try:
@@ -658,16 +657,18 @@ class PPSD(object):
                             result.append({
                                 "seed_id": seed_id,
                                 "start_time": channel.start_date or
-                                              UTCDateTime("1900-01-01"),
+                                UTCDateTime("1900-01-01"),
                                 "end_time": channel.end_date or
-                                            UTCDateTime("2099-01-01"),
+                                UTCDateTime("2099-01-01"),
                                 "response": resp.get_evalresp_response(
                                     t_samp=self.delta, nfft=self.nfft,
                                     output="VEL")[0]
                             })
-                        except:
-                            import traceback
-                            traceback.print_exc()
+                        except Exception as e:
+                            msg = (f"Could not get response for {seed_id}"
+                                   f"- {channel.start_date},"
+                                   f"errror {e.with_traceback()}")
+                            warnings.warn(msg)
                             continue
             return result
         elif isinstance(self.metadata, Parser):
@@ -681,7 +682,7 @@ class PPSD(object):
                     if key == resp_key:
                         break
                 else:
-                    msg = "Response for %s not found in Parser" % self.id
+                    msg = f"Response for {self.id} not found in Parser"
                     continue
                 resp_file.seek(0, 0)
                 resp = evalresp(t_samp=self.delta, nfft=self.nfft,
@@ -690,24 +691,24 @@ class PPSD(object):
                                 network=self.network, locid=self.location,
                                 units="VEL", freq=False, debug=False)
                 result.append({"seed_id": channel["channel_id"],
-                               "start_time": channel["start_date"]
-                                             or UTCDateTime("1900-01-01"),
-                               "end_time": channel["end_date"]
-                                           or UTCDateTime("2099-01-01") ,
+                               "start_time": channel["start_date"] or
+                               UTCDateTime("1900-01-01"),
+                               "end_time": channel["end_date"] or
+                               UTCDateTime("2099-01-01"),
                                "response": resp})
             return result
         elif isinstance(self.metadata, dict):
             paz = self.metadata
             result = []
-            result.append({ "seed_id": self.id,
-                            "start_time": UTCDateTime("1900-01-01"),
-                            "end_time": UTCDateTime("2099-01-01"),
-                            "response": paz_to_freq_resp(paz['poles'],
-                                                         paz['zeros'],
-                                                         paz['gain'] *
-                                                         paz['sensitivity'],
-                                                         self.delta,
-                                                         nfft=self.nfft)})
+            result.append({"seed_id": self.id,
+                           "start_time": UTCDateTime("1900-01-01"),
+                           "end_time": UTCDateTime("2099-01-01"),
+                           "response": paz_to_freq_resp(paz['poles'],
+                                                        paz['zeros'],
+                                                        paz['gain'] *
+                                                        paz['sensitivity'],
+                                                        self.delta,
+                                                        nfft=self.nfft)})
             return result
         elif isinstance(self.metadata, Response):
             resp = self.metadata
@@ -716,16 +717,18 @@ class PPSD(object):
                 response = resp.get_evalresp_response(t_samp=self.delta,
                                                       nfft=self.nfft,
                                                       output="VEL")[0]
-            except:
+            except Exception as e:
+                msg = (f"Could not get response: "
+                       f"error {e.with_traceback()}")
+                warnings.warn(msg)
                 response = None
             result.append({"seed_id": self.id,
                            "start_time": UTCDateTime("1900-01-01"),
                            "end_time": UTCDateTime("2099-01-01"),
-                           "response": response
-                        })
+                           "response": response})
             return result
         else:
-            msg = "Unexpected type for `metadata`: %s" % type(self.metadata)
+            msg = f"Unexpected type for `metadata`: {type(self.metadata)}"
             raise TypeError(msg)
 
     def _setup_period_binning(self, period_smoothing_width_octaves,
@@ -1367,7 +1370,8 @@ class PPSD(object):
         # first, to save some time, tried to do this in __init__ like:
         #   self._get_response = self._get_response_from_inventory
         # but that makes the object non-picklable
-        match = next((d for d in self.responses if d["start_time"] <= tr.stats.starttime <= d["end_time"]), None)
+        match = next((d for d in self.responses if d["start_time"]
+                      <= tr.stats.starttime <= d["end_time"]), None)
         if match:
             return match["response"]
         else:
