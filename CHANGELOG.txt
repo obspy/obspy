@@ -73,6 +73,8 @@ Changes:
    * add support for Chebyshev I/II, elliptic and Bessel filters alongside
      the default Butterworth filters (see #3294)
    * fix potential out of bounds array access in AR picker (see #1801)
+ - obspy.clients.neic
+   * change the default server 
 
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================
