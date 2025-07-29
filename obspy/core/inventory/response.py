@@ -363,6 +363,13 @@ class PolesZerosResponseStage(ResponseStage):
         :returns: The calculated normalization factor (returns None if the
             response stage normalization frequency is None)
         :rtype: float or None
+
+        .. rubric:: Example
+
+        >>> from obspy import read
+        >>> paz_response_stage = read()[0].stats.response.response_stages[0]
+        >>> paz_response_stage.calculate_normalization_factor()
+        59206129.76107476
         """
         if not self.normalization_frequency:
             return None
