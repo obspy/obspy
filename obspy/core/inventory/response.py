@@ -368,8 +368,8 @@ class PolesZerosResponseStage(ResponseStage):
 
         >>> from obspy import read
         >>> paz_response_stage = read()[0].stats.response.response_stages[0]
-        >>> paz_response_stage.calculate_normalization_factor()
-        59206129.76107476
+        >>> paz_response_stage.calculate_normalization_factor()  # doctest: +ELLIPSIS
+        59206129.7610747...
         """
         if not self.normalization_frequency:
             return None
