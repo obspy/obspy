@@ -8,11 +8,12 @@ from obspy import read_events, read_inventory
 from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.io.shapefile.core import (
     _write_shapefile, HAS_PYSHP, PYSHP_VERSION_AT_LEAST_1_2_11,
-    PYSHP_VERSION_WARNING)
+    PYSHP_VERSION_WARNING, PYSHP_VERSION)
 import pytest
 
 if HAS_PYSHP:
     import shapefile
+    from shapefile import Field
 
 
 SHAPEFILE_SUFFIXES = (".shp", ".shx", ".dbf", ".prj")
@@ -32,6 +33,11 @@ expected_catalog_fields = [
     ['MaxHorAzi', 'N', 7, 3],
     ['OriUncDesc', 'C', 40, 0],
     ['Magnitude', 'N', 8, 3]]
+
+if PYSHP_VERSION[0] == 3:
+    expected_catalog_fields = [Field(_[0], _[1], _[2], _[3])
+                               for _ in expected_catalog_fields]
+
 expected_catalog_records = [
     ['quakeml:us.anss.org/event/20120101052755.98',
      'quakeml:us.anss.org/origin/20120101052755.98',
@@ -71,6 +77,11 @@ expected_inventory_fields = [
     ['StartDate', 'D', 8, 0],
     ['EndDate', 'D', 8, 0],
     ['Channels', 'C', 254, 0]]
+
+if PYSHP_VERSION[0] == 3:
+    expected_inventory_fields = [Field(_[0], _[1], _[2], _[3])
+                                 for _ in expected_inventory_fields]
+
 expected_inventory_records = [
     ['GR', 'FUR', 11.2752, 48.162899, 565.0, datetime.date(2006, 12, 16),
      None, '.HHZ,.HHN,.HHE,.BHZ,.BHN,.BHE,.LHZ,.LHN,.LHE,.VHZ,.VHN,.VHE'],
@@ -84,14 +95,22 @@ expected_inventory_records = [
      None, '.EHZ,.EHN,.EHE']]
 # set up expected results with extra 'Region' field
 expected_catalog_fields_with_region = copy.deepcopy(expected_catalog_fields)
-expected_catalog_fields_with_region.append(['Region', 'C', 50, 0])
+if PYSHP_VERSION[0] < 3:
+    expected_catalog_fields_with_region.append(['Region', 'C', 50, 0])
+elif PYSHP_VERSION[0] == 3:
+    expected_catalog_fields_with_region.append(Field('Region', 'C', 50, 0))
 expected_catalog_records_with_region = copy.deepcopy(expected_catalog_records)
 expected_catalog_records_with_region[0].append('SOUTHEAST OF HONSHU, JAPAN')
 expected_catalog_records_with_region[1].append('GERMANY')
 # set up expected results with extra 'Comment' field
 expected_inventory_fields_with_comment = copy.deepcopy(
     expected_inventory_fields)
-expected_inventory_fields_with_comment.append(['Comment', 'C', 50, 0])
+if PYSHP_VERSION[0] < 3:
+    expected_inventory_fields_with_comment.append(['Comment', 'C', 50, 0])
+elif PYSHP_VERSION[0] == 3:
+    expected_inventory_fields_with_comment.append(Field('Comment', 'C', 50, 0))
+
+
 expected_inventory_records_with_comment = copy.deepcopy(
     expected_inventory_records)
 expected_inventory_records_with_comment[0].append('Abc')

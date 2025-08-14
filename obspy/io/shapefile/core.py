@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import datetime
-import inspect
 import re
 import warnings
 
@@ -328,9 +327,7 @@ def _add_field(writer, name, type_, width, precision):
         width = 1
         precision = 0
 
-    sig = inspect.signature(writer.field)
-    param_names = list(sig.parameters.keys())
-    if 'fieldType' in param_names:
+    if PYSHP_VERSION[0] < 3:
         kwargs = dict(fieldType=type_, size=width, decimal=precision)
     else:
         kwargs = dict(field_type=type_, size=width, decimal=precision)
@@ -341,12 +338,12 @@ def _add_field(writer, name, type_, width, precision):
         if kwargs[key] is None:
             kwargs.pop(key)
 
-    if 'fieldType' in param_names:
+    if PYSHP_VERSION[0] < 3:
         writer.field(name, **kwargs)
-    elif 'field_type' in param_names:
+    elif PYSHP_VERSION[0] == 3:
         writer.field(name, **kwargs)
     else:
-        # Use positional
+        # Use positional arguments for newer pyshp versions?
         writer.field(name, type_, width, precision)
 
 
