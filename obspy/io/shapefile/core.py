@@ -328,7 +328,6 @@ def _add_field(writer, name, type_, width, precision):
         width = 1
         precision = 0
 
-
     sig = inspect.signature(writer.field)
     param_names = list(sig.parameters.keys())
     if 'fieldType' in param_names:
