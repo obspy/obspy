@@ -64,7 +64,7 @@ Changes:
    * Fix a bug writing the informational "description" field of instrument
      sensitivity input/output units (see #3572).
    * Fix a bug where xmlns namespaces were not properly read and written into
-     output StationXML files (see #3574)
+     output StationXML files (see #3588)
  - obspy.io.xseed:
    * Improve error message when trying to read a local path to a file that does
      not exist with XSEED Parser (see #2686)
