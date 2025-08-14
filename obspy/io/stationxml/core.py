@@ -183,22 +183,8 @@ def _read_stationxml(path_or_file_object, level='response'):
                                          sender=sender, created=created,
                                          module=module, module_uri=module_uri)
 
-
-    def get_namespaces_lxml(filename):
-        """Extract namespaces using lxml - most reliable method"""
-        from io import BytesIO
-        if isinstance(filename, (str, Path)):
-            with open(filename, 'rb') as f:
-                tree = etree.parse(f)
-                root = tree.getroot()
-                return root.nsmap
-        else:
-            tree = etree.parse(filename)
-            root = tree.getroot()
-            return root.nsmap
-
-    namespaces = get_namespaces_lxml(path_or_file_object)
-    inv._namespaces = namespaces
+    # Do not forget to attach the nsmap namespaces to the root element.
+    inv._namespaces = root.nsmap
 
     _read_extra(root, inv)  # read extra tags from root element
     return inv
