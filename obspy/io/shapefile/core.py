@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+import inspect
 import re
 import warnings
 
@@ -318,19 +319,36 @@ def _add_field(writer, name, type_, width, precision):
     # shapefile <=1.2.10, see
     # GeospatialPython/pyshp@ba61854aa7161fd7d4cff12b0fd08b6ec7581bb7 and
     # GeospatialPython/pyshp#71 so work around this
+    # 2025 edit, we need to check the pyshp version and the signature
+    # of the field() method
     if type_ == 'D':
         width = 8
         precision = 0
     elif type_ == 'L':
         width = 1
         precision = 0
-    kwargs = dict(fieldType=type_, size=width, decimal=precision)
+
+
+    sig = inspect.signature(writer.field)
+    param_names = list(sig.parameters.keys())
+    if 'fieldType' in param_names:
+        kwargs = dict(fieldType=type_, size=width, decimal=precision)
+    else:
+        kwargs = dict(field_type=type_, size=width, decimal=precision)
+
     # remove None's because shapefile.Writer.field() doesn't use None as
     # placeholder but the default values directly
     for key in list(kwargs.keys()):
         if kwargs[key] is None:
             kwargs.pop(key)
-    writer.field(name, **kwargs)
+
+    if 'fieldType' in param_names:
+        writer.field(name, **kwargs)
+    elif 'field_type' in param_names:
+        writer.field(name, **kwargs)
+    else:
+        # Use positional
+        writer.field(name, type_, width, precision)
 
 
 def _create_layer(writer, field_definitions, extra_fields=None):

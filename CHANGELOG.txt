@@ -65,6 +65,9 @@ Changes:
  - obspy.io.sac:
    * Fix writing SACPZ from poles and zeros stages with Hertz transfer function
      type. SAC is expecting the SACPZ data to be in radians/s (see #3334)
+ - obspy.io.shapefile:
+   * Added an inspetion of the writer.field() method to check for signature
+     change (fieldType -> field_type)
  - obspy.io.wav:
    * Fixed reading of stereo wav files (see #3399)
  - obspy.io.win:
