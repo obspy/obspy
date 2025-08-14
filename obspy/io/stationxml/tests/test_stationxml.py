@@ -1305,11 +1305,16 @@ class TestStationXML():
         inv = read_inventory(path)
         extra = inv.networks[0].stations[0].channels[0].sensor.extra
         assert len(extra) == 1
+        assert len(inv._namespaces) == 2
+        assert "gfz" in inv._namespaces
 
         with BytesIO() as buf:
             inv.write(buf, format='STATIONXML')
             buf.seek(0)
             inv_2 = obspy.read_inventory(buf)
+
+            assert inv._namespaces == inv_2._namespaces
+
             extra_2 = inv_2.networks[0].stations[0].channels[0].sensor.extra
             assert len(extra) == 1
             assert extra == extra_2
