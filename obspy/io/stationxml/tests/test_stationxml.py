@@ -1294,10 +1294,10 @@ class TestStationXML():
         # make sure it's not present at all for now
         # assert matches[0].text is None
 
-    def test_read_write_addition_namespace(self,testdata):
+    def test_read_write_addition_namespace(self, testdata):
         """
-
-
+        Makes sure the xmlns namespaces are read and written correctly.
+        PR #3588
         """
         from io import BytesIO
         from obspy import read_inventory

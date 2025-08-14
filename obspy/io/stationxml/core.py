@@ -900,11 +900,10 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         mappings (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
     """
 
-
     if nsmap is None:
         try:
             nsmap = inventory._namespaces
-        except:
+        except AttributeError:
             nsmap = {}
 
     elif None in nsmap:
