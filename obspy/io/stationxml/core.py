@@ -182,6 +182,24 @@ def _read_stationxml(path_or_file_object, level='response'):
     inv = obspy.core.inventory.Inventory(networks=networks, source=source,
                                          sender=sender, created=created,
                                          module=module, module_uri=module_uri)
+
+
+    def get_namespaces_lxml(filename):
+        """Extract namespaces using lxml - most reliable method"""
+        from io import BytesIO
+        if isinstance(filename, (str, Path)):
+            with open(filename, 'rb') as f:
+                tree = etree.parse(f)
+                root = tree.getroot()
+                return root.nsmap
+        else:
+            tree = etree.parse(filename)
+            root = tree.getroot()
+            return root.nsmap
+
+    namespaces = get_namespaces_lxml(path_or_file_object)
+    inv._namespaces = namespaces
+
     _read_extra(root, inv)  # read extra tags from root element
     return inv
 
@@ -895,8 +913,14 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
     :param nsmap: Additional custom namespace abbreviation
         mappings (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
     """
+
+
     if nsmap is None:
-        nsmap = {}
+        try:
+            nsmap = inventory._namespaces
+        except:
+            nsmap = {}
+
     elif None in nsmap:
         msg = ("Custom namespace mappings do not allow redefinition of "
                "default StationXML namespace (key `None`). "

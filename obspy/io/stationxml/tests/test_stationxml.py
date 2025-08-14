@@ -1293,3 +1293,23 @@ class TestStationXML():
         # if it is present, at least it should have empty value, but let's just
         # make sure it's not present at all for now
         # assert matches[0].text is None
+
+    def test_read_write_addition_namespace(self,testdata):
+        """
+
+
+        """
+        from io import BytesIO
+        from obspy import read_inventory
+        path = testdata['fdsnstationxml_with_namespace.xml']
+        inv = read_inventory(path)
+        extra = inv.networks[0].stations[0].channels[0].sensor.extra
+        assert len(extra) == 1
+
+        with BytesIO() as buf:
+            inv.write(buf, format='STATIONXML')
+            buf.seek(0)
+            inv_2 = obspy.read_inventory(buf)
+            extra_2 = inv_2.networks[0].stations[0].channels[0].sensor.extra
+            assert len(extra) == 1
+            assert extra == extra_2
