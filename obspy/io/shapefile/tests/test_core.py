@@ -13,7 +13,8 @@ import pytest
 
 if HAS_PYSHP:
     import shapefile
-    from shapefile import Field
+    if PYSHP_VERSION > 3:
+        from shapefile import Field
 
 
 SHAPEFILE_SUFFIXES = (".shp", ".shx", ".dbf", ".prj")
