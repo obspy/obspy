@@ -34,7 +34,7 @@ expected_catalog_fields = [
     ['OriUncDesc', 'C', 40, 0],
     ['Magnitude', 'N', 8, 3]]
 
-if PYSHP_VERSION[0] == 3:
+if HAS_PYSHP and PYSHP_VERSION[0] == 3:
     expected_catalog_fields = [Field(_[0], _[1], _[2], _[3])
                                for _ in expected_catalog_fields]
 
@@ -78,7 +78,7 @@ expected_inventory_fields = [
     ['EndDate', 'D', 8, 0],
     ['Channels', 'C', 254, 0]]
 
-if PYSHP_VERSION[0] == 3:
+if HAS_PYSHP and PYSHP_VERSION[0] == 3:
     expected_inventory_fields = [Field(_[0], _[1], _[2], _[3])
                                  for _ in expected_inventory_fields]
 
@@ -95,9 +95,9 @@ expected_inventory_records = [
      None, '.EHZ,.EHN,.EHE']]
 # set up expected results with extra 'Region' field
 expected_catalog_fields_with_region = copy.deepcopy(expected_catalog_fields)
-if PYSHP_VERSION[0] < 3:
+if HAS_PYSHP and PYSHP_VERSION[0] < 3:
     expected_catalog_fields_with_region.append(['Region', 'C', 50, 0])
-elif PYSHP_VERSION[0] == 3:
+elif HAS_PYSHP and PYSHP_VERSION[0] == 3:
     expected_catalog_fields_with_region.append(Field('Region', 'C', 50, 0))
 expected_catalog_records_with_region = copy.deepcopy(expected_catalog_records)
 expected_catalog_records_with_region[0].append('SOUTHEAST OF HONSHU, JAPAN')
@@ -105,9 +105,9 @@ expected_catalog_records_with_region[1].append('GERMANY')
 # set up expected results with extra 'Comment' field
 expected_inventory_fields_with_comment = copy.deepcopy(
     expected_inventory_fields)
-if PYSHP_VERSION[0] < 3:
+if HAS_PYSHP and PYSHP_VERSION[0] < 3:
     expected_inventory_fields_with_comment.append(['Comment', 'C', 50, 0])
-elif PYSHP_VERSION[0] == 3:
+elif HAS_PYSHP and PYSHP_VERSION[0] == 3:
     expected_inventory_fields_with_comment.append(Field('Comment', 'C', 50, 0))
 
 
