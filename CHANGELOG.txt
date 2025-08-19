@@ -1,3 +1,13 @@
+Next release...
+====================================
+
+Changes:
+ - obspy.io.shapefile:
+   * Added a pyshp version check of the writer.field() method to check for a
+     signature change (fieldType -> field_type) - adapted the tests for
+     changes in `__repr__` (see #3599). Pinning version <3 because of doctest
+     failures linked to hardcoded doctest.NORMALIZE_WHITESPACE = 1  (see #3600)
+
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================
 
@@ -65,10 +75,6 @@ Changes:
  - obspy.io.sac:
    * Fix writing SACPZ from poles and zeros stages with Hertz transfer function
      type. SAC is expecting the SACPZ data to be in radians/s (see #3334)
- - obspy.io.shapefile:
-   * Added a version check of the writer.field() method to check for signature
-     change (fieldType -> field_type) - adapted the tests for changes in
-     `__repr__` (see #3599)
  - obspy.io.wav:
    * Fixed reading of stereo wav files (see #3399)
  - obspy.io.win:
