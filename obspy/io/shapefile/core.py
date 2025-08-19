@@ -338,9 +338,7 @@ def _add_field(writer, name, type_, width, precision):
         if kwargs[key] is None:
             kwargs.pop(key)
 
-    if PYSHP_VERSION[0] < 3:
-        writer.field(name, **kwargs)
-    elif PYSHP_VERSION[0] == 3:
+    if PYSHP_VERSION[0] <= 3:
         writer.field(name, **kwargs)
     else:
         # Use positional arguments for newer pyshp versions?
