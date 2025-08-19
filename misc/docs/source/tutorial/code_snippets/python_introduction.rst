@@ -87,7 +87,7 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
    place which allows you to go shopping for all kind of figures. The source
    code for each figure is linked. Note matplotlib has even its own latex
    renderer.
-* https://scitools.org.uk/cartopy/docs/latest/
+* https://cartopy.readthedocs.io/stable/
    Package plotting 2D data on maps in Python. Similar to GMT.
 * https://trac.osgeo.org/gdal/wiki/GdalOgrInPython
    Package which allows to directly read a GeoTiff which then can be plotted
