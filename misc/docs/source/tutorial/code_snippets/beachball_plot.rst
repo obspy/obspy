@@ -7,3 +7,6 @@ focal mechanism.
 
 .. plot:: tutorial/code_snippets/beachball_plot.py
    :include-source:
+
+.. plot:: tutorial/code_snippets/beachball_plot2.py
+   :include-source:
