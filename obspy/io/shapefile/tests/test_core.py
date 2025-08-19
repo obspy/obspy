@@ -13,7 +13,7 @@ import pytest
 
 if HAS_PYSHP:
     import shapefile
-    if PYSHP_VERSION > 3:
+    if PYSHP_VERSION[0] > 3:
         from shapefile import Field
 
 
