@@ -160,6 +160,7 @@ ENTRY_POINTS = {
         'GSE1 = obspy.io.gse2.core',
         'GSE2 = obspy.io.gse2.core',
         'MSEED = obspy.io.mseed.core',
+        'MSEED3 = obspy.io.mseed3.core',
         'NNSA_KB_CORE = obspy.io.css.core',
         'PDAS = obspy.io.pdas.core',
         'SAC = obspy.io.sac.core',
@@ -227,6 +228,11 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.mseed.core:_is_mseed',
         'readFormat = obspy.io.mseed.core:_read_mseed',
         'writeFormat = obspy.io.mseed.core:_write_mseed',
+        ],
+    'obspy.plugin.waveform.MSEED3': [
+        'isFormat = obspy.io.mseed3.core:_is_mseed3',
+        'readFormat = obspy.io.mseed3.core:_read_mseed3',
+        # Write not implemented yet; keep entry absent
         ],
     'obspy.plugin.waveform.PDAS': [
         'isFormat = obspy.io.pdas.core:_is_pdas',
