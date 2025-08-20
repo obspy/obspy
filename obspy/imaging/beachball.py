@@ -106,7 +106,8 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to ``100``.
     :param nofill: Do not fill the beach ball, but only plot the planes.
-    :param plot_zerotrace: If True, ignore the isotropic component. Default is False.
+    :param plot_zerotrace: If True, ignore the isotropic component. Default
+        is True.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
     :type axes: :class:`matplotlib.axes.Axes`
@@ -147,7 +148,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
             colors, p = plot_dc(np1, size, xy=xy, width=width)
         else:
             colors, p = plot_mt(t, n, p, size,
-                                plot_zerotrace=plot_zerotrace, xy=xy, width=width)
+                            plot_zerotrace=plot_zerotrace, xy=xy, width=width)
             plot_dc_used = False
     else:
         colors, p = plot_dc(np1, size=size, xy=xy, width=width)
@@ -228,7 +229,8 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to ``100``.
     :param nofill: Do not fill the beach ball, but only plot the planes.
-    :param plot_zerotrace: If True, ignore the isotropic component. Default is False.
+    :param plot_zerotrace: If True, ignore the isotropic component. Default 
+        is True.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
     :param outfile: Output file string. Also used to automatically
@@ -362,14 +364,14 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
     isotestv0 = 0
     isotestv2 = 0
 
-    for ii in range(0,360):
+    for ii in range(0, 360):
         fir = ii * D2R
 
         f = -v[1] / v[0]
         iso = vi / v[0]
         with np.errstate(divide='ignore'):
             s2alphan = (2. + 2. * iso) / \
-            float(3. + (1. - 2. * f) * np.cos(2. * fir))
+                float(3. + (1. - 2. * f) * np.cos(2. * fir))
         if s2alphan > 1.:
             isotestv0 += 1
 
@@ -377,7 +379,7 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
         iso = vi / v[2]
         with np.errstate(divide='ignore'):
             s2alphan = (2. + 2. * iso) / \
-            float(3. + (1. - 2. * f) * np.cos(2. * fir))
+                float(3. + (1. - 2. * f) * np.cos(2. * fir))
         if s2alphan > 1.:
             isotestv2 += 1
 
@@ -387,10 +389,10 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
     elif isotestv2 == 0:
         d = 2
         m = 0
-        
+
     f = -v[1] / float(v[d])
     iso = vi / float(v[d])
-    
+
     # Cliff Frohlich, Seismological Research letters,
     # Vol 7, Number 1, January-February, 1996
     # Unless the isotropic parameter lies in the range
@@ -425,7 +427,7 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
         fir = i * D2R
         with np.errstate(divide='ignore'):
             s2alphan = (2. + 2. * iso) / \
-            float(3. + (1. - 2. * f) * np.cos(2. * fir))
+                float(3. + (1. - 2. * f) * np.cos(2. * fir))
         if s2alphan > 1.:
             big_iso += 1
         else:
@@ -464,8 +466,10 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
                 y[i] = y0 + radius_size * r * co
                 azp = az
             else:
-                # If there is a big enough gap between points, start a new segment
-                if np.fabs(np.fabs(az - azp) - np.pi) < D2R * 10. and takeoff > 80. * D2R:
+                # If there is a big enough gap between points,
+                # start a new segment
+                if np.fabs(np.fabs(az - azp) - np.pi) < D2R * 10. and \
+                   takeoff > 80. * D2R:
                     azi[n][1] = azp
                     n += 1
                     azi[n][0] = az
