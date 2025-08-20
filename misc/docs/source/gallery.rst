@@ -79,7 +79,7 @@ Gallery
     :alt: Beachball Plot
 
 .. plot:: tutorial/code_snippets/beachball_plot2.py
-    :target: tutorial/code_snippets/beachball_plot.html
+    :target: tutorial/code_snippets/beachball_plot2.html
     :alt: Beachball Plot Matrix
 
 .. plot:: tutorial/code_snippets/cartopy_plot_with_beachballs.py

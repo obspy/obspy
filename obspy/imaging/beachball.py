@@ -69,7 +69,7 @@ def mopad_fallback(func, *args, **kwargs):
 @mopad_fallback
 def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
-          plot_zerotrace=False, zorder=100, axes=None):
+          plot_zerotrace=True, zorder=100, axes=None):
     """
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection).
@@ -195,7 +195,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
 def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
               alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
-              plot_zerotrace=False,zorder=100, outfile=None, format=None,
+              plot_zerotrace=True, zorder=100, outfile=None, format=None,
               fig=None):
     """
     Draws a beach ball diagram of an earthquake focal mechanism.
@@ -283,7 +283,7 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         return fig
 
 
-def plot_mt(T, N, P, size=200, plot_zerotrace=False,  # noqa
+def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
             x0=0, y0=0, xy=(0, 0), width=200):
     """
     Uses a principal axis T, N and P to draw a beach ball plot.
@@ -355,7 +355,7 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=False,  # noqa
             colors.append('w')
         return colors, collect
 
-    if (plot_zerotrace):
+    if plot_zerotrace:
         vi = 0.
 
     # Test to choose the dominant eigenvalue
@@ -402,7 +402,7 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=False,  # noqa
             collect.append(cir)
             colors.append('w')
             return colors, collect
-        if vi > 0:
+        elif vi > 0:
             cir = patches.Ellipse(xy, width=width[0], height=width[1])
             collect.append(cir)
             colors.append('b')

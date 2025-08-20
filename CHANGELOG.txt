@@ -1,3 +1,12 @@
+Next release...
+====================================
+
+Changes:
+ - obspy.imaging.beachball:
+   * <code change>
+   * <documentation change - snippet>
+   
+   
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================
 
