@@ -277,7 +277,8 @@ def extract_mseed3_metadata(record, stats):
     # Handle special case for pubversion -> dataquality mapping
     if hasattr(record, 'pubversion'):
         stats.mseed['dataquality'] = {0: "X", 1: "R",
-                                      2: "D", 3: "Q", 4: "M"}[record.pubversion]
+                                      2: "D", 3: "Q",
+                                      4: "M"}[record.pubversion]
 
     # Check if this is MSEED3 format
     is_mseed3 = hasattr(record, 'formatversion') and record.formatversion >= 3
@@ -419,6 +420,7 @@ def _read_mseed3(filename, starttime=None, endtime=None, headonly=False,
                     filename.seek(cur_pos, 0)
             except (OSError, IOError, AttributeError) as e:
                 # If we can't determine size, let the library handle it
+                print(e)
                 length = None
         else:
             # File path - more robust path handling
@@ -452,7 +454,8 @@ def _read_mseed3(filename, starttime=None, endtime=None, headonly=False,
 
         # Initialize with better error context
         try:
-            mstracelist = MS3TraceList(input_filename, unpack_data=not headonly,
+            mstracelist = MS3TraceList(input_filename,
+                                       unpack_data=not headonly,
                                        record_list=True)
         except Exception as e:
             # More specific error classification
@@ -572,7 +575,8 @@ def _read_mseed3(filename, starttime=None, endtime=None, headonly=False,
                                 " Please send the file to the ObsPy developers"
                                 " so that we can add "
                                 "support for it.") %
-                       (UNSUPPORTED_ENCODINGS[encoding_code], encoding_code))
+                                (UNSUPPORTED_ENCODINGS[encoding_code],
+                                 encoding_code))
                         raise ValueError(msg)
                     else:
                         msg = ("Encoding '%i' is not a valid MiniSEED"
@@ -611,7 +615,7 @@ def _read_mseed3(filename, starttime=None, endtime=None, headonly=False,
             if headonly:
                 trace = Trace(data=np.array([]), header=stats)
                 trace.stats.npts = segment.samplecnt\
-                    if hasattr(segment,'samplecnt') else 0
+                    if hasattr(segment, 'samplecnt') else 0
                 traces.append(trace)
                 continue
 
