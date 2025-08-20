@@ -21,124 +21,95 @@ from ..mseed.headers import (ENCODINGS, UNSUPPORTED_ENCODINGS,
 
 from pymseed import MS3TraceList
 
-
 def _is_mseed3(file):
     """
-    Checks whether a file is Mini-SEED/full SEED or not.
+    Checks whether a file is a valid MiniSEED file (version 2 or 3).
 
     :type file: str or file-like object
-    :param file: Mini-SEED/full SEED file to be checked.
+    :param file: MiniSEED file to be checked.
     :rtype: bool
-    :return: ``True`` if a Mini-SEED file.
-
-    This method only reads the first seven bytes of the file and checks
-    whether its a Mini-SEED or full SEED file.
-
-    It also is true for fullSEED files because libmseed can read the data
-    part of fullSEED files. If the method finds a fullSEED file it also
-    checks if it has a data part and returns False otherwise.
-
-    Thus it cannot be used to validate a Mini-SEED or SEED file.
+    :return: ``True`` if a valid MiniSEED file.
     """
-    # Open filehandler or use an existing file like object.
-    if not hasattr(file, 'read'):
-        file_size = os.path.getsize(file)
-        with io.open(file, 'rb') as fh:
-            return __is_mseed3(fh, file_size=file_size)
-    else:
-        initial_pos = file.tell()
-        try:
-            if hasattr(file, "getbuffer"):  # BytesIO
-                file_size = file.getbuffer().nbytes
-            else:
-                try:
-                    file_size = os.fstat(file.fileno()).st_size
-                except Exception:
-                    _p = file.tell()
-                    file.seek(0, 2)
-                    file_size = file.tell()
-                    file.seek(_p, 0)
-            return __is_mseed3(file, file_size)
-        finally:
-            # Reset pointer.
-            file.seek(initial_pos, 0)
-
-
-def __is_mseed3(fp, file_size):  # NOQA
-    """
-    Internal version of _is_mseed3 working only with open file-like object.
-    """
-    header = fp.read(7)
-    # File has less than 7 characters
-    if len(header) != 7:
-        return False
-    # Sequence number must contains a single number or be empty
-    seqnr = header[0:6].replace(b'\x00', b' ').strip()
-    if not seqnr.isdigit() and seqnr != b'':
-        # This might be a completely empty sequence - in that case jump 128
-        # bytes and try again.
-        fp.seek(-7, 1)
-        try:
-            _t = fp.read(128).decode().strip()
-        except Exception:
-            return False
-        if not _t:
-            return __is_mseed3(fp=fp, file_size=file_size)
-        return False
-    # Check for any valid control header types.
-    if header[6:7] in [b'D', b'R', b'Q', b'M']:
-        return True
-    elif header[6:7] == b" ":
-        # If empty, it might be a noise record. Check the rest of 128 bytes
-        # (min record size) and try again.
-        try:
-            _t = fp.read(128 - 7).decode().strip()
-        except Exception:
-            return False
-        if not _t:
-            return __is_mseed3(fp=fp, file_size=file_size)
-        return False
-    # Check if Full-SEED
-    elif header[6:7] != b'V':
-        return False
-    # Parse the whole file and check whether it has has a data record.
-    fp.seek(1, 1)
-    _i = 0
-    # search for blockettes 010 or 008
-    while True:
-        if fp.read(3) in [b'010', b'008']:
-            break
-        # the next for bytes are the record length
-        # as we are currently at position 7 (fp.read(3) fp.read(4))
-        # we need to subtract this first before we seek
-        # to the appropriate position
-        try:
-            fp.seek(int(fp.read(4)) - 7, 1)
-        except Exception:
-            return False
-        _i += 1
-        # break after 3 cycles
-        if _i == 3:
-            return False
-
-    # Try to get a record length.
-    fp.seek(8, 1)
     try:
-        record_length = pow(2, int(fp.read(2)))
+        from pymseed import MS3TraceList
+
+        # Handle file-like objects vs file paths
+        if hasattr(file, 'read'):
+            # For file-like objects, we need to save to a temp file
+            import tempfile
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                file.seek(0)
+                temp_file.write(file.read())
+                temp_filename = temp_file.name
+
+            try:
+                # Try to read with pymseed - if it works, it's valid MiniSEED
+                MS3TraceList(temp_filename, unpack_data=False)
+                return True
+            except Exception:
+                return False
+            finally:
+                # Clean up temp file
+                import os
+                try:
+                    os.unlink(temp_filename)
+                except OSError:
+                    pass
+        else:
+            # For file paths, directly try to read
+            try:
+                MS3TraceList(str(file), unpack_data=False)
+                return True
+            except Exception:
+                return False
+
+    except ImportError:
+        # If pymseed is not available, return False
+        return False
     except Exception:
         return False
 
-    # Jump to the second record.
-    fp.seek(record_length + 6, 0)
-    # Loop over all records and return True if one record is a data
-    # record
-    while fp.tell() < file_size:
-        flag = fp.read(1)
-        if flag in [b'D', b'R', b'Q', b'M']:
-            return True
-        fp.seek(record_length - 1, 1)
-    return False
 
+def __is_mseed3(fp, file_size):
+    """
+    Internal version of _is_mseed3 working only with open file-like object.
+    """
+    try:
+        from pymseed import MS3TraceList
+        import tempfile
+
+        # Save current position
+        initial_pos = fp.tell()
+
+        try:
+            # Read all data to temp file
+            fp.seek(0)
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                temp_file.write(fp.read())
+                temp_filename = temp_file.name
+
+            try:
+                # Try to parse with pymseed
+                MS3TraceList(temp_filename, unpack_data=False)
+                return True
+            except Exception:
+                return False
+            finally:
+                # Clean up
+                import os
+                try:
+                    os.unlink(temp_filename)
+                except OSError:
+                    pass
+
+        finally:
+            # Always restore file position
+            fp.seek(initial_pos)
+
+    except ImportError:
+        return False
+    except Exception:
+        return False
 
 def _get_mseed3_input_file(filename):
     """
@@ -693,19 +664,194 @@ def _read_mseed3(filename, starttime=None, endtime=None, headonly=False,
     return stream.sort()
 
 
-def _write_mseed3(stream, filename, encoding=None, byteorder=None, **kwargs):
+def _write_mseed3(stream, filename, encoding=None, byteorder=None,
+                  record_length=512, format_version=3, flush_data=True,
+                  **kwargs):
     """
-    Write Stream object to MiniSEED 3 format.
+    Write Stream object to MiniSEED 3 format using pymseed.
 
     :param stream: ObsPy Stream object to write
-    :param filename: Output filename
-    :param encoding: Data encoding to use
-    :param byteorder: Byte order for output
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param filename: Output filename or file-like object
+    :type filename: str or file-like object
+    :param encoding: Data encoding to use (default: auto-detect from trace)
+    :type encoding: str or int, optional
+    :param byteorder: Byte order for output (not used in MSEED3, kept for compatibility)
+    :type byteorder: str, optional
+    :param record_length: Record length in bytes (default: 512)
+    :type record_length: int, optional
+    :param format_version: MiniSEED format version (default: 3)
+    :type format_version: int, optional
+    :param flush_data: Whether to flush remaining data in buffers (default: True)
+    :type flush_data: bool, optional
     """
-    raise NotImplementedError(
-        "MiniSEED 3 writing is not yet implemented. "
-        "This functionality requires additional development."
-    )
+    from pymseed import MS3TraceList, sample_time
+    import tempfile
+    import os
+
+    # Validate format version
+    if format_version not in [2, 3]:
+        raise ValueError(f"Unsupported format version: {format_version}. Use 2 or 3.")
+
+    # Validate record length
+    if record_length not in VALID_RECORD_LENGTHS:
+        raise ValueError(f"Invalid record length: {record_length}. "
+                         f"Valid lengths are: {VALID_RECORD_LENGTHS}")
+
+    # Determine if we're writing to a file or file-like object
+    close_file = False
+    temp_file = None
+
+    if hasattr(filename, 'write'):
+        # File-like object
+        if hasattr(filename, 'mode') and 'b' not in filename.mode:
+            raise ValueError("File must be opened in binary mode for MiniSEED writing")
+        file_handle = filename
+    elif isinstance(filename, (str, bytes, os.PathLike)):
+        # File path - open for writing
+        file_handle = open(filename, 'wb')
+        close_file = True
+    else:
+        raise TypeError(f"Invalid filename type: {type(filename)}")
+
+    # Define encoding mappings from ObsPy to pymseed
+    # ObsPy encoding name/code -> pymseed sample_type character
+    encoding_map = {
+        'ASCII': 'a',
+        'INT16': 'i',
+        'INT32': 'i',
+        'FLOAT32': 'f',
+        'FLOAT64': 'd',
+        'STEIM1': 'i',
+        'STEIM2': 'i',
+        0: 'a',   # ASCII
+        1: 'i',   # 16-bit integers
+        3: 'i',   # 32-bit integers
+        4: 'f',   # IEEE float32
+        5: 'd',   # IEEE float64
+        10: 'i',  # STEIM1
+        11: 'i',  # STEIM2
+    }
+
+    def record_handler(buffer, handlerdata):
+        """Write buffer to the file handle."""
+        handlerdata["fh"].write(buffer)
+
+    # Initialize MS3TraceList
+    traces = MS3TraceList()
+
+    total_samples = 0
+    total_records = 0
+
+    try:
+        # Group traces by source identifier for efficient processing
+        trace_groups = {}
+        for trace in stream:
+            # Create source ID from ObsPy trace stats
+            if hasattr(trace.stats, 'mseed3') and 'source_id' in trace.stats.mseed3:
+                # Use existing MSEED3 source ID if available
+                sourceid = trace.stats.mseed3['source_id']
+            else:
+                # Create FDSN source ID from NSLC codes
+                network = trace.stats.network or ""
+                station = trace.stats.station or ""
+                location = trace.stats.location or ""
+                channel = trace.stats.channel or ""
+
+                # For MSEED3, use FDSN format: FDSN:NET_STA_LOC_CHAN_SUB_SUBSUB
+                sourceid = f"FDSN:{network}_{station}_{location}_{channel}__"
+
+            if sourceid not in trace_groups:
+                trace_groups[sourceid] = []
+            trace_groups[sourceid].append(trace)
+
+        # Process each trace group
+        for sourceid, trace_list in trace_groups.items():
+            # Sort traces by start time to ensure proper chronological order
+            trace_list.sort(key=lambda t: t.stats.starttime)
+
+            for trace in trace_list:
+                # Determine encoding for this trace
+                trace_encoding = encoding
+                if trace_encoding is None:
+                    # Auto-detect from trace stats
+                    if hasattr(trace.stats, 'mseed') and 'encoding' in trace.stats.mseed:
+                        obspy_encoding = trace.stats.mseed['encoding']
+                        trace_encoding = encoding_map.get(obspy_encoding, 'i')
+                    else:
+                        # Default based on data type
+                        if trace.data.dtype == np.float32:
+                            trace_encoding = 'f'
+                        elif trace.data.dtype == np.float64:
+                            trace_encoding = 'd'
+                        else:
+                            trace_encoding = 'i'
+                elif isinstance(trace_encoding, (int, str)):
+                    # Convert encoding to pymseed format
+                    trace_encoding = encoding_map.get(trace_encoding, 'i')
+
+                # Convert start time to nanoseconds
+                start_time_ns = int(trace.stats.starttime.timestamp * 1_000_000_000)
+
+                # Handle data in chunks if trace is very large
+                chunk_size = 10000  # Process in chunks to avoid memory issues
+                data = trace.data
+                sample_rate = trace.stats.sampling_rate
+
+                # Process data in chunks
+                for i in range(0, len(data), chunk_size):
+                    chunk_data = data[i:i+chunk_size]
+                    chunk_start_ns = sample_time(start_time_ns, i, sample_rate)
+
+                    # Convert numpy array to list for pymseed
+                    if isinstance(chunk_data, np.ndarray):
+                        chunk_data = chunk_data.tolist()
+
+                    # Add data to MS3TraceList
+                    traces.add_data(
+                        sourceid=sourceid,
+                        data_samples=chunk_data,
+                        sample_type=trace_encoding,
+                        sample_rate=sample_rate,
+                        start_time=chunk_start_ns,
+                    )
+
+                    # Pack records periodically to avoid excessive memory usage
+                    if i > 0 and i % (chunk_size * 5) == 0:
+                        packed_samples, packed_records = traces.pack(
+                            record_handler,
+                            handlerdata={"fh": file_handle},
+                            format_version=format_version,
+                            record_length=record_length,
+                            flush_data=False,
+                        )
+                        total_samples += packed_samples
+                        total_records += packed_records
+
+        # Final pack to flush all remaining data
+        packed_samples, packed_records = traces.pack(
+            record_handler,
+            handlerdata={"fh": file_handle},
+            format_version=format_version,
+            record_length=record_length,
+            flush_data=flush_data,
+        )
+        total_samples += packed_samples
+        total_records += packed_records
+
+    finally:
+        # Clean up file handle if we opened it
+        if close_file and file_handle:
+            file_handle.close()
+
+        # Clean up temporary file if created
+        if temp_file:
+            try:
+                os.unlink(temp_file)
+            except OSError:
+                pass
+
+    return {"samples_written": total_samples, "records_written": total_records}
 
 
 if __name__ == '__main__':
