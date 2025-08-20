@@ -688,8 +688,6 @@ def _write_mseed3(stream, filename, encoding=None, byteorder=None,
      (default: True)
     :type flush_data: bool, optional
     """
-
-
     # Validate format version
     if format_version not in [2, 3]:
         raise ValueError(f"Unsupported format version: {format_version}."
