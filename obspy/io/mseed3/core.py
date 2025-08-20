@@ -368,8 +368,8 @@ def _matches_sourcename(sourceid, sourcename):
 
 
 def _read_mseed3(filename, starttime=None, endtime=None, headonly=False,
-                sourcename=None, reclen=None, details=False,
-                header_byteorder=None, verbose=None, **kwargs):
+                 sourcename=None, reclen=None, details=False,
+                 header_byteorder=None, verbose=None, **kwargs):
     """
     Reads a MSEED3 file and returns an ObsPy Stream object.
 
@@ -569,9 +569,9 @@ def _read_mseed3(filename, starttime=None, endtime=None, headonly=False,
                 if encoding_code not in ENCODINGS:
                     if encoding_code in UNSUPPORTED_ENCODINGS:
                         msg = (("Encoding '%s' (%i) is not supported by ObsPy."
-                               " Please send the file to the ObsPy developers"
-                               " so that we can add "
-                               "support for it.") %
+                                " Please send the file to the ObsPy developers"
+                                " so that we can add "
+                                "support for it.") %
                        (UNSUPPORTED_ENCODINGS[encoding_code], encoding_code))
                         raise ValueError(msg)
                     else:
@@ -666,12 +666,14 @@ def _read_mseed3(filename, starttime=None, endtime=None, headonly=False,
 
                     if hasattr(rec.msr, 'calibration_type'):
                         cal_type = rec.msr.calibration_type
-                        calibration_type = cal_type if cal_type != -1 else False
+                        calibration_type = cal_type \
+                            if cal_type != -1 else False
 
                 # Store detailed information
                 if 'blkt1001' not in trace.stats.mseed:
                     trace.stats.mseed['blkt1001'] = AttribDict()
-                trace.stats.mseed['blkt1001']['timing_quality'] = timing_quality
+                trace.stats.mseed['blkt1001']['timing_quality'] =\
+                    timing_quality
                 trace.stats.mseed['calibration_type'] = calibration_type
 
             traces.append(trace)
