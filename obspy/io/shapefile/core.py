@@ -318,13 +318,19 @@ def _add_field(writer, name, type_, width, precision):
     # shapefile <=1.2.10, see
     # GeospatialPython/pyshp@ba61854aa7161fd7d4cff12b0fd08b6ec7581bb7 and
     # GeospatialPython/pyshp#71 so work around this
+    # We need to check the pyshp version and the signature
+    # of the write.field() method (see #3599)
     if type_ == 'D':
         width = 8
         precision = 0
     elif type_ == 'L':
         width = 1
         precision = 0
-    kwargs = dict(fieldType=type_, size=width, decimal=precision)
+    if PYSHP_VERSION[0] < 3:
+        kwargs = dict(fieldType=type_, size=width, decimal=precision)
+    else:
+        # subtle arg name change in pyshp >= 3
+        kwargs = dict(field_type=type_, size=width, decimal=precision)
     # remove None's because shapefile.Writer.field() doesn't use None as
     # placeholder but the default values directly
     for key in list(kwargs.keys()):
