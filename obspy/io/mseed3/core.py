@@ -545,7 +545,7 @@ def _read_mseed3(filename, starttime=None, endtime=None, headonly=False,
 
                 # Extract metadata from MSRecord
                 stats = extract_mseed3_metadata(rec.msr, stats)
-
+                detected_byteorder = None
                 # Get byteorder from the first record
                 if record_count == 1:
                     # Try to get byteorder from MSRecord structure
@@ -575,8 +575,8 @@ def _read_mseed3(filename, starttime=None, endtime=None, headonly=False,
                                 " Please send the file to the ObsPy developers"
                                 " so that we can add "
                                 "support for it.") %
-                                (UNSUPPORTED_ENCODINGS[encoding_code],
-                                 encoding_code))
+                               (UNSUPPORTED_ENCODINGS[encoding_code],
+                                encoding_code))
                         raise ValueError(msg)
                     else:
                         msg = ("Encoding '%i' is not a valid MiniSEED"
@@ -596,6 +596,8 @@ def _read_mseed3(filename, starttime=None, endtime=None, headonly=False,
                 # User specified byteorder overrides detected one
                 stats.mseed["byteorder"] = processed_header_byteorder
             # If no byteorder was set by extract_mseed_metadata, set a default
+            elif detected_byteorder:
+                stats.mseed["byteorder"] = detected_byteorder
             elif "byteorder" not in stats.mseed:
                 stats.mseed["byteorder"] = NATIVE_BYTEORDER
 
