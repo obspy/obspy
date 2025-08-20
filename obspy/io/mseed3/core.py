@@ -4,7 +4,6 @@ MSEED bindings to ObsPy core module.
 """
 import ctypes as C  # NOQA
 import fnmatch
-import io
 import os
 import struct
 
@@ -19,7 +18,8 @@ from ..mseed import ObsPyMSEEDFilesizeTooSmallError, ObsPyMSEEDError
 from ..mseed.headers import (ENCODINGS, UNSUPPORTED_ENCODINGS,
                              VALID_RECORD_LENGTHS)
 
-from pymseed import MS3TraceList
+from pymseed import MS3TraceList, sample_time
+
 
 def _is_mseed3(file):
     """
@@ -110,6 +110,7 @@ def __is_mseed3(fp, file_size):
         return False
     except Exception:
         return False
+
 
 def _get_mseed3_input_file(filename):
     """
@@ -676,22 +677,23 @@ def _write_mseed3(stream, filename, encoding=None, byteorder=None,
     :type filename: str or file-like object
     :param encoding: Data encoding to use (default: auto-detect from trace)
     :type encoding: str or int, optional
-    :param byteorder: Byte order for output (not used in MSEED3, kept for compatibility)
+    :param byteorder: Byte order for output (not used in MSEED3, kept for
+     compatibility)
     :type byteorder: str, optional
     :param record_length: Record length in bytes (default: 512)
     :type record_length: int, optional
     :param format_version: MiniSEED format version (default: 3)
     :type format_version: int, optional
-    :param flush_data: Whether to flush remaining data in buffers (default: True)
+    :param flush_data: Whether to flush remaining data in buffers
+     (default: True)
     :type flush_data: bool, optional
     """
-    from pymseed import MS3TraceList, sample_time
-    import tempfile
-    import os
+
 
     # Validate format version
     if format_version not in [2, 3]:
-        raise ValueError(f"Unsupported format version: {format_version}. Use 2 or 3.")
+        raise ValueError(f"Unsupported format version: {format_version}."
+                         f" Use 2 or 3.")
 
     # Validate record length
     if record_length not in VALID_RECORD_LENGTHS:
@@ -705,7 +707,8 @@ def _write_mseed3(stream, filename, encoding=None, byteorder=None,
     if hasattr(filename, 'write'):
         # File-like object
         if hasattr(filename, 'mode') and 'b' not in filename.mode:
-            raise ValueError("File must be opened in binary mode for MiniSEED writing")
+            raise ValueError("File must be opened in binary mode for"
+                             " MiniSEED writing")
         file_handle = filename
     elif isinstance(filename, (str, bytes, os.PathLike)):
         # File path - open for writing
@@ -748,7 +751,8 @@ def _write_mseed3(stream, filename, encoding=None, byteorder=None,
         trace_groups = {}
         for trace in stream:
             # Create source ID from ObsPy trace stats
-            if hasattr(trace.stats, 'mseed3') and 'source_id' in trace.stats.mseed3:
+            if (hasattr(trace.stats, 'mseed3') and 'source_id' in
+                    trace.stats.mseed3):
                 # Use existing MSEED3 source ID if available
                 sourceid = trace.stats.mseed3['source_id']
             else:
@@ -775,7 +779,8 @@ def _write_mseed3(stream, filename, encoding=None, byteorder=None,
                 trace_encoding = encoding
                 if trace_encoding is None:
                     # Auto-detect from trace stats
-                    if hasattr(trace.stats, 'mseed') and 'encoding' in trace.stats.mseed:
+                    if (hasattr(trace.stats, 'mseed') and 'encoding' in
+                            trace.stats.mseed):
                         obspy_encoding = trace.stats.mseed['encoding']
                         trace_encoding = encoding_map.get(obspy_encoding, 'i')
                     else:
@@ -791,7 +796,8 @@ def _write_mseed3(stream, filename, encoding=None, byteorder=None,
                     trace_encoding = encoding_map.get(trace_encoding, 'i')
 
                 # Convert start time to nanoseconds
-                start_time_ns = int(trace.stats.starttime.timestamp * 1_000_000_000)
+                start_time_ns = int(trace.stats.starttime.timestamp
+                                    * 1_000_000_000)
 
                 # Handle data in chunks if trace is very large
                 chunk_size = 10000  # Process in chunks to avoid memory issues
