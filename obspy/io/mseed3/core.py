@@ -3,6 +3,7 @@
 MSEED bindings to ObsPy core module.
 """
 import ctypes as C  # NOQA
+import fnmatch
 import io
 import os
 import struct
@@ -141,10 +142,12 @@ def __is_mseed3(fp, file_size):  # NOQA
 
 def _get_mseed3_input_file(filename):
     """
-    Utility function to handle different types of input (filename, file object, BytesIO)
+    Utility function to handle different types of input (filename, file object,
+     BytesIO)
     and return a suitable filename for mseedlib functions.
 
-    :param filename: Input source, can be a filename, file object, or BytesIO object.
+    :param filename: Input source, can be a filename, file object, or BytesIO
+     object.
     :type filename: str, file, or BytesIO
     :return: Tuple of (filename to use, temp_file object if created or None)
     """
@@ -243,7 +246,8 @@ def extract_mseed3_metadata(record, stats):
         if not byteorder_found and hasattr(record, 'header'):
             for attr_name in byteorder_attrs:
                 if hasattr(record.header, attr_name):
-                    stats.mseed['byteorder'] = getattr(record.header, attr_name)
+                    stats.mseed['byteorder'] = getattr(record.header,
+                                                       attr_name)
                     byteorder_found = True
                     break
 
@@ -319,7 +323,8 @@ def extract_mseed3_metadata(record, stats):
     # for attr_name in dir(record):
     #     # Skip private attributes, methods, and ones we've already handled
     #     if (attr_name.startswith('_') or
-    #             attr_name in ['starttime', 'samplerate', 'reclen', 'samplecnt',
+    #             attr_name in ['starttime', 'samplerate', 'reclen',
+    #                           'samplecnt',
     #                           'sampletype', 'formatversion',
     #                           'sourceid', 'crc', 'extra_headers', 'recid',
     #                           'timingquality', 'flags', 'blockettecount',
@@ -358,7 +363,7 @@ def _matches_sourcename(sourceid, sourcename):
         seed_id = sourceid.replace('_', '.')
 
     # Use fnmatch for wildcard matching
-    import fnmatch
+
     return fnmatch.fnmatch(seed_id, sourcename)
 
 
