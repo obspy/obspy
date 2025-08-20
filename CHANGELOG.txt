@@ -2,6 +2,8 @@ master
 ======
 
 Changes:
+ - General
+   * Fix documentation for the command line scripts (see #1208 #3569)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
