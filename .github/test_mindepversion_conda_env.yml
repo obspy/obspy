@@ -16,8 +16,8 @@ dependencies:
   # soft dependencies
   - cartopy
   - geographiclib
-  # pinning <3 - to change once the docset issue is fixed #3600
-  - pyshp<3
+  # pinning != 3.0.0 - see #3600
+  - pyshp != 3.0.0
   # tests
   - packaging
   - pyproj

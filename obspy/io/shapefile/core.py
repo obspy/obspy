@@ -330,6 +330,7 @@ def _add_field(writer, name, type_, width, precision):
     if PYSHP_VERSION[0] < 3:
         kwargs = dict(fieldType=type_, size=width, decimal=precision)
     else:
+        # subtle arg name change in pyshp = 3
         kwargs = dict(field_type=type_, size=width, decimal=precision)
 
     # remove None's because shapefile.Writer.field() doesn't use None as
@@ -338,11 +339,7 @@ def _add_field(writer, name, type_, width, precision):
         if kwargs[key] is None:
             kwargs.pop(key)
 
-    if PYSHP_VERSION[0] <= 3:
-        writer.field(name, **kwargs)
-    else:
-        # Use positional arguments for newer pyshp versions?
-        writer.field(name, type_, width, precision)
+    writer.field(name, **kwargs)
 
 
 def _create_layer(writer, field_definitions, extra_fields=None):
