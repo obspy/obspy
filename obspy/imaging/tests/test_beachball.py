@@ -303,7 +303,6 @@ class TestBeachballPlot:
         # with #3583 this should be solved and no warnings should be raised.
         assert len(w) == 0
 
-
     @pytest.mark.image_path_suffix('pdf')
     def test_beach_with_axes_to_pdf(self, image_path):
         """
