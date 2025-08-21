@@ -300,13 +300,9 @@ class TestBeachballPlot:
             # Always raise warning.
             beachball(mt, outfile=image_path)
 
-        # Make sure the appropriate warnings has been raised.
-        assert w
-        # Filter
-        w = [_i.message.args[0] for _i in w]
-        w = [_i for _i in w
-             if "falling back to the mopad wrapper" in _i.lower()]
-        assert w
+        # with #3583 this should be solved and no warnings should be raised.
+        assert len(w) == 0
+
 
     @pytest.mark.image_path_suffix('pdf')
     def test_beach_with_axes_to_pdf(self, image_path):
