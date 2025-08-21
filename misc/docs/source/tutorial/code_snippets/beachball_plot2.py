@@ -15,7 +15,6 @@ fig1, ax1 = plt.subplots(nrows=1, ncols=5, figsize=(12, 6), sharey=True)
 xticks = np.arange(-50, 51, 25)
 yticks = np.arange(-100, 101, 20)
 ax1[0].set_yticks(ticks=yticks, labels=yticks)
-n = 0
 
 for i, file in enumerate(files):
     cols1 = [3, 4, 5, 6, 7, 8]
@@ -30,7 +29,6 @@ for i, file in enumerate(files):
         ax1[i].add_collection(coll)
 
     ax1[i].set_xticks(ticks=xticks, labels=xticks)
-    n += 1
 
 fig1.suptitle("Datasets courtesy of C. Tape")
 plt.tight_layout()
