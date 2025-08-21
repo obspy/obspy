@@ -73,7 +73,7 @@ Changes:
    * add support for Chebyshev I/II, elliptic and Bessel filters alongside
      the default Butterworth filters (see #3294)
    * fix potential out of bounds array access in AR picker (see #1801)
-   * fix a small issue in evalresp linked to picky new gcc (see #3587)
+   * fix a small issue in evalresp linked to picky new gcc (see #3578)
 
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================
