@@ -148,7 +148,8 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
             colors, p = plot_dc(np1, size, xy=xy, width=width)
         else:
             colors, p = plot_mt(t, n, p, size,
-                            plot_zerotrace=plot_zerotrace, xy=xy, width=width)
+                                plot_zerotrace=plot_zerotrace,
+                                xy=xy, width=width)
             plot_dc_used = False
     else:
         colors, p = plot_dc(np1, size=size, xy=xy, width=width)
@@ -229,7 +230,7 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to ``100``.
     :param nofill: Do not fill the beach ball, but only plot the planes.
-    :param plot_zerotrace: If True, ignore the isotropic component. Default 
+    :param plot_zerotrace: If True, ignore the isotropic component. Default
         is True.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
