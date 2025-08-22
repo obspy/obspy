@@ -595,7 +595,12 @@ class TestPsd:
         Some tests that make sure checking if a new PSD slice to be addded to
         existing PPSD has an invalid overlap or not works as expected.
         """
-        ppsd = PPSD(Stats(), Response())
+        # Calling PPSD with an empty Response object will emit a warning
+        # that it's impossible to compute evalresp (in _preload_responses)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            ppsd = PPSD(Stats(), Response())
+            assert len(w) == 1
         one_second = 1000000000
         t0 = 946684800000000000  # 2000-01-01T00:00:00
         time_diffs = [
