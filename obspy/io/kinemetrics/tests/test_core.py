@@ -59,7 +59,7 @@ class TestCore():
             # The is_evt() method should not change the file pointer.
             assert buf.tell() == 0
 
-    def test_read_via_obspy(self, testdata):
+    def test_read_via_obspy1(self, testdata):
         """
         Read files via obspy.core.stream.read function.
         """
@@ -84,7 +84,10 @@ class TestCore():
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
-        # 2
+    def test_read_via_obspy2(self, testdata):
+        """
+        Read files via obspy.core.stream.read function.
+        """
         filename = testdata['BX456_MOLA-02351.evt']
         st = read(filename, apply_calib=True)
         st.verify()
@@ -107,7 +110,7 @@ class TestCore():
         assert st[0].stats.station == 'MOLA'
         assert st[0].stats.calib == 1.0
 
-    def test_reading_via_obspy_and_bytesio(self, testdata):
+    def test_read_via_obspy_and_bytesio1(self, testdata):
         """
         Test the reading of Evt files from BytesIO objects.
         """
@@ -135,6 +138,10 @@ class TestCore():
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
+    def test_read_via_obspy_and_bytesio2(self, testdata):
+        """
+        Test the reading of Evt files from BytesIO objects.
+        """
         # 2
         filename = testdata['BX456_MOLA-02351.evt']
         with open(filename, "rb") as fh:
@@ -161,7 +168,7 @@ class TestCore():
         assert st[0].stats.station == 'MOLA'
         assert st[0].stats.calib == 1.0
 
-    def test_read_via_module(self, testdata):
+    def test_read_via_module1(self, testdata):
         """
         Read files via obspy.io.kinemetrics.core.read_evt function.
         """
@@ -186,7 +193,10 @@ class TestCore():
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
-        # 2
+    def test_read_via_module2(self, testdata):
+        """
+        Read files via obspy.io.kinemetrics.core.read_evt function.
+        """
         filename = testdata['BX456_MOLA-02351.evt']
         st = read_evt(filename, apply_calib=True)
         st.verify()
