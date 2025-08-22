@@ -79,8 +79,8 @@ class TestWaveformPlugins:
                         continue
                     # new trace object in native byte order
                     dt = np.dtype(np.int_).newbyteorder(native_byteorder)
-                    if format in ('MSEED', 'GSE2'):
-                        # MiniSEED and GSE2 cannot write int64, enforce type
+                    if format in ('MSEED', 'MSEED3', 'GSE2'):
+                        # MiniSEED, miniseed3 and GSE2 cannot write int64, enforce type
                         dt = np.int32
                     tr = Trace(data=data.astype(dt))
                     tr.stats.network = "BW"
@@ -156,11 +156,14 @@ class TestWaveformPlugins:
                         # SAC format preserves byteorder on writing
                         assert st[0].data.dtype.byteorder \
                                         in ('=', byteorder)
+                    elif format == 'MSEED3':
+                        # MSEED3 format is always little endian, <
+                        assert st[0].data.dtype.byteorder == '<'
                     else:
                         assert st[0].data.dtype.byteorder == '='
                     # check meta data
                     # some formats do not contain a calibration factor
-                    if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST', 'AH',
+                    if format not in ['MSEED', 'MSEED3', 'WAV', 'TSPAIR', 'SLIST', 'AH',
                                       'GCF']:
                         assert round(abs(st[0].stats.calib-0.199999), 5) == 0
                     else:
@@ -291,7 +294,7 @@ class TestWaveformPlugins:
                 # rates <= 250 Hz
                 start = UTCDateTime(2009, 1, 13, 12, 1, 3)
             dt = np.int_
-            if format in ('MSEED', 'GSE2'):
+            if format in ('MSEED', 'MSEED3', 'GSE2'):
                 dt = np.int32
             tr = Trace(data=data.astype(dt))
             tr.stats.network = "BW"
