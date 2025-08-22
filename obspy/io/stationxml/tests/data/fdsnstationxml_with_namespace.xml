@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML xmlns:gfz="http://gfz-potsdam.de/ns/fdsnstationxml/1" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.2">
+  <Source>ObsPy 1.4.1</Source>
+  <Module>ObsPy 1.4.1</Module>
+  <ModuleURI>https://www.obspy.org</ModuleURI>
+  <Created>2025-05-09T22:29:02.416510Z</Created>
+  <Network code="XX">
+    <Station code="STA">
+      <Latitude unit="DEGREES">0.0</Latitude>
+      <Longitude unit="DEGREES">0.0</Longitude>
+      <Elevation unit="METERS">0.0</Elevation>
+      <Site>
+        <Name></Name>
+      </Site>
+      <Channel code="LHZ" locationCode="00">
+        <Latitude unit="DEGREES">0.0</Latitude>
+        <Longitude unit="DEGREES">0.0</Longitude>
+        <Elevation unit="METERS">0.0</Elevation>
+        <Depth unit="METERS">0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <Sensor>
+          <Type>Hydrophone</Type>
+          <Description>High Tech HTI-04-PLC/ULF hydrophone, 0.01 Hz - 8 kHz [config: SN-31206805_MCS_210M]</Description>
+          <Manufacturer>High Tech, Inc.</Manufacturer>
+          <Model>HTI-04-PLC-ULF</Model>
+          <SerialNumber>31206805</SerialNumber>
+          <gfz:Identifier type="hdl">10013/sensor.cec0d700-b439-4acb-9914-0c945c876676</gfz:Identifier>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2000.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+            </InputUnits>
+            <OutputUnits>
+              <Name>count</Name>
+            </OutputUnits>
+          </InstrumentSensitivity>
+          <Stage number="1">
+            <Coefficients>
+              <Description>DIGITIZER - CS5321 Delta-Sigma A/D converter</Description>
+              <InputUnits>
+                <Name>m/s</Name>
+              </InputUnits>
+              <OutputUnits>
+                <Name>count</Name>
+              </OutputUnits>
+              <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+              <Numerator>1.0</Numerator>
+            </Coefficients>
+            <Decimation>
+              <InputSampleRate unit="HERTZ">100.0</InputSampleRate>
+              <Factor>1</Factor>
+              <Offset>0</Offset>
+              <Delay>0.0</Delay>
+              <Correction>0.0</Correction>
+            </Decimation>
+            <StageGain>
+              <Value>2000.0</Value>
+              <Frequency>1.0</Frequency>
+            </StageGain>
+          </Stage>
+        </Response>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>
