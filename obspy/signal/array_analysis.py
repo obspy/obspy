@@ -616,8 +616,8 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
     :return: Returns the geometry of the stations as 2d :class:`numpy.ndarray`
             The first dimension are the station indexes with the same order
             as the traces in the stream object. The second index are the
-            values of [lat, lon, elev] in km
-            last index contains center [lat, lon, elev] in degrees and km if
+            values of [lon, lat, elev] in km
+            last index contains center [lon, lat, elev] in degrees and km if
             return_center is true
     """
     nstat = len(stream)
