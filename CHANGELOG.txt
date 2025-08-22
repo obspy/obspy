@@ -2,6 +2,9 @@ master
 ======
 
 Changes:
+ - General:
+   * adjusted minimum dependency versions to Python >=3.11, numpy >=1.25,
+     scipy >=1.10 and matplotlib >=3.6 (see #3570)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
