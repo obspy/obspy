@@ -1609,7 +1609,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
         # This should rarely be the case.
         if current_time_shift == 0 and is_time_correction_applied:
             # This sets bit 2 of the activity flags to 0.
-            current_record[36] = current_record[36] & (~2)
+            current_record[36] = np.int64(current_record[36]) & (~2)
             is_time_correction_applied = False
         # This is the case if the time correction has been applied. This
         # requires some more work by changing both, the actual time and the
@@ -1659,9 +1659,9 @@ def shift_time_of_file(input_file, output_file, timeshift):
             # Write to current record.
             time[0:2] = year[:]
             time[2:4] = julday[:]
-            time[4] = hour[:]
-            time[5] = minute[:]
-            time[6] = second[:]
+            time[4] = hour[0]
+            time[5] = minute[0]
+            time[6] = second[0]
             time[8:10] = msecs[:]
             current_record[20:30] = time[:]
 

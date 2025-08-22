@@ -77,7 +77,7 @@ class TestFreqTrace():
         # [42] plan
         # [43] dplan
         self.data_win, self.nwin, self.no_win = \
-            util.enframe(self.data, signal.hamming(self.n), self.inc)
+            util.enframe(self.data, signal.windows.hamming(self.n), self.inc)
         self.data_win_bc, self.nwin_, self.no_win_ = \
             util.enframe(self.data, np.ones(self.n), self.inc)
         # self.data_win = data

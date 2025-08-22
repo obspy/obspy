@@ -351,7 +351,7 @@ from . import arrayio as _io
 # class or on an instance.  This looks like "if instance is None" on methods.
 #
 # See:
-# https://docs.python.org/3.5/howto/descriptor.html
+# https://docs.python.org/3/howto/descriptor.html
 # https://nbviewer.jupyter.org/urls/gist.github.com/ChrisBeaumont/
 #   5758381/raw/descriptor_writeup.ipynb
 
@@ -964,10 +964,13 @@ class SACTrace(object):
 
         """
         try:
-            self._hf = self._hf.byteswap(True).newbyteorder('S')
-            self._hi = self._hi.byteswap(True).newbyteorder('S')
+            self._hf = self._hf.byteswap(True).view(
+                self._hf.dtype.newbyteorder('S'))
+            self._hi = self._hi.byteswap(True).view(
+                self._hi.dtype.newbyteorder('S'))
             if self.data is not None:
-                self.data = self.data.byteswap(True).newbyteorder('S')
+                self.data = self.data.byteswap(True).view(
+                        self.data.dtype.newbyteorder('S'))
         except Exception as e:
             # if this fails, roll it back?
             raise e

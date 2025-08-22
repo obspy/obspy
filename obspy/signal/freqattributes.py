@@ -372,8 +372,9 @@ def peak_ground_motion(data, delta, freq, damp=0.1):
     Peak ground motion parameters
 
     Compute the maximal displacement, velocity, acceleration and the peak
-    ground acceleration at a certain frequency (standard frequencies for
-    ShakeMaps are 0.3/1.0/3.0 Hz).
+    ground acceleration at a certain frequency (standard periods for
+    ShakeMaps are 0.3/1.0/3.0 seconds. Note that the above input is expected as
+    frequency in Hertz.).
 
     Data must be displacement
 

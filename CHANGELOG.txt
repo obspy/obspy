@@ -1,6 +1,5 @@
 Next release...
 ====================================
-
 Changes:
  - obspy.io.nordic:
    * Parse ID-lines (type I) into event.extra['nordic_event_id]
@@ -12,14 +11,54 @@ Changes:
  - obspy.io.seisan:
    * Fix parsing of files written in int16
 
-maintenance_1.4.x
-=================
+1.4.2 (doi: 10.5281/zenodo.15309143)
+====================================
+
+Changes:
+ - General:
+   * add support for numpy v2.0 (see #3461)
+ - obspy.core:
+   * util: removed old and outdated 'CatchWarnings' context manager in favor of
+     the better 'CatchAndAssertWarnings' context manager (see #3452)
+ - obspy.clients.fdsn
+   * make sure to use a copy of `DEFAULT_SERVICES` when initializing a client
+     instance while skipping service discovery, to avoid accidental changes to
+     `DEFAULT_SERVICES` (see #3493)
+
+
+1.4.1 (doi: 10.5281/zenodo.11093256)
+====================================
 
 Changes:
  - obspy.core:
+   * fix a bug in response calculation with non-SI input units. With e.g.
+     "nm/s" as first stage input units (which is unusual, though), the
+     amplitude of the frequency response was calculated wrongly, not taking
+     into account the scaling factor needed to get from "nm/s" to "m/s". In
+     general if this bug would have been encountered before it should have led
+     to quite obviously wrong results, since it would lead to values that would
+     have been off by at least two orders of magnitude (e.g. in case of "cm/s")
+     or even up to nine orders of magnitude (e.g. in case of "nm/s").
+     (see #3369)
    * fix a bug in Stream.select(inventory=...) (see #3282)
+   * fix a problem in Stream.plot() failing to remove the "min-max-plot zoom
+     warning" when interactively zooming into and then again out of a plot with
+     reduced number of points plotted with matplotlib >=3.6 (see #3318)
+   * fix an issue with Stream.rotate() when there are dots in e.g. station code
+     (see #3373)
  - obspy.clients.fdsn:
-   * update URL for raspberryshake FDSN web service (see #3264)
+   * update URLs for FDSN web services raspberryshake, ISC and LMU (see #3264,
+     and #3413)
+   * properly include server response in error messages on bad requests (see
+     #3306)
+   * IRIS/Earthscope: fix all "catalogs" and "contributors" being suffixed with
+     '\n ' (see #3438)
+ - obspy.clients.nrl:
+   * better handling of individual stages units when combining sensor and
+     datalogger response from a full downloaded offline version of the new NRL
+     v2 (see #3315, #3395)
+   * add support to use new categories "integrated" and "soh" in new NRL v2
+     (see #3315)
  - obspy.clients.seedlink:
    * avoid unnecessary calls to "get_info()" on waveform requests without
      wildcards (see #3232)
@@ -27,12 +66,33 @@ Changes:
    * fix a bug that raised an error when plotting beachball patches with
      routine "beach" with providing an existing axes instance (for proper
      scaling) and saving to vector graphics as pdf/eps (see #2887)
+   * fix a problem in Stream.plot() failing to remove the "min-max-plot zoom
+     warning" when interactively zooming into and then again out of a plot with
+     reduced number of points plotted with matplotlib >=3.6 (see #3318)
+   * fix some issues with bad x-tick positioning and labeling in dayplots
+     (see #3361)
+   * fix a bug in Stream.plot() where the plotting method argument (e.g.,
+     'fast', 'full') was ignored for section-type plots
  - obspy.io.gcf:
    * Fixed an issue in algorithm to split and encode last few data into GCF 
      blocks (see #3252)
+ - obspy.io.sac:
+   * Fix writing SACPZ from poles and zeros stages with Hertz transfer function
+     type. SAC is expecting the SACPZ data to be in radians/s (see #3334)
+ - obspy.io.wav:
+   * Fixed reading of stereo wav files (see #3399)
+ - obspy.io.win:
+   * Fixed three bugs when reading 0.5 byte datawide (see #3310)
  - obspy.io.xseed:
    * Fixed reading SEED frequency-amplitude-phase response lists that are
      spread out over multiple blockettes (see #3277)
+   * Fix reading uncertainties of poles/zeros complex numbers (see #3401)
+ - obspy.io.zmap:
+   * Fix writing events with origins that have no depth or depth errors given
+     (see #3343)
+ - obspy.signal:
+   * PPSD: Fix some time slices getting skipped if sampling rate does not align
+     well with the length of one PSD slice. (see #3387)
  - obspy.taup:
    * bugfix to allow calculations for a model with no discontinuities
      (see #3070, #3244)

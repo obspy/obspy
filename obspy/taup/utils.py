@@ -179,3 +179,22 @@ def _classify_path(path, model):
     if abs(error_p) < abs(error_s):
         return "p"
     return "s"
+
+
+def _flat(list_or_tuple):
+    """
+    Return a flat version of the input tuple. Intention is to avoid numpy
+    single-item arrays with ndim >0. Reason being that newer numpy has
+    deprecated automatic conversion to scalars from these types of arrays and
+    this would result in errors in some future numpy releases.
+    Seems like we rely on this automatic conversion to scalars a lot. This very
+    likely could be done faster and more elegant, not sure if this is impacting
+    execution speed of our taup routines.
+    """
+    def _item_or_return(x):
+        try:
+            return x.item()
+        except AttributeError:
+            return x
+
+    return tuple(_item_or_return(x) for x in list_or_tuple)

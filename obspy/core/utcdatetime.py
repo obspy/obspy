@@ -312,7 +312,8 @@ class UTCDateTime(object):
                     timestamp_seconds = int(value.__dict__['timestamp'])
                     timestamp_microseconds = round(
                         (value.__dict__['timestamp'] % 1.0) * 1e6)
-                    dt_ = datetime.datetime.utcfromtimestamp(timestamp_seconds)
+                    dt_ = datetime.datetime.fromtimestamp(
+                        timestamp_seconds, tz=datetime.timezone.utc)
                     dt_ = dt_.replace(microsecond=timestamp_microseconds)
                     self._from_datetime(dt_)
                 return
@@ -685,7 +686,8 @@ class UTCDateTime(object):
             return TIMESTAMP0 + dt
         except OverflowError:
             # for very large future / past dates
-            return datetime.datetime.utcfromtimestamp(self.timestamp)
+            return datetime.datetime.fromtimestamp(
+                self.timestamp, tz=datetime.timezone.utc)
 
     datetime = property(_get_datetime)
 
@@ -993,6 +995,12 @@ class UTCDateTime(object):
             msg = ("unsupported operand type(s) for +: 'UTCDateTime' and "
                    "'UTCDateTime'")
             raise TypeError(msg)
+        # need to make sure we don't get e.g. np.float32 singl precision input
+        # or worse, because then numpy is in charge of the calculations and
+        # numpy 2.0 is not automatically upcasting to avoid precision loss
+        # which means we can't keep full precision when converting input
+        # seconds to nanoseconds
+        value = float(value)
         return UTCDateTime(ns=self._ns + int(round(value * 1e9)))
 
     def __sub__(self, value):

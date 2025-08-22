@@ -1818,14 +1818,14 @@ class TestStream:
             st = Stream([tr_a, tr_b])
             st._cleanup()
             assert st == Stream([tr1])
-            assert type(st[0].data) == np.ndarray
+            assert isinstance(st[0].data, np.ndarray)
         # test mergeable traces (adjacent ones)
         for tr_b in [tr5, tr6]:
             tr_a = tr1.copy()
             st = Stream([tr_a, tr_b])
             st._cleanup()
             assert len(st) == 1
-            assert type(st[0].data) == np.ndarray
+            assert isinstance(st[0].data, np.ndarray)
             st_result = Stream([tr1, tr_b])
             st_result.merge()
             assert st == st_result
@@ -1835,7 +1835,7 @@ class TestStream:
             st = Stream([tr_a, tr_b])
             st._cleanup()
             assert len(st) == 1
-            assert type(st[0].data) == np.ndarray
+            assert isinstance(st[0].data, np.ndarray)
             st_result = Stream([tr1, tr_b])
             st_result.merge()
             assert st == st_result
@@ -2003,6 +2003,11 @@ class TestStream:
         Testing the rotate method.
         """
         st = read()
+        # test for #3373
+        # add some weird dots in station/location code
+        for tr in st:
+            tr.stats.station = 'RJ.OB'
+            tr.stats.location = '0.'
         st += st.copy()
         st[3:].normalize()
         st2 = st.copy()

@@ -609,7 +609,7 @@ class TestQuakeML():
         all_enums = {}
         for module_item_name in dir(event_header):
             module_item = getattr(event_header, module_item_name)
-            if type(module_item) != Enum:
+            if not isinstance(module_item, Enum):
                 continue
             # Assign clearer names.
             enum_name = module_item_name

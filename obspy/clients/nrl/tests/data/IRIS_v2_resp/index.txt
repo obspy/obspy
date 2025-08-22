@@ -1,0 +1,15 @@
+[Main]
+question = "Select the hardware element"
+
+[Soh]
+path = "soh/index.txt"
+
+[Sensor]
+path = "sensor/index.txt"
+
+[Integrated]
+path = "integrated/index.txt"
+
+[Datalogger]
+path = "datalogger/index.txt"
+

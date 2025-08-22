@@ -276,7 +276,7 @@ class Client(object):
         if _discover_services:
             self._discover_services()
         else:
-            self.services = DEFAULT_SERVICES
+            self.services = DEFAULT_SERVICES.copy()
 
         # Use EIDA token if provided - this requires setting new url openers.
         #
@@ -1618,6 +1618,12 @@ class Client(object):
                 try:
                     self.services["available_event_catalogs"] = \
                         parse_simple_xml(wadl)["catalogs"]
+                    # XXX can be removed when IRIS/Earthscope drops its event
+                    # webservice
+                    if '.iris.' in url or 'earthscope' in url:
+                        self.services["available_event_catalogs"] = \
+                            _cleanup_earthscope(
+                                self.services["available_event_catalogs"])
                 except ValueError:
                     msg = "Could not parse the catalogs at '%s'." % url
                     warnings.warn(msg)
@@ -1625,6 +1631,12 @@ class Client(object):
                 try:
                     self.services["available_event_contributors"] = \
                         parse_simple_xml(wadl)["contributors"]
+                    # XXX can be removed when IRIS/Earthscope drops its event
+                    # webservice
+                    if '.iris.' in url or 'earthscope' in url:
+                        self.services["available_event_contributors"] = \
+                            _cleanup_earthscope(
+                                self.services["available_event_contributors"])
                 except ValueError:
                     msg = "Could not parse the contributors at '%s'." % url
                     warnings.warn(msg)
@@ -1799,12 +1811,21 @@ def raise_on_error(code, data):
     """
     # get detailed server response message
     if code != 200:
+        # let's try to resolve all the different types that `data` can sadly
+        # have..
+        # first, if it's `BytesIO` (or should it for whatever reason be
+        # `StringIO` which it shouldn't..) then break it down by reading it
         try:
             server_info = data.read()
-        except Exception:
-            server_info = None
-        else:
+        # if there is no `read()` method it should be `bytes`
+        except AttributeError:
+            server_info = data
+        # now decode the bytes (or if for whatever weird reason we ended up
+        # with a string, then do nothing more)
+        try:
             server_info = server_info.decode('ASCII', errors='ignore')
+        except AttributeError:
+            pass
         if server_info:
             server_info = "\n".join(
                 line for line in server_info.splitlines() if line)
@@ -1890,14 +1911,36 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
         url_obj = opener.open(request, timeout=timeout, data=data)
     # Catch HTTP errors.
     except urllib_request.HTTPError as e:
+        # try hard to assemble the most details on what the problem is from the
+        # exception object
+        try:
+            error_msg = e.msg
+        except AttributeError:
+            error_msg = None
+        try:
+            error_details = e.read()
+        except Exception:
+            error_details = None
+        if error_details:
+            # looks like we get bytes back so let's decode but be robust just
+            # in case
+            try:
+                error_details = error_details.decode('UTF-8', errors='ignore')
+            except AttributeError:
+                pass
+        if error_msg and error_details:
+            error_data = f'{error_msg}\n{error_details}'
+        elif error_msg:
+            error_data = error_msg
+        elif error_details:
+            error_data = error_details
+        else:
+            error_data = None
         if debug is True:
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
-                  (e.code, str(e.reason), url, e.read())
+                  (e.code, str(e.reason), url, error_data or '')
             print(msg)
-        else:
-            # Without this line we will get unclosed sockets
-            e.read()
-        return e.code, e
+        return e.code, error_data
     except Exception as e:
         if debug is True:
             print("Error while downloading: %s" % url)
@@ -2045,6 +2088,21 @@ def _validate_eida_token(token):
                    flags=re.IGNORECASE):
         return True
     return False
+
+
+def _cleanup_earthscope(items):
+    """
+    IRIS/Earthscope has all "catalogs" and "contributors" suffixed with "\n "
+    and has confirmed that this will not be fixed. So need to clean up here.
+
+    Can be removed when Earthscope drops its event service
+    """
+    new_items = []
+    for item in items:
+        if item.endswith('\n '):
+            item = item[:-2]
+        new_items.append(item)
+    return new_items
 
 
 if __name__ == '__main__':

@@ -900,12 +900,12 @@ class PPSD(object):
                                      tr.stats.delta)
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?
-                    success = self.__process(slice)
+                    success = self.__process(slice, t1)
                     if success:
                         if verbose:
                             print(t1)
                         changed = True
-                t1 += (1 - self.overlap) * self.ppsd_length  # advance
+                t1 += self.step  # advance
 
             # enforce time limits, pad zeros if gaps
             # tr.trim(t, t+PPSD_LENGTH, pad=True)
@@ -913,7 +913,7 @@ class PPSD(object):
             self.__invalidate_histogram()
         return changed
 
-    def __process(self, tr):
+    def __process(self, tr, t):
         """
         Processes a segment of data and save the psd information.
         Whether `Trace` is compatible (station, channel, ...) has to
@@ -921,6 +921,11 @@ class PPSD(object):
 
         :type tr: :class:`~obspy.core.trace.Trace`
         :param tr: Compatible Trace with data of one PPSD segment
+        :type t: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param t: Start time of the time window the data was cut for. This can
+            be different usually on a subsample scale and then in some cases
+            can lead to a directly following time segment being left out as
+            they seem to overlap.
         :returns: `True` if segment was successfully processed,
             `False` otherwise.
         """
@@ -1011,7 +1016,7 @@ class PPSD(object):
                          (self.psd_periods <= per_right)]
             smoothed_psd.append(specs.mean())
         smoothed_psd = np.array(smoothed_psd, dtype=np.float32)
-        self.__insert_processed_data(tr.stats.starttime, smoothed_psd)
+        self.__insert_processed_data(t, smoothed_psd)
         return True
 
     def _get_times_all_details(self):

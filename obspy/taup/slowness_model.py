@@ -15,6 +15,7 @@ from .slowness_layer import (bullen_depth_for,
                              evaluate_at_bullen)
 from .velocity_layer import (VelocityLayer, evaluate_velocity_at_bottom,
                              evaluate_velocity_at_top)
+from .utils import _flat
 
 
 def _fix_critical_depths(critical_depths, layer_num, is_p_wave):
@@ -1326,15 +1327,15 @@ class SlownessModel(object):
         ldim = np.ndim(layer_num)
 
         if ldim == 1 and pdim == 0:
-            time = np.empty(shape=layer_num.shape, dtype=np.float_)
-            dist = np.empty(shape=layer_num.shape, dtype=np.float_)
+            time = np.empty(shape=layer_num.shape, dtype=np.float64)
+            dist = np.empty(shape=layer_num.shape, dtype=np.float64)
         elif ldim == 0 and pdim == 1:
-            time = np.empty(shape=spherical_ray_param.shape, dtype=np.float_)
-            dist = np.empty(shape=spherical_ray_param.shape, dtype=np.float_)
+            time = np.empty(shape=spherical_ray_param.shape, dtype=np.float64)
+            dist = np.empty(shape=spherical_ray_param.shape, dtype=np.float64)
         elif ldim == pdim and (ldim == 0 or
                                layer_num.shape == spherical_ray_param.shape):
-            time = np.empty(shape=layer_num.shape, dtype=np.float_)
-            dist = np.empty(shape=layer_num.shape, dtype=np.float_)
+            time = np.empty(shape=layer_num.shape, dtype=np.float64)
+            dist = np.empty(shape=layer_num.shape, dtype=np.float64)
         else:
             raise TypeError('Either spherical_ray_param or layer_num must be '
                             '0D, or they must have the same shape.')
@@ -1815,7 +1816,7 @@ class SlownessModel(object):
                     dtype=SlownessLayer)
                 bot_layer = (p, top_layer['bot_depth'],
                              s_layer['bot_p'], s_layer['bot_depth'])
-                out[other_layer_num+number_added] = bot_layer
+                out[other_layer_num+number_added] = _flat(bot_layer)
                 out = np.insert(out, other_layer_num+number_added, top_layer)
                 # Fix critical layers since we have added a slowness layer.
                 _fix_critical_depths(critical_depths,
