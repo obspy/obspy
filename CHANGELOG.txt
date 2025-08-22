@@ -32,6 +32,9 @@ Changes:
      getting raised as an FDSNException but some low-level exceptions like
      AttributeError, which in turn caused problems in Mass Downloader (see
      #3513)
+  - obspy.clients.neic
+   * Update the default CWB QueryServer IP address from the old IP to the
+     new USGS server address (see #3592)
  - obspy.clients.seedlink:
    * fix a bug in basic client `get_info()` which leaded to exceptions when
      querying with `level="channel"` in presence of stations with no current
@@ -73,6 +76,7 @@ Changes:
    * add support for Chebyshev I/II, elliptic and Bessel filters alongside
      the default Butterworth filters (see #3294)
    * fix potential out of bounds array access in AR picker (see #1801)
+   * fix a small issue in evalresp linked to picky new gcc (see #3578)
  - obspy.signal.spectral_estimation.PPSD:
    * Changed the moment instrument responses are calculated by evalresp: they
      are now preloaded at PPSD instantiation time, and no longer calculated
