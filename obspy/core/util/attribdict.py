@@ -153,7 +153,8 @@ class AttribDict(collections.abc.MutableMapping):
                 continue
             self.__setitem__(key, value)
 
-    def _pretty_str(self, priorized_keys=[], min_label_length=16):
+    def _pretty_str(self, priorized_keys=[], min_label_length=16,
+                    suppress_if_none=[]):
         """
         Return better readable string representation of AttribDict object.
 
@@ -176,6 +177,10 @@ class AttribDict(collections.abc.MutableMapping):
         pattern = "%%%ds: %%s" % (i)
         # check if keys exist
         other_keys = [k for k in keys if k not in priorized_keys]
+        # check if some keys should be suppressed
+        for key in suppress_if_none:
+            if key in other_keys and self.__dict__[key] is None:
+                other_keys.remove(key)
         # priorized keys first + all other keys
         keys = priorized_keys + sorted(other_keys)
         head = [pattern % (k, self.__dict__[k]) for k in keys]
