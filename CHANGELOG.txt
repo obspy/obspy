@@ -1,7 +1,16 @@
-master
-======
+Next release...
+====================================
 
 Changes:
+ - obspy.io.nordic:
+   * Parse ID-lines (type I) into event.extra['nordic_event_id]
+   * Support reading of compact Nordic files (only containing header lines)
+   * Write amplitude with highest possible precision
+   * Fix writing / reading of high-frequency IAMLHF amplitudes
+   * Fix parsing of BAZ when they precede the associated phase pick in file
+   * Fix bug where check for nordic format version crashed on long phase names
+ - obspy.io.seisan:
+   * Fix parsing of files written in int16
 
 maintenance_1.4.x
 =================
@@ -21,15 +30,6 @@ Changes:
  - obspy.io.gcf:
    * Fixed an issue in algorithm to split and encode last few data into GCF 
      blocks (see #3252)
- - obspy.io.nordic:
-   * Parse ID-lines (type I) into event.extra['nordic_event_id]
-   * Support reading of compact Nordic files (only containing header lines)
-   * Write amplitude with highest possible precision
-   * Fix writing / reading of high-frequency IAMLHF amplitudes
-   * Fix parsing of BAZ when they precede the associated phase pick in file
-   * Fix bug where check for nordic format version crashed on long phase names
- - obspy.io.seisan:
-   * Fix parsing of files written in int16
  - obspy.io.xseed:
    * Fixed reading SEED frequency-amplitude-phase response lists that are
      spread out over multiple blockettes (see #3277)
