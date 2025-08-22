@@ -11,6 +11,7 @@ Changes:
  - obspy.io.seisan:
    * Fix parsing of files written in int16
 
+
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================
 
