@@ -78,6 +78,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.0
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
@@ -104,6 +105,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
+        assert st[0].stats.calib == 1.0
 
     def test_reading_via_obspy_and_bytesio(self, testdata):
         """
@@ -127,6 +129,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.0
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
@@ -156,6 +159,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
+        assert st[0].stats.calib == 1.0
 
     def test_read_via_module(self, testdata):
         """
@@ -176,6 +180,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.0
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
@@ -226,6 +231,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.0
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
@@ -255,6 +261,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
+        assert st[0].stats.calib == 1.0
 
     def verify_stats_evt(self, evt_stats):
         dico = {'chan_fullscale': 2.5, 'chan_sensorgain': 1,
@@ -330,6 +337,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.1694431304931641e-06
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0_raw(st[0].data)
