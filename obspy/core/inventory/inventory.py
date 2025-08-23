@@ -205,7 +205,7 @@ class Inventory(ComparingObject):
         elif isinstance(key, tuple):
             if len(key) == 1:
                 return self.networks[key[0]]
-            elif len(key) == 2:  
+            elif len(key) == 2:
                 return self.networks[key[0]].stations[key[1]]
             elif len(key) == 3:
                 return self.networks[key[0]].stations[key[1]].channels[key[2]]
@@ -558,24 +558,24 @@ class Inventory(ComparingObject):
         return orientation
 
     def select(self, network=None, station=None, location=None, channel=None,
-                   time=None, starttime=None, endtime=None, sampling_rate=None,
-                   keep_empty=False, minlatitude=None, maxlatitude=None,
-                   minlongitude=None, maxlongitude=None, latitude=None,
-                   longitude=None, minradius=None, maxradius=None,
-                   shallow_copy=False):
+               time=None, starttime=None, endtime=None, sampling_rate=None,
+               keep_empty=False, minlatitude=None, maxlatitude=None,
+               minlongitude=None, maxlongitude=None, latitude=None,
+               longitude=None, minradius=None, maxradius=None,
+               shallow_copy=False):
             r"""
             Return a copy of the inventory filtered on various parameters.
 
             Returns the :class:`Inventory` object with only the
             :class:`~obspy.core.inventory.network.Network`\ s /
             :class:`~obspy.core.inventory.station.Station`\ s /
-            :class:`~obspy.core.inventory.channel.Channel`\ s that match the given
-            criteria (e.g. all channels with ``channel="EHZ"``).
+            :class:`~obspy.core.inventory.channel.Channel`\ s that match the
+            given criteria (e.g. all channels with ``channel="EHZ"``).
 
             .. warning::
-                If shallow_copy = True, the returned object is based on a shallow
-                copy of the original object. That means that modifying any mutable
-                child elements will also modify the original object
+                If shallow_copy = True, the returned object is based on a
+                shallow copy of the original object. This means that modifying
+                any mutable child elements will modify the original object
                 (see https://docs.python.org/3/library/copy.html).
 
             .. rubric:: Example
@@ -598,41 +598,41 @@ class Inventory(ComparingObject):
                     Channels (4):
                         BW.RJOB..EHZ, GR.WET..BHZ, GR.WET..HHZ, GR.WET..LHZ
 
-            The `network`, `station`, `location` and `channel` selection criteria
-            may also contain UNIX style wildcards (e.g. ``*``, ``?``, ...; see
-            :func:`~fnmatch.fnmatch`).
+            The `network`, `station`, `location` and `channel` selection
+            criteria may also contain UNIX style wildcards
+            (e.g. ``*``, ``?``, ...; see :func:`~fnmatch.fnmatch`).
 
             :type network: str
-            :param network: Potentially wildcarded network code. If not given,
-                all network codes will be accepted.
+            :param network: Potentially wildcarded network code.
+                If not given, all network codes will be accepted.
             :type station: str
-            :param station: Potentially wildcarded station code. If not given,
-                all station codes will be accepted.
+            :param station: Potentially wildcarded station code.
+                If not given, all station codes will be accepted.
             :type location: str
-            :param location: Potentially wildcarded location code. If not given,
-                all location codes will be accepted.
+            :param location: Potentially wildcarded location code.
+                If not given, all location codes will be accepted.
             :type channel: str
-            :param channel: Potentially wildcarded channel code. If not given,
-                all channel codes will be accepted.
+            :param channel: Potentially wildcarded channel code.
+                If not given, all channel codes will be accepted.
             :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
-            :param time: Only include networks/stations/channels active at given
-                point in time.
+            :param time: Only include networks/stations/channels active
+                at given point in time.
             :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-            :param starttime: Only include networks/stations/channels active at or
-                after given point in time (i.e. channels ending before given time
-                will not be shown).
+            :param starttime: Only include networks/stations/channels active
+                at or after given point in time (i.e. channels ending before
+                given time will not be shown).
             :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-            :param endtime: Only include networks/stations/channels active before
-                or at given point in time (i.e. channels starting after given time
-                will not be shown).
+            :param endtime: Only include networks/stations/channels active
+                before or at given point in time (i.e. channels starting
+                after given time will not be shown).
             :type sampling_rate: float
             :param sampling_rate: Only include channels whose sampling rate
-                matches the given sampling rate, in Hz (within absolute tolerance
-                of 1E-8 Hz and relative tolerance of 1E-5)
+                matches the given sampling rate, in Hz (within absolute
+                tolerance of 1E-8 Hz and relative tolerance of 1E-5)
             :type keep_empty: bool
             :param keep_empty: If set to `True`, networks/stations that match
-                themselves but have no matching child elements (stations/channels)
-                will be included in the result.
+                themselves but have no matching child elements
+                (stations/channels) will be included in the result.
             :type minlatitude: float
             :param minlatitude: Only include stations/channels with a latitude
                 larger than the specified minimum.
@@ -640,11 +640,11 @@ class Inventory(ComparingObject):
             :param maxlatitude: Only include stations/channels with a latitude
                 smaller than the specified maximum.
             :type minlongitude: float
-            :param minlongitude: Only include stations/channels with a longitude
-                larger than the specified minimum.
+            :param minlongitude: Only include stations/channels with a
+                longitude larger than the specified minimum.
             :type maxlongitude: float
-            :param maxlongitude: Only include stations/channels with a longitude
-                smaller than the specified maximum.
+            :param maxlongitude: Only include stations/channels with a
+                longitude smaller than the specified maximum.
             :type latitude: float
             :param latitude: Specify the latitude to be used for a radius
                 selection.
@@ -652,18 +652,18 @@ class Inventory(ComparingObject):
             :param longitude: Specify the longitude to be used for a radius
                 selection.
             :type minradius: float
-            :param minradius: Only include stations/channels within the specified
-                minimum number of degrees from the geographic point defined by the
-                latitude and longitude parameters.
+            :param minradius: Only include stations/channels within the
+                specified minimum number of degrees from the geographic point
+                defined by the latitude and longitude parameters.
             :type maxradius: float
-            :param maxradius: Only include stations/channels within the specified
-                maximum number of degrees from the geographic point defined by the
-                latitude and longitude parameters.
+            :param maxradius: Only include stations/channels within the
+                specified maximum number of degrees from the geographic point
+                defined by the latitude and longitude parameters.
             :type shallow_copy: bool
-            :param shallow_copy: If True, returns an inventory that shares the same
-                Network/Station/Channel objects as original (true shallow copy)
-                Set True when you need to map results back to original inventory
-                indices.
+            :param shallow_copy: If True, returns an inventory that shares the
+                same Network/Station/Channel objects as original (true shallow
+                copy) Set True when you need to map results back to original
+                inventory indices.
             """
             networks = []
             for net in self.networks:
@@ -681,28 +681,28 @@ class Inventory(ComparingObject):
 
                 if shallow_copy:
                     if not any([station, location, channel, sampling_rate,
-                                minlatitude, maxlatitude, minlongitude, 
-                                maxlongitude, latitude, longitude, minradius, 
+                                minlatitude, maxlatitude, minlongitude,
+                                maxlongitude, latitude, longitude, minradius,
                                 maxradius]):
                         # Network-only filtering
                         networks.append(net)
                     else:
-                        # We have station/channel level criteria, but we want to 
-                        # preserve object identity. So we'll include the whole 
+                        # We have station/channel level criteria, but want to
+                        # preserve object identity. So we'll include the whole
                         # network and let where() handle the detailed filtering
                         networks.append(net)
                 else:
                     net_ = net.select(
-                        station=station, location=location, channel=channel, 
+                        station=station, location=location, channel=channel,
                         time=time, starttime=starttime, endtime=endtime,
                         sampling_rate=sampling_rate, keep_empty=keep_empty,
                         minlatitude=minlatitude, maxlatitude=maxlatitude,
                         minlongitude=minlongitude, maxlongitude=maxlongitude,
                         latitude=latitude, longitude=longitude,
                         minradius=minradius, maxradius=maxradius)
-                    
-                    # If the network previously had stations but no longer has any
-                    # and keep_empty is False: Skip the network.
+
+                    # If the network previously had stations but no longer has
+                    # any and keep_empty is False: Skip the network.
                     if has_stations and not keep_empty and not net_.stations:
                         continue
                     networks.append(net_)
@@ -741,13 +741,13 @@ class Inventory(ComparingObject):
         :param time: Only include networks/stations/channels active at given
             point in time.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Only include networks/stations/channels active at or
-            after given point in time (i.e. channels ending before given time
-            will not be shown).
+        :param starttime: Only include networks/stations/channels active at
+            or after given point in time (i.e. channels ending before given
+            time will not be shown).
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Only include networks/stations/channels active before
-            or at given point in time (i.e. channels starting after given time
-            will not be shown).
+            or at given point in time (i.e. channels starting after given
+            time will not be shown).
         :type sampling_rate: float
         :param sampling_rate: Only include channels whose sampling rate
             matches the given sampling rate, in Hz (within absolute tolerance
@@ -772,12 +772,12 @@ class Inventory(ComparingObject):
             selection.
         :type minradius: float
         :param minradius: Only include stations/channels within the specified
-            minimum number of degrees from the geographic point defined by the
-            latitude and longitude parameters.
+            minimum number of degrees from the geographic point defined by
+            the latitude and longitude parameters.
         :type maxradius: float
         :param maxradius: Only include stations/channels within the specified
-            maximum number of degrees from the geographic point defined by the
-            latitude and longitude parameters.
+            maximum number of degrees from the geographic point defined by
+            the latitude and longitude parameters.
         :rtype: list
         :return: List of tuples for matching elements:
 
@@ -792,7 +792,7 @@ class Inventory(ComparingObject):
         >>> channel = inv[indices[0]]  # Should be single result
 
         >>> # Find all BHZ channels across networks
-        >>> indices = inv.where("*.*.*.BHZ") 
+        >>> indices = inv.where("*.*.*.BHZ")
         >>> channels = inv[indices]
 
         >>> # Find all stations in IU network
@@ -806,7 +806,7 @@ class Inventory(ComparingObject):
         >>> from obspy import UTCDateTime
         >>> t1 = UTCDateTime("2010-01-01")
         >>> t2 = UTCDateTime("2010-12-31")
-        >>> indices = inv.where(starttime=t1, endtime=t2, channel="*Z", 
+        >>> indices = inv.where(starttime=t1, endtime=t2, channel="*Z",
         ...                     minlatitude=40, maxlatitude=50)
         """
 
@@ -829,15 +829,15 @@ class Inventory(ComparingObject):
                 }
             else:
                 raise ValueError(f"Invalid SEED ID format: {seed_id}. "
-                               "Expected N, N.S, or N.S.L.C")
+                                 "Expected N, N.S, or N.S.L.C")
 
         filtered = self.select(shallow_copy=True, **kwargs)
 
         indices = []
 
-        # When using shallow_copy=True, the filtered inventory may contain 
-        # entire networks even if we only want specific stations/channels, 
-        # so we need to apply the filtering logic ourselves to find the 
+        # When using shallow_copy=True, the filtered inventory may contain
+        # entire networks even if we only want specific stations/channels,
+        # so we need to apply the filtering logic ourselves to find the
         # actual matching elements
 
         for net_idx, net in enumerate(self.networks):
@@ -846,10 +846,10 @@ class Inventory(ComparingObject):
                 continue
 
             # Check networks
-            if all(x is None for x in [kwargs.get('station'), 
-                                      kwargs.get('location'),
-                                      kwargs.get('channel'), 
-                                      kwargs.get('sampling_rate')]):
+            if all(x is None for x in [kwargs.get('station'),
+                                       kwargs.get('location'),
+                                       kwargs.get('channel'),
+                                       kwargs.get('sampling_rate')]):
 
                 indices.append((net_idx,))
                 continue
@@ -860,7 +860,7 @@ class Inventory(ComparingObject):
                 if not self._station_matches_criteria(sta, **kwargs):
                     continue
 
-                if (kwargs.get('location') is None and 
+                if (kwargs.get('location') is None and
                         kwargs.get('channel') is None):
                     indices.append((net_idx, sta_idx))
                     continue
@@ -875,17 +875,17 @@ class Inventory(ComparingObject):
         """Check if a station (sta) matches the given criteria."""
 
         station_pattern = kwargs.get('station')
-        if (station_pattern and 
+        if (station_pattern and
                 not fnmatch.fnmatch(sta.code.upper(),
-                                   station_pattern.upper())):
+                                    station_pattern.upper())):
             return False
 
         time = kwargs.get('time')
         starttime = kwargs.get('starttime')
         endtime = kwargs.get('endtime')
         if any(t is not None for t in (time, starttime, endtime)):
-            if not sta.is_active(time=time, starttime=starttime, 
-                                endtime=endtime):
+            if not sta.is_active(time=time, starttime=starttime,
+                                 endtime=endtime):
                 return False
 
         lat_min = kwargs.get('minlatitude')
@@ -893,16 +893,16 @@ class Inventory(ComparingObject):
         lon_min = kwargs.get('minlongitude')
         lon_max = kwargs.get('maxlongitude')
 
-        if (lat_min is not None and 
+        if (lat_min is not None and
                 (sta.latitude is None or sta.latitude <= lat_min)):
             return False
-        if (lat_max is not None and 
+        if (lat_max is not None and
                 (sta.latitude is None or sta.latitude >= lat_max)):
             return False
-        if (lon_min is not None and 
+        if (lon_min is not None and
                 (sta.longitude is None or sta.longitude <= lon_min)):
             return False
-        if (lon_max is not None and 
+        if (lon_max is not None and
                 (sta.longitude is None or sta.longitude >= lon_max)):
             return False
 
@@ -912,15 +912,15 @@ class Inventory(ComparingObject):
         """Check if a channel (cha) matches the given criteria."""
 
         location_pattern = kwargs.get('location')
-        if (location_pattern and 
+        if (location_pattern and
                 not fnmatch.fnmatch(cha.location_code or "",
-                                   location_pattern)):
+                                    location_pattern)):
             return False
 
         channel_pattern = kwargs.get('channel')
-        if (channel_pattern and 
+        if (channel_pattern and
                 not fnmatch.fnmatch(cha.code.upper(),
-                                   channel_pattern.upper())):
+                                    channel_pattern.upper())):
             return False
 
         time = kwargs.get('time')
@@ -928,7 +928,7 @@ class Inventory(ComparingObject):
         endtime = kwargs.get('endtime')
         if any(t is not None for t in (time, starttime, endtime)):
             if not cha.is_active(time=time, starttime=starttime,
-                                endtime=endtime):
+                                 endtime=endtime):
                 return False
 
         sampling_rate = kwargs.get('sampling_rate')
