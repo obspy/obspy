@@ -9,10 +9,9 @@ Changes:
      (see #3251)
    * inventory: additional formatting tweaks to expanded channel information
      (see #3261)
-   * inventory: add shallow_copy kwarg to select to retrieve true shallow copy to
-     allow for easier direct editing, correct docstring for clarity
-   * inventory: add where function to retrieve network, station, and channel index
-     values via seed_id or select search parameters
+   * inventory: correct select docstring; does not return a shallow copy
+   * inventory: add 'where' function to retrieve network, station, and channel
+     index values via seed_id and/or select search parameters
    * inventory: expand functionality of _getitem_ to accept index tuples
    * read(): better support for reading from file-like objects in many plugins
      (see #3346)
