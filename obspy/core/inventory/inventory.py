@@ -711,232 +711,232 @@ class Inventory(ComparingObject):
             inv.networks = networks
             return inv
 
-        def where(self, seed_id=None, **kwargs):
-            """
-            Find indices of inventory elements matching selection criteria.
+    def where(self, seed_id=None, **kwargs):
+        """
+        Find indices of inventory elements matching selection criteria.
 
-            Can use either a SEED ID string or the same parameters as select().
+        Can use either a SEED ID string or the same parameters as select().
 
-            :type seed_id: str, optional
-            :param seed_id: SEED ID string to search for. Can be:
+        :type seed_id: str, optional
+        :param seed_id: SEED ID string to search for. Can be:
 
-                * ``"N"`` (network code only)
-                * ``"N.S"`` (network and station codes)
-                * ``"N.S.L.C"`` (network, station, location, and channel codes)
+            * ``"N"`` (network code only)
+            * ``"N.S"`` (network and station codes)
+            * ``"N.S.L.C"`` (network, station, location, and channel codes)
 
-                Supports wildcards (?,*) in any component.
-            :type network: str
-            :param network: Potentially wildcarded network code. If not given,
-                all network codes will be accepted.
-            :type station: str
-            :param station: Potentially wildcarded station code. If not given,
-                all station codes will be accepted.
-            :type location: str
-            :param location: Potentially wildcarded location code. If not given,
-                all location codes will be accepted.
-            :type channel: str
-            :param channel: Potentially wildcarded channel code. If not given,
-                all channel codes will be accepted.
-            :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
-            :param time: Only include networks/stations/channels active at given
-                point in time.
-            :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-            :param starttime: Only include networks/stations/channels active at or
-                after given point in time (i.e. channels ending before given time
-                will not be shown).
-            :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-            :param endtime: Only include networks/stations/channels active before
-                or at given point in time (i.e. channels starting after given time
-                will not be shown).
-            :type sampling_rate: float
-            :param sampling_rate: Only include channels whose sampling rate
-                matches the given sampling rate, in Hz (within absolute tolerance
-                of 1E-8 Hz and relative tolerance of 1E-5)
-            :type minlatitude: float
-            :param minlatitude: Only include stations/channels with a latitude
-                larger than the specified minimum.
-            :type maxlatitude: float
-            :param maxlatitude: Only include stations/channels with a latitude
-                smaller than the specified maximum.
-            :type minlongitude: float
-            :param minlongitude: Only include stations/channels with a longitude
-                larger than the specified minimum.
-            :type maxlongitude: float
-            :param maxlongitude: Only include stations/channels with a longitude
-                smaller than the specified maximum.
-            :type latitude: float
-            :param latitude: Specify the latitude to be used for a radius
-                selection.
-            :type longitude: float
-            :param longitude: Specify the longitude to be used for a radius
-                selection.
-            :type minradius: float
-            :param minradius: Only include stations/channels within the specified
-                minimum number of degrees from the geographic point defined by the
-                latitude and longitude parameters.
-            :type maxradius: float
-            :param maxradius: Only include stations/channels within the specified
-                maximum number of degrees from the geographic point defined by the
-                latitude and longitude parameters.
-            :rtype: list
-            :return: List of tuples for matching elements:
+            Supports wildcards (?,*) in any component.
+        :type network: str
+        :param network: Potentially wildcarded network code. If not given,
+            all network codes will be accepted.
+        :type station: str
+        :param station: Potentially wildcarded station code. If not given,
+            all station codes will be accepted.
+        :type location: str
+        :param location: Potentially wildcarded location code. If not given,
+            all location codes will be accepted.
+        :type channel: str
+        :param channel: Potentially wildcarded channel code. If not given,
+            all channel codes will be accepted.
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only include networks/stations/channels active at given
+            point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only include networks/stations/channels active at or
+            after given point in time (i.e. channels ending before given time
+            will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only include networks/stations/channels active before
+            or at given point in time (i.e. channels starting after given time
+            will not be shown).
+        :type sampling_rate: float
+        :param sampling_rate: Only include channels whose sampling rate
+            matches the given sampling rate, in Hz (within absolute tolerance
+            of 1E-8 Hz and relative tolerance of 1E-5)
+        :type minlatitude: float
+        :param minlatitude: Only include stations/channels with a latitude
+            larger than the specified minimum.
+        :type maxlatitude: float
+        :param maxlatitude: Only include stations/channels with a latitude
+            smaller than the specified maximum.
+        :type minlongitude: float
+        :param minlongitude: Only include stations/channels with a longitude
+            larger than the specified minimum.
+        :type maxlongitude: float
+        :param maxlongitude: Only include stations/channels with a longitude
+            smaller than the specified maximum.
+        :type latitude: float
+        :param latitude: Specify the latitude to be used for a radius
+            selection.
+        :type longitude: float
+        :param longitude: Specify the longitude to be used for a radius
+            selection.
+        :type minradius: float
+        :param minradius: Only include stations/channels within the specified
+            minimum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type maxradius: float
+        :param maxradius: Only include stations/channels within the specified
+            maximum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :rtype: list
+        :return: List of tuples for matching elements:
 
-                * ``(net_idx,)`` for network-only matches
-                * ``(net_idx, sta_idx)`` for station matches
-                * ``(net_idx, sta_idx, chan_idx)`` for channel matches
+            * ``(net_idx,)`` for network-only matches
+            * ``(net_idx, sta_idx)`` for station matches
+            * ``(net_idx, sta_idx, chan_idx)`` for channel matches
 
-            .. rubric:: Example
+        .. rubric:: Example
 
-            >>> # Find specific channel by SEED ID
-            >>> indices = inv.where("IU.ANMO.00.BHZ")
-            >>> channel = inv[indices[0]]  # Should be single result
+        >>> # Find specific channel by SEED ID
+        >>> indices = inv.where("IU.ANMO.00.BHZ")
+        >>> channel = inv[indices[0]]  # Should be single result
 
-            >>> # Find all BHZ channels across networks
-            >>> indices = inv.where("*.*.*.BHZ") 
-            >>> channels = inv[indices]
+        >>> # Find all BHZ channels across networks
+        >>> indices = inv.where("*.*.*.BHZ") 
+        >>> channels = inv[indices]
 
-            >>> # Find all stations in IU network
-            >>> indices = inv.where("IU.*")
-            >>> stations = inv[indices]
+        >>> # Find all stations in IU network
+        >>> indices = inv.where("IU.*")
+        >>> stations = inv[indices]
 
-            >>> # Alternative: use select parameters
-            >>> indices = inv.where(channel="BHZ", network="IU")
+        >>> # Alternative: use select parameters
+        >>> indices = inv.where(channel="BHZ", network="IU")
 
-            >>> # Find channels in a time range with geographic constraints
-            >>> from obspy import UTCDateTime
-            >>> t1 = UTCDateTime("2010-01-01")
-            >>> t2 = UTCDateTime("2010-12-31")
-            >>> indices = inv.where(starttime=t1, endtime=t2, channel="*Z", 
-            ...                     minlatitude=40, maxlatitude=50)
-            """
+        >>> # Find channels in a time range with geographic constraints
+        >>> from obspy import UTCDateTime
+        >>> t1 = UTCDateTime("2010-01-01")
+        >>> t2 = UTCDateTime("2010-12-31")
+        >>> indices = inv.where(starttime=t1, endtime=t2, channel="*Z", 
+        ...                     minlatitude=40, maxlatitude=50)
+        """
 
-            if seed_id is not None:
-                parts = seed_id.split('.')
+        if seed_id is not None:
+            parts = seed_id.split('.')
 
-                if len(parts) == 1:
-                    # Network only: "IU"
-                    kwargs = {'network': parts[0]}
-                elif len(parts) == 2:
-                    # Network and station: "IU.ANMO"
-                    kwargs = {'network': parts[0], 'station': parts[1]}
-                elif len(parts) == 4:
-                    # Full SEED ID: "IU.ANMO.00.BHZ"
-                    kwargs = {
-                        'network': parts[0],
-                        'station': parts[1],
-                        'location': parts[2] if parts[2] else None,
-                        'channel': parts[3]
-                    }
-                else:
-                    raise ValueError(f"Invalid SEED ID format: {seed_id}. "
-                                   "Expected N, N.S, or N.S.L.C")
+            if len(parts) == 1:
+                # Network only: "IU"
+                kwargs = {'network': parts[0]}
+            elif len(parts) == 2:
+                # Network and station: "IU.ANMO"
+                kwargs = {'network': parts[0], 'station': parts[1]}
+            elif len(parts) == 4:
+                # Full SEED ID: "IU.ANMO.00.BHZ"
+                kwargs = {
+                    'network': parts[0],
+                    'station': parts[1],
+                    'location': parts[2] if parts[2] else None,
+                    'channel': parts[3]
+                }
+            else:
+                raise ValueError(f"Invalid SEED ID format: {seed_id}. "
+                               "Expected N, N.S, or N.S.L.C")
 
-            filtered = self.select(shallow_copy=True, **kwargs)
+        filtered = self.select(shallow_copy=True, **kwargs)
 
-            indices = []
+        indices = []
 
-            # When using shallow_copy=True, the filtered inventory may contain 
-            # entire networks even if we only want specific stations/channels, 
-            # so we need to apply the filtering logic ourselves to find the 
-            # actual matching elements
+        # When using shallow_copy=True, the filtered inventory may contain 
+        # entire networks even if we only want specific stations/channels, 
+        # so we need to apply the filtering logic ourselves to find the 
+        # actual matching elements
 
-            for net_idx, net in enumerate(self.networks):
+        for net_idx, net in enumerate(self.networks):
 
-                if net not in filtered.networks:
+            if net not in filtered.networks:
+                continue
+
+            # Check networks
+            if all(x is None for x in [kwargs.get('station'), 
+                                      kwargs.get('location'),
+                                      kwargs.get('channel'), 
+                                      kwargs.get('sampling_rate')]):
+
+                indices.append((net_idx,))
+                continue
+
+            # Check stations and channels
+            for sta_idx, sta in enumerate(net.stations):
+
+                if not self._station_matches_criteria(sta, **kwargs):
                     continue
 
-                # Check networks
-                if all(x is None for x in [kwargs.get('station'), 
-                                          kwargs.get('location'),
-                                          kwargs.get('channel'), 
-                                          kwargs.get('sampling_rate')]):
-
-                    indices.append((net_idx,))
+                if (kwargs.get('location') is None and 
+                        kwargs.get('channel') is None):
+                    indices.append((net_idx, sta_idx))
                     continue
 
-                # Check stations and channels
-                for sta_idx, sta in enumerate(net.stations):
+                for chan_idx, chan in enumerate(sta.channels):
+                    if self._channel_matches_criteria(chan, **kwargs):
+                        indices.append((net_idx, sta_idx, chan_idx))
 
-                    if not self._station_matches_criteria(sta, **kwargs):
-                        continue
+        return indices
 
-                    if (kwargs.get('location') is None and 
-                            kwargs.get('channel') is None):
-                        indices.append((net_idx, sta_idx))
-                        continue
+    def _station_matches_criteria(self, sta, **kwargs):
+        """Check if a station (sta) matches the given criteria."""
 
-                    for chan_idx, chan in enumerate(sta.channels):
-                        if self._channel_matches_criteria(chan, **kwargs):
-                            indices.append((net_idx, sta_idx, chan_idx))
+        station_pattern = kwargs.get('station')
+        if (station_pattern and 
+                not fnmatch.fnmatch(sta.code.upper(),
+                                   station_pattern.upper())):
+            return False
 
-            return indices
-
-        def _station_matches_criteria(self, sta, **kwargs):
-            """Check if a station (sta) matches the given criteria."""
-
-            station_pattern = kwargs.get('station')
-            if (station_pattern and 
-                    not fnmatch.fnmatch(sta.code.upper(),
-                                       station_pattern.upper())):
+        time = kwargs.get('time')
+        starttime = kwargs.get('starttime')
+        endtime = kwargs.get('endtime')
+        if any(t is not None for t in (time, starttime, endtime)):
+            if not sta.is_active(time=time, starttime=starttime, 
+                                endtime=endtime):
                 return False
 
-            time = kwargs.get('time')
-            starttime = kwargs.get('starttime')
-            endtime = kwargs.get('endtime')
-            if any(t is not None for t in (time, starttime, endtime)):
-                if not sta.is_active(time=time, starttime=starttime, 
-                                    endtime=endtime):
-                    return False
+        lat_min = kwargs.get('minlatitude')
+        lat_max = kwargs.get('maxlatitude')
+        lon_min = kwargs.get('minlongitude')
+        lon_max = kwargs.get('maxlongitude')
 
-            lat_min = kwargs.get('minlatitude')
-            lat_max = kwargs.get('maxlatitude')
-            lon_min = kwargs.get('minlongitude')
-            lon_max = kwargs.get('maxlongitude')
+        if (lat_min is not None and 
+                (sta.latitude is None or sta.latitude <= lat_min)):
+            return False
+        if (lat_max is not None and 
+                (sta.latitude is None or sta.latitude >= lat_max)):
+            return False
+        if (lon_min is not None and 
+                (sta.longitude is None or sta.longitude <= lon_min)):
+            return False
+        if (lon_max is not None and 
+                (sta.longitude is None or sta.longitude >= lon_max)):
+            return False
 
-            if (lat_min is not None and 
-                    (sta.latitude is None or sta.latitude <= lat_min)):
+        return True
+
+    def _channel_matches_criteria(self, cha, **kwargs):
+        """Check if a channel (cha) matches the given criteria."""
+
+        location_pattern = kwargs.get('location')
+        if (location_pattern and 
+                not fnmatch.fnmatch(cha.location_code or "",
+                                   location_pattern)):
+            return False
+
+        channel_pattern = kwargs.get('channel')
+        if (channel_pattern and 
+                not fnmatch.fnmatch(cha.code.upper(),
+                                   channel_pattern.upper())):
+            return False
+
+        time = kwargs.get('time')
+        starttime = kwargs.get('starttime')
+        endtime = kwargs.get('endtime')
+        if any(t is not None for t in (time, starttime, endtime)):
+            if not cha.is_active(time=time, starttime=starttime,
+                                endtime=endtime):
                 return False
-            if (lat_max is not None and 
-                    (sta.latitude is None or sta.latitude >= lat_max)):
-                return False
-            if (lon_min is not None and 
-                    (sta.longitude is None or sta.longitude <= lon_min)):
-                return False
-            if (lon_max is not None and 
-                    (sta.longitude is None or sta.longitude >= lon_max)):
+
+        sampling_rate = kwargs.get('sampling_rate')
+        if sampling_rate is not None:
+            if abs(cha.sample_rate - sampling_rate) > 1e-8:
                 return False
 
-            return True
-
-        def _channel_matches_criteria(self, cha, **kwargs):
-            """Check if a channel (cha) matches the given criteria."""
-
-            location_pattern = kwargs.get('location')
-            if (location_pattern and 
-                    not fnmatch.fnmatch(cha.location_code or "",
-                                       location_pattern)):
-                return False
-
-            channel_pattern = kwargs.get('channel')
-            if (channel_pattern and 
-                    not fnmatch.fnmatch(cha.code.upper(),
-                                       channel_pattern.upper())):
-                return False
-
-            time = kwargs.get('time')
-            starttime = kwargs.get('starttime')
-            endtime = kwargs.get('endtime')
-            if any(t is not None for t in (time, starttime, endtime)):
-                if not cha.is_active(time=time, starttime=starttime,
-                                    endtime=endtime):
-                    return False
-
-            sampling_rate = kwargs.get('sampling_rate')
-            if sampling_rate is not None:
-                if abs(cha.sample_rate - sampling_rate) > 1e-8:
-                    return False
-
-            return True
+        return True
 
     def remove(self, network='*', station='*', location='*', channel='*',
                keep_empty=False):
