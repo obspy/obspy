@@ -766,27 +766,34 @@ class Inventory(ComparingObject):
 
         .. rubric:: Example
 
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> inv = read_inventory()
         >>> # Find specific channel by SEED ID
-        >>> indices = inv.where("IU.ANMO.00.BHZ")
-        >>> channel = inv[indices[0]]  # Should be single result
+        >>> indices = inv.where("BW.RJOB")
+        >>> print(indices) # doctest: +NORMALIZE_WHITESPACE
+        [(1, 2), (1, 2), (1, 2)]
+        >>> channels = inv[indices[0]]
+        >>> print(channels) # doctest: +NORMALIZE_WHITESPACE
+        Station RJOB (Jochberg, Bavaria, BW-Net)
+                Station Code: RJOB
+                Channel Count: None/None (Selected/Total)
+                2007-12-17T00:00:00.000000Z -
+                Access: None
+                Latitude: 47.7372, Longitude: 12.7957, Elevation: 860.0 m
+                Available Channels:
+                    ..EH[ZNE]   200.0 Hz  2007-12-17(351) -
 
-        >>> # Find all BHZ channels across networks
-        >>> indices = inv.where("*.*.*.BHZ")
+        >>> # Find all LH? channels across networks
+        >>> indices = inv.where("*.*.*.LH?")
         >>> channels = inv[indices]
 
-        >>> # Find all stations in IU network
-        >>> indices = inv.where("IU.*")
+        >>> # Find all stations in BW network
+        >>> indices = inv.where("BW.*")
         >>> stations = inv[indices]
 
         >>> # Alternative: use select parameters
-        >>> indices = inv.where(channel="BHZ", network="IU")
+        >>> indices = inv.where(channel="BHZ", network="BW")
 
-        >>> # Find channels in a time range with geographic constraints
-        >>> from obspy import UTCDateTime
-        >>> t1 = UTCDateTime("2010-01-01")
-        >>> t2 = UTCDateTime("2010-12-31")
-        >>> indices = inv.where(starttime=t1, endtime=t2, channel="*Z",
-        ...                     minlatitude=40, maxlatitude=50)
         """
 
         if seed_id is not None:
