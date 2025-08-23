@@ -24,8 +24,6 @@ Changes:
    * window 'slepian' was removed in Trace/Stream.taper() as it was removed
      from scipy with version 1.6, add new window 'dpss' that scipy promotes as
      replacement but might need other parameters passed in (see #3331)
-   * util: removed old and outdated 'CatchWarnings' context manager in favor of
-     the better 'CatchAndAssertWarnings' context manager (see #3452)
  - obspy.clients.filesystem:
    * tsindex: update syntax for SQLAlchemy 2.0 compatibility (see #3269)
    * tsindex: leap second handling was deactivated as it is not needed with
@@ -34,14 +32,14 @@ Changes:
    * Natural Resources Canada (NRCAN) added to list of known clients
    * A FDSNNoServiceException is now raised instead of a ValueError when
      querying a webservice not present in Client.services  (see #3483)
-   * make sure to use a copy of `DEFAULT_SERVICES` when initializing a client
-     instance while skipping service discovery, to avoid accidental changes to
-     `DEFAULT_SERVICES` (see #3493)
    * make it possible to opt out of server side gzip compression (see #3469)
    * fix a regression introduced by #3306 which lead to some network errors not
      getting raised as an FDSNException but some low-level exceptions like
      AttributeError, which in turn caused problems in Mass Downloader (see
      #3513)
+  - obspy.clients.neic
+   * Update the default CWB QueryServer IP address from the old IP to the
+     new USGS server address (see #3592)
  - obspy.clients.seedlink:
    * fix a bug in basic client `get_info()` which leaded to exceptions when
      querying with `level="channel"` in presence of stations with no current
@@ -70,6 +68,9 @@ Changes:
    * Less strict date/time parsing (#3283).
  - obspy.io.seiscomp:
    * add seiscomp scxml 0.13 support (see #3345)
+ - obspy.io.stationxml:
+   * Fix a bug writing the informational "description" field of instrument
+     sensitivity input/output units (see #3572).
  - obspy.io.xseed:
    * Improve error message when trying to read a local path to a file that does
      not exist with XSEED Parser (see #2686)
@@ -80,6 +81,21 @@ Changes:
    * add support for Chebyshev I/II, elliptic and Bessel filters alongside
      the default Butterworth filters (see #3294)
    * fix potential out of bounds array access in AR picker (see #1801)
+   * fix a small issue in evalresp linked to picky new gcc (see #3578)
+
+1.4.2 (doi: 10.5281/zenodo.15309143)
+====================================
+
+Changes:
+ - General:
+   * add support for numpy v2.0 (see #3461)
+ - obspy.core:
+   * util: removed old and outdated 'CatchWarnings' context manager in favor of
+     the better 'CatchAndAssertWarnings' context manager (see #3452)
+ - obspy.clients.fdsn
+   * make sure to use a copy of `DEFAULT_SERVICES` when initializing a client
+     instance while skipping service discovery, to avoid accidental changes to
+     `DEFAULT_SERVICES` (see #3493)
 
 1.4.1 (doi: 10.5281/zenodo.11093256)
 ====================================
