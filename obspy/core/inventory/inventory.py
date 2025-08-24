@@ -812,7 +812,7 @@ class Inventory(ComparingObject):
                     conflicts.append('channel')
 
             if conflicts:
-                msg = (f"Warning: {', '.join(conflicts)} filter params"
+                msg = (f"{', '.join(conflicts)} filter params"
                        " will be superseded by seed_id filter")
                 warnings.warn(msg)
 
