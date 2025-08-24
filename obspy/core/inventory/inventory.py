@@ -797,32 +797,41 @@ class Inventory(ComparingObject):
         """
 
         if seed_id is not None:
-
-            # reminder that seed_id NSLC kwargs take priority
-            if ('network' in kwargs or 'station' in kwargs or
-               'location' in kwargs or 'channel' in kwargs):
-                msg = ("Warning: NSLC filter params will be "
-                       "superseded by seed_id filter")
-                warnings.warn(msg)
-
             parts = seed_id.split('.')
 
+            # check filtering conflicts
+            conflicts = []
+            if len(parts) >= 1 and 'network' in kwargs:
+                conflicts.append('network')
+            if len(parts) >= 2 and 'station' in kwargs:
+                conflicts.append('station')
+            if len(parts) >= 4:
+                if parts[2] and 'location' in kwargs:
+                    conflicts.append('location')
+                if 'channel' in kwargs:
+                    conflicts.append('channel')
+
+            if conflicts:
+                msg = (f"Warning: {', '.join(conflicts)} filter params"
+                       " will be superseded by seed_id filter")
+                warnings.warn(msg)
+
             if len(parts) == 1:
-                # Network only: "IU"
+                # Network only: "BW" - allows S.L.C. kwargs
                 kwargs['network'] = parts[0]
             elif len(parts) == 2:
-                # Network and station: "IU.ANMO"
+                # Network and station: "BW.RJOB" - allows L.C kwargs
                 kwargs['network'] = parts[0]
                 kwargs['station'] = parts[1]
             elif len(parts) == 4:
-                # Full SEED ID: "IU.ANMO.00.BHZ"
+                # Full SEED ID: "BW.RJOB.00.BHZ" - supersedes all
                 kwargs['network'] = parts[0]
                 kwargs['station'] = parts[1]
                 kwargs['location'] = parts[2] if parts[2] else None
                 kwargs['channel'] = parts[3]
             else:
-                raise ValueError(f"Invalid SEED ID format: {seed_id}. "
-                                 "Expected N, N.S, or N.S.L.C")
+                raise ValueError(f"Invalid SEED ID format: {seed_id}."
+                                 " Expected N, N.S, or N.S.L.C")
 
         filtered = self.select(**kwargs)
 
@@ -841,17 +850,13 @@ class Inventory(ComparingObject):
                     code_to_indices[id(chan)] = (net_idx, sta_idx, chan_idx)
 
         # Determine the search level based on seed_id
-        if seed_id is not None:
-            parts = seed_id.split('.')
-            search_level = len(parts)  # 1=network, 2=station, 4=channel
+        if (kwargs.get('channel') is not None or
+           kwargs.get('location') is not None):
+            search_level = 4  # channel
+        elif kwargs.get('station') is not None:
+            search_level = 2  # station
         else:
-            if (kwargs.get('channel') is not None or
-               kwargs.get('location') is not None):
-                search_level = 4  # channel
-            elif kwargs.get('station') is not None:
-                search_level = 2  # station
-            else:
-                search_level = 1  # network
+            search_level = 1  # network
 
         for fnet in filtered.networks:
             if search_level == 1:
