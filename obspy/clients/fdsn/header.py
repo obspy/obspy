@@ -177,15 +177,26 @@ OPTIONAL_EVENT_PARAMETERS = [
     "includearrivals", "eventid", "limit", "offset", "catalog", "contributor",
     "updatedafter"]
 
+DEFAULT_AVAILABILITY_PARAMETERS = [
+    "starttime", "endtime", "network", "station", "location", "channel"
+]
+
+OPTIONAL_AVAILABILITY_PARAMETERS = [
+    "quality", "minimumlength", "longestonly", "format"
+]
+
 DEFAULT_PARAMETERS = {
     "dataselect": DEFAULT_DATASELECT_PARAMETERS,
     "event": DEFAULT_EVENT_PARAMETERS,
-    "station": DEFAULT_STATION_PARAMETERS}
+    "station": DEFAULT_STATION_PARAMETERS,
+    "availability": DEFAULT_AVAILABILITY_PARAMETERS}
 
 OPTIONAL_PARAMETERS = {
     "dataselect": OPTIONAL_DATASELECT_PARAMETERS,
     "event": OPTIONAL_EVENT_PARAMETERS,
-    "station": OPTIONAL_STATION_PARAMETERS}
+    "station": OPTIONAL_STATION_PARAMETERS,
+    "availability": OPTIONAL_AVAILABILITY_PARAMETERS
+    }
 
 PARAMETER_ALIASES = {
     "net": "network",
