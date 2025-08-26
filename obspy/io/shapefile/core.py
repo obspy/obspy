@@ -318,14 +318,16 @@ def _add_field(writer, name, type_, width, precision):
     # shapefile <=1.2.10, see
     # GeospatialPython/pyshp@ba61854aa7161fd7d4cff12b0fd08b6ec7581bb7 and
     # GeospatialPython/pyshp#71 so work around this
-    # We need to check the pyshp version and the signature
-    # of the write.field() method (see #3599)
     if type_ == 'D':
         width = 8
         precision = 0
     elif type_ == 'L':
         width = 1
         precision = 0
+    # We need to check the pyshp version and the signature
+    # of the write.field() method (see #3599)
+    #  Added a pyshp version check of the writer.field() method to check for a
+    #  signature change (fieldType -> field_type) (see #3600)
     if PYSHP_VERSION[0] < 3:
         kwargs = dict(fieldType=type_, size=width, decimal=precision)
     else:

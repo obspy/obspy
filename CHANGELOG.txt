@@ -3,11 +3,7 @@ Next release...
 
 Changes:
  - obspy.io.shapefile:
-   * Added a pyshp version check of the writer.field() method to check for a
-     signature change (fieldType -> field_type) - adapted the tests for
-     changes in `__repr__` (see #3599). Pinning version != 3.0.0 for the tests
-     because of doctest failures linked to hardcoded
-     doctest.NORMALIZE_WHITESPACE = 1  (see #3600)
+   * add support for pyshp v3 (see #3599)
 
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================

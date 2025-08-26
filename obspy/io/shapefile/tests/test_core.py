@@ -14,6 +14,7 @@ import pytest
 if HAS_PYSHP:
     import shapefile
     if PYSHP_VERSION[0] >= 3:
+        # adapted the tests for changes in `__repr__` (see #3599).
         from shapefile import Field
 
 
