@@ -2,9 +2,6 @@ master
 ======
 
 Changes:
-Changes:
- - General:
-   * Documentation: small fixes (see #3516)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
@@ -80,6 +77,7 @@ Changes:
      the default Butterworth filters (see #3294)
    * fix potential out of bounds array access in AR picker (see #1801)
    * fix a small issue in evalresp linked to picky new gcc (see #3578)
+   * array analysis: minor docstring fix in "get_geometry()" (see #3516, #3606)
 
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================
