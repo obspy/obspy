@@ -190,6 +190,12 @@ class ISFReader(object):
             origin_id = origin.resource_id
         else:
             origin_id = None
+            msg = ('Event: {}'.format(event.resource_id) + '\n'
+                   'Phase block cannot be fully processed because it does not have an origin assigned.\n'
+                   'Please check if the bulletin is in accordance with the IMS1.0/ISF standard.')
+            warnings.warn(msg)
+            # Uncommenting the following line will skip the whole phases block if no origin can be assigned. 
+            #return
 
         while not self._next_line_type():
             line = self._get_next_line()
@@ -528,14 +534,14 @@ class ISFReader(object):
         return t
 
     def _parse_phase(self, line, origin_id):
-
-        # Data that we cannot interpret and assign
-        # to "Arrival", "Amplitude", "Pick" objects
-        # are still written as "Pick.comments" text.
-        # In the case that no reference to the origin is known,
-        # the origin-specific data was only stored as a comment.
-        # It's not very helpful. I recommend deleting this feature.
-        # It is currently commented out (# DD if origin_id is None: ...)
+        """
+        Parse a phase line, returning Pick, Amplitude, StationMagnitude,
+        Arrival objects as available.
+        """
+        # DD If origin_id is None, the origin-specific data was stored as
+        # DD Pick.comments only.
+        # DD It's not very helpful. I recommend deleting this feature.
+        # DD It is currently commented out (# DD if origin_id is None: ...)
         comments = []
 
         # 1-5     a5      station code

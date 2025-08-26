@@ -88,6 +88,8 @@ Changes:
    * add support for more dtypes (INT32, INT64, FLOAT32 etc) (see #3611)
  - obspy.io.cybershake:
    * add read support for CyberShake seismogram format (see #3370)
+ - obspy.io.iaspei:
+   * read the origin-specific data from the ISF phase block (see #3515)
  - obspy.io.kinemetrics:
    * extract all headers from EVT files (see #3606)
    * fix reading non-UTF8 character in the comment (see #3688)

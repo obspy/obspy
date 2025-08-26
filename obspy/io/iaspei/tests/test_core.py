@@ -3,7 +3,7 @@ import io
 import re
 
 import pytest
-
+import warnings
 from obspy import read_events
 from obspy.io.iaspei.core import _read_ims10_bulletin, _is_ims10_bulletin
 from obspy.core.event import ResourceIdentifier
@@ -185,6 +185,17 @@ class TestIASPEI():
         """
         Test reading IMS10 bulletin format
         """
-        cat = _read_ims10_bulletin(self.path_to_ims_2, _no_uuid_hashes=True)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # The last of the three events
+            # has a phase block with incorrect #OriginID tag
+            cat = _read_ims10_bulletin(self.path_to_ims_2, _no_uuid_hashes=True)
+            assert len(w) == 3
+            assert issubclass(w[-3].category, UserWarning)
+            assert "Phase block cannot be fully processed" in str(w[-3].message)
+            assert issubclass(w[-2].category, UserWarning)
+            assert "This pick would have a time more than 6 hours after" in str(w[-2].message)
+            assert issubclass(w[-1].category, UserWarning)
+            assert "Could not determine absolute time of pick" in str(w[-1].message)
         assert len(cat) == 3
         self._assert_catalog2(cat)
