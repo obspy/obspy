@@ -585,6 +585,70 @@ class Client(object):
                          quality=None, orderby=None, limit=None,
                          format='geocsv', mergegaps=None,
                          merge=None, show=None, **kwargs):
+        """
+        Query the availability service of the client.
+
+        Returns a list of namedtuples (`Availability`) containing availability
+        information for network/station/channel combinations.
+
+        >>> client = Client("EARTHSCOPE")
+        >>> avail = client.get_availability(network="IU", station="ANMO",
+        ...                                 starttime=UTCDateTime(2020, 1, 1),
+        ...                                 endtime=UTCDateTime(2020, 2, 1))
+        >>> print(avail[0])
+        Availability(network='IU', station='ANMO', location='00',
+                    channel='BHZ', quality='M', sampling_rate=20.0,
+                    earliest=2020-01-01T00:00:00.000000Z,
+                    latest=2020-01-31T23:59:59.000000Z,
+                    updated=2020-02-01T12:34:56.000000Z,
+                    time_spans='...', restriction=None)
+
+        The return value is a list of namedtuples.
+
+        :type network: str, optional
+        :param network: Limit to availability for a specific network code.
+        :type station: str, optional
+        :param station: Limit to availability for a specific station code.
+        :type location: str, optional
+        :param location: Limit to availability for a specific location code.
+        :type channel: str, optional
+        :param channel: Limit to availability for a specific channel code.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param starttime: Limit to data available on or after this time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endtime: Limit to data available on or before this time.
+        :type quality: str, optional
+        :param quality: Limit to data with a specific quality indicator.
+        :type orderby: str, optional
+        :param orderby: Order the results by:
+            ``"nslc_time_quality_samplerate"``,
+            ``"latestupdate"``, ``"latestupdate_desc"``,
+            ``"timespancount"``, ``"timespancount_desc"``.
+        :type limit: int, optional
+        :param limit: Limit the results to the specified number of entries.
+        :type format: str, optional
+        :param format: Format of the request. Default is ``"geocsv"``.
+            Allowed values: ``"text"``, ``"geocsv"``, ``"json"``, ``"request"``.
+        :type mergegaps: bool, optional
+        :param mergegaps: Merge small gaps if supported by the service
+            (not supported with ``details=False``).
+        :type merge: str, optional
+        :param merge: Comma-separated options to merge availability records by:
+            ``"samplerate"``, ``"quality"``, ``"overlap"``.
+        :type show: str, optional
+        :param show: Currently only ``"latestupdate"`` is supported.
+
+        :raises ValueError:
+            If the client does not have an availability service or invalid
+            parameter values are provided.
+
+
+        Any additional keyword arguments will be passed to the webservice as
+        additional arguments. If you pass one of the default parameters and the
+        webservice does not support it, a warning will be issued. Passing any
+        non-default parameters that the webservice does not support will raise
+        an error.
+        """
         if "availability" not in self.services:
             msg = "The current client does not have an availability service."
             raise ValueError(msg)
