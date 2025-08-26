@@ -78,17 +78,25 @@ class ISFReader(object):
     def deserialize(self):
         if not self.lines:
             raise ObsPyReadingError()
-        header_flag = False
+        datasection_flag = False
         while not self._next_line_type():
-            # Skip the lines preceding the header
+            # Skip the lines preceding the begin of data section
             # (if the bulletin is enveloped as an AutoDRM response message)
             # (BEGIN IMS1.0, MSG_TYPE DATA, ...)
             line = self._get_next_line()
-            if line.upper().startswith('DATA_TYPE BULLETIN IMS1.0:SHORT'):
-                header_flag = True
+            if line.upper().startswith('DATA_TYPE BULLETIN IMS1.0'):
+                if 'LONG' in line.upper():
+                    # warnings.warn('Only IMS1.0:SHORT is supported, '
+                    #               'other subformats might not work')
+                    datasection_flag = False
+                else:
+                    # if subformat is not specified, assume SHORT
+                    datasection_flag = True
                 break
-        if not header_flag:
-            raise ObsPyReadingError()
+        if not datasection_flag:
+            msg = ("No data section of valid DATA_TYPE found.\n"
+                   "Is this a valid IMS1.0 bulletin?")
+            raise ObsPyReadingError(msg)
         try:
             self._deserialize()
         except ISFEndOfFile:
@@ -191,11 +199,14 @@ class ISFReader(object):
         else:
             origin_id = None
             msg = ('Event: {}'.format(event.resource_id) + '\n'
-                   'Phase block cannot be fully processed because it does not have an origin assigned.\n'
-                   'Please check if the bulletin is in accordance with the IMS1.0/ISF standard.')
+                   'Phase block cannot be fully processed because '
+                   'it does not have an origin assigned.\n'
+                   'Please check if the bulletin is in accordance '
+                   'with the IMS1.0/ISF standard.')
             warnings.warn(msg)
-            # Uncommenting the following line will skip the whole phases block if no origin can be assigned. 
-            #return
+            # Uncommenting the line (# return) below will skip
+            # the entire ISF phase block if no origin can be assigned.
+            # return
 
         while not self._next_line_type():
             line = self._get_next_line()
@@ -538,7 +549,7 @@ class ISFReader(object):
         Parse a phase line, returning Pick, Amplitude, StationMagnitude,
         Arrival objects as available.
         """
-        # DD If origin_id is None, the origin-specific data was stored as
+        # DD If origin_id is None, the origin-specific data are stored as
         # DD Pick.comments only.
         # DD It's not very helpful. I recommend deleting this feature.
         # DD It is currently commented out (# DD if origin_id is None: ...)
@@ -837,8 +848,12 @@ def __is_ims10_bulletin(fh, **kwargs):  # NOQA
             if iline > 40:
                 break
             sline = _decode_if_possible(line).rstrip()
-            if sline.upper().startswith("DATA_TYPE BULLETIN IMS1.0:SHORT"):
-                return True
+            if sline.upper().startswith("DATA_TYPE BULLETIN IMS1.0"):
+                if 'LONG' in sline.upper():
+                    return False
+                else:
+                    # if subformat is not specified, assume SHORT
+                    return True
     except Exception:
         return False
     return False
