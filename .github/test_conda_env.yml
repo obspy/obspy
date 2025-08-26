@@ -16,7 +16,10 @@ dependencies:
   # soft dependencies
   - cartopy
   - geographiclib
-  - pyshp
+  # Pinning version != 3.0.0 for the tests
+  # because of doctest failures linked to hardcoded
+  # doctest.NORMALIZE_WHITESPACE = 1 (see #3600)
+  - pyshp != 3.0.0
   # tests
   - packaging
   - pyproj
