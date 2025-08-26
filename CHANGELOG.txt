@@ -32,7 +32,7 @@ Changes:
      getting raised as an FDSNException but some low-level exceptions like
      AttributeError, which in turn caused problems in Mass Downloader (see
      #3513)
-  - obspy.clients.neic
+ - obspy.clients.neic
    * Update the default CWB QueryServer IP address from the old IP to the
      new USGS server address (see #3592)
  - obspy.clients.seedlink:
