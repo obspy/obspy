@@ -7,6 +7,7 @@ import warnings
 from obspy import read_events
 from obspy.io.iaspei.core import _read_ims10_bulletin, _is_ims10_bulletin
 from obspy.core.event import ResourceIdentifier
+from obspy.core.util.obspy_types import ObsPyReadingError
 
 
 class TestIASPEI():
@@ -189,13 +190,38 @@ class TestIASPEI():
             warnings.simplefilter("always")
             # The last of the three events
             # has a phase block with incorrect #OriginID tag
-            cat = _read_ims10_bulletin(self.path_to_ims_2, _no_uuid_hashes=True)
+            cat = _read_ims10_bulletin(self.path_to_ims_2,
+                                       _no_uuid_hashes=True)
             assert len(w) == 3
             assert issubclass(w[-3].category, UserWarning)
-            assert "Phase block cannot be fully processed" in str(w[-3].message)
+            s_msg = "Phase block cannot be fully processed"
+            assert s_msg in str(w[-3].message)
             assert issubclass(w[-2].category, UserWarning)
-            assert "This pick would have a time more than 6 hours after" in str(w[-2].message)
+            s_msg = "This pick would have a time more than 6 hours after"
+            assert s_msg in str(w[-2].message)
             assert issubclass(w[-1].category, UserWarning)
-            assert "Could not determine absolute time of pick" in str(w[-1].message)
+            s_msg = "Could not determine absolute time of pick"
+            assert s_msg in str(w[-1].message)
         assert len(cat) == 3
         self._assert_catalog2(cat)
+
+    def test_reading_file_faulty(self):
+        """
+        Test reading IMS10 bulletin format with faulty file
+        """
+        fbuf = io.BytesIO()
+        with open(self.path_to_ims_2, 'rb') as fi:
+            for line in fi:
+                if line.startswith(b"DATA_TYPE BULLETIN IMS1.0"):
+                    # Corrupt the DATA_TYPE line
+                    line = b"DATA_TYPE BULLETIN IMS1.0:long\n"
+                fbuf.write(line)
+        # print(fbuf.getvalue().decode('utf-8'))
+        fbuf.seek(0, 0)
+        assert not _is_ims10_bulletin(fbuf)
+        fbuf.seek(0, 0)
+        with pytest.raises(ObsPyReadingError) as excinfo:
+            _read_ims10_bulletin(fbuf)
+            s_msg = "No data section of valid DATA_TYPE found"
+            print(excinfo.value)
+            assert s_msg in str(excinfo.value)

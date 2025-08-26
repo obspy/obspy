@@ -297,7 +297,7 @@
           <text>TAS flag: "T__"</text>
         </comment>
         <comment id="smi:local/c2a0a78c-42fa-4e19-885d-7ef2e55d45fa/comment">
-          <text> (Qual flag modified for test)</text>
+          <text> (Qual flag and SNR modified for test)</text>
         </comment>
       </pick>
       <pick publicID="smi:local/c2a0a78c-42fa-4e19-885d-7ef2e55d45fa/pick/19692977">
@@ -368,6 +368,7 @@
         <period>
           <value>0.2</value>
         </period>
+        <snr>1.0</snr>
         <pickID>smi:local/c2a0a78c-42fa-4e19-885d-7ef2e55d45fa/pick/19692975</pickID>
       </amplitude>
       <amplitude publicID="smi:local/c2a0a78c-42fa-4e19-885d-7ef2e55d45fa/amplitude/19692978">
