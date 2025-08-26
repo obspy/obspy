@@ -275,7 +275,7 @@
         <backazimuth>
           <value>85.7</value>
         </backazimuth>
-        <onset>emergent</onset>
+        <onset>questionable</onset>
         <phaseHint>Sg</phaseHint>
         <evaluationMode>manual</evaluationMode>
         <comment id="smi:local/c2a0a78c-42fa-4e19-885d-7ef2e55d45fa/comment">
@@ -290,7 +290,7 @@
         <backazimuth>
           <value>30.8</value>
         </backazimuth>
-        <onset>questionable</onset>
+        <onset>impulsive</onset>
         <phaseHint>Pg</phaseHint>
         <evaluationMode>automatic</evaluationMode>
         <comment id="smi:local/c2a0a78c-42fa-4e19-885d-7ef2e55d45fa/comment">
@@ -394,7 +394,7 @@
     <event publicID="smi:local/c2a0a78c-42fa-4e19-885d-7ef2e55d45fa/event/2032696">
       <preferredOriginID>smi:local/c2a0a78c-42fa-4e19-885d-7ef2e55d45fa/origin/2032696</preferredOriginID>
       <type>induced or triggered event</type>
-      <typeCertainty>known</typeCertainty>
+      <typeCertainty>suspected</typeCertainty>
       <description>
         <text>CZECH REPUBLIC, OSTRAVA</text>
         <type>region name</type>
@@ -575,6 +575,9 @@
         <evaluationMode>manual</evaluationMode>
         <comment id="smi:local/c2a0a78c-42fa-4e19-885d-7ef2e55d45fa/comment">
           <text>TAS flag: "T__"</text>
+        </comment>
+        <comment id="smi:local/c2a0a78c-42fa-4e19-885d-7ef2e55d45fa/comment">
+          <text> (incorrect time for test)</text>
         </comment>
       </pick>
       <amplitude publicID="smi:local/c2a0a78c-42fa-4e19-885d-7ef2e55d45fa/amplitude/19696328">
