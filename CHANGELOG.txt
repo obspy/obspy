@@ -1,5 +1,5 @@
-Next release...
-====================================
+maintenance_1.4.x
+=================
 
 Changes:
  - obspy.io.shapefile:
