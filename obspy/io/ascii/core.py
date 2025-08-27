@@ -488,28 +488,47 @@ def _determine_dtype(custom_fmt):
 
 def _parse_data(data, data_type):
     """
-    Simple function to read data contained in a StringIO object to a NumPy
-    array.
+    Reads data from a StringIO object and parses it into a NumPy array with the
+    specified data type. Only pre-defined data types are allowed.
 
     :type data: io.StringIO
     :param data: The actual data.
     :type data_type: str
-    :param data_type: The data type of the expected data. Currently supported
-        are strings starting with 'INT' (INTEGER, INT32, ...) which will be
-        cast to 'int64' or 'FLOAT' (FLOAT, FLOAT32, ...), cast to 'float64'.
+    :param data_type: The data type to parse. Allowed values:
+                      'INTEGER', 'INT32', 'INT64',
+                      'FLOAT', 'FLOAT32', 'FLOAT64'.
+    :raises KeyError: If the provided data_type is not valid.
     """
-    if data_type.upper().startswith("INT"):
-        dtype = np.int_
-    elif data_type.upper().startswith("FLOAT"):
-        dtype = np.float64
-    else:
-        raise NotImplementedError
-    # Seek to the beginning of the StringIO.
+    # Define allowed data types and their corresponding NumPy dtypes
+    dtype_map = {
+        "INTEGER": np.int64,
+        "INT8": np.int8,
+        "INT16": np.int16,
+        "INT32": np.int32,
+        "INT64": np.int64,
+        "FLOAT": np.float64,
+        "FLOAT16": np.float16,
+        "FLOAT32": np.float32,
+        "FLOAT64": np.float64,
+    }
+
+    # Raise an error if the data_type is not valid
+    if data_type.upper() not in dtype_map:
+        allowed_types = ", ".join(f'"{key}"' for key in dtype_map)
+        raise NotImplementedError(f"Unsupported data_type: {data_type}. "
+                                  f"Allowed values are: {allowed_types}.")
+
+    # Get the matching NumPy dtype
+    dtype = dtype_map[data_type.upper()]
+
+    # Seek to the beginning of the StringIO object
     data.seek(0)
-    # Data will always be a StringIO. Avoid to send empty StringIOs to
-    # numpy.readtxt() which raises a warning.
+
+    # Handle empty data streams gracefully
     if len(data.read(1)) == 0:
         return np.array([], dtype=dtype)
+
+    # Reset to the start and load the data
     data.seek(0)
     return np.loadtxt(data, dtype=dtype, ndmin=1)
 

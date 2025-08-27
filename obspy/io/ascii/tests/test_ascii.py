@@ -699,7 +699,7 @@ class TestASCII():
         assert stream[0].stats.starttime == \
             UTCDateTime("2008-01-15T00:00:00.025000")
         assert stream[0].stats.calib == 1.0e-00
-        assert stream[0].data.dtype.name == "int64"
+        assert stream[0].data.dtype.name == "int32"
         # check first 4 samples
         data = [185, 181, 185, 189]
         np.testing.assert_array_almost_equal(stream[0].data[0:4], data)
@@ -715,4 +715,4 @@ class TestASCII():
         # read
         stream = _read_slist(testfile)
         stream.verify()
-        assert stream[0].data.dtype.name == "float64"
+        assert stream[0].data.dtype.name == "float32"
