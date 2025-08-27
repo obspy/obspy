@@ -497,7 +497,7 @@ def _parse_data(data, data_type):
     :param data_type: The data type to parse. Allowed values:
                       'INTEGER', 'INT8', 'INT16', 'INT32', 'INT64',
                       'FLOAT', 'FLOAT16', 'FLOAT32', 'FLOAT64'.
-    :raises KeyError: If the provided data_type is not valid.
+    :raises NotImplementedError: If the provided data_type is not valid.
     """
     # Define allowed data types and their corresponding NumPy dtypes
     dtype_map = {
