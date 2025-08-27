@@ -501,12 +501,12 @@ def _parse_data(data, data_type):
     """
     # Define allowed data types and their corresponding NumPy dtypes
     dtype_map = {
-        "INTEGER": np.int64,
+        "INTEGER": int,
         "INT8": np.int8,
         "INT16": np.int16,
         "INT32": np.int32,
         "INT64": np.int64,
-        "FLOAT": np.float64,
+        "FLOAT": float,
         "FLOAT16": np.float16,
         "FLOAT32": np.float32,
         "FLOAT64": np.float64,
