@@ -681,3 +681,38 @@ class TestASCII():
 
         for actual, expected in zip(actual_lines, expected_lines):
             assert actual.strip() == expected.strip()
+
+    def test_read_slist_file_single_trace_int32(self, testdata):
+        """
+        Read SLIST file test via obspy.core.ascii._read_slist.
+        """
+        testfile = testdata['slist_int32.ascii']
+        # read
+        stream = _read_slist(testfile)
+        stream.verify()
+        assert stream[0].stats.network == 'XX'
+        assert stream[0].stats.station == 'TEST'
+        assert stream[0].stats.location == ''
+        assert stream[0].stats.channel == 'BHZ'
+        assert stream[0].stats.sampling_rate == 40.0
+        assert stream[0].stats.npts == 635
+        assert stream[0].stats.starttime == \
+            UTCDateTime("2008-01-15T00:00:00.025000")
+        assert stream[0].stats.calib == 1.0e-00
+        assert stream[0].data.dtype.name == "int64"
+        # check first 4 samples
+        data = [185, 181, 185, 189]
+        np.testing.assert_array_almost_equal(stream[0].data[0:4], data)
+        # check last 4 samples
+        data = [761, 755, 748, 746]
+        np.testing.assert_array_almost_equal(stream[0].data[-4:], data)
+
+    def test_read_slist_file_single_trace_float64(self, testdata):
+        """
+        Read SLIST file test via obspy.core.ascii._read_slist.
+        """
+        testfile = testdata['slist_float32.ascii']
+        # read
+        stream = _read_slist(testfile)
+        stream.verify()
+        assert stream[0].data.dtype.name == "float64"

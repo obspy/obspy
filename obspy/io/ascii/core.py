@@ -495,11 +495,12 @@ def _parse_data(data, data_type):
     :param data: The actual data.
     :type data_type: str
     :param data_type: The data type of the expected data. Currently supported
-        are 'INTEGER' and 'FLOAT'.
+        are strings starting with 'INT' (INTEGER, INT32, ...) which will be
+        cast to 'int64' or 'FLOAT' (FLOAT, FLOAT32, ...), cast to 'float64'.
     """
-    if data_type == "INTEGER":
+    if data_type.upper().startswith("INT"):
         dtype = np.int_
-    elif data_type == "FLOAT":
+    elif data_type.upper().startswith("FLOAT"):
         dtype = np.float64
     else:
         raise NotImplementedError
