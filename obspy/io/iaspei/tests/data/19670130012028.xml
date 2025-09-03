@@ -264,9 +264,6 @@
           <value>5.4</value>
         </mag>
         <waveformID stationCode="LJU"></waveformID>
-        <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
-          <text>min max indicator (&lt;, &gt;, or blank):  </text>
-        </comment>
       </stationMagnitude>
       <stationMagnitude publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/station_magnitude/27631216">
         <originID>smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/origin/1838613</originID>
@@ -274,9 +271,6 @@
           <value>5.5</value>
         </mag>
         <waveformID stationCode="KHC"></waveformID>
-        <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
-          <text>min max indicator (&lt;, &gt;, or blank):  </text>
-        </comment>
       </stationMagnitude>
       <stationMagnitude publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/station_magnitude/27631252">
         <originID>smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/origin/1838613</originID>
@@ -284,9 +278,6 @@
           <value>5.5</value>
         </mag>
         <waveformID stationCode="STU"></waveformID>
-        <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
-          <text>min max indicator (&lt;, &gt;, or blank):  </text>
-        </comment>
       </stationMagnitude>
       <stationMagnitude publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/station_magnitude/27631311">
         <originID>smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/origin/1838613</originID>
@@ -294,9 +285,6 @@
           <value>4.9</value>
         </mag>
         <waveformID stationCode="SHL"></waveformID>
-        <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
-          <text>min max indicator (&lt;, &gt;, or blank):  </text>
-        </comment>
       </stationMagnitude>
       <stationMagnitude publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/station_magnitude/27631313">
         <originID>smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/origin/1838613</originID>
@@ -304,9 +292,6 @@
           <value>4.8</value>
         </mag>
         <waveformID stationCode="KOD"></waveformID>
-        <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
-          <text>min max indicator (&lt;, &gt;, or blank):  </text>
-        </comment>
       </stationMagnitude>
       <stationMagnitude publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/station_magnitude/27631314">
         <originID>smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/origin/1838613</originID>
@@ -314,9 +299,6 @@
           <value>4.8</value>
         </mag>
         <waveformID stationCode="NAI"></waveformID>
-        <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
-          <text>min max indicator (&lt;, &gt;, or blank):  </text>
-        </comment>
       </stationMagnitude>
       <stationMagnitude publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/station_magnitude/27631315">
         <originID>smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/origin/1838613</originID>
@@ -324,9 +306,6 @@
           <value>4.5</value>
         </mag>
         <waveformID stationCode="LAO"></waveformID>
-        <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
-          <text>min max indicator (&lt;, &gt;, or blank):  </text>
-        </comment>
       </stationMagnitude>
       <pick publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/pick/27631110">
         <time>
@@ -334,9 +313,6 @@
         </time>
         <waveformID stationCode="TIF"></waveformID>
         <phaseHint>P*</phaseHint>
-        <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
-          <text>TAS flag: "T__"</text>
-        </comment>
       </pick>
       <pick publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/pick/27631111">
         <time>
@@ -344,9 +320,6 @@
         </time>
         <waveformID stationCode="TIF"></waveformID>
         <phaseHint>S</phaseHint>
-        <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
-          <text>TAS flag: "___"</text>
-        </comment>
       </pick>
       <pick publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/pick/27631112">
         <time>
@@ -355,9 +328,6 @@
         <waveformID stationCode="BKR"></waveformID>
         <onset>impulsive</onset>
         <phaseHint>P*</phaseHint>
-        <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
-          <text>TAS flag: "T__"</text>
-        </comment>
       </pick>
       <pick publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/pick/27631113">
         <time>
@@ -365,9 +335,6 @@
         </time>
         <waveformID stationCode="BKR"></waveformID>
         <phaseHint>S</phaseHint>
-        <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
-          <text>TAS flag: "___"</text>
-        </comment>
       </pick>
     </event>
   </eventParameters>

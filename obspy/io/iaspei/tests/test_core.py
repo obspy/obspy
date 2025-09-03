@@ -74,7 +74,7 @@ class TestIASPEI():
         data, num_subs = re.subn(expected_id_prefix, got_id_prefix, data)
         # resource id replacements should be done in the QuakeML file we
         # compare against
-        assert num_subs == 65
+        assert num_subs == 54
         bio = io.BytesIO(data)
         expected = read_events(bio, format="QUAKEML")
         # now first check if we got the expected number of picks and station
@@ -191,7 +191,9 @@ class TestIASPEI():
             # The last of the three events
             # has a phase block with incorrect #OriginID tag
             cat = _read_ims10_bulletin(self.path_to_ims_2,
-                                       _no_uuid_hashes=True)
+                                       _no_uuid_hashes=True,
+                                       skip_orphan=False,
+                                       origin_specific_to_comments=True)
             assert len(w) == 3
             assert issubclass(w[-3].category, UserWarning)
             s_msg = "Phase block cannot be fully processed"
@@ -207,7 +209,7 @@ class TestIASPEI():
 
     def test_reading_file_faulty(self):
         """
-        Test reading IMS10 bulletin format with faulty file
+        Test reading IMS10 bulletin from a file of non-compliant format
         """
         fbuf = io.BytesIO()
         with open(self.path_to_ims_2, 'rb') as fi:

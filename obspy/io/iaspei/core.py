@@ -19,7 +19,7 @@ from obspy.core.event import (
     Pick, StationMagnitude, WaveformStreamID, Amplitude, Arrival)
 from obspy.core.event.header import AmplitudeUnit
 from obspy.core.util.obspy_types import ObsPyReadingError
-from .util import (
+from obspy.io.iaspei.util import (
     float_or_none, int_or_none, fixed_flag, evaluation_mode_and_status,
     _block_header)
 
@@ -74,6 +74,9 @@ class ISFReader(object):
                       if line.strip()]
         self.cat = Catalog()
         self._no_uuid_hashes = kwargs.get('_no_uuid_hashes', False)
+        self.skip_orphan = kwargs.get('skip_orphan', True)
+        self.origin_specific_to_comments = kwargs.get(
+            'origin_specific_to_comments', False)
 
     def deserialize(self):
         if not self.lines:
@@ -204,12 +207,12 @@ class ISFReader(object):
                    'Please check if the bulletin is in accordance '
                    'with the IMS1.0/ISF standard.')
             warnings.warn(msg)
-            # Uncommenting the line (# return) below will skip
-            # the entire ISF phase block if no origin can be assigned.
-            # return
 
         while not self._next_line_type():
             line = self._get_next_line()
+            if self.skip_orphan and not origin_id:
+                # skip all phase lines if no origin can be assigned
+                continue
             if line.strip().startswith('('):
                 comment = self._parse_generic_comment(line)
                 if len(event.picks):
@@ -224,9 +227,9 @@ class ISFReader(object):
                 event.amplitudes.append(amplitude)
             if station_magnitude:
                 event.station_magnitudes.append(station_magnitude)
-            if origin:
+            if arrival:
                 # The list of Arrival items is stored in the specified origin
-                if arrival:
+                if origin:
                     origin.arrivals.append(arrival)
             continue
 
@@ -272,12 +275,14 @@ class ISFReader(object):
             event.event_type_certainty = event_type_certainty
 
     def _specify_preferred_origin(self):
-        '''
-        Find the preferred origin in two simple cases:
+        """
+        Find the preferred origin
+
+        in two simple cases:
           - only one origin for an event
-          - tagged #PRIME
+          - tagged #PRIME in the origin comments
         Affects: event.preferred_origin_id
-        '''
+        """
         event = self.cat[-1]
         event.preferred_origin_id = None
         if len(event.origins) == 1:
@@ -549,120 +554,136 @@ class ISFReader(object):
         Parse a phase line, returning Pick, Amplitude, StationMagnitude,
         Arrival objects as available.
         """
-        # DD If origin_id is None, the origin-specific data are stored as
-        # DD Pick.comments only.
-        # DD It's not very helpful. I recommend deleting this feature.
-        # DD It is currently commented out (# DD if origin_id is None: ...)
+        # If self.origin_specific_to_comments flag is set
+        # and origin_id is None
+        # (i.e., no preferred origin could be assigned to the event)
+        # then all available origin-specific information
+        # in the phase line
+        # (distance, azimuth, residuals, ...) are stored as comments
+        # in the Pick.comments attribute.
+        # It's not very helpful and somewhat against the spirit of
+        # QuakeML. For this, the flag is off by default.
         comments = []
 
         # 1-5     a5      station code
         station_code = line[0:5].strip()
+
         # 7-12    f6.2    station-to-event distance (degrees)
         # Arrival.distance (float)
         distance = float_or_none(line[6:12])
-        # DD if origin_id is None:
-        # DD     comments.append(
-        # DD     'station-to-event distance (degrees): "{}"'.format(
-        # DD                                                    line[6:12]))
+        if self.origin_specific_to_comments and not origin_id:
+            comments.append(
+                    'station-to-event distance (degrees): "{}"'.format(
+                        line[6:12]))
+
         # 14-18   f5.1    event-to-station azimuth (degrees)
         # Arrival.azimuth (float)
         event_azimuth = float_or_none(line[13:18])
-        # DD if origin_id is None:
-        # DD     comments.append(
-        # DD     'event-to-station azimuth (degrees): "{}"'.format(
-        # DD                                                   line[13:18]))
+        if self.origin_specific_to_comments and not origin_id:
+            comments.append(
+                    'event-to-station azimuth (degrees): "{}"'.format(
+                        line[13:18]))
+
         # 20-27   a8      phase code
         # Pick.phase_hint (str)
         # Arrival.phase (str)
         phase_hint = line[19:27].strip()
+
         # 29-40   i2,a1,i2,a1,f6.3        arrival time (hh:mm:ss.sss)
         # Pick.time (UTCDateTime, ATTRIBUTE_HAS_ERRORS)
         time = self._get_pick_time(line[28:40])
+
         # 42-46   f5.1    time residual (seconds)
         # Arrival.time_residual (float)
         time_residual = float_or_none(line[41:46])
-        # DD if origin_id is None:
-        # DD     comments.append(
-        # DD     'time residual (seconds): "{}"'.format(line[41:46]))
+        if self.origin_specific_to_comments and not origin_id:
+            comments.append(
+                    'time residual (seconds): "{}"'.format(line[41:46]))
+
         # 48-52   f5.1    observed azimuth (degrees)
         # Pick.backazimuth (float, ATTRIBUTE_HAS_ERRORS)
         backazimuth = float_or_none(line[47:52])
-        # DD if origin_id is None:
-        # DD     comments.append(
-        # DD     'observed azimuth (degrees): "{}"'.format(line[47:52]))
+
         # 54-58   f5.1    azimuth residual (degrees)
         # Arrival.backazimuth_residual (float)
         backazimuth_residual = float_or_none(line[53:58])
-        # DD if origin_id is None:
-        # DD     comments.append(
-        # DD     'azimuth residual (degrees): "{}"'.format(line[53:58]))
+        if self.origin_specific_to_comments and not origin_id:
+            comments.append(
+                    'azimuth residual (degrees): "{}"'.format(line[53:58]))
+
         # 60-65   f5.1    observed slowness (seconds/degree)
         # Pick.horizontal_slowness (float, ATTRIBUTE_HAS_ERRORS)
         horizontal_slowness = float_or_none(line[59:65])
-        # DD comments.append(
-        # DD   'observed slowness (seconds/degree): "{}"'.format(line[59:65]))
+
         # 67-72   f5.1    slowness residual (seconds/degree)
         # Arrival.horizontal_slowness_residual (float)
         horizontal_slowness_residual = float_or_none(line[66:71])
-        # DD if origin_id is None:
-        # DD     comments.append(
-        # DD     'slowness residual (seconds/degree): "{}"'.format(
-        # DD                                                   line[66:71]))
+        if self.origin_specific_to_comments and not origin_id:
+            comments.append(
+                    'slowness residual (seconds/degree): "{}"'.format(
+                        line[66:71]))
+
         # 74      a1      time defining flag (T or _)
         # Arrival.time_weight (float)
         time_defining_flag = line[73]
         time_weight = 0
         if time_defining_flag == 'T':
             time_weight = 1
-        # DD comments.append(
-        # DD   'time defining flag (T or _): "{}"'.format(line[73]))
+
         # 75      a1      azimuth defining flag (A or _)
         # Arrival.backazimuth_weight (float)
         azimuth_defining_flag = line[74]
         backazimuth_weight = 0
         if azimuth_defining_flag == 'A':
             backazimuth_weight = 1
-        # DD comments.append(
-        # DD   'azimuth defining flag (A or _): "{}"'.format(line[74]))
+
         # 76      a1      slowness defining flag (S or _)
         # Arrival.horizontal_slowness_weight (float)
         slowness_defining_flag = line[75]
         horizontal_slowness_weight = 0
         if slowness_defining_flag == 'S':
             horizontal_slowness_weight = 1
-        # DD comments.append(
-        # DD   'slowness defining flag (S or _): "{}"'.format(line[75]))
-        comments.append(
-            'TAS flag: "{}"'.format(line[73:76]))
+        # TAS flag (T, A, S, or _) not implemented in QuakeML
+        if self.origin_specific_to_comments and not origin_id:
+            comments.append('TAS flag: "{}"'.format(line[73:76]))
+
         # 78-82   f5.1    signal-to-noise ratio
         # Amplitude.snr (float)
         snr = float_or_none(line[77:82])
-        # comments.append('signal-to-noise ratio: "{}"'.format(line[77:82]))
+
         # 84-92   f9.1    amplitude (nanometers)
         # Amplitude.generic_amplitude (float, ATTRIBUTE_HAS_ERRORS)
         amp = float_or_none(line[83:92])
+
         # 94-98   f5.2    period (seconds)
         # Amplitude.period (float, ATTRIBUTE_HAS_ERRORS)
         period = float_or_none(line[93:98])
+
         # 100     a1      type of pick (a = automatic, m = manual)
         # Pick.evaluation_mode (EvaluationMode)
         evaluation_mode = line[99]
+
         # 101     a1      direction of short period motion
         #                 (c = compression, d = dilatation, _= null)
         # Pick.polarity (PickPolarity)
         polarity = POLARITY[line[100].strip().lower()]
+
         # 102     a1      onset quality (i = impulsive, e = emergent,
         #                                q = questionable, _ = null)
         # Pick.onset (PickOnset)
         onset = ONSET[line[101].strip().lower()]
+
         # 104-108 a5      magnitude type (mb, Ms, ML, mbmle, msmle)
         # StationMagnitude.station_magnitude_type (str)
         magnitude_type = line[103:108].strip()
+
         # 109     a1      min max indicator (<, >, or blank)
-        min_max_indicator = line[108]
+        min_max_indicator = line[108].strip()
+
         # 110-113 f4.1    magnitude value
         # StationMagnitude.mag (float, ATTRIBUTE_HAS_ERRORS)
         mag = float_or_none(line[109:113])
+
         # 115-122 a8      arrival identification
         phase_id = line[114:122].strip()
         #
@@ -674,7 +695,8 @@ class ISFReader(object):
         # process items
         waveform_id = WaveformStreamID(station_code=station_code)
         evaluation_mode = PICK_EVALUATION_MODE[evaluation_mode.strip().lower()]
-        comments = [self._make_comment(', '.join(comments))]
+        if len(comments) > 0:
+            comments = [self._make_comment(', '.join(comments))]
         # assemble
         # pick
         if phase_id:
@@ -709,8 +731,11 @@ class ISFReader(object):
             amplitude_id = None
         # station_magnitude
         if mag:
-            comment = ('min max indicator (<, >, or blank): ' +
-                       min_max_indicator)
+            comment = ''
+            if min_max_indicator:
+                # StationMagnitude min/max indicator not implemented in QuakeML
+                # min max indicator (<, >, or '')
+                comment = ('min max indicator: ' + min_max_indicator)
             if phase_id:
                 station_magnitude_id = self._construct_id(
                         ['station_magnitude', phase_id])
@@ -722,7 +747,7 @@ class ISFReader(object):
                     amplitude_id=amplitude_id, waveform_id=waveform_id,
                     origin_id=origin_id, mag=mag,
                     magnitude_type=magnitude_type,
-                    comments=[self._make_comment(comment)]
+                    comments=[self._make_comment(comment)] if comment else []
                     )
             if origin_id is None:
                 setattr(station_magnitude, 'origin_id', None)
@@ -769,6 +794,7 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
         position after the function has been called.
     :type reset_fp: bool
     :param file_mode: Mode to open file in if necessary.
+    :meta private:
     """
     try:
         position = filename_or_buf.tell()
@@ -791,7 +817,46 @@ def _read_ims10_bulletin(filename_or_buf, **kwargs):
     Reads an ISF IMS1.0 bulletin file to a :class:`~obspy.core.event.Catalog`
     object.
 
-    :param filename_or_buf: File or file-like object
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.event.read_events` function, call this
+        instead.
+
+    .. rubric:: Note
+        This reader only supports the IMS1.0:SHORT subformat, not LONG or
+        other subformats.
+
+    .. rubric:: Note
+        Compared to previous versions (1.4.x) of this reader, the processing
+        of phase blocks has changed. Phase blocks contain origin-specific data
+        (distance, azimuth, residuals, defining flags).
+        In previous versions, origin-specific data was always stored as text
+        in the Pick.comments object.
+        Now, this data is stored in the Arrival object according to QukaML.
+        If no preferred origin could be assigned (e.g. because multiple origins
+        are given and no #PRIME tag or no #OrigID is present),
+        a warning is issued and parsing of this phase block is skipped.
+
+    .. rubric:: Note
+        This default behavior can be changed by setting two flags (fce args)
+        of the ISFReader class. Setting `skip_orphan` to False
+        and `origin_specific_to_comments` to True will parse the phase block
+        even if no preferred origin could be assigned.
+        However, since the origin-specific data can not be stored in the
+        Arrival object without a valid origin_id, this data is then stored
+        as text in the Pick.comments attribute, similar to previous versions.
+
+    :type file: str or :class:`~pathlib.Path` or
+        file-like object( e.g. `ByesIO`)
+    :param filename_or_buf: bulletin file to read
+    :param skip_orphan = True: If False, orphan phase blocks will be skipped
+        (i.e. if no origin could be assigned to the phase block).
+    :param origin_specific_to_comments = False: If True, origin-specific data
+        in orphan phase blocks will be stored as text in the Pick.comments
+    :raises: :class:`~obspy.core.ObsPyReadingError` on problems to read file
+    :rtype: :class:`~obspy.core.event.Catalog`
+    :return: Catalog object
+    :meta public:
     """
     try:
         return _buffer_proxy(filename_or_buf, __read_ims10_bulletin,
@@ -808,6 +873,7 @@ def __read_ims10_bulletin(fh, **kwargs):  # NOQA
     object.
 
     :param fh: File or file-like object
+    :meta private:
     """
     return ISFReader(fh, **kwargs).deserialize()
 
@@ -821,6 +887,7 @@ def _is_ims10_bulletin(filename_or_buf, **kwargs):
         object.
     :rtype: bool
     :return: ``True`` if ISF IMS1.0 bulletin file.
+    :meta public:
     """
     try:
         return _buffer_proxy(filename_or_buf, __is_ims10_bulletin,
