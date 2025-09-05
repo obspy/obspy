@@ -178,16 +178,11 @@
           <distance>0.73</distance>
           <timeResidual>1.1</timeResidual>
           <timeWeight>1.0</timeWeight>
-          <horizontalSlownessWeight>0.0</horizontalSlownessWeight>
-          <backazimuthWeight>0.0</backazimuthWeight>
         </arrival>
         <arrival publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/arrival/27631111">
           <pickID>smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/pick/27631111</pickID>
           <phase>S</phase>
           <distance>0.73</distance>
-          <timeWeight>0.0</timeWeight>
-          <horizontalSlownessWeight>0.0</horizontalSlownessWeight>
-          <backazimuthWeight>0.0</backazimuthWeight>
         </arrival>
         <arrival publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/arrival/27631112">
           <pickID>smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/pick/27631112</pickID>
@@ -196,16 +191,11 @@
           <distance>0.88</distance>
           <timeResidual>-1.5</timeResidual>
           <timeWeight>1.0</timeWeight>
-          <horizontalSlownessWeight>0.0</horizontalSlownessWeight>
-          <backazimuthWeight>0.0</backazimuthWeight>
         </arrival>
         <arrival publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/arrival/27631113">
           <pickID>smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/pick/27631113</pickID>
           <phase>S</phase>
           <distance>0.88</distance>
-          <timeWeight>0.0</timeWeight>
-          <horizontalSlownessWeight>0.0</horizontalSlownessWeight>
-          <backazimuthWeight>0.0</backazimuthWeight>
         </arrival>
       </origin>
       <magnitude publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/magnitude">
