@@ -626,21 +626,21 @@ class ISFReader(object):
         # 74      a1      time defining flag (T or _)
         # Arrival.time_weight (float)
         time_defining_flag = line[73]
-        time_weight = 0
+        time_weight = None
         if time_defining_flag == 'T':
             time_weight = 1
 
         # 75      a1      azimuth defining flag (A or _)
         # Arrival.backazimuth_weight (float)
         azimuth_defining_flag = line[74]
-        backazimuth_weight = 0
+        backazimuth_weight = None
         if azimuth_defining_flag == 'A':
             backazimuth_weight = 1
 
         # 76      a1      slowness defining flag (S or _)
         # Arrival.horizontal_slowness_weight (float)
         slowness_defining_flag = line[75]
-        horizontal_slowness_weight = 0
+        horizontal_slowness_weight = None
         if slowness_defining_flag == 'S':
             horizontal_slowness_weight = 1
         # TAS flag (T, A, S, or _) not implemented in QuakeML
@@ -822,12 +822,12 @@ def _read_ims10_bulletin(filename_or_buf, **kwargs):
         ObsPy :func:`~obspy.core.event.read_events` function, call this
         instead.
 
-    .. rubric:: Note
-        This reader only supports the IMS1.0:SHORT subformat, not LONG or
+    .. rubric:: Notes
+
+    (1) This reader only supports the IMS1.0:SHORT subformat, not LONG or
         other subformats.
 
-    .. rubric:: Note
-        Compared to previous versions (1.4.x) of this reader, the processing
+    (2) Compared to previous versions (1.4.x) of this reader, the processing
         of phase blocks has changed. Phase blocks contain origin-specific data
         (distance, azimuth, residuals, defining flags).
         In previous versions, origin-specific data was always stored as text
@@ -837,7 +837,6 @@ def _read_ims10_bulletin(filename_or_buf, **kwargs):
         are given and no #PRIME tag or no #OrigID is present),
         a warning is issued and parsing of this phase block is skipped.
 
-    .. rubric:: Note
         This default behavior can be changed by setting two flags (fce args)
         of the ISFReader class. Setting `skip_orphan` to False
         and `origin_specific_to_comments` to True will parse the phase block
@@ -849,10 +848,12 @@ def _read_ims10_bulletin(filename_or_buf, **kwargs):
     :type file: str or :class:`~pathlib.Path` or
         file-like object( e.g. `ByesIO`)
     :param filename_or_buf: bulletin file to read
-    :param skip_orphan = True: If False, orphan phase blocks will be skipped
+    :param skip_orphan: Default True.
+        If False, orphan phase blocks will be skipped
         (i.e. if no origin could be assigned to the phase block).
-    :param origin_specific_to_comments = False: If True, origin-specific data
-        in orphan phase blocks will be stored as text in the Pick.comments
+    :param origin_specific_to_comments: Default False.
+        If True, origin-specific data in orphan phase blocks
+        will be stored as text in the Pick.comments
     :raises: :class:`~obspy.core.ObsPyReadingError` on problems to read file
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: Catalog object

@@ -123,8 +123,6 @@
           <distance>0.66</distance>
           <timeResidual>0.2</timeResidual>
           <timeWeight>1.0</timeWeight>
-          <horizontalSlownessWeight>0.0</horizontalSlownessWeight>
-          <backazimuthWeight>0.0</backazimuthWeight>
         </arrival>
         <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692975">
           <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692975</pickID>
@@ -133,8 +131,6 @@
           <distance>0.66</distance>
           <timeResidual>-0.1</timeResidual>
           <timeWeight>1.0</timeWeight>
-          <horizontalSlownessWeight>0.0</horizontalSlownessWeight>
-          <backazimuthWeight>0.0</backazimuthWeight>
         </arrival>
         <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692976">
           <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692976</pickID>
@@ -143,8 +139,6 @@
           <distance>1.13</distance>
           <timeResidual>0.2</timeResidual>
           <timeWeight>1.0</timeWeight>
-          <horizontalSlownessWeight>0.0</horizontalSlownessWeight>
-          <backazimuthWeight>0.0</backazimuthWeight>
         </arrival>
         <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692977">
           <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692977</pickID>
@@ -153,8 +147,6 @@
           <distance>1.38</distance>
           <timeResidual>-0.2</timeResidual>
           <timeWeight>1.0</timeWeight>
-          <horizontalSlownessWeight>0.0</horizontalSlownessWeight>
-          <backazimuthWeight>0.0</backazimuthWeight>
         </arrival>
         <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692978">
           <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692978</pickID>
@@ -163,8 +155,6 @@
           <distance>1.38</distance>
           <timeResidual>-0.1</timeResidual>
           <timeWeight>1.0</timeWeight>
-          <horizontalSlownessWeight>0.0</horizontalSlownessWeight>
-          <backazimuthWeight>0.0</backazimuthWeight>
         </arrival>
         <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692983">
           <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692983</pickID>
@@ -173,8 +163,6 @@
           <distance>1.6</distance>
           <timeResidual>0.1</timeResidual>
           <timeWeight>1.0</timeWeight>
-          <horizontalSlownessWeight>0.0</horizontalSlownessWeight>
-          <backazimuthWeight>0.0</backazimuthWeight>
         </arrival>
         <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692980">
           <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692980</pickID>
@@ -183,8 +171,6 @@
           <distance>1.6</distance>
           <timeResidual>-0.1</timeResidual>
           <timeWeight>1.0</timeWeight>
-          <horizontalSlownessWeight>0.0</horizontalSlownessWeight>
-          <backazimuthWeight>0.0</backazimuthWeight>
         </arrival>
       </origin>
       <magnitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/magnitude">
