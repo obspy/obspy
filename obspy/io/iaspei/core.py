@@ -693,7 +693,8 @@ class ISFReader(object):
             warnings.warn(msg)
             return None, None, None, None
         # process items
-        waveform_id = WaveformStreamID(station_code=station_code)
+        waveform_id = WaveformStreamID(network_code=None,
+                                       station_code=station_code)
         evaluation_mode = PICK_EVALUATION_MODE[evaluation_mode.strip().lower()]
         if len(comments) > 0:
             comments = [self._make_comment(', '.join(comments))]
@@ -715,6 +716,11 @@ class ISFReader(object):
                     'backazimuth_errors'):
             setattr(pick, key, None)
         # amplitude
+        # When reading from QuakeML later on,
+        # Amplitude.waveform_id.network_code defaults
+        # to empty string if not given.
+        waveform_id = WaveformStreamID(network_code="",
+                                       station_code=station_code)
         if amp:
             if phase_id:
                 amplitude_id = self._construct_id(['amplitude', phase_id])
@@ -722,14 +728,17 @@ class ISFReader(object):
                 amplitude_id = self._construct_id(['amplitude'], add_hash=True)
             # Convert from nanometers to meters
             amp /= 1e9
-            amplitude = Amplitude(resource_id=amplitude_id, pick_id=pick_id,
+            amplitude = Amplitude(resource_id=amplitude_id,
                                   unit=AmplitudeUnit.M, generic_amplitude=amp,
-                                  period=period, snr=snr
+                                  period=period, snr=snr,
+                                  pick_id=pick_id, waveform_id=waveform_id,
                                   )
         else:
             amplitude = None
             amplitude_id = None
         # station_magnitude
+        waveform_id = WaveformStreamID(network_code=None,
+                                       station_code=station_code)
         if mag:
             comment = ''
             if min_max_indicator:
@@ -744,9 +753,9 @@ class ISFReader(object):
                         ['station_magnitude'], add_hash=True)
             station_magnitude = StationMagnitude(
                     resource_id=station_magnitude_id,
+                    origin_id=origin_id,
+                    mag=mag, magnitude_type=magnitude_type,
                     amplitude_id=amplitude_id, waveform_id=waveform_id,
-                    origin_id=origin_id, mag=mag,
-                    magnitude_type=magnitude_type,
                     comments=[self._make_comment(comment)] if comment else []
                     )
             if origin_id is None:

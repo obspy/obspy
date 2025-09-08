@@ -308,6 +308,7 @@
         </period>
         <snr>1.0</snr>
         <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692975</pickID>
+        <waveformID stationCode="MORC"></waveformID>
       </amplitude>
       <amplitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19692978">
         <genericAmplitude>
@@ -318,6 +319,7 @@
           <value>0.23</value>
         </period>
         <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692978</pickID>
+        <waveformID stationCode="VRAC"></waveformID>
       </amplitude>
       <amplitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19692980">
         <genericAmplitude>
@@ -328,6 +330,7 @@
           <value>0.21</value>
         </period>
         <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692980</pickID>
+        <waveformID stationCode="KRUC"></waveformID>
       </amplitude>
     </event>
     <event publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/event/2032696">
@@ -519,6 +522,7 @@
           <value>0.29</value>
         </period>
         <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696328</pickID>
+        <waveformID stationCode="MORC"></waveformID>
       </amplitude>
       <amplitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19696332">
         <genericAmplitude>
@@ -529,6 +533,7 @@
           <value>0.02</value>
         </period>
         <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696332</pickID>
+        <waveformID stationCode="VRAC"></waveformID>
       </amplitude>
       <amplitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19696333">
         <genericAmplitude>
@@ -539,6 +544,7 @@
           <value>0.24</value>
         </period>
         <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696333</pickID>
+        <waveformID stationCode="KRUC"></waveformID>
       </amplitude>
     </event>
   </eventParameters>
