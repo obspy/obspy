@@ -21,14 +21,6 @@ import warnings
 from collections import OrderedDict
 from http.client import HTTPException, IncompleteRead
 from urllib.parse import urlparse
-# since python 3.10 socket.timeout is just an alias for builtin TimeoutError
-# and python docs state that it is a "deprecated alias", so that alias might
-# get removed at some point (or probably just kept forever), so be ready for it
-# here
-try:
-    from socket import timeout as socket_timeout
-except ImportError:
-    socket_timeout = TimeoutError
 
 from lxml import etree
 
@@ -1585,7 +1577,7 @@ class Client(object):
                             raise
                     except urllib_request.URLError:
                         wadl_queue.put((url, "timeout"))
-                    except socket_timeout:
+                    except TimeoutError:
                         wadl_queue.put((url, "timeout"))
             threadurl = ThreadURL()
             threadurl._timeout = self.timeout
@@ -1839,7 +1831,7 @@ def raise_on_error(code, data):
     # there can be random network issues that prevent us getting a proper HTTP
     # response and they need to handled differently
     if code is None:
-        if (isinstance(data, (socket_timeout, TimeoutError)) or
+        if (isinstance(data, TimeoutError) or
                 "timeout" in str(data).lower() or
                 "timed out" in str(data).lower()):
             raise FDSNTimeoutException("Timed Out")
