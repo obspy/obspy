@@ -219,7 +219,8 @@ class ISFReader(object):
                     event.picks[-1].comments.append(comment)
                 continue
             pick, amplitude, station_magnitude, arrival = self._parse_phase(
-                                                             line, origin_id)
+                    line, origin_id,
+                    self.origin_specific_to_comments and not origin_id)
             if (pick, amplitude, station_magnitude) == (None, None, None):
                 continue
             event.picks.append(pick)
@@ -549,20 +550,34 @@ class ISFReader(object):
                 return None
         return t
 
-    def _parse_phase(self, line, origin_id):
+    def _parse_phase(self, line, origin_id, values_to_comments=False):
         """
         Parse a phase line, returning Pick, Amplitude, StationMagnitude,
         Arrival objects as available.
+
+        :param line: Line to parse
+        :type line: str
+        :param origin_id: ResourceIdentifier of the origin
+            this phase belongs to
+        :type origin_id: obspy.core.event.ResourceIdentifier
+        :param values_to_comments: If True, all available origin-specific
+            information in the phase line (distance, azimuth, residuals, ...)
+            are stored as comments in the Pick.comments attribute.
+        :type values_to_comments: bool
+        :returns: (pick, amplitude, station_magnitude, arrival)
+        :rtype: tuple(obspy.core.event.Pick or None,
+                      obspy.core.event.Amplitude or None,
+                      obspy.core.event.StationMagnitude or None,
+                      obspy.core.event.Arrival or None)
+        :meta private:
         """
-        # If self.origin_specific_to_comments flag is set
-        # and origin_id is None
-        # (i.e., no preferred origin could be assigned to the event)
-        # then all available origin-specific information
-        # in the phase line
-        # (distance, azimuth, residuals, ...) are stored as comments
-        # in the Pick.comments attribute.
-        # It's not very helpful and somewhat against the spirit of
-        # QuakeML. For this, the flag is off by default.
+
+        # It is called with the values_to_comments argument set to True
+        # if it was not possible to assign the origin to the phase block
+        # and the self.origin_specific_to_comments flag is set.
+        # Storing values in comments is not very helpful
+        # and somewhat against the spirit of QuakeML.
+        # For this, the flag is off by default.
         comments = []
 
         # 1-5     a5      station code
@@ -571,7 +586,7 @@ class ISFReader(object):
         # 7-12    f6.2    station-to-event distance (degrees)
         # Arrival.distance (float)
         distance = float_or_none(line[6:12])
-        if self.origin_specific_to_comments and not origin_id:
+        if values_to_comments:
             comments.append(
                     'station-to-event distance (degrees): "{}"'.format(
                         line[6:12]))
@@ -579,7 +594,7 @@ class ISFReader(object):
         # 14-18   f5.1    event-to-station azimuth (degrees)
         # Arrival.azimuth (float)
         event_azimuth = float_or_none(line[13:18])
-        if self.origin_specific_to_comments and not origin_id:
+        if values_to_comments:
             comments.append(
                     'event-to-station azimuth (degrees): "{}"'.format(
                         line[13:18]))
@@ -596,7 +611,7 @@ class ISFReader(object):
         # 42-46   f5.1    time residual (seconds)
         # Arrival.time_residual (float)
         time_residual = float_or_none(line[41:46])
-        if self.origin_specific_to_comments and not origin_id:
+        if values_to_comments:
             comments.append(
                     'time residual (seconds): "{}"'.format(line[41:46]))
 
@@ -607,7 +622,7 @@ class ISFReader(object):
         # 54-58   f5.1    azimuth residual (degrees)
         # Arrival.backazimuth_residual (float)
         backazimuth_residual = float_or_none(line[53:58])
-        if self.origin_specific_to_comments and not origin_id:
+        if values_to_comments:
             comments.append(
                     'azimuth residual (degrees): "{}"'.format(line[53:58]))
 
@@ -618,7 +633,7 @@ class ISFReader(object):
         # 67-72   f5.1    slowness residual (seconds/degree)
         # Arrival.horizontal_slowness_residual (float)
         horizontal_slowness_residual = float_or_none(line[66:71])
-        if self.origin_specific_to_comments and not origin_id:
+        if values_to_comments:
             comments.append(
                     'slowness residual (seconds/degree): "{}"'.format(
                         line[66:71]))
@@ -644,7 +659,7 @@ class ISFReader(object):
         if slowness_defining_flag == 'S':
             horizontal_slowness_weight = 1
         # TAS flag (T, A, S, or _) not implemented in QuakeML
-        if self.origin_specific_to_comments and not origin_id:
+        if values_to_comments:
             comments.append('TAS flag: "{}"'.format(line[73:76]))
 
         # 78-82   f5.1    signal-to-noise ratio
@@ -841,18 +856,18 @@ def _read_ims10_bulletin(filename_or_buf, **kwargs):
         (distance, azimuth, residuals, defining flags).
         In previous versions, origin-specific data was always stored as text
         in the Pick.comments object.
-        Now, this data is stored in the Arrival object according to QukaML.
-        If no preferred origin could be assigned (e.g. because multiple origins
-        are given and no #PRIME tag or no #OrigID is present),
-        a warning is issued and parsing of this phase block is skipped.
+        Now this data is stored in the Arrival object according to QukaML.
+        If it was not possible to assign the preferred origin (e.g., because
+        multiple origins are given and the #PRIME or #OrigID tag is not present
+        ), a warning is issued and the parsing of this phase block is skipped.
 
-        This default behavior can be changed by setting two flags (fce args)
-        of the ISFReader class. Setting `skip_orphan` to False
-        and `origin_specific_to_comments` to True will parse the phase block
-        even if no preferred origin could be assigned.
-        However, since the origin-specific data can not be stored in the
-        Arrival object without a valid origin_id, this data is then stored
-        as text in the Pick.comments attribute, similar to previous versions.
+        This default behavior can be changed by setting two optional arguments.
+        By setting `skip_orphan` to False and
+        `origin_specific_to_comments` to True, the phase block is analyzed even
+        if the preferred origin cannot be assigned.
+        However, since origin-specific data cannot be stored in the Arrival
+        object without a valid origin_id, this data is stored as text
+        in the Pick.comments attributes, similar to previous versions.
 
     :type file: str or :class:`~pathlib.Path` or
         file-like object( e.g. `ByesIO`)
