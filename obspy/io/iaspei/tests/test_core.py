@@ -106,6 +106,8 @@ class TestIASPEI():
         bio = io.BytesIO(data)
         expected = read_events(bio, format="QUAKEML")
         self.prepare_comparison(expected)
+        # got.write("DEBUGgot.xml", format="QUAKEML")
+        # expected.write("DEBUGexpected.xml", format="QUAKEML")
         # take the entire uncropped got catalog and compare against expected
         assert got == expected
 
