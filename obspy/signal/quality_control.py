@@ -453,31 +453,39 @@ class MSEEDMetadata(object):
         self.meta['sample_min'] = min([tr.data.min() for tr in self.data])
         self.meta['sample_max'] = max([tr.data.max() for tr in self.data])
 
+
+        # 
+        # Vectorised implementation to reduce memory consumption and optimise running time
+        #
+        #
+
+        full_samples = np.concatenate([tr.data.astype(np.float64, copy=False) for tr in self.data])
+
+
         # Manually implement these as they have to work across a list of
         # arrays.
-        self.meta['sample_mean'] = \
-            sum(tr.data.sum() for tr in self.data) / npts
+        self.meta['sample_mean'] = full_samples.mean()
 
-        full_samples = np.concatenate([tr.data for tr in self.data])
+
+#       full_samples = np.concatenate([tr.data for tr in self.data])
         self.meta['sample_median'] = np.median(full_samples)
         self.meta['sample_lower_quartile'] = np.percentile(full_samples, 25)
         self.meta['sample_upper_quartile'] = np.percentile(full_samples, 75)
 
-        # Might overflow np.int64 so make Python obj. (.astype(object))
-        # allows conversion to long int when required (see tests)
-        self.meta['sample_rms'] = \
-            np.sqrt(sum((tr.data.astype(object) ** 2).sum()
-                        for tr in self.data) / npts)
+        self.meta['sample_rms'] = np.sqrt(np.mean(full_samples ** 2))
 
-        self.meta['sample_stdev'] = np.sqrt(sum(
-            ((tr.data - self.meta["sample_mean"]) ** 2).sum()
-            for tr in self.data) / npts)
+        # Sample standard deviation
+        self.meta['sample_stdev'] = full_samples.std(ddof=0)
+
 
         # Percentage based availability as a function of total gap length
         # over the full trace duration
         self.meta['percent_availability'] = 100 * (
             (self.total_time - self.meta['sum_gaps']) /
             self.total_time)
+
+
+
 
     def _compute_continuous_seg_sample_metrics(self):
         """
