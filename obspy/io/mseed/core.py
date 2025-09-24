@@ -139,6 +139,7 @@ def __is_mseed(fp, file_size):  # NOQA
         fp.seek(record_length - 1, 1)
     return False
 
+
 def __read_header(buffer, index):
     """
         Reads the first record of the given buffer and returns
@@ -153,6 +154,7 @@ def __read_header(buffer, index):
     header = _read_mseed(io.BytesIO(buffer[index:index+4096].tobytes()),
                          headonly=True)
     return header[0].stats
+
 
 def __bisect_mseed(buffer, timestamp, before=True):
     """
@@ -234,8 +236,6 @@ def __bisect_mseed(buffer, timestamp, before=True):
         return low
     else:
         return high
-
-
 
 
 def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
