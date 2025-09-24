@@ -441,7 +441,10 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     bfr_np = bfr_np[offset:]
     buflen = len(bfr_np)
     bufptr_low = 0
-    bufptr_high = buflen
+    
+    # not buflen, otherwise unit test with mocked os.path.getsize
+    # will not work
+    bufptr_high = length - offset
 
     # If no selection is given pass None to the C function.
     if starttime is None and endtime is None and sourcename is None:
@@ -491,11 +494,11 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     all_data = []
 
     if bufptr_high - bufptr_low > 2 ** 31:
-        msg = ("ObsPy can currently not directly read mini-SEED windows that "
-               "are larger than 2^31 bytes (2048 MiB). To still read it, "
-               "please read the file in chunks as documented here: "
-               "https://github.com/obspy/obspy/pull/1419"
-               "#issuecomment-221582369")
+        msg = (
+            "ObsPy can currently not directly read mini-SEED files that are "
+            "larger than 2^31 bytes (2048 MiB). To still read it, please "
+            "read the file in chunks as documented here: "
+            "https://github.com/obspy/obspy/pull/1419#issuecomment-221582369")
         raise ObsPyMSEEDFilesizeTooLargeError(msg)
 
     # Use a callback function to allocate the memory and keep track of the
