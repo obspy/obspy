@@ -138,6 +138,104 @@ def __is_mseed(fp, file_size):  # NOQA
         fp.seek(record_length - 1, 1)
     return False
 
+def __read_header(buffer, index):
+    """
+        Reads the first record of the given buffer and returns
+        header information.
+
+        :param buffer: numpy.array(dtype=int8) or compatible containing
+                       raw miniseed data.
+        :param index:  position in the buffer which should be read
+
+        returns obspy.core.trace.Stats object
+    """
+    header = _read_mseed(io.BytesIO(buffer[index:index+4096].tobytes()),
+                         headonly=True)
+    return header[0].stats
+
+def __bisect_mseed(buffer, timestamp, before=True):
+    """
+         Quickly finds a timestamp in a miniseed stream using interpolation
+         search.
+
+         The code is a helper for _read_mseed and is written to be efficient,
+         a record size of 4096 is assumed. The code stops when the area
+         searched is less than 1MB in size. This code is intended to fasten
+         up the code when trying to cut out a time window of data from a
+         large input file. Using this, the code potentially only needs to
+         actually read a very small portion of a file. Cutting off at 1MB
+         also eliminates the need of treating boundary conditions.
+
+         The algorithm used is "interplation search" as described by W.W.
+         Peterson 1957: doi:10.1147/rd.12.0130.
+
+         This code only works when the data is ordered (i.e. the time
+         stamps are ordered in ascending order). Otherwise the code
+         may fail, in this case, None is returned.
+
+         :param buffer: numpy.array(dtype=int8) or compatible containing
+                        raw miniseed data.
+         :param timestamp: obspy.core.UTCDateTime() timestamp to look for
+                           in buffer
+         :param before: If True, return the index of the record containing
+                        the timestamp, if False, return the index of the
+                        next record.
+
+         returns index of the buffer either including the timestamp or
+                 the next one or None if the time stamp cannot be found.
+    """
+    low = 0
+    high = len(buffer)
+
+    # cut off here, linear search will be fast enough, avoid treating
+    # boundary cases
+    stopat = 1024*1024
+
+    if high - low <= stopat:
+        if before:
+            return low
+        else:
+            return high
+
+    starttime = __read_header(buffer, low).starttime
+    endtime = __read_header(buffer, high-4096).endtime
+
+    # timestamp not in this file
+    if timestamp < starttime or timestamp > endtime:
+        return None
+
+    while high-low > stopat:
+
+        # Cannot find timestamp
+        if timestamp < starttime or timestamp > endtime:
+            return None
+
+        # classical interpolation search
+        informed_guess_percentage = (timestamp - starttime) / \
+                                    (endtime - starttime)
+        buffer_raw_guess = informed_guess_percentage * (high-low)
+        informed_guess = low + int(buffer_raw_guess // 4096) * 4096
+
+        # algorithm stuck due to rounding to 4096 boundaries
+        if informed_guess <= low or informed_guess >= high:
+            informed_guess = (high - low) / 2
+            informed_guess = low + int(informed_guess // 4096) * 4096
+
+        guess_time = __read_header(buffer, informed_guess).starttime
+
+        if guess_time > timestamp:
+            high = informed_guess
+            endtime = guess_time
+        else:
+            low = informed_guess
+            starttime = guess_time
+    if before:
+        return low
+    else:
+        return high
+
+
+
 
 def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 sourcename=None, reclen=None, details=False,
@@ -306,7 +404,10 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     # If it's a file name just read it.
     if isinstance(mseed_object, str):
         # Read to NumPy array which is used as a buffer.
-        bfr_np = np.fromfile(mseed_object, dtype=np.int8)
+        # use memmap, faster than fromfile, same functionality
+        bfr_np = np.memmap(mseed_object, dtype=np.int8, mode="c")
+        # bfr_np = np.fromfile(mseed_object, dtype=np.int8)
+
     elif hasattr(mseed_object, 'read'):
         bfr_np = from_buffer(mseed_object.read(), dtype=np.int8)
 
@@ -333,6 +434,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         break
     bfr_np = bfr_np[offset:]
     buflen = len(bfr_np)
+    bufptr_low = 0
+    bufptr_high = buflen
 
     # If no selection is given pass None to the C function.
     if starttime is None and endtime is None and sourcename is None:
@@ -347,6 +450,12 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 raise ValueError(msg)
             selections.timewindows.contents.starttime = \
                 util._convert_datetime_to_mstime(starttime)
+
+            # bisect to the actual starttime
+            # avoids parsing of the whole file
+            bufptr_low = __bisect_mseed(bfr_np, starttime, before=True) \
+                or 0
+
         else:
             # HPTERROR results in no starttime.
             selections.timewindows.contents.starttime = HPTERROR
@@ -356,6 +465,9 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 raise ValueError(msg)
             selections.timewindows.contents.endtime = \
                 util._convert_datetime_to_mstime(endtime)
+            bufptr_high = __bisect_mseed(bfr_np, endtime, before=False) \
+                or buflen
+
         else:
             # HPTERROR results in no starttime.
             selections.timewindows.contents.endtime = HPTERROR
@@ -396,9 +508,10 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     clibmseed.verbose = bool(verbose)
     try:
         lil = clibmseed.readMSEEDBuffer(
-            bfr_np, buflen, selections, C.c_int8(unpack_data),
-            reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
-            alloc_data)
+            bfr_np[bufptr_low:bufptr_high], bufptr_high - bufptr_low,
+            selections, C.c_int8(unpack_data), reclen, C.c_int8(verbose),
+            C.c_int8(details), header_byteorder, alloc_data)
+
     except InternalMSEEDError as e:
         msg = e.args[0]
         if offset and offset in str(e):
