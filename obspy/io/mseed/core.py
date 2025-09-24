@@ -441,7 +441,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     bfr_np = bfr_np[offset:]
     buflen = len(bfr_np)
     bufptr_low = 0
-    
+
     # not buflen, otherwise unit test with mocked os.path.getsize
     # will not work
     bufptr_high = length - offset
