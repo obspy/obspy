@@ -4,6 +4,10 @@ maintenance_1.4.x
 Changes:
  - obspy.io.shapefile:
    * add support for pyshp v3 (see #3599)
+ - obspy.signal
+   * MSEEDMetadata: Computation of sample metrics replaced with vectorised
+     numpy code. Speedup of roughly factor 10 for integer data and 1.5 for
+     floating point data. (see #3621)
 
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================
