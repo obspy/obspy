@@ -187,7 +187,7 @@ class TestClient():
         Tests the parsing of the available event contributors.
         """
         response = requests.get(
-            'http://service.iris.edu/fdsnws/event/1/contributors')
+            'https://service.iris.edu/fdsnws/event/1/contributors')
         xml = lxml.etree.fromstring(response.content)
         expected = {
             elem.text for elem in xml.xpath('/Contributors/Contributor')}
@@ -625,7 +625,7 @@ class TestClient():
     def test_str_method(self):
         got = str(self.client)
         expected = (
-            "FDSN Webservice Client (base url: http://service.iris.edu)\n"
+            "FDSN Webservice Client (base url: https://service.iris.edu)\n"
             "Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6), "
             "'station' (v1.0.7), 'available_event_catalogs', "
             "'available_event_contributors'\n\n"
@@ -958,17 +958,17 @@ class TestClient():
         everything if not authentication is used.
 
         EARTHSCOPE runs three services to test it:
-            http://ds.iris.edu/files/redirect/307/station/1
-            http://ds.iris.edu/files/redirect/307/dataselect/1
-            http://ds.iris.edu/files/redirect/307/event/1
+            https://ds.iris.edu/files/redirect/307/station/1
+            https://ds.iris.edu/files/redirect/307/dataselect/1
+            https://ds.iris.edu/files/redirect/307/event/1
         """
         c = Client("EARTHSCOPE", service_mappings={
             "station":
-                "http://ds.iris.edu/files/redirect/307/station/1",
+                "https://ds.iris.edu/files/redirect/307/station/1",
             "dataselect":
-                "http://ds.iris.edu/files/redirect/307/dataselect/1",
+                "https://ds.iris.edu/files/redirect/307/dataselect/1",
             "event":
-                "http://ds.iris.edu/files/redirect/307/event/1"},
+                "https://ds.iris.edu/files/redirect/307/event/1"},
             user_agent=USER_AGENT)
 
         st = c.get_waveforms(
@@ -1024,9 +1024,9 @@ class TestClient():
         # The error will already be raised during the initialization in most
         # cases.
         service_mappings = {
-            "station": "http://ds.iris.edu/files/redirect/307/station/1",
-            "dataselect": "http://ds.iris.edu/files/redirect/307/dataselect/1",
-            "event": "http://ds.iris.edu/files/redirect/307/event/1"}
+            "station": "https://ds.iris.edu/files/redirect/307/station/1",
+            "dataselect": "https://ds.iris.edu/files/redirect/307/dataselect/1",
+            "event": "https://ds.iris.edu/files/redirect/307/event/1"}
         with warnings.catch_warnings():
             # ignore warnings about unclosed sockets
             # These occur when rasing the FDSNRedirectException, but
@@ -1089,7 +1089,7 @@ class TestClient():
         see #1578).
         """
         t = UTCDateTime(2000, 1, 1)
-        url_base = "http://service.iris.edu/fdsnws/dataselect/1/query?"
+        url_base = "https://service.iris.edu/fdsnws/dataselect/1/query?"
         kwargs = dict(network='IU', station='ANMO', location='00',
                       channel='HHZ', starttime=t, endtime=t)
 
@@ -1217,7 +1217,7 @@ class TestClient():
                 a dummy stream.
                 """
                 # check that we're at the expected FDSN WS server
-                assert 'http://geofon.gfz-potsdam.de' == self_.base_url
+                assert 'https://geofon.gfz-potsdam.de' == self_.base_url
                 # check if credentials were used
                 # eida auth availability should be positive in all cases
                 assert self_._has_eida_auth
@@ -1341,32 +1341,32 @@ class TestClientNoNetwork():
         Tests the build_url() functions.
         """
         # Application WADL
-        assert build_url("http://service.iris.edu", "dataselect", 1,
+        assert build_url("https://service.iris.edu", "dataselect", 1,
                          "application.wadl") == \
-            "http://service.iris.edu/fdsnws/dataselect/1/application.wadl"
-        assert build_url("http://service.iris.edu", "event", 1,
+            "https://service.iris.edu/fdsnws/dataselect/1/application.wadl"
+        assert build_url("https://service.iris.edu", "event", 1,
                          "application.wadl") == \
-            "http://service.iris.edu/fdsnws/event/1/application.wadl"
-        assert build_url("http://service.iris.edu", "station", 1,
+            "https://service.iris.edu/fdsnws/event/1/application.wadl"
+        assert build_url("https://service.iris.edu", "station", 1,
                          "application.wadl") == \
-            "http://service.iris.edu/fdsnws/station/1/application.wadl"
+            "https://service.iris.edu/fdsnws/station/1/application.wadl"
 
         # Test one parameter.
-        assert build_url("http://service.iris.edu", "dataselect", 1,
+        assert build_url("https://service.iris.edu", "dataselect", 1,
                          "query", {"network": "BW"}) == \
-            "http://service.iris.edu/fdsnws/dataselect/1/query?network=BW"
-        assert build_url("http://service.iris.edu", "dataselect", 1,
+            "https://service.iris.edu/fdsnws/dataselect/1/query?network=BW"
+        assert build_url("https://service.iris.edu", "dataselect", 1,
                          "queryauth", {"network": "BW"}) == \
-            "http://service.iris.edu/fdsnws/dataselect/1/queryauth?network=BW"
+            "https://service.iris.edu/fdsnws/dataselect/1/queryauth?network=BW"
         # Test two parameters. Note random order, two possible results.
-        assert build_url("http://service.iris.edu", "dataselect", 1,
+        assert build_url("https://service.iris.edu", "dataselect", 1,
                          "query", {"net": "A", "sta": "BC"}) in \
-            ("http://service.iris.edu/fdsnws/dataselect/1/query?net=A&sta=BC",
-             "http://service.iris.edu/fdsnws/dataselect/1/query?sta=BC&net=A")
+            ("https://service.iris.edu/fdsnws/dataselect/1/query?net=A&sta=BC",
+             "https://service.iris.edu/fdsnws/dataselect/1/query?sta=BC&net=A")
 
         # A wrong service raises a ValueError
         with pytest.raises(ValueError):
-            build_url("http://service.iris.edu", "obspy", 1, "query")
+            build_url("https://service.iris.edu", "obspy", 1, "query")
 
     def test_location_parameters(self):
         """
@@ -1383,43 +1383,43 @@ class TestClientNoNetwork():
         """
         # requests with no specified location should be treated as a wildcard
         assert not ("--" in build_url(
-            "http://service.iris.edu", "station", 1, "query",
+            "https://service.iris.edu", "station", 1, "query",
             {"network": "IU", "station": "ANMO", "starttime": "2013-01-01"}))
         # location of "  " is the same as "--"
-        assert build_url("http://service.iris.edu", "station", 1,
+        assert build_url("https://service.iris.edu", "station", 1,
                          "query", {"location": "  "}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?location=--"
+            "https://service.iris.edu/fdsnws/station/1/query?location=--"
         # wildcard locations are valid. Will be encoded.
-        assert build_url("http://service.iris.edu", "station", 1,
+        assert build_url("https://service.iris.edu", "station", 1,
                          "query", {"location": "*"}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?location=%2A"
-        assert build_url("http://service.iris.edu", "station", 1,
+            "https://service.iris.edu/fdsnws/station/1/query?location=%2A"
+        assert build_url("https://service.iris.edu", "station", 1,
                          "query", {"location": "A?"}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?location=A%3F"
+            "https://service.iris.edu/fdsnws/station/1/query?location=A%3F"
 
         # lists are valid, including <space><space> lists. Again encoded
         # result.
-        assert build_url("http://service.iris.edu", "station", 1,
+        assert build_url("https://service.iris.edu", "station", 1,
                          "query", {"location": "  ,1?,?0"}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "https://service.iris.edu/fdsnws/station/1/query?" \
             "location=--%2C1%3F%2C%3F0"
-        assert build_url("http://service.iris.edu", "station", 1,
+        assert build_url("https://service.iris.edu", "station", 1,
                          "query", {"location": "1?,--,?0"}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "https://service.iris.edu/fdsnws/station/1/query?" \
             "location=1%3F%2C--%2C%3F0"
 
         # Test all three special cases with empty parameters into lists.
-        assert build_url("http://service.iris.edu", "station", 1,
+        assert build_url("https://service.iris.edu", "station", 1,
                          "query", {"location": "  ,AA,BB"}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "https://service.iris.edu/fdsnws/station/1/query?" \
             "location=--%2CAA%2CBB"
-        assert build_url("http://service.iris.edu", "station", 1,
+        assert build_url("https://service.iris.edu", "station", 1,
                          "query", {"location": "AA,  ,BB"}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "https://service.iris.edu/fdsnws/station/1/query?" \
             "location=AA%2C--%2CBB"
-        assert build_url("http://service.iris.edu", "station", 1,
+        assert build_url("https://service.iris.edu", "station", 1,
                          "query", {"location": "AA,BB,  "}) == \
-            "http://service.iris.edu/fdsnws/station/1/query?" \
+            "https://service.iris.edu/fdsnws/station/1/query?" \
             "location=AA%2CBB%2C--"
 
         # The location parameter is also passed through the
@@ -1457,11 +1457,11 @@ class TestClientNoNetwork():
         """
         # no authentication
         got = self.client._build_url("dataselect", "query", {'net': "BW"})
-        expected = "http://service.iris.edu/fdsnws/dataselect/1/query?net=BW"
+        expected = "https://service.iris.edu/fdsnws/dataselect/1/query?net=BW"
         assert got == expected
         # with authentication
         got = self.client_auth._build_url("dataselect", "query", {'net': "BW"})
-        expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
+        expected = ("https://service.iris.edu/fdsnws/dataselect/1/"
                     "queryauth?net=BW")
         assert got == expected
 
@@ -1479,7 +1479,7 @@ class TestClientNoNetwork():
         password = "anonymous"
         client.set_credentials(user=user, password=password)
         got = client._build_url("dataselect", "query", {'net': "BW"})
-        expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
+        expected = ("https://service.iris.edu/fdsnws/dataselect/1/"
                     "queryauth?net=BW")
         assert got == expected
         # more basic test: check that set_credentials has set Client.user
@@ -1529,7 +1529,7 @@ class TestClientNoNetwork():
         version_mock.return_value = '1.1.9'
         got = str(self.client)
         expected = (
-            "FDSN Webservice Client (base url: http://service.iris.edu)\n"
+            "FDSN Webservice Client (base url: https://service.iris.edu)\n"
             "Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6), "
             "'station' (v1.0.7)\n\n"
             "Use e.g. client.help('dataselect') for the\n"
@@ -1711,7 +1711,7 @@ class TestClientNoNetwork():
                "client short URL to 'EARTHSCOPE'.")
         with CatchAndAssertWarnings(expected=[(ObsPyDeprecationWarning, msg)]):
             client = Client('IRIS', _discover_services=False)
-        assert client.base_url == 'http://service.iris.edu'
+        assert client.base_url == 'https://service.iris.edu'
 
     def test_query_a_non_existent_service_exception(self):
         """
