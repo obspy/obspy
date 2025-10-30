@@ -131,7 +131,7 @@ URL_MAPPINGS = {
     "ODC": "https://www.orfeus-eu.org",
     "ORFEUS": "https://www.orfeus-eu.org",
     "RESIF": "https://ws.resif.fr",
-    "RESIFPH5": "https://ph5ws.resif.fr",
+    "RESIFPH5": "http://ph5ws.resif.fr",
     "RASPISHAKE": "https://data.raspberryshake.org",
     "SCEDC": "https://service.scedc.caltech.edu",
     "TEXNET": "http://rtserve.beg.utexas.edu",
