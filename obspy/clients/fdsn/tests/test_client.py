@@ -1025,7 +1025,9 @@ class TestClient():
         # cases.
         service_mappings = {
             "station": "https://ds.iris.edu/files/redirect/307/station/1",
-            "dataselect": "https://ds.iris.edu/files/redirect/307/dataselect/1",
+            "dataselect": (
+                "https://ds.iris.edu/files/redirect/307/dataselect/1"
+            ),
             "event": "https://ds.iris.edu/files/redirect/307/event/1"}
         with warnings.catch_warnings():
             # ignore warnings about unclosed sockets
