@@ -177,15 +177,26 @@ OPTIONAL_EVENT_PARAMETERS = [
     "includearrivals", "eventid", "limit", "offset", "catalog", "contributor",
     "updatedafter"]
 
+DEFAULT_AVAILABILITY_PARAMETERS = [
+    "starttime", "endtime", "network", "station", "location", "channel"
+]
+
+OPTIONAL_AVAILABILITY_PARAMETERS = [
+    "quality", "orderby", "limit", "format", "mergegaps", "merge", "show"
+]
+
 DEFAULT_PARAMETERS = {
     "dataselect": DEFAULT_DATASELECT_PARAMETERS,
     "event": DEFAULT_EVENT_PARAMETERS,
-    "station": DEFAULT_STATION_PARAMETERS}
+    "station": DEFAULT_STATION_PARAMETERS,
+    "availability": DEFAULT_AVAILABILITY_PARAMETERS}
 
 OPTIONAL_PARAMETERS = {
     "dataselect": OPTIONAL_DATASELECT_PARAMETERS,
     "event": OPTIONAL_EVENT_PARAMETERS,
-    "station": OPTIONAL_STATION_PARAMETERS}
+    "station": OPTIONAL_STATION_PARAMETERS,
+    "availability": OPTIONAL_AVAILABILITY_PARAMETERS
+    }
 
 PARAMETER_ALIASES = {
     "net": "network",
@@ -250,7 +261,11 @@ DEFAULT_TYPES = {
     "catalog": str,
     "contributor": str,
     "updatedafter": UTCDateTime,
-    "format": str}
+    "format": str,
+    "mergegaps": float,
+    "merge": str,
+    "show": str,
+    }
 
 DEFAULT_VALUES = {
     "starttime": None,
@@ -259,7 +274,7 @@ DEFAULT_VALUES = {
     "station": None,
     "location": None,
     "channel": None,
-    "quality": "B",
+    "quality": None,
     "minimumlength": 0.0,
     "longestonly": False,
     "startbefore": None,
@@ -290,10 +305,13 @@ DEFAULT_VALUES = {
     "eventtype": None,
     "limit": None,
     "offset": 1,
-    "orderby": "time",
+    "orderby": None,
     "catalog": None,
     "contributor": None,
     "updatedafter": None,
+    "mergegaps": 0.0,
+    "merge": None,
+    "show": None,
 }
 
 # This creates a services dictionary containing default and optional services,
@@ -302,7 +320,7 @@ DEFAULT_VALUES = {
 # minimal and very permissive service provider, without actually having to
 # do the query.
 DEFAULT_SERVICES = {}
-for service in ["dataselect", "event", "station"]:
+for service in ["dataselect", "event", "station", "availability"]:
     DEFAULT_SERVICES[service] = {}
 
     for default_param in DEFAULT_PARAMETERS[service]:
@@ -316,8 +334,10 @@ for service in ["dataselect", "event", "station"]:
         if optional_param == "format":
             if service == "dataselect":
                 default_val = "miniseed"
-            else:
+            elif service == "station":
                 default_val = "xml"
+            elif service == "availability":
+                default_val = "geocsv"
         else:
             default_val = DEFAULT_VALUES[optional_param]
 

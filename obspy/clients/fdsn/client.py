@@ -9,7 +9,6 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import collections.abc
 import copy
 import gzip
 import io
@@ -18,7 +17,7 @@ import re
 import textwrap
 import threading
 import warnings
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple, abc
 from http.client import HTTPException, IncompleteRead
 from urllib.parse import urlparse
 # since python 3.10 socket.timeout is just an alias for builtin TimeoutError
@@ -60,7 +59,8 @@ import urllib.request as urllib_request
 import queue
 
 
-DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
+DEFAULT_SERVICE_VERSIONS = {'dataselect': 1,
+                            'station': 1, 'event': 1, 'availability': 1}
 
 
 class CustomRedirectHandler(urllib_request.HTTPRedirectHandler):
@@ -199,8 +199,9 @@ class Client(object):
         :param service_mappings: For advanced use only. Allows the direct
             setting of the endpoints of the different services. (e.g.
             ``service_mappings={'station': 'http://example.com/test/stat/1'}``)
-            Valid keys are ``event``, ``station``, and ``dataselect``. This
-            will overwrite the ``base_url`` and ``major_versions`` arguments.
+            Valid keys are ``event``, ``station``, ``dataselect``, and
+            ``availability``. This will overwrite the ``base_url`` and
+            ``major_versions`` arguments.
             For all services not specified, the default default locations
             indicated by ``base_url`` and ``major_versions`` will be used. Any
             service that is manually specified as ``None`` (e.g.
@@ -578,6 +579,132 @@ class Client(object):
             cat = obspy.read_events(data_stream, format="quakeml")
             data_stream.close()
             return cat
+
+    def get_availability(self, network=None, station=None, location=None,
+                         channel=None, starttime=None, endtime=None,
+                         quality=None, orderby=None, limit=None,
+                         format='geocsv', mergegaps=None,
+                         merge=None, show=None, **kwargs):
+        """
+        Query the availability service of the client.
+
+        Returns a list of namedtuples (`Availability`) containing availability
+        information for network/station/channel combinations.
+
+        >>> client = Client("EARTHSCOPE")
+        >>> avail = client.get_availability(network="IU", station="ANMO",
+        ...                                 starttime=UTCDateTime(2020, 1, 1),
+        ...                                 endtime=UTCDateTime(2020, 2, 1))
+        >>> print(avail[0])
+        Availability(network='IU', station='ANMO', location='00',
+                    channel='BHZ', quality='M', sampling_rate=20.0,
+                    earliest=2020-01-01T00:00:00.000000Z,
+                    latest=2020-01-31T23:59:59.000000Z,
+                    updated=2020-02-01T12:34:56.000000Z,
+                    time_spans='...', restriction=None)
+
+        The return value is a list of namedtuples.
+
+        :type network: str, optional
+        :param network: Limit to availability for a specific network code.
+        :type station: str, optional
+        :param station: Limit to availability for a specific station code.
+        :type location: str, optional
+        :param location: Limit to availability for a specific location code.
+        :type channel: str, optional
+        :param channel: Limit to availability for a specific channel code.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param starttime: Limit to data available on or after this time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endtime: Limit to data available on or before this time.
+        :type quality: str, optional
+        :param quality: Limit to data with a specific quality indicator.
+        :type orderby: str, optional
+        :param orderby: Order the results by:
+            ``"nslc_time_quality_samplerate"``,
+            ``"latestupdate"``, ``"latestupdate_desc"``,
+            ``"timespancount"``, ``"timespancount_desc"``.
+        :type limit: int, optional
+        :param limit: Limit the results to the specified number of entries.
+        :type format: str, optional
+        :param format: Format of the request. Default is ``"geocsv"``.
+            Allowed values: ``"text"``, ``"geocsv"``, ``"json"``, ``"request"``.
+        :type mergegaps: bool, optional
+        :param mergegaps: Merge small gaps if supported by the service
+            (not supported with ``details=False``).
+        :type merge: str, optional
+        :param merge: Comma-separated options to merge availability records by:
+            ``"samplerate"``, ``"quality"``, ``"overlap"``.
+        :type show: str, optional
+        :param show: Currently only ``"latestupdate"`` is supported.
+
+        :raises ValueError:
+            If the client does not have an availability service or invalid
+            parameter values are provided.
+
+
+        Any additional keyword arguments will be passed to the webservice as
+        additional arguments. If you pass one of the default parameters and the
+        webservice does not support it, a warning will be issued. Passing any
+        non-default parameters that the webservice does not support will raise
+        an error.
+        """
+        if "availability" not in self.services:
+            msg = "The current client does not have an availability service."
+            raise ValueError(msg)
+
+        locs = locals()
+        setup_query_dict('availability', locs, kwargs)
+
+        if mergegaps is not None and not kwargs.get("details"):
+            msg = "Extent method does not support parameter 'mergegaps'"
+            raise ValueError(msg)
+        if format is not None and format not in ["text",
+        "geocsv", "json", "request"]:
+            msg = "Unsupported value for parameter 'format'"
+            raise ValueError(msg)
+        if orderby is not None and orderby not in \
+        ["nslc_time_quality_samplerate", "latestupdate",
+        "latestupdate_desc", "timespancount", "timespancount_desc"]:
+            msg = "Unsupported value for parameter 'orderby'"
+            raise ValueError(msg)
+        if show is not None and show != "latestupdate":
+            msg = "Unsupported value for parameter 'show'"
+            raise ValueError(msg)
+        if merge is not None:
+            parts = merge.split(',')
+            for p in parts:
+                if p not in ["samplerate", "quality", "overlap"]:
+                    msg = "Unsupported value for parameter 'merge'"
+                    raise ValueError(msg)
+        if "details" not in kwargs:
+            kwargs["details"] = True
+
+        url = self._create_url_from_parameters(
+            "availability", DEFAULT_PARAMETERS['availability'], kwargs)
+
+        availability = self._download(url)
+
+        Availability = namedtuple(
+            'Availability',
+            ['network', 'station', 'location', 'channel', 'quality',
+            'sampling_rate', 'earliest', 'latest', 'updated',
+            'time_spans', 'restriction'],
+            defaults=(None, None, None))
+
+        lines = [line.decode().splitlines()[0].split('|')
+                 for line in availability.readlines()[5:]]
+
+        to_return = []
+        for l in lines:
+            l[5] = float(l[5])
+            l[6] = UTCDateTime(l[6])
+            l[7] = UTCDateTime(l[7])
+            if len(l) > 8:
+                l[8] = UTCDateTime(l[8])
+            to_return.append(Availability(*l))
+
+        return to_return
 
     def get_stations(self, starttime=None, endtime=None, startbefore=None,
                      startafter=None, endbefore=None, endafter=None,
@@ -1298,9 +1425,11 @@ class Client(object):
         """
         service_params = self.services[service]
         # Get all required parameters and make sure they are available!
+
         required_parameters = [
             key for key, value in service_params.items()
             if value["required"] is True]
+
         for req_param in required_parameters:
             if req_param not in parameters:
                 msg = "Parameter '%s' is required." % req_param
@@ -1308,6 +1437,10 @@ class Client(object):
 
         final_parameter_set = {}
 
+        endpoint = "extent" if service == "availability" and \
+        not parameters.get("details") else "query"
+        if service == "availability" and "details" in parameters:
+            del parameters["details"]
         # Now loop over all parameters, convert them and make sure they are
         # accepted by the service.
         for key, value in parameters.items():
@@ -1351,7 +1484,7 @@ class Client(object):
             value = convert_to_string(value)
             final_parameter_set[key] = value
 
-        return self._build_url(service, "query",
+        return self._build_url(service, endpoint,
                                parameters=final_parameter_set)
 
     def __str__(self):
@@ -1522,7 +1655,7 @@ class Client(object):
         """
         # authenticated dataselect queries have different target URL
         if self.user is not None:
-            if service == "dataselect" and resource_type == "query":
+            if service in ("dataselect", "availability") and resource_type == "query":
                 resource_type = "queryauth"
         return build_url(self.base_url, service, self.major_versions[service],
                          resource_type, parameters,
@@ -1536,7 +1669,7 @@ class Client(object):
         They are discovered by downloading the corresponding WADL files. If a
         WADL does not exist, the services are assumed to be non-existent.
         """
-        services = ["dataselect", "event", "station"]
+        services = ["dataselect", "event", "station", "availability"]
         # omit manually deactivated services
         for service, custom_target in self._service_mappings.items():
             if custom_target is None:
@@ -1633,6 +1766,10 @@ class Client(object):
                     self.services["eida-auth"] = True
                 if self.debug is True:
                     print("Discovered dataselect service")
+            elif "availability" in url:
+                self.services["availability"] = WADLParser(wadl).parameters
+                if self.debug is True:
+                    print("Discovered availability service")
             elif "event" in url and "application.wadl" in url:
                 self.services["event"] = WADLParser(wadl).parameters
                 if self.debug is True:
@@ -1783,9 +1920,10 @@ def build_url(base_url, service, major_version, resource_type,
         service_mappings = {}
 
     # Only allow certain resource types.
-    if service not in ["dataselect", "event", "station"]:
+    if service not in ["dataselect", "event", "station", "availability"]:
         msg = "Resource type '%s' not allowed. Allowed types: \n%s" % \
-            (service, ",".join(("dataselect", "event", "station")))
+            (service, ",".join(("dataselect", "event", "station",
+            "availability")))
         raise ValueError(msg)
 
     # Special location handling.
@@ -1982,7 +2120,6 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
         return None, e
 
     code = url_obj.getcode()
-
     # Unpack gzip if necessary.
     if url_obj.info().get("Content-Encoding") == "gzip":
         if debug is True:
@@ -2000,7 +2137,6 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
         f = gzip.GzipFile(fileobj=buf)
     else:
         f = url_obj
-
     if return_string is False:
         data = io.BytesIO(f.read())
     else:
@@ -2029,7 +2165,6 @@ def setup_query_dict(service, locs, kwargs):
             value = kwargs.pop(key)
             if value is not None:
                 kwargs[PARAMETER_ALIASES[key]] = value
-
     for param in DEFAULT_PARAMETERS[service] + OPTIONAL_PARAMETERS[service]:
         param = PARAMETER_ALIASES.get(param, param)
         value = locs[param]
@@ -2074,7 +2209,7 @@ def get_bulk_string(bulk, arguments):
         raise FDSNInvalidRequestException(msg)
     # If its an iterable, we build up the query string from it
     # StringIO objects also have __iter__ so check for 'read' as well
-    if isinstance(bulk, collections.abc.Iterable) \
+    if isinstance(bulk, abc.Iterable) \
             and not hasattr(bulk, "read") \
             and not isinstance(bulk, str):
         tmp = ["%s=%s" % (key, convert_to_string(value))
