@@ -24,7 +24,7 @@ class Client(object):
 
     :type host: str, optional
     :param host: The IP address or DNS name of the server
-        (default is "137.227.224.97" for cwbpub.cr.usgs.gov)
+        (default is "137.227.230.97" for cwbpub.usgs.gov)
     :type port: int, optional
     :param port: The port of the QueryServer (default is ``2061``)
     :type timeout: int, optional
@@ -51,7 +51,7 @@ class Client(object):
     IU.ANMO.00.BH... | 40.0 Hz, 401 samples
     IU.ANMO.00.BH... | 40.0 Hz, 401 samples
     """
-    def __init__(self, host="137.227.224.97", port=2061, timeout=30,
+    def __init__(self, host="137.227.230.97", port=2061, timeout=30,
                  debug=False):
         """
         Initializes access to a CWB QueryServer
