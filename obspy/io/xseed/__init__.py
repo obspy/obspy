@@ -6,8 +6,8 @@ obspy.io.xseed - (X)SEED and RESP support for ObsPy
 representation of `Dataless SEED`. This module contains converters from
 `Dataless SEED` to `XML-SEED` and vice versa as well as a converter from
 `Dataless SEED` to `RESP` files. The :mod:`~obspy.io.xseed` module is tested
-against the complete ORFEUS Dataless SEED archive, the IRIS (US) Dataless SEED
-archive and against ArcLink response requests.
+against the complete ORFEUS Dataless SEED archive, the EarthScope/IRIS (US)
+Dataless SEED archive and against ArcLink response requests.
 
 All files can be converted to ObsPy's internal inventory objects at which
 point they can be written out to any format ObsPy supports. In the case of

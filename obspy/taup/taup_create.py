@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Class to create new models.
@@ -125,7 +124,7 @@ class TauPCreate(object):
                 os.makedirs(dirname)
             self.tau_model.serialize(self.output_filename)
             if self.debug:
-                print("Done Saving " + self.output_filename)
+                print("Done Saving " + str(self.output_filename))
         except IOError as e:
             print("Tried to write!\n Caught IOError. Do you have write "
                   "permission in this directory?", e)
@@ -156,9 +155,9 @@ def build_taup_model(filename, output_folder=None, verbose=True):
     :meth:`~obspy.taup.tau_model.TauModel.from_file`. The output file will have
     the same name as the input with ``'.npz'`` as file extension.
 
-    :type filename: str
+    :type filename: str or :class:`~pathlib.Path`
     :param filename: Absolute path of input file.
-    :type output_folder: str
+    :type output_folder: str or :class:`~pathlib.Path`
     :param output_folder: Directory in which the built
         :class:`~obspy.taup.tau_model.TauModel` will be stored. Defaults to
         the `taup/data` directory of the current obspy installation.
@@ -166,8 +165,12 @@ def build_taup_model(filename, output_folder=None, verbose=True):
     if output_folder is None:
         output_folder = __DATA_DIR
 
-    model_name = os.path.splitext(os.path.basename(filename))[0]
-    output_filename = os.path.join(output_folder, model_name + ".npz")
+    if not isinstance(output_folder, Path):
+        output_folder = Path(output_folder)
+    if not isinstance(filename, Path):
+        filename = Path(filename)
+
+    output_filename = output_folder / filename.with_suffix(".npz").name
 
     if verbose:
         print("Building obspy.taup model for '%s' ..." % filename)

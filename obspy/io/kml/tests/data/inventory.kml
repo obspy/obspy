@@ -68,10 +68,10 @@
 	Access: None 
 	Latitude: 48.1629, Longitude: 11.2752, Elevation: 565.0 m
 	Available Channels:
-		..HH[ZNE]   100.0 Hz  2006-12-16 to None
-		..BH[ZNE]    20.0 Hz  2006-12-16 to None
-		..LH[ZNE]     1.0 Hz  2006-12-16 to None
-		..VH[ZNE]     0.1 Hz  2006-12-16 to None
+    ..HH[ZNE]   100.0 Hz  2006-12-16(350) -
+    ..BH[ZNE]    20.0 Hz  2006-12-16(350) -
+    ..LH[ZNE]     1.0 Hz  2006-12-16(350) -
+    ..VH[ZNE]     0.1 Hz  2006-12-16(350) -
     </description>
         <TimeSpan>
           <begin>2006-12-16T00:00:00.000000Z</begin>
@@ -91,9 +91,9 @@
 	Access: None 
 	Latitude: 49.1440, Longitude: 12.8782, Elevation: 613.0 m
 	Available Channels:
-		..HH[ZNE]   100.0 Hz  2007-02-02 to None
-		..BH[ZNE]    20.0 Hz  2007-02-02 to None
-		..LH[ZNE]     1.0 Hz  2007-02-02 to None
+    ..HH[ZNE]   100.0 Hz  2007-02-02(033) -
+    ..BH[ZNE]    20.0 Hz  2007-02-02(033) -
+    ..LH[ZNE]     1.0 Hz  2007-02-02(033) -
    </description>
         <TimeSpan>
           <begin>2007-02-02T00:00:00.000000Z</begin>
@@ -133,7 +133,7 @@
 	Access: None 
 	Latitude: 47.7372, Longitude: 12.7957, Elevation: 860.0 m
 	Available Channels:
-	..EH[ZNE]   200.0 Hz  2001-05-15 to 2006-12-12
+	..EH[ZNE]   200.0 Hz  2001-05-15(135) - 2006-12-12(346)
   </description>
         <TimeSpan>
           <begin>2001-05-15T00:00:00.000000Z</begin>
@@ -154,7 +154,7 @@
 	Access: None 
 	Latitude: 47.7372, Longitude: 12.7957, Elevation: 860.0 m
 	Available Channels:
-	..EH[ZNE]   200.0 Hz  2006-12-13 to 2007-12-17
+	..EH[ZNE]   200.0 Hz  2006-12-13(347) - 2007-12-17(351)
 	</description>
         <TimeSpan>
           <begin>2006-12-13T00:00:00.000000Z</begin>
@@ -175,7 +175,7 @@
 	Access: None 
 	Latitude: 47.7372, Longitude: 12.7957, Elevation: 860.0 m
 	Available Channels:
-	..EH[ZNE]   200.0 Hz  2007-12-17 to None
+	..EH[ZNE]   200.0 Hz  2007-12-17(351) -
 	</description>
         <TimeSpan>
           <begin>2007-12-17T00:00:00.000000Z</begin>

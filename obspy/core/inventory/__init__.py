@@ -7,8 +7,8 @@ This class hierarchy is closely modelled after the upcoming de-facto standard
 format `FDSN StationXML <https://www.fdsn.org/xml/station/>`_ which was
 developed as a human readable XML replacement for Dataless SEED.
 
-.. note:: IRIS is maintaining a Java tool for converting dataless SEED into
-          StationXML and vice versa at
+.. note:: EarthScope/IRIS is maintaining a Java tool for converting dataless
+          SEED into StationXML and vice versa at
           https://seiscode.iris.washington.edu/projects/stationxml-converter
 
 :copyright:
@@ -83,8 +83,7 @@ Station RJOB (Jochberg, Bavaria, BW-Net)
     Access: None
     Latitude: 47.7372, Longitude: 12.7957, Elevation: 860.0 m
     Available Channels:
-     ..EH[ZNE]   200.0 Hz  2007-12-17 to None
-
+        ..EH[ZNE]   200.0 Hz  2007-12-17(351) -
 
 >>> cha = sta[0]
 >>> print(cha)  # doctest: +NORMALIZE_WHITESPACE

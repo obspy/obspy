@@ -90,6 +90,7 @@ categories.*
     obspy.io.alsep
     obspy.io.ascii
     obspy.io.css
+    obspy.io.cybershake
     obspy.io.dmx
     obspy.io.gcf
     obspy.io.gse2
@@ -132,6 +133,7 @@ categories.*
 
     obspy.io.cmtsolution
     obspy.io.cnv
+    obspy.io.csv
     obspy.io.focmec
     obspy.io.gse2
     obspy.io.hypodd

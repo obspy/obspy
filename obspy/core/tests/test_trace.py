@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import math
-import os
 import pickle
-from copy import deepcopy
 import warnings
+from copy import deepcopy
 from unittest import mock
 
 from packaging.version import parse as parse_version
@@ -13,6 +12,7 @@ import numpy.ma as ma
 from obspy import Stream, Trace, __version__, read, read_inventory
 from obspy import UTCDateTime as UTC
 from obspy.core import Stats
+from obspy.core.util.base import _get_entry_points
 from obspy.io.xseed import Parser
 import pytest
 
@@ -93,9 +93,9 @@ class TestTrace:
         with pytest.raises(TypeError):
             tr.__mul__('1234')
 
-    def test_div(self):
+    def test_truediv(self):
         """
-        Tests the __div__ method of the Trace class.
+        Tests the __truediv__ method of the Trace class.
         """
         tr = Trace(data=np.arange(1000))
         st = tr / 5
@@ -103,9 +103,9 @@ class TestTrace:
         assert len(st[0]) == 200
         # you may only multiply using an integer
         with pytest.raises(TypeError):
-            tr.__div__(2.5)
+            tr.__truediv__(2.5)
         with pytest.raises(TypeError):
-            tr.__div__('1234')
+            tr.__truediv__('1234')
 
     def test_ltrim(self):
         """
@@ -1427,7 +1427,7 @@ class TestTrace:
         tr.data = np.ma.ones(100)
         tr.data[30:40] = np.ma.masked
         tm = tr.times()
-        assert np.alltrue(tr.data.mask == tm.mask)
+        assert np.all(tr.data.mask == tm.mask)
         # test relative with reftime
         tr.data = np.ones(100)
         shift = 9.5
@@ -1742,12 +1742,9 @@ class TestTrace:
         tr2.remove_response(pre_filt=(0.1, 0.5, 30, 50))
         np.testing.assert_array_almost_equal(tr1.data, tr2.data)
 
-    def test_remove_polynomial_response(self):
+    def test_remove_polynomial_response(self, testdata):
         """
         """
-        from obspy import read_inventory
-        path = os.path.dirname(__file__)
-
         # blockette 62, stage 0
         tr = read()[0]
         tr.stats.network = 'IU'
@@ -1757,8 +1754,8 @@ class TestTrace:
         tr.stats.starttime = UTC("2010-07-23T00:00:00")
         # remove response
         del tr.stats.response
-        filename = os.path.join(path, 'data', 'stationxml_IU.ANTO.30.LDO.xml')
-        inv = read_inventory(filename, format='StationXML')
+        inv = read_inventory(
+            testdata['stationxml_IU.ANTO.30.LDO.xml'], format='StationXML')
         tr.attach_response(inv)
         tr.remove_response()
 
@@ -1771,8 +1768,8 @@ class TestTrace:
         tr.stats.starttime = UTC("2004-06-16T00:00:00")
         # remove response
         del tr.stats.response
-        filename = os.path.join(path, 'data', 'stationxml_BK.CMB.__.LKS.xml')
-        inv = read_inventory(filename, format='StationXML')
+        inv = read_inventory(
+            testdata['stationxml_BK.CMB.__.LKS.xml'], format='StationXML')
         tr.attach_response(inv)
 
         # raises UserWarning: Stage gain not defined - ignoring
@@ -1912,11 +1909,13 @@ class TestTrace:
         """
         # Load the prepared data. The data has been created using SAC.
         file_ = "interpolation_test_random_waveform_delta_0.01_npts_50.sac"
-        org_tr = read("/path/to/%s" % file_)[0]
+        org_tr = read("/path/to/%s" % file_, round_sampling_interval=False)[0]
         file_ = "interpolation_test_interpolated_delta_0.003.sac"
-        interp_delta_0_003 = read("/path/to/%s" % file_)[0]
+        interp_delta_0_003 = read(
+            "/path/to/%s" % file_, round_sampling_interval=False)[0]
         file_ = "interpolation_test_interpolated_delta_0.077.sac"
-        interp_delta_0_077 = read("/path/to/%s" % file_)[0]
+        interp_delta_0_077 = read(
+            "/path/to/%s" % file_, round_sampling_interval=False)[0]
 
         # Perform the same interpolation as in Python with ObsPy.
         int_tr = org_tr.copy().interpolate(sampling_rate=1.0 / 0.003,
@@ -2736,3 +2735,46 @@ class TestTrace:
                 tr.trim(0.01)
             assert len(tr.stats.processing) == n
             assert len(record) == 1
+
+    def test_taper_scipy_plugins(self):
+        """
+        Test that scipy window functions work in taper() and just test that
+        they do something
+        """
+        scipy_windows = {
+            'barthann': {},
+            'bartlett': {},
+            'blackman': {},
+            'blackmanharris': {},
+            'bohman': {},
+            'boxcar': {},
+            'chebwin': {'at': 50},
+            'dpss': {'NW': 1},
+            'flattop': {},
+            'gaussian': {'std': 1},
+            'general_gaussian': {'p': 1, 'sig': 1},
+            'hamming': {},
+            'hann': {},
+            'kaiser': {'beta': 1},
+            'nuttall': {},
+            'parzen': {},
+            'triang': {}}
+        eps = _get_entry_points('obspy.plugin.taper')
+        # cosine is not from scipy, leave it out here
+        eps.pop('cosine')
+
+        # make sure we test all entry points defined in setup.py
+        assert eps.keys() == scipy_windows.keys()
+
+        ones = np.ones(10, dtype=np.float64)
+        tr_bkp = Trace(np.ones(10, dtype=np.float64))
+        for window, kwargs in scipy_windows.items():
+            tr = tr_bkp.copy()
+            tr.taper(max_percentage=0.4, type=window, **kwargs)
+            # boxcar actually doesnt change the data at all
+            if window == 'boxcar':
+                np.testing.assert_array_equal(tr.data, ones)
+                continue
+            # just test that the data changed..
+            with pytest.raises(AssertionError):
+                np.testing.assert_array_almost_equal(tr.data, ones)

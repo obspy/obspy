@@ -10,6 +10,9 @@
       <comment>
         <text>NonLinLoc OctTree Location</text>
       </comment>
+      <comment>
+        <text>NLLOC "./nlloc.20100527.165625.grid0" "LOCATED" "Location completed."</text>
+      </comment>
       <creationInfo>
         <author>Megies LMU Munich</author>
         <creationTime>2014-10-17T16:30:08.000000Z</creationTime>
@@ -51,6 +54,9 @@
             <text>Note: Depth/Latitude/Longitude errors are calculated from covariance matrix as 1D marginal (Lon/Lat errors as great circle degrees) while OriginUncertainty min/max horizontal errors are calculated from 2D error ellipsoid and are therefore seemingly higher compared to 1D errors. Error estimates can be reconstructed from the following original NonLinLoc error statistics line:
 STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ 0.0043871 YY 0.0191034 YZ 0.00503624 ZZ 0.036713 EllAz1  206.782 Dip1  16.4026 Len1  0.227982 Az2  300.149 Dip2  11.2855 Len2  0.327468 Len3  3.709256e-01</text>
         </comment>
+        <comment>
+          <text>NLLOC "./nlloc.20100527.165625.grid0" "LOCATED" "Location completed."</text>
+        </comment>
         <creationInfo>
           <author>Megies LMU Munich</author>
           <creationTime>2014-10-17T16:30:08.000000Z</creationTime>
@@ -66,7 +72,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
         <arrival publicID="smi:local/677a937b-4db0-4fad-8822-9d75fdb3f9c5">
           <pickID>smi:local/d7ba3bb7-645f-4ee6-a8f4-65e0332c5025</pickID>
           <phase>P</phase>
-          <azimuth>200.7</azimuth>
+          <azimuth>195.71</azimuth>
           <distance>0.0169036489048</distance>
           <takeoffAngle>
             <value>152.6</value>
@@ -77,7 +83,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
         <arrival publicID="smi:local/06e00087-a9c8-4ee5-a5a8-4240bcac7db8">
           <pickID>smi:local/3a0bde89-d7e6-45ef-a08a-4b950720f7be</pickID>
           <phase>S</phase>
-          <azimuth>200.6</azimuth>
+          <azimuth>195.71</azimuth>
           <distance>0.0169036489048</distance>
           <takeoffAngle>
             <value>156.4</value>
@@ -88,7 +94,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
         <arrival publicID="smi:local/619921cf-129e-4ef8-a743-a397becd7146">
           <pickID>smi:local/95492f79-0db4-4bba-a198-6c08db43dd83</pickID>
           <phase>P</phase>
-          <azimuth>64.7</azimuth>
+          <azimuth>66.5</azimuth>
           <distance>0.0267620123489</distance>
           <takeoffAngle>
             <value>139.3</value>
@@ -99,7 +105,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
         <arrival publicID="smi:local/2c5ae0cc-981d-42c5-b2ef-57ae34ba5c02">
           <pickID>smi:local/75ca039c-bfca-41c3-8fd3-9d70341a23fe</pickID>
           <phase>S</phase>
-          <azimuth>63.9</azimuth>
+          <azimuth>66.5</azimuth>
           <distance>0.0267620123489</distance>
           <takeoffAngle>
             <value>144.4</value>
@@ -110,7 +116,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
         <arrival publicID="smi:local/44bbb2f9-76cc-4f73-9b8c-022ec9950b0b">
           <pickID>smi:local/550537fb-922c-4742-9bcc-504c1d330480</pickID>
           <phase>P</phase>
-          <azimuth>348.8</azimuth>
+          <azimuth>349.85</azimuth>
           <distance>0.0349881070783</distance>
           <takeoffAngle>
             <value>131.0</value>
@@ -121,7 +127,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
         <arrival publicID="smi:local/d7b02dea-3610-4209-9fe8-ab450a159c90">
           <pickID>smi:local/0783bf9f-6862-40a3-baeb-ed247b73ca6f</pickID>
           <phase>S</phase>
-          <azimuth>348.4</azimuth>
+          <azimuth>349.85</azimuth>
           <distance>0.0349881070783</distance>
           <takeoffAngle>
             <value>137.7</value>
@@ -132,7 +138,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
         <arrival publicID="smi:local/f7d77c25-1729-4879-b014-2f4608b72844">
           <pickID>smi:local/d6fa4a8a-6e4c-48a1-9ab9-e84b60038f4b</pickID>
           <phase>P</phase>
-          <azimuth>258.3</azimuth>
+          <azimuth>258.95</azimuth>
           <distance>0.0751742930387</distance>
           <takeoffAngle>
             <value>106.5</value>
@@ -143,7 +149,7 @@ STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ
         <arrival publicID="smi:local/dbeb77a9-1f2a-4d81-adb0-a1ad82713665">
           <pickID>smi:local/b0b74d7c-bd9e-4183-abcb-5c784a53f8b0</pickID>
           <phase>S</phase>
-          <azimuth>258.1</azimuth>
+          <azimuth>258.95</azimuth>
           <distance>0.0751742930387</distance>
           <takeoffAngle>
             <value>113.1</value>

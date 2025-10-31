@@ -499,13 +499,13 @@ class TauModel(object):
                   ('p_wave', np.bool_),
                   ('s_wave', np.bool_),
                   ('allow_inner_core_s', np.bool_),
-                  ('max_delta_p', np.float_),
-                  ('max_depth_interval', np.float_),
-                  ('max_interp_error', np.float_),
-                  ('max_range_interval', np.float_),
-                  ('min_delta_p', np.float_),
-                  ('radius_of_planet', np.float_),
-                  ('slowness_tolerance', np.float_)]
+                  ('max_delta_p', np.float64),
+                  ('max_depth_interval', np.float64),
+                  ('max_interp_error', np.float64),
+                  ('max_range_interval', np.float64),
+                  ('min_delta_p', np.float64),
+                  ('radius_of_planet', np.float64),
+                  ('slowness_tolerance', np.float64)]
         slowness_model = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
             key = dtype[0]
@@ -526,15 +526,15 @@ class TauModel(object):
             arrays['s_mod.' + key] = arr_
 
         # e) handle .s_mod.v_mod
-        dtypes = [('cmb_depth', np.float_),
-                  ('iocb_depth', np.float_),
+        dtypes = [('cmb_depth', np.float64),
+                  ('iocb_depth', np.float64),
                   ('is_spherical', np.bool_),
-                  ('max_radius', np.float_),
+                  ('max_radius', np.float64),
                   ('min_radius', np.int_),
                   ('model_name', np.str_,
                    len(self.s_mod.v_mod.model_name)),
-                  ('moho_depth', np.float_),
-                  ('radius_of_planet', np.float_)]
+                  ('moho_depth', np.float64),
+                  ('radius_of_planet', np.float64)]
         velocity_model = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
             key = dtype[0]

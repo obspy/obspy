@@ -51,7 +51,7 @@ class Blockette(object):
         self.seed_version = kwargs.get('version', 2.4)
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
         return self.__dict__ == other.__dict__
 

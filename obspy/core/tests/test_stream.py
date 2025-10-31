@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
-import inspect
 import io
-import os
 import pickle
 import platform
+import re
 import warnings
 from copy import deepcopy
-from os.path import dirname, join, abspath
-from pathlib import Path
 from unittest import mock
 
 import numpy as np
@@ -27,8 +24,9 @@ class TestStream:
     """
     Test suite for obspy.core.stream.Stream.
     """
-    _current_file = inspect.getfile(inspect.currentframe())
-    data_path = join(dirname(abspath(_current_file)), "data")
+    @pytest.fixture(scope="package")
+    def ascii_path(self, root):
+        return root / "io" / "ascii" / "tests" / "data"
 
     @pytest.fixture()
     def mseed_stream(self):
@@ -761,7 +759,7 @@ class TestStream:
                     latitude=0.0, longitude=0.0, elevation=0.0, depth=0.0,
                     start_date=UTCDateTime(1990, 1, 1),
                     end_date=UTCDateTime(1998, 1, 1)),
-            Channel(code='EHZ', location_code='00',
+            Channel(code='EHN', location_code='00',
                     latitude=0.0, longitude=0.0, elevation=0.0, depth=0.0,
                     start_date=UTCDateTime(1999, 1, 1))
         ]
@@ -1821,14 +1819,14 @@ class TestStream:
             st = Stream([tr_a, tr_b])
             st._cleanup()
             assert st == Stream([tr1])
-            assert type(st[0].data) == np.ndarray
+            assert isinstance(st[0].data, np.ndarray)
         # test mergeable traces (adjacent ones)
         for tr_b in [tr5, tr6]:
             tr_a = tr1.copy()
             st = Stream([tr_a, tr_b])
             st._cleanup()
             assert len(st) == 1
-            assert type(st[0].data) == np.ndarray
+            assert isinstance(st[0].data, np.ndarray)
             st_result = Stream([tr1, tr_b])
             st_result.merge()
             assert st == st_result
@@ -1838,7 +1836,7 @@ class TestStream:
             st = Stream([tr_a, tr_b])
             st._cleanup()
             assert len(st) == 1
-            assert type(st[0].data) == np.ndarray
+            assert isinstance(st[0].data, np.ndarray)
             st_result = Stream([tr1, tr_b])
             st_result.merge()
             assert st == st_result
@@ -1887,7 +1885,7 @@ class TestStream:
         np.testing.assert_array_almost_equal(
             st1[0].data[:-1], st2[0].data[:-1], decimal=5)
 
-    def test_read(self):
+    def test_read(self, ascii_path):
         """
         Testing read function.
         """
@@ -1929,14 +1927,11 @@ class TestStream:
             read('/path/to/UNKNOWN')
 
         # 4 - file patterns
-        path = os.path.dirname(__file__)
-        ascii_path = os.path.join(path, "..", "..", "io", "ascii", "tests",
-                                  "data")
-        filename = os.path.join(ascii_path, 'slist.*')
+        filename = ascii_path / 'slist.*'
         st = read(filename)
         assert len(st) == 2
         # exception if no file matches file pattern
-        filename = path + os.sep + 'data' + os.sep + 'NOTEXISTING.*'
+        filename = ascii_path / 'NOTEXISTING.*'
         with pytest.raises(Exception):
             read(filename)
 
@@ -1967,12 +1962,11 @@ class TestStream:
         tr = read('https://examples.obspy.org/test.sac', headonly=True)[0]
         assert tr.data.size == 0
 
-    def test_read_path(self):
+    def test_read_path(self, datapath):
         """
         Test for reading a pathlib object.
         """
-        base_path = Path(__file__).parent / 'data'
-        data_path = base_path / 'IU_ULN_00_LH1_2015-07-18T02.mseed'
+        data_path = datapath / 'IU_ULN_00_LH1_2015-07-18T02.mseed'
         assert data_path.exists()
         st = read(data_path)
         assert isinstance(st, Stream)
@@ -2010,6 +2004,11 @@ class TestStream:
         Testing the rotate method.
         """
         st = read()
+        # test for #3373
+        # add some weird dots in station/location code
+        for tr in st:
+            tr.stats.station = 'RJ.OB'
+            tr.stats.location = '0.'
         st += st.copy()
         st[3:].normalize()
         st2 = st.copy()
@@ -2842,3 +2841,90 @@ class TestStream:
         n1 = len(st.slice(None, utc)[0])
         n2 = len(st.trim(None, utc)[0])
         assert n1 == n2
+
+    def test_filter_ftype(self):
+        st = read()
+        ftypes = ['butter', 'cheby1', 'cheby2', 'ellip', 'bessel']
+        streams = [st.copy().filter('bandpass', 5, 10,
+                                    ftype=ftype, rp=10, rs=100)
+                   for ftype in ftypes]
+        for st in streams[1:]:
+            assert not streams_almost_equal(st, streams[0])
+
+    def test_filter_freq_args(self):
+        st = read()
+        for filtert, freq in [('lowpass', 5,),
+                              ('highpass', 5)]:
+            stf1 = st.copy().filter(filtert, freq=freq)
+            stf2 = st.copy().filter(filtert, freq)
+            assert streams_almost_equal(stf2, stf1)
+        for filtert, freqmin, freqmax in [('bandpass', 1, 5),
+                                          ('bandstop', 1, 5)]:
+            stf1 = st.copy().filter(filtert, freqmin=freqmin, freqmax=freqmax)
+            stf2 = st.copy().filter(filtert, freqmin, freqmax)
+            assert streams_almost_equal(stf2, stf1)
+
+    def test_merge_checks_messages(self, mseed_stream):
+        """
+        Test improved error messages
+        """
+        # dtype
+        st = mseed_stream.copy()
+        st[0].data = np.require(
+            st[0].data, dtype=st[0].data.dtype.newbyteorder('<'))
+        st[1].data = np.require(
+            st[1].data, dtype=st[1].data.dtype.newbyteorder('>'))
+        msg = ('Can not merge traces with same ids (BW.BGLD..EHE) but '
+               'differing data types (float64, >f8)!')
+        with pytest.raises(Exception, match=re.escape(msg)):
+            st.merge()
+        # sampling rate
+        st = mseed_stream.copy()
+        st[0].stats.sampling_rate = 200
+        st[1].stats.sampling_rate = 20
+        msg = ('Can not merge traces with same ids (BW.BGLD..EHE) but '
+               'differing sampling rates (200.0, 20.0)!')
+        with pytest.raises(Exception, match=re.escape(msg)):
+            st.merge()
+        # calib
+        st = mseed_stream.copy()
+        st[0].stats.calib = 12345
+        st[1].stats.calib = 100
+        msg = ('Can not merge traces with same ids (BW.BGLD..EHE) but '
+               'differing calibration factors (12345, 100)!')
+        with pytest.raises(Exception, match=re.escape(msg)):
+            st.merge()
+
+    def test_newbyteorder(self, mseed_stream):
+        """
+        Test switching byteorder on trace/stream, for simplicity both things
+        tested here
+        """
+        msg = ('Can not merge traces with same ids (BW.BGLD..EHE) but '
+               'differing data types (float64, >f8)!')
+        # set different byteorders
+        st = mseed_stream
+        st[0].data = np.require(
+            st[0].data, dtype=st[0].data.dtype.newbyteorder('<'))
+        st[1].data = np.require(
+            st[1].data, dtype=st[1].data.dtype.newbyteorder('>'))
+        # check that we set up correctly this should fail now
+        assert st[0].data.dtype == np.dtype('float64')
+        assert st[1].data.dtype == np.dtype('>f8')
+        with pytest.raises(Exception, match=re.escape(msg)):
+            st.merge()
+        # check working on trace
+        st = mseed_stream.copy()
+        assert st[0].data.dtype == np.dtype('float64')
+        assert st[1].data.dtype == np.dtype('>f8')
+        st[1].newbyteorder('<')
+        assert st[1].data.dtype == np.dtype('float64')
+        st.merge()
+        # check working on stream
+        st = mseed_stream.copy()
+        assert st[0].data.dtype == np.dtype('float64')
+        assert st[1].data.dtype == np.dtype('>f8')
+        st.newbyteorder('=')
+        for tr in st:
+            assert tr.data.dtype == np.dtype('float64')
+        st.merge()

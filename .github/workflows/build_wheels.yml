@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        build: [cp38, cp39, cp310, cp311]
+        build: [cp38, cp39, cp310, cp311, cp312]
         exclude-flag:
           - ${{ github.ref_name == 'master' && github.event_name == 'push' }}
         exclude:
@@ -40,8 +40,10 @@ jobs:
             exclude-flag: true
           - build: cp310
             exclude-flag: true
+          - build: cp311
+            exclude-flag: true
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -59,18 +61,19 @@ jobs:
           echo "CIBW_TEST_COMMAND: $CIBW_TEST_COMMAND"
 
       - name: Build and test wheels
-        uses: pypa/cibuildwheel@v2.11.2
+        uses: pypa/cibuildwheel@v3.1.4
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
+          name: wheel-${{ matrix.os }}-${{ matrix.build }}
 
   build_sdist:
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test_wheels')
     name: build sdist
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -78,23 +81,35 @@ jobs:
         shell: bash -l {0}
         run: pipx run build --sdist
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: dist/*.tar.gz
+          name: sdist
+
+  merge_artifacts:
+    name: merge sdist and wheel artifacts together
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/upload-artifact/merge@v4
+        with:
+          name: artifact
+          delete-merged: true
 
   publish_test:
     name: publish tag to testpypi
     if: github.event_name == 'push' && github.ref_type == 'tag'
-    needs: [build_wheels, build_sdist]
+    needs: merge_artifacts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v5
         with:
           name: artifact
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@v1.5.1
+      - uses: pypa/gh-action-pypi-publish@v1.13.0
         with:
+          verbose: true
           user: __token__
           password: ${{ secrets.TESTPYPI }}
           repository_url: https://test.pypi.org/legacy/
@@ -102,14 +117,14 @@ jobs:
   publish:
     name: publish release
     if: github.event_name == 'release'
-    needs: [build_wheels, build_sdist]
+    needs: merge_artifacts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v5
         with:
           name: artifact
           path: dist
-      - uses: pypa/gh-action-pypi-publish@v1.5.1
+      - uses: pypa/gh-action-pypi-publish@v1.13.0
         with:
           user: __token__
           password: ${{ secrets.PYPI }}

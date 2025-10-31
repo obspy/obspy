@@ -40,6 +40,9 @@ def _get_nanoseconds_for_start_of_year(year):
     # 2050-2099. We deliberately raise an exception in the read routine if the
     # current year will become 2050 (just in case someone really still uses
     # this code then.. ;-)
+    # make sure we don't get e.g. np.uint8 input as numpy will not
+    # automatically upcast for us with numpy 2.0 anymore
+    year = int(year)
     if year < 50:
         year += 2000
     else:

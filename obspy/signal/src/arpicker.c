@@ -199,10 +199,10 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
 
     nl_p = (int)(l_p*sample_rate);
     nl_s = (int)(l_s*sample_rate);
-    if((i2+nl_p+m1_p)>ndat){
-        i2 -= nl_p +m1_p;
-    }
     i2 += m1_p + nl_p;
+    if((i2+nl_p+m1_p)>ndat){
+        i2 = ndat - nl_p - m1_p;
+    }
 
     // Leonard & Kennett AIC Criterion - Model2
     for(i=0;i<(i2+nl_p);i++){
@@ -351,8 +351,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             i5 = ndat;
         // we try this for now
         //   i6 = i4 - m1_s - nl_s;
-#if 0
-#endif
+
         // STA-LTA in reversed direction
         memset(buf_sta,0,ndat*sizeof(float));
         memset(buf_lta,0,ndat*sizeof(float));

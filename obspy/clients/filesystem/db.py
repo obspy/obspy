@@ -11,9 +11,8 @@ SQLAlchemy ORM definitions (database layout) for tsindex.db.
 import datetime
 
 from sqlalchemy import Column, String, Integer, Float
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.schema import PrimaryKeyConstraint
-
 
 Base = declarative_base()
 

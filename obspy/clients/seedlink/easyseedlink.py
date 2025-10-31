@@ -304,7 +304,7 @@ class EasySeedLinkClient(object):
         if not type(stop_on) is list:
             stop_on = [stop_on]
         for i, stopword in enumerate(stop_on):
-            if not type(stopword) == bytes:
+            if not isinstance(stopword, bytes):
                 stop_on[i] = stopword.encode()
 
         self.conn.socket.send(bytes_)

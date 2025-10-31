@@ -43,21 +43,21 @@ def bullen_radial_slowness(layer, p, radius_of_planet, check=True):
     ldim = np.ndim(layer)
     pdim = np.ndim(p)
     if ldim == 1 and pdim == 0:
-        time = np.zeros(shape=layer.shape, dtype=np.float_)
-        dist = np.zeros(shape=layer.shape, dtype=np.float_)
+        time = np.zeros(shape=layer.shape, dtype=np.float64)
+        dist = np.zeros(shape=layer.shape, dtype=np.float64)
     elif ldim == 0 and pdim == 1:
-        time = np.zeros(shape=p.shape, dtype=np.float_)
-        dist = np.zeros(shape=p.shape, dtype=np.float_)
+        time = np.zeros(shape=p.shape, dtype=np.float64)
+        dist = np.zeros(shape=p.shape, dtype=np.float64)
     elif ldim == pdim and (ldim == 0 or layer.shape == p.shape):
-        time = np.zeros(shape=layer.shape, dtype=np.float_)
-        dist = np.zeros(shape=layer.shape, dtype=np.float_)
+        time = np.zeros(shape=layer.shape, dtype=np.float64)
+        dist = np.zeros(shape=layer.shape, dtype=np.float64)
     else:
         raise TypeError('Either layer or p must be 0D, or they must have '
                         'the same shape.')
 
     length = len(time)
-    if isinstance(p, np.float_):
-        p = p * np.ones(length, dtype=np.float_)
+    if isinstance(p, np.float64):
+        p = p * np.ones(length, dtype=np.float64)
 
     clibtau.bullen_radial_slowness_inner_loop(
         layer, p, time, dist, radius_of_planet, length)
@@ -94,17 +94,17 @@ def bullen_depth_for(layer, ray_param, radius_of_planet, check=True):
     ldim = np.ndim(layer)
     pdim = np.ndim(ray_param)
     if ldim == 1 and pdim == 0:
-        ray_param = ray_param * np.ones(layer.shape, dtype=np.float_)
-        depth = np.zeros(shape=layer.shape, dtype=np.float_)
+        ray_param = ray_param * np.ones(layer.shape, dtype=np.float64)
+        depth = np.zeros(shape=layer.shape, dtype=np.float64)
     elif ldim == 0 and pdim == 1:
         layer = layer * np.ones(ray_param.shape, dtype=SlownessLayer)
-        depth = np.zeros(shape=ray_param.shape, dtype=np.float_)
+        depth = np.zeros(shape=ray_param.shape, dtype=np.float64)
     elif ldim == pdim and (ldim == 0 or layer.shape == ray_param.shape):
         if ldim == 0:
             # Make array-like to work with NumPy < 1.9.
             layer = np.array([layer], dtype=SlownessLayer)
             ray_param = np.array([ray_param])
-        depth = np.zeros(shape=layer.shape, dtype=np.float_)
+        depth = np.zeros(shape=layer.shape, dtype=np.float64)
     else:
         raise TypeError('Either layer or ray_param must be 0D, or they must '
                         'have the same shape.')

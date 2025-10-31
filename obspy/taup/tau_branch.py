@@ -240,10 +240,10 @@ class TauBranch(object):
             bot_branch.tau[:index_s] = (self.tau[:index_s] -
                                         top_branch.tau[:index_s])
 
-            bot_branch.time[index_s] = time_dist_s['time']
-            bot_branch.dist[index_s] = time_dist_s['dist']
-            bot_branch.tau[index_s] = (time_dist_s['time'] -
-                                       s_ray_param * time_dist_s['dist'])
+            bot_branch.time[index_s] = time_dist_s['time'].item()
+            bot_branch.dist[index_s] = time_dist_s['dist'].item()
+            bot_branch.tau[index_s] = (
+                time_dist_s['time'] - s_ray_param * time_dist_s['dist']).item()
 
             bot_branch.time[index_s + 1:] = (self.time[index_s:] -
                                              top_branch.time[index_s + 1:])
@@ -260,10 +260,10 @@ class TauBranch(object):
             bot_branch.tau[:index_p] = (self.tau[:index_p] -
                                         top_branch.tau[:index_p])
 
-            bot_branch.time[index_p] = time_dist_p['time']
-            bot_branch.dist[index_p] = time_dist_p['dist']
-            bot_branch.tau[index_p] = (time_dist_p['time'] -
-                                       p_ray_param * time_dist_p['dist'])
+            bot_branch.time[index_p] = time_dist_p['time'].item()
+            bot_branch.dist[index_p] = time_dist_p['dist'].item()
+            bot_branch.tau[index_p] = (
+                time_dist_p['time'] - p_ray_param * time_dist_p['dist']).item()
 
             bot_branch.time[index_p + 1:] = (self.time[index_p:] -
                                              top_branch.time[index_p + 1:])
@@ -281,10 +281,10 @@ class TauBranch(object):
             bot_branch.tau[:index_s] = (self.tau[:index_s] -
                                         top_branch.tau[:index_s])
 
-            bot_branch.time[index_s] = time_dist_s['time']
-            bot_branch.dist[index_s] = time_dist_s['dist']
-            bot_branch.tau[index_s] = (time_dist_s['time'] -
-                                       s_ray_param * time_dist_s['dist'])
+            bot_branch.time[index_s] = time_dist_s['time'].item()
+            bot_branch.dist[index_s] = time_dist_s['dist'].item()
+            bot_branch.tau[index_s] = (
+                time_dist_s['time'] - s_ray_param * time_dist_s['dist']).item()
 
             bot_branch.time[index_s + 1:index_p] = (
                 self.time[index_s:index_p - 1] -
@@ -296,10 +296,10 @@ class TauBranch(object):
                 self.tau[index_s:index_p - 1] -
                 top_branch.tau[index_s + 1:index_p])
 
-            bot_branch.time[index_p] = time_dist_p['time']
-            bot_branch.dist[index_p] = time_dist_p['dist']
-            bot_branch.tau[index_p] = (time_dist_p['time'] -
-                                       p_ray_param * time_dist_p['dist'])
+            bot_branch.time[index_p] = time_dist_p['time'].item()
+            bot_branch.dist[index_p] = time_dist_p['dist'].item()
+            bot_branch.tau[index_p] = (
+                time_dist_p['time'] - p_ray_param * time_dist_p['dist']).item()
 
             bot_branch.time[index_p + 1:] = (self.time[index_p - 1:] -
                                              top_branch.time[index_p + 1:])
@@ -386,9 +386,10 @@ class TauBranch(object):
                         ray_param,
                         s_mod.radius_of_planet)
                     the_path[path_index]['p'] = ray_param
-                    the_path[path_index]['time'] = time
-                    the_path[path_index]['dist'] = dist
-                    the_path[path_index]['depth'] = turn_s_layer['bot_depth']
+                    the_path[path_index]['time'] = time.item()
+                    the_path[path_index]['dist'] = dist.item()
+                    the_path[path_index]['depth'] = \
+                        turn_s_layer['bot_depth'].item()
                     path_index += 1
 
         # Upgoing branches:
@@ -414,10 +415,11 @@ class TauBranch(object):
                     turn_s_layer,
                     ray_param,
                     s_mod.radius_of_planet)
-                the_path[path_index]['p'] = ray_param
-                the_path[path_index]['time'] = time
-                the_path[path_index]['dist'] = dist
-                the_path[path_index]['depth'] = turn_s_layer['top_depth']
+                the_path[path_index]['p'] = ray_param.item()
+                the_path[path_index]['time'] = time.item()
+                the_path[path_index]['dist'] = dist.item()
+                the_path[path_index]['depth'] = \
+                    turn_s_layer['top_depth'].item()
                 path_index += 1
                 mask[first_unmasked] = True
 
@@ -448,15 +450,15 @@ class TauBranch(object):
         Store all attributes for serialization in a structured array.
         """
         dtypes = [('debug', np.bool_),
-                  ('bot_depth', np.float_),
-                  ('dist', np.float_, self.dist.shape),
+                  ('bot_depth', np.float64),
+                  ('dist', np.float64, self.dist.shape),
                   ('is_p_wave', np.bool_),
-                  ('max_ray_param', np.float_),
-                  ('min_ray_param', np.float_),
-                  ('min_turn_ray_param', np.float_),
-                  ('tau', np.float_, self.tau.shape),
-                  ('time', np.float_, self.time.shape),
-                  ('top_depth', np.float_)]
+                  ('max_ray_param', np.float64),
+                  ('min_ray_param', np.float64),
+                  ('min_turn_ray_param', np.float64),
+                  ('tau', np.float64, self.tau.shape),
+                  ('time', np.float64, self.time.shape),
+                  ('top_depth', np.float64)]
         arr = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
             key = dtype[0]

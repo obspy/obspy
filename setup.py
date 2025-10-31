@@ -42,6 +42,8 @@ from setuptools import Extension, find_packages, setup
 
 
 # The minimum python version which can be used to run ObsPy
+# XXX when dropping Python 3.9, get rid of socket.timeout and just use
+# TimeoutError, e.g. in fdsn/client.py
 MIN_PYTHON_VERSION = (3, 8)
 
 # Fail fast if the user is on an unsupported version of python.
@@ -81,13 +83,18 @@ EXTERNAL_EVALRESP = False
 EXTERNAL_LIBMSEED = False
 
 # Hard dependencies needed to install/run ObsPy.
+# Backwards compatibility hacks to be removed later:
+#  - matplotlib 3.3 (/3.4?): imaging (see #3242)
+# sqlalchemy pinned to <2.0 for now because of API changes that break
+# clients.filesystem.db. We suppress warnings in that module and also see
+# pytest.ini for some rules to ignore related warnings
 INSTALL_REQUIRES = [
     'numpy>=1.20',
     'scipy>=1.7',
     'matplotlib>=3.3',
     'lxml',
     'setuptools',
-    'sqlalchemy',
+    'sqlalchemy>=1.4',
     'decorator',
     'requests',
 ]
@@ -110,8 +117,8 @@ EXTRAS_REQUIRES['all'] = [dep for depl in EXTRAS_REQUIRES.values()
 # package specific settings
 KEYWORDS = [
     'ALSEP', 'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
-    'beamforming', 'cross correlation', 'database', 'dataless',
-    'Dataless SEED', 'DMX', 'earthquakes', 'Earthworm', 'EIDA',
+    'beamforming', 'cross correlation', 'CYBERSHAKE', 'database', 'dataless',
+    'Dataless SEED', 'DMX', 'earthquakes', 'EarthScope', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
     'focal mechanism', 'FOCMEC', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P',
     'IASPEI', 'imaging', 'IMS', 'instrument correction',
@@ -120,8 +127,8 @@ KEYWORDS = [
     'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS', 'PDAS',
     'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
     'REFTEK130', 'RG-1.6', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
-    'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN',
-    'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
+    'SAGE', 'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
+    'SEISAN', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
     'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston', 'XML-SEED',
@@ -132,7 +139,7 @@ ENTRY_POINTS = {
         'obspy-flinn-engdahl = obspy.scripts.flinnengdahl:main',
         'obspy-runtests = obspy.scripts.runtests:main',
         'obspy-reftek-rescue = obspy.scripts.reftekrescue:main',
-        'obspy-print = obspy.scripts._print:main',
+        'obspy-print = obspy.scripts.print:main',
         'obspy-sds-report = obspy.scripts.sds_html_report:main',
         'obspy-scan = obspy.imaging.scripts.scan:main',
         'obspy-plot = obspy.imaging.scripts.plot:main',
@@ -174,6 +181,7 @@ ENTRY_POINTS = {
         'ALSEP_PSE = obspy.io.alsep.core',
         'ALSEP_WTN = obspy.io.alsep.core',
         'ALSEP_WTH = obspy.io.alsep.core',
+        'CYBERSHAKE = obspy.io.cybershake.core'
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -308,6 +316,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.ALSEP_WTH': [
         'isFormat = obspy.io.alsep.core:_is_wth',
         'readFormat = obspy.io.alsep.core:_read_wth',
+        ],
+    'obspy.plugin.waveform.CYBERSHAKE': [
+        'isFormat = obspy.io.cybershake.core:_is_cybershake',
+        'readFormat = obspy.io.cybershake.core:_read_cybershake'
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
@@ -329,7 +341,10 @@ ENTRY_POINTS = {
         'IMS10BULLETIN = obspy.io.iaspei.core',
         'EVT = obspy.io.sh.evt',
         'FOCMEC = obspy.io.focmec.core',
-        'HYPODDPHA = obspy.io.hypodd.pha'
+        'HYPODDPHA = obspy.io.hypodd.pha',
+        'CSV = obspy.io.csv.core',
+        'CSZ = obspy.io.csv.core',
+        'EVENTTXT = obspy.io.csv.core',
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -412,6 +427,21 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.hypodd.pha:_is_pha',
         'readFormat = obspy.io.hypodd.pha:_read_pha',
         'writeFormat = obspy.io.hypodd.pha:_write_pha',
+        ],
+    'obspy.plugin.event.CSV': [
+        'isFormat = obspy.io.csv.core:_is_csv',
+        'readFormat = obspy.io.csv.core:_read_csv',
+        'writeFormat = obspy.io.csv.core:_write_csv',
+        ],
+    'obspy.plugin.event.CSZ': [
+        'isFormat = obspy.io.csv.core:_is_csz',
+        'readFormat = obspy.io.csv.core:_read_csz',
+        'writeFormat = obspy.io.csv.core:_write_csz',
+        ],
+    'obspy.plugin.event.EVENTTXT': [
+        'isFormat = obspy.io.csv.core:_is_eventtxt',
+        'readFormat = obspy.io.csv.core:_read_eventtxt',
+        'writeFormat = obspy.io.csv.core:_write_eventtxt',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
@@ -509,23 +539,23 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.taper': [
         'cosine = obspy.signal.invsim:cosine_taper',
-        'barthann = scipy.signal:barthann',
-        'bartlett = scipy.signal:bartlett',
-        'blackman = scipy.signal:blackman',
-        'blackmanharris = scipy.signal:blackmanharris',
-        'bohman = scipy.signal:bohman',
-        'boxcar = scipy.signal:boxcar',
-        'chebwin = scipy.signal:chebwin',
-        'flattop = scipy.signal:flattop',
-        'gaussian = scipy.signal:gaussian',
-        'general_gaussian = scipy.signal:general_gaussian',
-        'hamming = scipy.signal:hamming',
-        'hann = scipy.signal:hann',
-        'kaiser = scipy.signal:kaiser',
-        'nuttall = scipy.signal:nuttall',
-        'parzen = scipy.signal:parzen',
-        'slepian = scipy.signal:slepian',
-        'triang = scipy.signal:triang',
+        'barthann = scipy.signal.windows:barthann',
+        'bartlett = scipy.signal.windows:bartlett',
+        'blackman = scipy.signal.windows:blackman',
+        'blackmanharris = scipy.signal.windows:blackmanharris',
+        'bohman = scipy.signal.windows:bohman',
+        'boxcar = scipy.signal.windows:boxcar',
+        'chebwin = scipy.signal.windows:chebwin',
+        'flattop = scipy.signal.windows:flattop',
+        'gaussian = scipy.signal.windows:gaussian',
+        'general_gaussian = scipy.signal.windows:general_gaussian',
+        'hamming = scipy.signal.windows:hamming',
+        'hann = scipy.signal.windows:hann',
+        'kaiser = scipy.signal.windows:kaiser',
+        'nuttall = scipy.signal.windows:nuttall',
+        'parzen = scipy.signal.windows:parzen',
+        'triang = scipy.signal.windows:triang',
+        'dpss = scipy.signal.windows:dpss',
         ],
     'obspy.plugin.trigger': [
         'recstalta = obspy.signal.trigger:recursive_sta_lta',
@@ -535,6 +565,8 @@ ENTRY_POINTS = {
         'zdetect = obspy.signal.trigger:z_detect',
         'recstaltapy = obspy.signal.trigger:recursive_sta_lta_py',
         'classicstaltapy = obspy.signal.trigger:classic_sta_lta_py',
+        'energyratio = obspy.signal.trigger:energy_ratio',
+        'modifiedenergyratio = obspy.signal.trigger:modified_energy_ratio',
         ],
     }
 
@@ -785,6 +817,7 @@ def setupPackage():
             'Programming Language :: Python :: 3.9',
             'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: 3.11',
+            'Programming Language :: Python :: 3.12',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
@@ -794,7 +827,7 @@ def setupPackage():
             'obspy.io.css': ['contrib/*'],
             # NOTE: If the libmseed test data wasn't used in our tests, we
             # could just ignore src/* everywhere.
-            'obspy.io.gcf':['src/*'],
+            'obspy.io.gcf': ['src/*'],
             'obspy.io.gse2': ['src/*'],
             'obspy.io.mseed': [
                 # Only keep src/libmseed/test/* except for the C files.

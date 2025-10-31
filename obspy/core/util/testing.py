@@ -14,7 +14,6 @@ import inspect
 import io
 import os
 import re
-import warnings
 
 import numpy as np
 from lxml import etree
@@ -24,17 +23,11 @@ MODULE_TEST_SKIP_CHECKS = {}
 
 def compare_xml_strings(doc1, doc2):
     """
-    Simple helper function to compare two XML strings.
+    Simple helper function to compare two XML byte strings.
 
-    :type doc1: str
-    :type doc2: str
+    :type doc1: bytes
+    :type doc2: bytes
     """
-    # Compat py2k and py3k
-    try:
-        doc1 = doc1.encode()
-        doc2 = doc2.encode()
-    except Exception:
-        pass
     obj1 = etree.fromstring(doc1).getroottree()
     obj2 = etree.fromstring(doc2).getroottree()
 
@@ -99,52 +92,6 @@ def get_all_py_files():
         py_files.update([os.path.abspath(os.path.join(dirpath, i)) for i in
                          filenames if i.endswith(".py")])
     return sorted(py_files)
-
-
-class WarningsCapture(object):
-    """
-    Try hard to capture all warnings.
-
-    Aims to be a reliable drop-in replacement for built-in
-    warnings.catch_warnings() context manager.
-
-    Based on pytest's _DeprecatedCallContext context manager.
-    """
-    def __enter__(self):
-        self.captured_warnings = []
-        self._old_warn = warnings.warn
-        self._old_warn_explicit = warnings.warn_explicit
-        warnings.warn_explicit = self._warn_explicit
-        warnings.warn = self._warn
-        return self
-
-    def _warn_explicit(self, message, category, *args, **kwargs):
-        self.captured_warnings.append(
-            warnings.WarningMessage(message=category(message),
-                                    category=category,
-                                    filename="", lineno=0))
-
-    def _warn(self, message, category=Warning, *args, **kwargs):
-        if isinstance(message, Warning):
-            self.captured_warnings.append(
-                warnings.WarningMessage(
-                    message=category(message), category=category or Warning,
-                    filename="", lineno=0))
-        else:
-            self.captured_warnings.append(
-                warnings.WarningMessage(
-                    message=category(message), category=category,
-                    filename="", lineno=0))
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        warnings.warn_explicit = self._old_warn_explicit
-        warnings.warn = self._old_warn
-
-    def __len__(self):
-        return len(self.captured_warnings)
-
-    def __getitem__(self, key):
-        return self.captured_warnings[key]
 
 
 def create_diverse_catalog():
@@ -427,23 +374,6 @@ def create_diverse_catalog():
 
     events = [_create_event()]
     return Catalog(events=events)
-
-
-def setup_context_testcase(test_case, cm):
-    """
-    Use a contextmanager to set up a unittest test case.
-
-    Inspired by Ned Batchelder's recipe found here: goo.gl/8TBJ7s.
-
-    :param test_case:
-        An instance of unittest.TestCase
-    :param cm:
-        Any instances which implements the context manager protocol,
-        ie its class definition implements __enter__ and __exit__ methods.
-    """
-    val = cm.__enter__()
-    test_case.addCleanup(cm.__exit__, None, None, None)
-    return val
 
 
 def streams_almost_equal(st1, st2, default_stats=True, rtol=1e-05, atol=1e-08,

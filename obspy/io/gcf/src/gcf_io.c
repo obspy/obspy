@@ -44,6 +44,8 @@
 //    2022-03-10  Removed use of time.h by changing use of time_t to derrived arithmetic type gtime
 //                 moved inclusion of unistd.h and to header file
 //    2022-03-15  Added sampling rate 800 Hz as an allowed sampling rate
+//    2022-12-20  Added check in write_gcf that number of samples in last block is compatible with
+//                 compression, else split into two blocks
 //    
 //  TODO:
 //  
@@ -316,7 +318,6 @@ void merge_GcfFile(GcfFile *obj, int mode, double tol) {
       Ord = (int *)malloc(obj->n_seg*sizeof(int));
       NewOrd = (int *)malloc(obj->n_seg*sizeof(int)); 
       ord = (double *)malloc(obj->n_seg*sizeof(double));
-      
       
       // chunks to use when reallocating 
       chunk = MAX_DATA_BLOCK*10;
@@ -1006,18 +1007,52 @@ int parse_gcf_block(unsigned char buffer[1024], GcfSeg *seg, int mode, int endia
 }
 
 
+void init_GcfSeg_for_read(GcfSeg *seg, int mode){
+   init_GcfSeg(seg,0);
+   if (mode >= 0) realloc_GcfSeg(seg, MAX_DATA_BLOCK);
+}
+
+
+int read_gcf_block(GcfFile *obj, unsigned char buffer[1024], GcfSeg *seg, int mode, int endian, double tol) {
+   int32 n_alloc=0;
+   int err=0;
+
+   obj->n_blk += 1;
+   if ((err=parse_gcf_block(buffer,seg,mode,endian)) < 0) {
+      // not a data block
+      return 1;
+   } else if (err >= 10) {
+      // there were some issues with the data block
+      obj->n_errData++;
+   }
+   if (seg->err > 0 && seg->err < 10) {
+      obj->n_errHead++;
+   }
+
+   // all done add segment
+   seg->blk = obj->n_blk-1;
+   if (mode >= 0 && (seg->err == 3 || seg->err == 4)) {
+      // no data were actually decoded, temporarly set n_alloc to 0 to avoid adding non-existing data to GcfFile
+      n_alloc = seg->n_alloc;
+      seg->n_alloc = 0;
+   }
+   add_GcfSeg(obj,*seg,abs(mode),tol);
+   if (mode >= 0 && (seg->err == 3 || seg->err == 4)) seg->n_alloc = n_alloc;
+   return 0;
+}
+
+
 /* function read_gcf() parses a gcf data file */
 int read_gcf(const char *f, GcfFile *obj, int mode) {
-   int ret=0, endian, d=0, err=0, b1 = 0; 
-   int32 fid=0, n_alloc=0;
+   int ret=0, endian, d=0, b1 = 0;
+   int32 fid=0;
    GcfSeg seg;
    double tol = 1.E-3;
    unsigned char buffer[1024]; 
    
    // initiate and allocate segment
-   init_GcfSeg(&seg,0);
-   if (mode >= 0) realloc_GcfSeg(&seg, MAX_DATA_BLOCK);
-   
+   init_GcfSeg_for_read(&seg, mode);
+
    // adjust mode if nedded
    if (mode > 2) {
       mode = 2;
@@ -1029,27 +1064,7 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
    if (opengcf(f,&fid)) ret=-1;
    else {
       while(FillBuffer(1024,buffer,&fid)) {
-         obj->n_blk += 1;
-         if ((err=parse_gcf_block(buffer,&seg,mode,endian)) < 0) {
-            // not a data block
-            d++;
-         } else if (err >= 10) {
-            // there were some issues with the data block
-            obj->n_errData++;
-         }
-         if (seg.err > 0 && seg.err < 10) {
-            obj->n_errHead++;
-         }
-         
-         // all done add segment
-         seg.blk = obj->n_blk-1;
-         if (mode >= 0 && (seg.err == 3 || seg.err == 4)) {
-            // no data were actually decoded, temporarly set n_alloc to 0 to avoid adding non-existing data to GcfFile
-            n_alloc = seg.n_alloc;
-            seg.n_alloc = 0;
-         }
-         add_GcfSeg(obj,seg,abs(mode),tol);
-         if (mode >= 0 && (seg.err == 3 || seg.err == 4)) seg.n_alloc = n_alloc;
+         d += read_gcf_block(obj, buffer, &seg, mode, endian, tol);
          if (b1) break;
       }
       closegcf(&fid);
@@ -1059,7 +1074,7 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
 
    // merge segments if asked for
    if (abs(mode) < 2) merge_GcfFile(obj,mode,tol);
-   if (!ret && obj->n_blk==d) ret = 1 + endian; // no data blocks in file   
+   if (!ret && obj->n_blk==d) ret = 1 + endian; // no data blocks in file
    return ret;
 }
 
@@ -1235,8 +1250,13 @@ int write_gcf(const char *f, GcfFile *obj) {
                   d1++;     // last data point
                   // find the compression level
                   d32 = obj->seg[i].data[d1]-obj->seg[i].data[d0];
-                  if (d32 < -32768 || d32 > 32767) {
+                  if (d32 < -32768 || d32 > 32767 || obj->seg[i].n_data - d1 <= 250) {
                      // need 4 byte for each difference, maximum number of data points are 250
+                     //  if number of data points left are <= 250 just use 4 bytes for each difference
+                     //  this will not alter the size of the file but guarantees that we can write all
+                     //  samples, e.g. if there are only 3 samples left this can not be represented 
+                     //  if compression code is 2 or 4 as number of samples is evaluated as number of
+                     //  four-byte records.
                      c = 4;
                      d1 = d0+249;  // 249 here to prevent compression to get swaped to 2 later
                   } else {                        
@@ -1263,6 +1283,19 @@ int write_gcf(const char *f, GcfFile *obj) {
                               c = cprev; 
                               break;
                            }
+                        }
+                     }
+                     // check if all data is covered, if so check that number of data points in block 
+                     //  is compatible with compression 
+                     if (d1+1 >= obj->seg[i].n_data && c != 4) {
+                        n = d1-d0+1;
+                        if (c == 1) {
+                           // number of data points must be an integer multiple of 4
+                           d1 -= n-(n/4)*4;
+                        }
+                        if (c == 2) {
+                           // number of data points must be an integer multiple of 2
+                           d1 -= n-(n/2)*2;
                         }
                      }
                   }

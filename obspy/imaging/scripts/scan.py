@@ -422,7 +422,6 @@ class Scanner(object):
             height = len(labels) * 0.5
             height = max(4, height)
             fig.set_figheight(height)
-            plt.tight_layout()
 
             if not starttime or not endtime:
                 days = ax.get_xlim()
@@ -434,7 +433,11 @@ class Scanner(object):
             width = min(width, height * 4)
             fig.set_figwidth(width)
             plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
-            plt.tight_layout()
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", "The figure layout has changed to tight",
+                    UserWarning)
+                plt.tight_layout()
 
             fig.savefig(outfile)
             plt.close(fig)

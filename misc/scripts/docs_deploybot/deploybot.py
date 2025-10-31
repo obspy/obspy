@@ -1,6 +1,6 @@
 """
 Hi, I am ObsPy's docs deploy bot. I request github runs and
-extract uploaded doc artifacts to the ObsPy server.
+extract uploaded doc and docset artifacts to the ObsPy server.
 Outdated PR docs older than 90 days will be deleted.
 """
 import logging

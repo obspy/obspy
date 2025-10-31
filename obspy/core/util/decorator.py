@@ -14,7 +14,6 @@ from pathlib import Path
 import re
 import socket
 import tarfile
-import unittest
 import warnings
 import zipfile
 
@@ -111,9 +110,11 @@ def deprecated_keywords(keywords):
 @decorator
 def skip_on_network_error(func, *args, **kwargs):
     """
-    Decorator for unittest to mark test routines that fail with certain network
+    Decorator to mark test routines that fail with certain network
     errors (e.g. timeouts) as "skipped" rather than "Error".
     """
+    import pytest  # NOQA
+
     try:
         return func(*args, **kwargs)
     ###################################################
@@ -121,11 +122,11 @@ def skip_on_network_error(func, *args, **kwargs):
     # network errors that should be skipped
     except socket.timeout as e:
         if str(e) == "timed out":
-            raise unittest.SkipTest(str(e))
+            pytest.skip(str(e))
     ###################################################
     except socket.error as e:
         if str(e) == "[Errno 110] Connection timed out":
-            raise unittest.SkipTest(str(e))
+            pytest.skip(str(e))
     # general except to be able to generally reraise
     except Exception:
         raise

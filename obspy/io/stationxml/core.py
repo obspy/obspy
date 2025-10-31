@@ -8,6 +8,7 @@ Functions dealing with reading and writing StationXML.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import collections.abc
 import copy
 import inspect
 import io
@@ -19,7 +20,6 @@ import warnings
 from lxml import etree
 
 import obspy
-from obspy.core import compatibility
 from obspy.core.util import AttribDict
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
@@ -1240,13 +1240,11 @@ def _write_io_units(parent, obj):
     sub = etree.SubElement(parent, "InputUnits")
     etree.SubElement(sub, "Name").text = \
         str(obj.input_units)
-    etree.SubElement(sub, "Description").text = \
-        str(obj.input_units_description)
+    _obj2tag(sub, "Description", obj.input_units_description)
     sub = etree.SubElement(parent, "OutputUnits")
     etree.SubElement(sub, "Name").text = \
         str(obj.output_units)
-    etree.SubElement(sub, "Description").text = \
-        str(obj.output_units_description)
+    _obj2tag(sub, "Description", obj.output_units_description)
     _write_extra(parent, obj)
 
 
@@ -1345,7 +1343,7 @@ def _write_response_stage(parent, stage):
         attr["resourceId"] = stage.resource_id
     sub = etree.SubElement(parent, "Stage", attr)
     # do nothing for gain only response stages
-    if type(stage) == ResponseStage:
+    if type(stage) is ResponseStage:
         pass
     else:
         # create tag for stage type
@@ -1370,7 +1368,7 @@ def _write_response_stage(parent, stage):
         _obj2tag(sub__, "Description", stage.output_units_description)
 
         # write custom fields of respective stage type
-        if type(stage) == ResponseStage:
+        if type(stage) is ResponseStage:
             pass
         elif isinstance(stage, PolesZerosResponseStage):
             _obj2tag(sub_, "PzTransferFunctionType",
@@ -1573,7 +1571,7 @@ def _write_element(parent, element, name):
         sub = etree.SubElement(parent, custom_name, attrib=attrib)
         if isinstance(
                 element['value'],
-                compatibility.collections_abc.Mapping):  # nested extra tags
+                collections.abc.Mapping):  # nested extra tags
             for tagname, tag_element in element['value'].items():
                 _write_element(sub, tag_element, tagname)
         else:

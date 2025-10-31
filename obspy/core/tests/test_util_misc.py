@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 import sys
 import tempfile
 import warnings
@@ -11,7 +10,7 @@ from obspy import UTCDateTime, read
 from obspy.core.event import ResourceIdentifier as ResId
 from obspy.core.util.misc import CatchOutput, get_window_times, \
     _ENTRY_POINT_CACHE, _yield_obj_parent_attr
-from obspy.core.util.testing import WarningsCapture
+from obspy.core.util.base import CatchAndAssertWarnings
 
 
 class TestUtilMisc:
@@ -75,15 +74,13 @@ class TestUtilMisc:
         except OSError as e:
             pytest.fail('CatchOutput has broken file I/O!\n' + str(e))
 
-    def test_no_obspy_imports(self):
+    def test_no_obspy_imports(self, root):
         """
         Check files that are used at install time for obspy imports.
         """
-        from obspy.core import util
-        files = ["version.py"]
+        files = [root / "core" / "util" / "version.py"]
 
         for file_ in files:
-            file_ = os.path.join(os.path.dirname(util.__file__), file_)
             msg = ("File %s seems to contain an import 'from obspy' "
                    "(line %%i: '%%s').") % file_
             with open(file_, "rb") as fh:
@@ -301,12 +298,12 @@ class TestUtilMisc:
 
     def test_warning_capture(self):
         """
-        Tests for the WarningsCapture class in obspy.core.util.testing
+        Tests for the CatchAndAssertWarnings class in obspy.core.util.base
         """
         # ensure a warning issued with warn is captured. Before, this could
         # raise a TypeError.
-        with WarningsCapture() as w:
+        with CatchAndAssertWarnings() as w:
             warnings.warn('something bad is happening in the world')
 
         assert len(w) == 1
-        assert 'something bad' in str(w.captured_warnings[0].message)
+        assert 'something bad' in str(w[0].message)

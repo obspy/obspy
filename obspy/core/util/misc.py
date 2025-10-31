@@ -290,9 +290,9 @@ def CatchOutput():  # NOQA
         raise SystemExit(out.stderr)
 
 
-def _py36_windowsconsoleio_workaround():
+def _py3_windowsconsoleio_workaround():
     """
-    This monkey patch prevents crashing Py3.6 under Windows while using
+    This monkey patch prevents crashing Py >=3.6 under Windows while using
     the SuppressOutput context manager.
 
     Python 3.6 implemented unicode console handling for Windows. This works
@@ -307,9 +307,10 @@ def _py36_windowsconsoleio_workaround():
     The workaround in this case will reopen stdio with a different fd which
     also means a different handle by replicating the logic in
     "Py_lifecycle.c:initstdio/create_stdio".
-    See https://github.com/pytest-dev/py/issues/103
 
+    See https://github.com/pytest-dev/py/issues/103
     See http://bugs.python.org/issue30555
+    See https://github.com/obspy/obspy/issues/3148#issuecomment-1274254892
     """
     if not WIN32 or sys.version_info[:2] < (3, 6):
         return
@@ -348,10 +349,10 @@ def SuppressOutput():  # noqa
     ...    os.system('echo "mystdout"')
     ...    os.system('echo "mystderr" >&2')
 
-    Note: Does not work reliably for Windows Python 3.6 under Windows - see
-    function definition of _py36_windowsconsoleio_workaround().
+    Note: Does not work reliably for Python 3 under Windows - see
+    function definition of _py3_windowsconsoleio_workaround().
     """
-    _py36_windowsconsoleio_workaround()
+    _py3_windowsconsoleio_workaround()
     with os.fdopen(os.dup(1), 'wb', 0) as tmp_stdout:
         with os.fdopen(os.dup(2), 'wb', 0) as tmp_stderr:
             with open(os.devnull, 'wb') as to_file:
@@ -531,9 +532,13 @@ class MatplotlibBackend(object):
             shows a warning if the backend was not switched successfully.
         """
         import matplotlib
+        # first of all, all figures should be closed, matplotlib is showing a
+        # warning that this will not be done automatically by matplotlib in
+        # newer releases anymore, so do it here
+        import matplotlib.pyplot as plt
+        plt.close("all")
         # sloppy. only do a `plt.switch_backend(..)`
         if sloppy:
-            import matplotlib.pyplot as plt
             plt.switch_backend(backend)
         else:
             # check if `matplotlib.use(..)` is emitting a warning
@@ -543,7 +548,6 @@ class MatplotlibBackend(object):
                     matplotlib.use(backend)
             # if that's the case, follow up with `plt.switch_backend(..)`
             except UserWarning:
-                import matplotlib.pyplot as plt
                 plt.switch_backend(backend)
             # finally check if the switch was successful,
             # show a warning if not
@@ -702,6 +706,20 @@ def _yield_resource_id_parent_attr(obj):
                         yield out
 
     return func(obj)
+
+
+def ptp(a, *args, **kwargs):
+    """
+    Replacement for :meth:`numpy.ndarray.ptp()` and the corresponding method on
+    `MaskedArray` objects which are being removed in numpy 2.0
+    Basically just makes sure we call the correct replacement function numpy
+    put in place for regular and masked arrays.
+
+    :type a: :class:`numpy.ndarray` or :class:`numpy.ma.MaskedArray`
+    """
+    if isinstance(a, np.ma.MaskedArray):
+        return np.ma.ptp(a, *args, **kwargs)
+    return np.ptp(a, *args, **kwargs)
 
 
 if __name__ == '__main__':

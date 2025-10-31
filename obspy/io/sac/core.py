@@ -11,6 +11,7 @@ SAC bindings to ObsPy core module.
 import io
 import os
 import struct
+from pathlib import Path
 
 from obspy import Stream
 
@@ -166,7 +167,7 @@ def _internal_is_sac_xy(buf):
 
 
 def _read_sac_xy(filename, headonly=False, debug_headers=False,
-                 **kwargs):  # @UnusedVariable
+                 round_sampling_interval=True, **kwargs):  # @UnusedVariable
     """
     Reads an alphanumeric SAC file and returns an ObsPy Stream object.
 
@@ -175,7 +176,7 @@ def _read_sac_xy(filename, headonly=False, debug_headers=False,
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :param filename: Alphanumeric SAC file to be read.
-    :type filename: str, open file, or file-like object
+    :type filename: str, :class:`~pathlib.Path`, open file, or file-like object
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
     :type headonly: bool
@@ -186,6 +187,10 @@ def _read_sac_xy(filename, headonly=False, debug_headers=False,
         values are not synchronized with the Stream object itself and won't
         be used during writing of a SAC file! Defaults to ``False``.
     :type debug_headers: bool
+    :param round_sampling_interval: Whether to round sampling interval to
+        microseconds before calculating sampling rate to avoid floating point
+        accuracy issues with some SAC files (see #3408)
+    :type round_sampling_interval: bool
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -195,16 +200,19 @@ def _read_sac_xy(filename, headonly=False, debug_headers=False,
     >>> st = read("/path/to/testxy.sac")
     """
     if isinstance(filename, io.BufferedIOBase):
-        return _internal_read_sac_xy(buf=filename, headonly=headonly,
-                                     debug_headers=debug_headers, **kwargs)
+        return _internal_read_sac_xy(
+            buf=filename, headonly=headonly, debug_headers=debug_headers,
+            round_sampling_interval=round_sampling_interval, **kwargs)
     else:
         with open(filename, "rb") as fh:
-            return _internal_read_sac_xy(buf=fh, headonly=headonly,
-                                         debug_headers=debug_headers, **kwargs)
+            return _internal_read_sac_xy(
+                buf=fh, headonly=headonly, debug_headers=debug_headers,
+                round_sampling_interval=round_sampling_interval, **kwargs)
 
 
-def _internal_read_sac_xy(buf, headonly=False, debug_headers=False,
-                          **kwargs):  # @UnusedVariable
+def _internal_read_sac_xy(
+        buf, headonly=False, debug_headers=False, round_sampling_interval=True,
+        **kwargs):  # @UnusedVariable
     """
     Reads an alphanumeric SAC file and returns an ObsPy Stream object.
 
@@ -224,6 +232,10 @@ def _internal_read_sac_xy(buf, headonly=False, debug_headers=False,
         values are not synchronized with the Stream object itself and won't
         be used during writing of a SAC file! Defaults to ``False``.
     :type debug_headers: bool
+    :param round_sampling_interval: Whether to round sampling interval to
+        microseconds before calculating sampling rate to avoid floating point
+        accuracy issues with some SAC files (see #3408)
+    :type round_sampling_interval: bool
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -234,7 +246,8 @@ def _internal_read_sac_xy(buf, headonly=False, debug_headers=False,
     """
     sac = SACTrace.read(buf, headonly=headonly, ascii=True)
     # assign all header entries to a new dictionary compatible with ObsPy
-    tr = sac.to_obspy_trace(debug_headers=debug_headers)
+    tr = sac.to_obspy_trace(debug_headers=debug_headers,
+                            round_sampling_interval=round_sampling_interval)
 
     return Stream([tr])
 
@@ -303,7 +316,7 @@ def _internal_write_sac_xy(trace, buf, **kwargs):  # @UnusedVariable
 
 
 def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
-              **kwargs):  # @UnusedVariable
+              round_sampling_interval=True, **kwargs):  # @UnusedVariable
     """
     Reads an SAC file and returns an ObsPy Stream object.
 
@@ -312,7 +325,7 @@ def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :param filename: SAC file to be read.
-    :type filename: str, open file, or file-like object
+    :type filename: str, :class:`~pathlib.Path`, open file, or file-like object
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
     :type headonly: bool
@@ -326,6 +339,10 @@ def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
     :param fsize: Check if file size is consistent with theoretical size
         from header. Defaults to ``True``.
     :type fsize: bool
+    :param round_sampling_interval: Whether to round sampling interval to
+        microseconds before calculating sampling rate to avoid floating point
+        accuracy issues with some SAC files (see #3408)
+    :type round_sampling_interval: bool
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -336,20 +353,23 @@ def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
     """
     # Only byte buffers for binary SAC.
     if isinstance(filename, io.BufferedIOBase):
-        return _internal_read_sac(buf=filename, headonly=headonly,
-                                  debug_headers=debug_headers, fsize=fsize,
-                                  **kwargs)
-    elif isinstance(filename, (str, bytes)):
+        return _internal_read_sac(
+            buf=filename, headonly=headonly, debug_headers=debug_headers,
+            fsize=fsize, round_sampling_interval=round_sampling_interval,
+            **kwargs)
+    elif isinstance(filename, (str, bytes, Path)):
         with open(filename, "rb") as fh:
-            return _internal_read_sac(buf=fh, headonly=headonly,
-                                      debug_headers=debug_headers, fsize=fsize,
-                                      **kwargs)
+            return _internal_read_sac(
+                buf=fh, headonly=headonly, debug_headers=debug_headers,
+                fsize=fsize, round_sampling_interval=round_sampling_interval,
+                **kwargs)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
 def _internal_read_sac(buf, headonly=False, debug_headers=False, fsize=True,
-                       byteorder=None, **kwargs):  # @UnusedVariable
+                       byteorder=None, round_sampling_interval=True,
+                       **kwargs):  # @UnusedVariable
     """
     Reads an SAC file and returns an ObsPy Stream object.
 
@@ -378,6 +398,10 @@ def _internal_read_sac(buf, headonly=False, debug_headers=False, fsize=True,
         :class:`obspy.io.sac.util.SacIOError` is raised. Only valid for binary
         files.
     :type byteorder: str, optional
+    :param round_sampling_interval: Whether to round sampling interval to
+        microseconds before calculating sampling rate to avoid floating point
+        accuracy issues with some SAC files (see #3408)
+    :type round_sampling_interval: bool
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
@@ -390,7 +414,8 @@ def _internal_read_sac(buf, headonly=False, debug_headers=False, fsize=True,
                         byteorder=byteorder, checksize=fsize,
                         encoding=encoding_str)
     # assign all header entries to a new dictionary compatible with an ObsPy
-    tr = sac.to_obspy_trace(debug_headers=debug_headers, encoding=encoding_str)
+    tr = sac.to_obspy_trace(debug_headers=debug_headers, encoding=encoding_str,
+                            round_sampling_interval=round_sampling_interval)
 
     return Stream([tr])
 

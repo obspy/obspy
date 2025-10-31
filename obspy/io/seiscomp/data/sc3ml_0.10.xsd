@@ -388,10 +388,10 @@
     </xs:simpleContent>
   </xs:complexType>
   <xs:complexType name="Reading">
-    <xs:sequence>
-      <xs:element name="pickReference" type="scs:PickReference" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="amplitudeReference" type="scs:AmplitudeReference" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="pickReference" type="scs:PickReference"/>
+      <xs:element name="amplitudeReference" type="scs:AmplitudeReference"/>
+    </xs:choice>
     <xs:attribute name="publicID" type="scs:ResourceIdentifier" use="required"/>
   </xs:complexType>
   <xs:complexType name="MomentTensorComponentContribution">
@@ -624,14 +624,14 @@
     <xs:attribute name="publicID" type="scs:ResourceIdentifier" use="required"/>
   </xs:complexType>
   <xs:complexType name="EventParameters">
-    <xs:sequence>
-      <xs:element name="pick" type="scs:Pick" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="amplitude" type="scs:Amplitude" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="reading" type="scs:Reading" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="origin" type="scs:Origin" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="focalMechanism" type="scs:FocalMechanism" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="event" type="scs:Event" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="pick" type="scs:Pick"/>
+      <xs:element name="amplitude" type="scs:Amplitude"/>
+      <xs:element name="reading" type="scs:Reading"/>
+      <xs:element name="origin" type="scs:Origin"/>
+      <xs:element name="focalMechanism" type="scs:FocalMechanism"/>
+      <xs:element name="event" type="scs:Event"/>
+    </xs:choice>
     <xs:attribute name="publicID" type="scs:ResourceIdentifier"/>
   </xs:complexType>
   <xs:complexType name="Parameter">
@@ -679,10 +679,10 @@
     <xs:attribute name="enabled" type="xs:boolean" use="required"/>
   </xs:complexType>
   <xs:complexType name="Config">
-    <xs:sequence>
-      <xs:element name="parameterSet" type="scs:ParameterSet" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="module" type="scs:ConfigModule" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="parameterSet" type="scs:ParameterSet"/>
+      <xs:element name="module" type="scs:ConfigModule"/>
+    </xs:choice>
     <xs:attribute name="publicID" type="scs:ResourceIdentifier"/>
   </xs:complexType>
   <xs:complexType name="QCLog">
@@ -721,11 +721,11 @@
     <xs:attribute name="created" type="xs:dateTime" use="required"/>
   </xs:complexType>
   <xs:complexType name="QualityControl">
-    <xs:sequence>
-      <xs:element name="log" type="scs:QCLog" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="waveformQuality" type="scs:WaveformQuality" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="outage" type="scs:Outage" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="log" type="scs:QCLog"/>
+      <xs:element name="waveformQuality" type="scs:WaveformQuality"/>
+      <xs:element name="outage" type="scs:Outage"/>
+    </xs:choice>
     <xs:attribute name="publicID" type="scs:ResourceIdentifier"/>
   </xs:complexType>
   <xs:complexType name="Blob">
@@ -1016,18 +1016,18 @@
     <xs:attribute name="code" type="xs:string" use="required"/>
   </xs:complexType>
   <xs:complexType name="Inventory">
-    <xs:sequence>
-      <xs:element name="stationGroup" type="scs:StationGroup" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="auxDevice" type="scs:AuxDevice" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="sensor" type="scs:Sensor" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="datalogger" type="scs:Datalogger" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="responsePAZ" type="scs:ResponsePAZ" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="responseFIR" type="scs:ResponseFIR" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="responseIIR" type="scs:ResponseIIR" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="responsePolynomial" type="scs:ResponsePolynomial" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="responseFAP" type="scs:ResponseFAP" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="network" type="scs:Network" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="stationGroup" type="scs:StationGroup"/>
+      <xs:element name="auxDevice" type="scs:AuxDevice"/>
+      <xs:element name="sensor" type="scs:Sensor"/>
+      <xs:element name="datalogger" type="scs:Datalogger"/>
+      <xs:element name="responsePAZ" type="scs:ResponsePAZ"/>
+      <xs:element name="responseFIR" type="scs:ResponseFIR"/>
+      <xs:element name="responseIIR" type="scs:ResponseIIR"/>
+      <xs:element name="responsePolynomial" type="scs:ResponsePolynomial"/>
+      <xs:element name="responseFAP" type="scs:ResponseFAP"/>
+      <xs:element name="network" type="scs:Network"/>
+    </xs:choice>
     <xs:attribute name="publicID" type="scs:ResourceIdentifier"/>
   </xs:complexType>
   <xs:complexType name="RouteArclink">
@@ -1045,10 +1045,10 @@
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="Route">
-    <xs:sequence>
-      <xs:element name="arclink" type="scs:RouteArclink" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="seedlink" type="scs:RouteSeedlink" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="arclink" type="scs:RouteArclink"/>
+      <xs:element name="seedlink" type="scs:RouteSeedlink"/>
+    </xs:choice>
     <xs:attribute name="publicID" type="scs:ResourceIdentifier" use="required"/>
     <xs:attribute name="networkCode" type="xs:string" use="required"/>
     <xs:attribute name="stationCode" type="xs:string" use="required"/>
@@ -1067,10 +1067,10 @@
     <xs:attribute name="streamCode" type="xs:string" use="required"/>
   </xs:complexType>
   <xs:complexType name="Routing">
-    <xs:sequence>
-      <xs:element name="route" type="scs:Route" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="access" type="scs:Access" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="route" type="scs:Route"/>
+      <xs:element name="access" type="scs:Access"/>
+    </xs:choice>
     <xs:attribute name="publicID" type="scs:ResourceIdentifier"/>
   </xs:complexType>
   <xs:complexType name="JournalEntry">
@@ -1083,9 +1083,9 @@
     <xs:attribute name="parameters" type="xs:string"/>
   </xs:complexType>
   <xs:complexType name="Journaling">
-    <xs:sequence>
-      <xs:element name="entry" type="scs:JournalEntry" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="entry" type="scs:JournalEntry"/>
+    </xs:choice>
     <xs:attribute name="publicID" type="scs:ResourceIdentifier"/>
   </xs:complexType>
   <xs:complexType name="ArclinkUser">
@@ -1144,23 +1144,94 @@
     <xs:attribute name="publicID" type="scs:ResourceIdentifier" use="required"/>
   </xs:complexType>
   <xs:complexType name="ArclinkLog">
-    <xs:sequence>
-      <xs:element name="arclinkRequest" type="scs:ArclinkRequest" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="arclinkUser" type="scs:ArclinkUser" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="arclinkRequest" type="scs:ArclinkRequest"/>
+      <xs:element name="arclinkUser" type="scs:ArclinkUser"/>
+    </xs:choice>
     <xs:attribute name="publicID" type="scs:ResourceIdentifier"/>
   </xs:complexType>
   <xs:element name="seiscomp">
     <xs:complexType>
-      <xs:all>
-        <xs:element name="EventParameters" type="scs:EventParameters" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="Config" type="scs:Config" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="QualityControl" type="scs:QualityControl" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="Inventory" type="scs:Inventory" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="Routing" type="scs:Routing" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="Journaling" type="scs:Journaling" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="ArclinkLog" type="scs:ArclinkLog" minOccurs="0" maxOccurs="1"/>
-      </xs:all>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="PickReference" type="scs:PickReference"/>
+        <xs:element name="AmplitudeReference" type="scs:AmplitudeReference"/>
+        <xs:element name="MomentTensorComponentContribution" type="scs:MomentTensorComponentContribution"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="DataUsed" type="scs:DataUsed"/>
+        <xs:element name="MomentTensorPhaseSetting" type="scs:MomentTensorPhaseSetting"/>
+        <xs:element name="MomentTensorStationContribution" type="scs:MomentTensorStationContribution"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="MomentTensor" type="scs:MomentTensor"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="StationMagnitudeContribution" type="scs:StationMagnitudeContribution"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="EventDescription" type="scs:EventDescription"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="OriginReference" type="scs:OriginReference"/>
+        <xs:element name="FocalMechanismReference" type="scs:FocalMechanismReference"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="CompositeTime" type="scs:CompositeTime"/>
+        <xs:element name="Arrival" type="scs:Arrival"/>
+        <xs:element name="StationMagnitude" type="scs:StationMagnitude"/>
+        <xs:element name="Magnitude" type="scs:Magnitude"/>
+        <xs:element name="Pick" type="scs:Pick"/>
+        <xs:element name="Amplitude" type="scs:Amplitude"/>
+        <xs:element name="Reading" type="scs:Reading"/>
+        <xs:element name="Origin" type="scs:Origin"/>
+        <xs:element name="FocalMechanism" type="scs:FocalMechanism"/>
+        <xs:element name="Event" type="scs:Event"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="Parameter" type="scs:Parameter"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="Setup" type="scs:Setup"/>
+        <xs:element name="ConfigStation" type="scs:ConfigStation"/>
+        <xs:element name="ParameterSet" type="scs:ParameterSet"/>
+        <xs:element name="ConfigModule" type="scs:ConfigModule"/>
+        <xs:element name="QCLog" type="scs:QCLog"/>
+        <xs:element name="WaveformQuality" type="scs:WaveformQuality"/>
+        <xs:element name="Outage" type="scs:Outage"/>
+        <xs:element name="StationReference" type="scs:StationReference"/>
+        <xs:element name="AuxSource" type="scs:AuxSource"/>
+        <xs:element name="SensorCalibration" type="scs:SensorCalibration"/>
+        <xs:element name="DataloggerCalibration" type="scs:DataloggerCalibration"/>
+        <xs:element name="Decimation" type="scs:Decimation"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="AuxStream" type="scs:AuxStream"/>
+        <xs:element name="Stream" type="scs:Stream"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="SensorLocation" type="scs:SensorLocation"/>
+        <xs:element name="Comment" type="scs:Comment"/>
+        <xs:element name="Station" type="scs:Station"/>
+        <xs:element name="StationGroup" type="scs:StationGroup"/>
+        <xs:element name="AuxDevice" type="scs:AuxDevice"/>
+        <xs:element name="Sensor" type="scs:Sensor"/>
+        <xs:element name="Datalogger" type="scs:Datalogger"/>
+        <xs:element name="ResponsePAZ" type="scs:ResponsePAZ"/>
+        <xs:element name="ResponseFIR" type="scs:ResponseFIR"/>
+        <xs:element name="ResponseIIR" type="scs:ResponseIIR"/>
+        <xs:element name="ResponsePolynomial" type="scs:ResponsePolynomial"/>
+        <xs:element name="ResponseFAP" type="scs:ResponseFAP"/>
+        <xs:element name="Network" type="scs:Network"/>
+        <xs:element name="RouteArclink" type="scs:RouteArclink"/>
+        <xs:element name="RouteSeedlink" type="scs:RouteSeedlink"/>
+        <xs:element name="Route" type="scs:Route"/>
+        <xs:element name="Access" type="scs:Access"/>
+        <xs:element name="JournalEntry" type="scs:JournalEntry"/>
+        <xs:element name="EventParameters" type="scs:EventParameters"/>
+        <xs:element name="Config" type="scs:Config"/>
+        <xs:element name="QualityControl" type="scs:QualityControl"/>
+        <xs:element name="Inventory" type="scs:Inventory"/>
+        <xs:element name="Routing" type="scs:Routing"/>
+        <xs:element name="Journaling" type="scs:Journaling"/>
+        <xs:element name="ArclinkStatusLine" type="scs:ArclinkStatusLine"/>
+        <xs:element name="ArclinkRequestLine" type="scs:ArclinkRequestLine"/>
+        <xs:element name="ArclinkRequest" type="scs:ArclinkRequest"/>
+        <xs:element name="ArclinkUser" type="scs:ArclinkUser"/>
+        <xs:element name="ArclinkLog" type="scs:ArclinkLog"/>
+      </xs:choice>
       <xs:attribute name="version" type="xs:string"/>
     </xs:complexType>
   </xs:element>

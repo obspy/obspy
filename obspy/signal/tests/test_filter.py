@@ -4,27 +4,22 @@
 The Filter test suite.
 """
 import gzip
-import os
-import unittest
 import warnings
 
 import numpy as np
 import scipy.signal as sg
 
 from obspy import read
-from obspy.signal.filter import (bandpass, highpass, lowpass, envelope,
-                                 lowpass_cheby_2)
+from obspy.signal.filter import (bandpass, bandstop, highpass, lowpass,
+                                 envelope, lowpass_cheby_2)
 
 
-class FilterTestCase(unittest.TestCase):
+class TestFilter():
     """
     Test cases for Filter.
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
 
-    def test_bandpass_vs_pitsa(self):
+    def test_bandpass_vs_pitsa(self, testdata):
         """
         Test Butterworth bandpass filter against Butterworth bandpass filter
         of PITSA. Note that the corners value is twice the value of the filter
@@ -32,8 +27,7 @@ class FilterTestCase(unittest.TestCase):
         tends to get bigger with higher order filtering.
         """
         # load test file
-        file = os.path.join(self.path, 'rjob_20051006.gz')
-        with gzip.open(file) as f:
+        with gzip.open(testdata['rjob_20051006.gz']) as f:
             data = np.loadtxt(f)
         # parameters for the test
         samp_rate = 200.0
@@ -43,15 +37,14 @@ class FilterTestCase(unittest.TestCase):
         # filter trace
         datcorr = bandpass(data, freq1, freq2, df=samp_rate, corners=corners)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_bandpass.gz')
-        with gzip.open(filename) as f:
+        with gzip.open(testdata['rjob_20051006_bandpass.gz']) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
-        self.assertEqual(rms < 1.0e-05, True)
+        assert rms < 1.0e-05
 
-    def test_bandpass_zphsh_vs_pitsa(self):
+    def test_bandpass_zphsh_vs_pitsa(self, testdata):
         """
         Test Butterworth zero-phase bandpass filter against Butterworth
         zero-phase bandpass filter of PITSA. Note that the corners value is
@@ -64,8 +57,7 @@ class FilterTestCase(unittest.TestCase):
         generally be of low interest/importance.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
-        with gzip.open(filename) as f:
+        with gzip.open(testdata['rjob_20051006.gz']) as f:
             data = np.loadtxt(f)
         # parameters for the test
         samp_rate = 200.0
@@ -76,15 +68,14 @@ class FilterTestCase(unittest.TestCase):
         datcorr = bandpass(data, freq1, freq2, df=samp_rate,
                            corners=corners, zerophase=True)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_bandpassZPHSH.gz')
-        with gzip.open(filename) as f:
+        with gzip.open(testdata['rjob_20051006_bandpassZPHSH.gz']) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
-        self.assertEqual(rms < 1.0e-05, True)
+        assert rms < 1.0e-05
 
-    def test_lowpass_vs_pitsa(self):
+    def test_lowpass_vs_pitsa(self, testdata):
         """
         Test Butterworth lowpass filter against Butterworth lowpass filter of
         PITSA. Note that the corners value is twice the value of the filter
@@ -92,8 +83,7 @@ class FilterTestCase(unittest.TestCase):
         tends to get bigger with higher order filtering.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
-        with gzip.open(filename) as f:
+        with gzip.open(testdata['rjob_20051006.gz']) as f:
             data = np.loadtxt(f)
         # parameters for the test
         samp_rate = 200.0
@@ -102,15 +92,14 @@ class FilterTestCase(unittest.TestCase):
         # filter trace
         datcorr = lowpass(data, freq, df=samp_rate, corners=corners)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_lowpass.gz')
-        with gzip.open(filename) as f:
+        with gzip.open(testdata['rjob_20051006_lowpass.gz']) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
-        self.assertEqual(rms < 1.0e-05, True)
+        assert rms < 1.0e-05
 
-    def test_lowpass_zphsh_vs_pitsa(self):
+    def test_lowpass_zphsh_vs_pitsa(self, testdata):
         """
         Test Butterworth zero-phase lowpass filter against Butterworth
         zero-phase lowpass filter of PITSA. Note that the corners value is
@@ -123,7 +112,7 @@ class FilterTestCase(unittest.TestCase):
         generally be of low interest/importance.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        filename = testdata['rjob_20051006.gz']
         with gzip.open(filename) as f:
             data = np.loadtxt(f)
         # parameters for the test
@@ -134,15 +123,15 @@ class FilterTestCase(unittest.TestCase):
         datcorr = lowpass(data, freq, df=samp_rate, corners=corners,
                           zerophase=True)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_lowpassZPHSH.gz')
+        filename = testdata['rjob_20051006_lowpassZPHSH.gz']
         with gzip.open(filename) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
-        self.assertEqual(rms < 1.0e-05, True)
+        assert rms < 1.0e-05
 
-    def test_highpass_vs_pitsa(self):
+    def test_highpass_vs_pitsa(self, testdata):
         """
         Test Butterworth highpass filter against Butterworth highpass filter
         of PITSA. Note that the corners value is twice the value of the filter
@@ -150,7 +139,7 @@ class FilterTestCase(unittest.TestCase):
         tends to get bigger with higher order filtering.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        filename = testdata['rjob_20051006.gz']
         with gzip.open(filename) as f:
             data = np.loadtxt(f)
         # parameters for the test
@@ -160,15 +149,15 @@ class FilterTestCase(unittest.TestCase):
         # filter trace
         datcorr = highpass(data, freq, df=samp_rate, corners=corners)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_highpass.gz')
+        filename = testdata['rjob_20051006_highpass.gz']
         with gzip.open(filename) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
-        self.assertEqual(rms < 1.0e-05, True)
+        assert rms < 1.0e-05
 
-    def test_highpass_zphsh_vs_pitsa(self):
+    def test_highpass_zphsh_vs_pitsa(self, testdata):
         """
         Test Butterworth zero-phase highpass filter against Butterworth
         zero-phase highpass filter of PITSA. Note that the corners value is
@@ -181,7 +170,7 @@ class FilterTestCase(unittest.TestCase):
         generally be of low interest/importance.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        filename = testdata['rjob_20051006.gz']
         with gzip.open(filename) as f:
             data = np.loadtxt(f)
         # parameters for the test
@@ -192,33 +181,33 @@ class FilterTestCase(unittest.TestCase):
         datcorr = highpass(data, freq, df=samp_rate, corners=corners,
                            zerophase=True)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_highpassZPHSH.gz')
+        filename = testdata['rjob_20051006_highpassZPHSH.gz']
         with gzip.open(filename) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
-        self.assertEqual(rms < 1.0e-05, True)
+        assert rms < 1.0e-05
 
-    def test_envelope_vs_pitsa(self):
+    def test_envelope_vs_pitsa(self, testdata):
         """
         Test Envelope filter against PITSA.
         The rms is not so good, but the fit is still good in most parts.
         """
         # load test file
-        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        filename = testdata['rjob_20051006.gz']
         with gzip.open(filename) as f:
             data = np.loadtxt(f)
         # filter trace
         datcorr = envelope(data)
         # load pitsa file
-        filename = os.path.join(self.path, 'rjob_20051006_envelope.gz')
+        filename = testdata['rjob_20051006_envelope.gz']
         with gzip.open(filename) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
-        self.assertEqual(rms < 1.0e-02, True)
+        assert rms < 1.0e-02
 
     def test_lowpass_cheby_2(self):
         """
@@ -233,9 +222,9 @@ class FilterTestCase(unittest.TestCase):
         freq = w / np.pi * nyquist
         h_db = 20 * np.log10(abs(h))
         # be smaller than -96dB above lowpass frequency
-        self.assertGreater(-96, h_db[freq > 50].max())
+        assert -96 > h_db[freq > 50].max()
         # be 0 (1dB ripple) before filter ramp
-        self.assertGreater(h_db[freq < 25].min(), -1)
+        assert h_db[freq < 25].min() > -1
 
     def test_bandpass_high_corner_at_nyquist(self):
         """
@@ -257,7 +246,7 @@ class FilterTestCase(unittest.TestCase):
                     expected = bandpass(
                         data, low_corner, nyquist * (1 - 1.1e-6), df=df,
                         corners=corners)
-                    self.assertEqual(len(w), 0)
+                    assert len(w) == 0
                 # all of these should be changed into a highpass
                 with warnings.catch_warnings(record=True) as w:
                     warnings.simplefilter("always")
@@ -267,12 +256,36 @@ class FilterTestCase(unittest.TestCase):
                                     df=df, corners=corners)
                     got3 = bandpass(data, low_corner, nyquist + 1.78,
                                     df=df, corners=corners)
-                    self.assertEqual(len(w), 3)
+                    numwarn = 0
                     for w_ in w:
-                        self.assertTrue('Selected high corner frequency ' in
-                                        str(w[0].message))
-                        self.assertTrue('Applying a high-pass instead.' in
-                                        str(w[0].message))
+                        if ('Selected high corner frequency ' in
+                                str(w_.message) and
+                                'Applying a high-pass instead.' in
+                                str(w_.message)):
+                            numwarn += 1
+                    assert numwarn == 3
                 for got in (got1, got2, got3):
                     np.testing.assert_allclose(got, expected, rtol=1e-3,
                                                atol=0.9)
+
+    def test_filterarr2d_axis_and_zerophase(self):
+        """
+        See #2805
+        """
+        stream = read()
+        df = stream[0].stats.sampling_rate
+        arr = np.array([tr.data for tr in stream[:3]])
+        for filterf, args in [(bandpass, (1, 5)),
+                              (bandstop, (1, 5)),
+                              (lowpass, (5,)),
+                              (highpass, (5,))]:
+            for zerophase in (False, True):
+                farray = filterf(arr, *args, df=df, zerophase=zerophase)
+                fseries = [filterf(arr[i, :], *args,
+                                   df=df, zerophase=zerophase)
+                           for i in range(3)]
+                assert np.all(np.isclose(farray, fseries))
+                # test filter along axis=0
+                farray2 = filterf(np.transpose(arr), *args, df=df,
+                                  zerophase=zerophase, axis=0)
+                assert np.all(np.isclose(farray2, np.transpose(farray)))

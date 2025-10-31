@@ -13,6 +13,8 @@ import importlib
 import inspect
 import io
 import os
+from contextlib import contextmanager
+from io import IOBase, TextIOBase, TextIOWrapper
 from pathlib import Path
 import re
 import sys
@@ -32,7 +34,8 @@ from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['clients.filesystem', 'core', 'geodetics', 'imaging',
                    'io.ah', 'io.alsep', 'io.arclink', 'io.ascii',
-                   'io.cmtsolution', 'io.cnv', 'io.css', 'io.dmx', 'io.focmec',
+                   'io.cmtsolution', 'io.cnv', 'io.css', 'io.csv',
+                   'io.cybershake', 'io.dmx', 'io.focmec',
                    'io.hypodd', 'io.iaspei', 'io.gcf', 'io.gse2', 'io.json',
                    'io.kinemetrics', 'io.kml', 'io.mseed', 'io.ndk', 'io.nied',
                    'io.nlloc', 'io.nordic', 'io.pdas', 'io.pde', 'io.quakeml',
@@ -52,7 +55,7 @@ WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'SEGY', 'SU', 'SEG2', 'WAV', 'WIN', 'CSS',
                             'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
                             'GCF', 'DMX', 'ALSEP_PSE', 'ALSEP_WTN',
-                            'ALSEP_WTH']
+                            'ALSEP_WTH', 'CYBERSHAKE']
 EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
 INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP']
 # waveform plugins accepting a byteorder keyword
@@ -63,11 +66,11 @@ NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
 
 # Define Obspy hard and soft dependencies
 HARD_DEPENDENCIES = [
-    "future", "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
+    "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
     "sqlalchemy", "decorator", "requests"]
 OPTIONAL_DEPENDENCIES = [
-    "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "shapefile",
-    "mock", "pyflakes", "geographiclib", "cartopy"]
+    "packaging", "pyproj", "pytest", "pytest-json-report", "pyshp",
+    "geographiclib", "cartopy"]
 DEPENDENCIES = HARD_DEPENDENCIES + OPTIONAL_DEPENDENCIES
 
 
@@ -619,17 +622,7 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
         pathname_or_url = str(pathname_or_url)
     if not isinstance(pathname_or_url, str):
         # not a string - we assume a file-like object
-        try:
-            # first try reading directly
-            generic = callback_func(pathname_or_url, **kwargs)
-        except TypeError:
-            # if this fails, create a temporary file which is read directly
-            # from the file system
-            pathname_or_url.seek(0)
-            with NamedTemporaryFile() as fh:
-                fh.write(pathname_or_url.read())
-                generic = callback_func(fh.name, **kwargs)
-        return generic
+        return callback_func(pathname_or_url, **kwargs)
     elif isinstance(pathname_or_url, bytes) and \
             pathname_or_url.strip().startswith(b'<'):
         # XML string
@@ -660,6 +653,103 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
             for filename in pathnames[1:]:
                 generic.extend(callback_func(filename, **kwargs))
         return generic
+
+
+def get_bytes_stream(file_or_stream):
+    """
+    Return a file-like object streaming bytes data (``bytes`` objects)
+
+    :type file_or_stream: str, Path or file-like object
+    :param file_or_stream: the input from which to return the stream of bytes
+    :return: a file-like object streaming bytes data
+    """
+    if isinstance(file_or_stream, IOBase):
+        return file_or_stream
+    else:
+        return open(file_or_stream, 'rb')
+
+
+@contextmanager
+def open_bytes_stream(file_or_stream):
+    """
+    Context manager to read bytes data stream from the argument,
+    e.g.: ``with open_bytes_stream(file_or_stream)``
+
+    :type file_or_stream: str, Path or file-like object
+    :param file_or_stream: The input object to open.
+        If this parameter is already a file-like object,
+        it will not be closed on exit but the stream position
+        will be reset so that the object can be reused
+    :return: a context manager to read bytes data
+    """
+    cur_pos = None
+    if isinstance(file_or_stream, IOBase):
+        cur_pos = file_or_stream.tell()
+    stream = get_bytes_stream(file_or_stream)
+    try:
+        yield stream
+    finally:
+        if cur_pos is None:  # str or Path passed: close stream
+            stream.close()
+        else:
+            file_or_stream.seek(cur_pos, 0)
+
+
+def get_text_stream(file_or_stream, encoding='utf-8'):
+    """
+    Return a file-like object streaming text data (``str`` objects)
+
+    :type file_or_stream: str, Path or file-like object
+    :param file_or_stream:  the input from which to return the stream of text
+    :type encoding: str
+    :param encoding: the encoding used. If the passed argument
+        is already a file-like object of encoded text data, this
+        argument is ignored
+    :return: a file-like object streaming text data
+    """
+    if isinstance(file_or_stream, TextIOBase):
+        return file_or_stream
+    elif isinstance(file_or_stream, IOBase):
+        return TextIOWrapper(file_or_stream, encoding=encoding)
+    else:
+        return open(file_or_stream, 'rt', encoding=encoding)
+
+
+@contextmanager
+def open_text_stream(file_or_stream, encoding='utf-8'):
+    """
+    Context manager releasing a text data stream from the argument,
+    e.g.: ``with open_text_stream(file_or_stream)``
+
+    :type file_or_stream: str, Path or file-like object.
+    :param file_or_stream: The input object to open.
+        If this parameter is already a file-like object,
+        it will not be closed on exit but the stream position
+        will be reset so that the object can be reused
+    :type encoding: str
+    :param encoding: the encoding used. If the passed argument
+        is already a file-like object of encoded text data, this
+        argument is ignored
+    :return: a context manager to read text data
+    """
+    cur_pos = None
+    if isinstance(file_or_stream, IOBase):
+        cur_pos = file_or_stream.tell()
+    stream = get_text_stream(file_or_stream, encoding=encoding)
+    try:
+        yield stream
+    finally:
+        if cur_pos is None:  # str or Path passed: close stream
+            stream.close()
+        else:
+            # if we wrapped file_or_stream in a TextIOWrapper,
+            # closing the latter would close also the underlying
+            # stream. Simply detach the wrapper in this case:
+            if isinstance(stream, TextIOWrapper) and \
+                    stream is not file_or_stream:
+                stream.detach()
+            # reset position:
+            file_or_stream.seek(cur_pos, 0)
 
 
 class CatchAndAssertWarnings(warnings.catch_warnings):

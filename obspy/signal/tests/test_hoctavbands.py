@@ -3,10 +3,8 @@
 """
 The hoctavbands.core test suite.
 """
-import os
-import unittest
-
 import numpy as np
+import pytest
 from scipy import signal
 
 from obspy.signal import hoctavbands, util
@@ -14,21 +12,14 @@ from obspy.signal import hoctavbands, util
 
 # only tests for windowed data are implemented currently
 
-class HoctavbandsTestCase(unittest.TestCase):
+class TestHoctavbands():
     """
     Test cases for half octav bands
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
-        file = os.path.join(self.path, '3cssan.hy.1.MBGA_Z')
-        f = open(file)
-        self.res = np.loadtxt(f)
-        f.close()
-        file = os.path.join(self.path, 'MBGA_Z.ASC')
-        f = open(file)
-        data = np.loadtxt(f)
-        f.close()
+    @pytest.fixture(scope="function", autouse=True)
+    def setup_data(self, testdata):
+        self.res = np.loadtxt(testdata['3cssan.hy.1.MBGA_Z'])
+        data = np.loadtxt(testdata['MBGA_Z.ASC'])
         # self.path = os.path.dirname(__file__)
         # self.res = np.loadtxt("3cssan.hy.1.MBGA_Z")
         # data = np.loadtxt("MBGA_Z.ASC")
@@ -84,7 +75,7 @@ class HoctavbandsTestCase(unittest.TestCase):
         # [42] plan
         # [43] dplan
         self.data_win, self.nwin, self.no_win = \
-            util.enframe(data, signal.hamming(self.n), self.inc)
+            util.enframe(data, signal.windows.hamming(self.n), self.inc)
 
     def test_hoctavbands(self):
         """
@@ -93,25 +84,25 @@ class HoctavbandsTestCase(unittest.TestCase):
                                    self.nofb, self.no_win)
         rms = np.sqrt(np.sum((hob[:, 0] - self.res[:, 20]) ** 2) /
                       np.sum(self.res[:, 20] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((hob[:, 1] - self.res[:, 21]) ** 2) /
                       np.sum(self.res[:, 21] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((hob[:, 2] - self.res[:, 22]) ** 2) /
                       np.sum(self.res[:, 22] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((hob[:, 3] - self.res[:, 23]) ** 2) /
                       np.sum(self.res[:, 23] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((hob[:, 4] - self.res[:, 24]) ** 2) /
                       np.sum(self.res[:, 24] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((hob[:, 5] - self.res[:, 25]) ** 2) /
                       np.sum(self.res[:, 25] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((hob[:, 6] - self.res[:, 26]) ** 2) /
                       np.sum(self.res[:, 26] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert rms < 1.0e-5
         rms = np.sqrt(np.sum((hob[:, 7] - self.res[:, 27]) ** 2) /
                       np.sum(self.res[:, 27] ** 2))
-        self.assertEqual(rms < 1.0e-5, True)
+        assert rms < 1.0e-5

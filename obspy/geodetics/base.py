@@ -35,13 +35,6 @@ WGS84_A = 6378137.0
 WGS84_F = 1 / 298.257223563
 
 
-def _isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
-    """
-    Equivalent of the :meth:`math.isclose` method compatible with python 2.7.
-    """
-    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
-
-
 def _check_latitude(latitude, variable_name='latitude'):
     """
     Check whether latitude is in the -90 to +90 range.
@@ -98,12 +91,10 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
 
         Algorithm from Geocentric Datum of Australia Technical Manual.
 
-        * http://www.icsm.gov.au/gda/
-        * http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf, pp. 15
+        * https://www.icsm.gov.au/publications
+        * https://www.icsm.gov.au/publications/gda2020-technical-manual-v16
 
         It states::
-
-            Computations on the Ellipsoid
 
             There are a number of formulae that are available to calculate
             accurate geodetic positions, azimuths and distances on the
@@ -128,7 +119,7 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
 
     b = a * (1 - f)  # semiminor axis
 
-    if _isclose(lat1, lat2) and _isclose(lon1, lon2):
+    if math.isclose(lat1, lat2) and math.isclose(lon1, lon2):
         return 0.0, 0.0, 0.0
 
     # convert latitudes and longitudes to radians:
@@ -165,7 +156,7 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
                 sin_sigma
 
             sqr_cos_alpha = 1 - sin_alpha * sin_alpha
-            if _isclose(sqr_cos_alpha, 0):
+            if math.isclose(sqr_cos_alpha, 0):
                 # Equatorial line
                 cos2sigma_m = 0
             else:
@@ -265,7 +256,7 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
     else:
         try:
             values = calc_vincenty_inverse(lat1, lon1, lat2, lon2, a, f)
-            if np.alltrue(np.isnan(values)):
+            if np.all(np.isnan(values)):
                 raise StopIteration
             return values
         except StopIteration:

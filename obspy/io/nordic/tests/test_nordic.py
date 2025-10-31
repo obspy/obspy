@@ -3,7 +3,6 @@
 """
 Functions for testing the obspy.io.nordic functions
 """
-import inspect
 import io
 import os
 import warnings
@@ -34,10 +33,6 @@ class TestNordicMethods:
     """
     Test suite for nordic io operations.
     """
-    path = os.path.dirname(
-        os.path.abspath(inspect.getfile(inspect.currentframe())))
-    testing_path = os.path.join(path, "data")
-
     def test_read_write(self):
         """
         Function to test the read and write capabilities of sfile_util.
@@ -153,12 +148,12 @@ class TestNordicMethods:
             assert read_ev.amplitudes[1].category == \
                 test_ev.amplitudes[1].category
 
-    def test_write_read_quakeml(self):
+    def test_write_read_quakeml(self, testdata):
         """
         Test whether all properties are set properly such that file can be
         written to Quakeml and read back in.
         """
-        testing_path = os.path.join(self.testing_path, '03-0345-23L.S202101')
+        testing_path = testdata['03-0345-23L.S202101']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -305,7 +300,7 @@ class TestNordicMethods:
                                        wavefiles='test')
             assert os.path.isfile(test_sfile)
 
-    def test_read_empty_header(self):
+    def test_read_empty_header(self, testdata):
         """
         Function to check a known issue, empty header info S-file: Bug found \
         by Dominic Evanzia.
@@ -314,16 +309,14 @@ class TestNordicMethods:
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
 
-            test_event = read_nordic(os.path.join(self.testing_path,
-                                                  'Sfile_no_location'))[0]
+            test_event = read_nordic(testdata['Sfile_no_location'])[0]
         assert not test_event.origins[0].latitude
         assert not test_event.origins[0].longitude
         assert not test_event.origins[0].depth
 
-    def test_read_extra_header(self):
-        testing_path = os.path.join(self.testing_path, 'Sfile_extra_header')
-        not_extra_header = os.path.join(self.testing_path,
-                                        '01-0411-15L.S201309')
+    def test_read_extra_header(self, testdata):
+        testing_path = testdata['Sfile_extra_header']
+        not_extra_header = testdata['01-0411-15L.S201309']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -339,14 +332,12 @@ class TestNordicMethods:
         assert test_event.origins[0].depth == \
                header_event.origins[0].depth
 
-    def test_header_mapping(self):
+    def test_header_mapping(self, testdata):
         # Raise "UserWarning: Lines of type I..."
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
-            head_1 = readheader(os.path.join(self.testing_path,
-                                             '01-0411-15L.S201309'))
-        with open(os.path.join(self.testing_path,
-                               '01-0411-15L.S201309'), 'r') as f:
+            head_1 = readheader(testdata['01-0411-15L.S201309'])
+        with open(testdata['01-0411-15L.S201309'], 'r') as f:
             # raises "UserWarning: AIN in header, currently unsupported"
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
@@ -354,16 +345,16 @@ class TestNordicMethods:
                 head_2, _ = _readheader(head_lines=tagged_lines['1'])
         _assert_similarity(head_1, head_2, strict=True)
 
-    def test_missing_header(self):
+    def test_missing_header(self, testdata):
         # Check that a suitable error is raised
         with pytest.raises(NordicParsingError):
             # Raises AIN warning
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)
-                readheader(os.path.join(self.testing_path, 'Sfile_no_header'))
+                readheader(testdata['Sfile_no_header'])
 
-    def test_reading_string_io(self):
-        filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
+    def test_reading_string_io(self, testdata):
+        filename = testdata['01-0411-15L.S201309']
         with open(filename, "rt") as fh:
             file_object = io.StringIO(fh.read())
 
@@ -377,8 +368,8 @@ class TestNordicMethods:
             ref_cat = read_events(filename)
             _assert_similarity(cat[0], ref_cat[0], strict=True)
 
-    def test_reading_bytes_io(self):
-        filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
+    def test_reading_bytes_io(self, testdata):
+        filename = testdata['01-0411-15L.S201309']
         with open(filename, "rb") as fh:
             file_object = io.BytesIO(fh.read())
 
@@ -392,8 +383,8 @@ class TestNordicMethods:
             ref_cat = read_events(filename)
             _assert_similarity(cat[0], ref_cat[0], strict=True)
 
-    def test_corrupt_header(self):
-        filename = os.path.join(self.testing_path, '01-0411-15L.S201309')
+    def test_corrupt_header(self, testdata):
+        filename = testdata['01-0411-15L.S201309']
         f = open(filename, 'r')
         with NamedTemporaryFile(suffix='.sfile') as tmp_file:
             fout = open(tmp_file.name, 'w')
@@ -445,8 +436,8 @@ class TestNordicMethods:
         assert _float_conv('1.0256') == 1.0256
         assert _str_conv(1.0256) == '1.0256'
 
-    def test_read_wavename(self):
-        testing_path = os.path.join(self.testing_path, '01-0411-15L.S201309')
+    def test_read_wavename(self, testdata):
+        testing_path = testdata['01-0411-15L.S201309']
         wavefiles = readwavename(testing_path)
         assert len(wavefiles) == 1
         # Check that read_nordic reads wavname when return_wavnames=True
@@ -477,11 +468,11 @@ class TestNordicMethods:
                     explosion=True, overwrite=True)
             assert readwavename(sfile) == ['test', 'albert']
 
-    def test_read_event(self):
+    def test_read_event(self, testdata):
         """
         Test the wrapper.
         """
-        testing_path = os.path.join(self.testing_path, '01-0411-15L.S201309')
+        testing_path = testdata['01-0411-15L.S201309']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -489,11 +480,11 @@ class TestNordicMethods:
         assert len(event.origins) == 2
         assert len(event.picks) == 17
 
-    def test_read_event_new(self):
+    def test_read_event_new(self, testdata):
         """
         Test the wrapper for New Nordic format reading.
         """
-        testing_path = os.path.join(self.testing_path, '03-0345-23L.S202101')
+        testing_path = testdata['03-0345-23L.S202101']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -502,14 +493,14 @@ class TestNordicMethods:
         assert len(event.picks) == 53
         assert len(event.origins[0].arrivals) == 35
 
-    def test_read_latin1(self):
+    def test_read_latin1(self, testdata):
         """
         Check that we can read dos formatted, latin1 encoded files.
         """
         with warnings.catch_warnings():
             # Lots of unsupported line warnings
             warnings.simplefilter('ignore', UserWarning)
-            dos_file = os.path.join(self.testing_path, 'dos-file.sfile')
+            dos_file = testdata['dos-file.sfile']
             assert _is_sfile(dos_file)
             event = readheader(dos_file)
             assert event.origins[0].latitude == 60.328
@@ -523,8 +514,8 @@ class TestNordicMethods:
             with pytest.raises(UnicodeDecodeError):
                 readheader(dos_file, 'ASCII')
 
-    def test_read_many_events(self):
-        testing_path = os.path.join(self.testing_path, 'select.out')
+    def test_read_many_events(self, testdata):
+        testing_path = testdata['select.out']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -596,8 +587,8 @@ class TestNordicMethods:
                 assert len(event_1.magnitudes) == len(event_2.magnitudes)
                 _assert_similarity(event_1, event_2, strict=False)
 
-    def test_inaccurate_picks(self):
-        testing_path = os.path.join(self.testing_path, 'bad_picks.sfile')
+    def test_inaccurate_picks(self, testdata):
+        testing_path = testdata['bad_picks.sfile']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -606,8 +597,8 @@ class TestNordicMethods:
         for pick in pick_string:
             assert len(pick) == 80
 
-    def test_round_len(self):
-        testing_path = os.path.join(self.testing_path, 'round_len_undef.sfile')
+    def test_round_len(self, testdata):
+        testing_path = testdata['round_len_undef.sfile']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -616,11 +607,11 @@ class TestNordicMethods:
         for pick in pick_string:
             assert len(pick) == 80
 
-    def test_read_moment(self):
+    def test_read_moment(self, testdata):
         """
         Test the reading of seismic moment from the s-file.
         """
-        testing_path = os.path.join(self.testing_path, 'automag.out')
+        testing_path = testdata['automag.out']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -629,11 +620,11 @@ class TestNordicMethods:
         assert len(mag) == 1
         assert mag[0].mag == 0.7
 
-    def test_read_moment_info(self):
+    def test_read_moment_info(self, testdata):
         """
         Test reading the info from spectral analysis.
         """
-        testing_path = os.path.join(self.testing_path, 'automag.out')
+        testing_path = testdata['automag.out']
         with warnings.catch_warnings():
             # Userwarning, type I
             warnings.simplefilter('ignore', UserWarning)
@@ -654,19 +645,20 @@ class TestNordicMethods:
                 assert round(average.get(key), 4) == \
                                  round(check_av.get(key), 4)
 
-    def test_is_sfile(self):
+    def test_is_sfile(self, datapath, testdata):
         sfiles = ['01-0411-15L.S201309', 'automag.out', 'bad_picks.sfile',
                   'round_len_undef.sfile', 'Sfile_extra_header',
                   'Sfile_no_location']
         for sfile in sfiles:
-            assert _is_sfile(os.path.join(self.testing_path, sfile))
-        no_header_path = os.path.join(self.testing_path, 'Sfile_no_header')
+            assert _is_sfile(testdata[sfile])
+        no_header_path = testdata['Sfile_no_header']
         assert not _is_sfile(no_header_path)
-        assert not _is_sfile(os.path.join(
-            self.path, '..', '..', 'nlloc', 'tests', 'data', 'nlloc.hyp'))
+        assert not _is_sfile(
+            datapath.parent.parent.parent /
+            'nlloc' / 'tests' / 'data' / 'nlloc.hyp')
 
-    def test_read_picks_across_day_end(self):
-        testing_path = os.path.join(self.testing_path, 'sfile_over_day')
+    def test_read_picks_across_day_end(self, testdata):
+        testing_path = testdata['sfile_over_day']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -678,7 +670,7 @@ class TestNordicMethods:
             # All picks in this event are within 60s of origin time
             assert (pick.time - event.origins[0].time) <= 60
         # Make sure zero hours and 24 hour picks are handled the same.
-        testing_path = os.path.join(self.testing_path, 'sfile_over_day_zeros')
+        testing_path = testdata['sfile_over_day_zeros']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -692,11 +684,11 @@ class TestNordicMethods:
             assert pick.time in pick_times
         assert event_2.origins[0].time == event.origins[0].time
 
-    def test_distance_conversion(self):
+    def test_distance_conversion(self, testdata):
         """
         Check that distances are converted properly.
         """
-        testing_path = os.path.join(self.testing_path, '01-0411-15L.S201309')
+        testing_path = testdata['01-0411-15L.S201309']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -744,7 +736,7 @@ class TestNordicMethods:
         assert preferred_origin.depth == event_back[0].origins[0].depth
         assert preferred_origin.time == event_back[0].origins[0].time
 
-    def test_read_high_precision_pick(self):
+    def test_read_high_precision_pick(self, testdata):
         """
         Nordic supports writing to milliseconds in high-precision mode,
         obspy < 1.2.0 did not properly read this, see #2348.
@@ -753,7 +745,7 @@ class TestNordicMethods:
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
             cat = read_events(
-                os.path.join(self.testing_path, "sfile_high_precision_picks"))
+                testdata['sfile_high_precision_picks'])
         event = cat[0]
         pick_times = {
             "LSd1": UTCDateTime(2010, 11, 26, 1, 28, 46.859),
@@ -766,13 +758,12 @@ class TestNordicMethods:
             assert len(pick) == 1
             assert pick[0].time == value
 
-    def test_high_precision_read_write(self):
+    def test_high_precision_read_write(self, testdata):
         """ Test that high-precision writing works. """
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
-            cat = read_events(
-                os.path.join(self.testing_path, "sfile_high_precision_picks"))
+            cat = read_events(testdata['sfile_high_precision_picks'])
         event = cat[0]
         pick_times = {
             "LSd1": UTCDateTime(2010, 11, 26, 1, 28, 46.859),
@@ -812,13 +803,12 @@ class TestNordicMethods:
                 value.second + (value.microsecond / 1e6), 2)
             assert pick[0].time == rounded_pick_time
 
-    def test_long_phase_name(self):
+    def test_long_phase_name(self, testdata):
         """ Nordic format supports 8 char phase names, sometimes. """
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
-            cat = read_events(
-                os.path.join(self.testing_path, "sfile_long_phase"))
+            cat = read_events(testdata['sfile_long_phase'])
         # This file has one event with one pick
         pick = cat[0].picks[0]
         arrival = cat[0].origins[0].arrivals[0]
@@ -853,14 +843,13 @@ class TestNordicMethods:
                 event_back = read_events(tf.name)[0]
         _assert_similarity(event, event_back, strict=True)
 
-    def test_seconds_overflow(self):
+    def test_seconds_overflow(self, testdata):
         """
         #2348 indicates that SEISAN sometimes overflows seconds into column 29.
         """
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
-            cat = read_events(
-                os.path.join(self.testing_path, "sfile_seconds_overflow"))
+            cat = read_events(testdata['sfile_seconds_overflow'])
         event = cat[0]
         pick_times = {
             "LSb2": UTCDateTime(2009, 7, 2, 6, 49) + 100.24}
@@ -881,24 +870,22 @@ class TestNordicMethods:
             assert len(pick) == 1
             assert pick[0].time == value
 
-    def test_read_bad_covariance(self):
+    def test_read_bad_covariance(self, testdata):
         """
         Verify graceful exit if covariance matrix is not positive-definite
         """
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
-            cat = read_events(
-                os.path.join(self.testing_path, "sfile_bad_covariance"))
+            cat = read_events(testdata['sfile_bad_covariance'])
         assert cat[0].origins[0].origin_uncertainty is None
 
-    def test_read_high_accuracy(self):
+    def test_read_high_accuracy(self, testdata):
         """
         Verify that high-accuracy locations are read, if present
         """
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
-            cat = read_events(
-                os.path.join(self.testing_path, "sfile_highaccuracy"))
+            cat = read_events(testdata['sfile_highaccuracy'])
         event = cat[0]
         event_time = event.origins[0].time
         event_lat = event.origins[0].latitude
@@ -1125,14 +1112,13 @@ class TestNordicMethods:
                                     pt_name='pt{:d}'.format(angle),
                                     outfile=outfile)
 
-    def test_read_uncert_ellipse(self):
+    def test_read_uncert_ellipse(self, testdata):
         """
         Verify that confidence ellipse is properly read/calculated from nordic
         """
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
-            cat = read_events(
-                os.path.join(self.testing_path, "sfile_highaccuracy"))
+            cat = read_events(testdata['sfile_highaccuracy'])
         event = cat[0]
         val = event.origins[0].origin_uncertainty
         hor_max = val['max_horizontal_uncertainty']
@@ -1142,8 +1128,8 @@ class TestNordicMethods:
         assert round(abs(hor_min-451.762494786), 7) == 0
         assert round(abs(azi_max-102.0592301), 7) == 0
 
-    def test_read_resolve_seedid(self):
-        testing_path = os.path.join(self.testing_path, '01-0411-15L.S201309')
+    def test_read_resolve_seedid(self, testdata):
+        testing_path = testdata['01-0411-15L.S201309']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
@@ -1155,8 +1141,8 @@ class TestNordicMethods:
         assert event.picks[0].waveform_id.location_code == '00'
         assert event.picks[0].waveform_id.channel_code[0] == 'H'
 
-    def test_read_resolve_seedid_new_format(self):
-        testing_path = os.path.join(self.testing_path, '03-0345-23L.S202101')
+    def test_read_resolve_seedid_new_format(self, testdata):
+        testing_path = testdata['03-0345-23L.S202101']
         # raises "UserWarning: AIN in header, currently unsupported"
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)

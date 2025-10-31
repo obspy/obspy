@@ -11,6 +11,7 @@ Classes related to instrument responses.
 """
 import copy
 import ctypes as C  # NOQA
+import collections.abc
 from collections import defaultdict
 from copy import deepcopy
 import itertools
@@ -19,7 +20,6 @@ import warnings
 
 import numpy as np
 
-from .. import compatibility
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
@@ -319,6 +319,35 @@ class PolesZerosResponseStage(ResponseStage):
         else:
             raise ValueError(msg)
 
+    def to_radians_per_second(self):
+        """
+        Convert to type 'LAPLACE (RADIANS/SECOND)'
+        """
+        if self.pz_transfer_function_type == 'LAPLACE (RADIANS/SECOND)':
+            return
+        elif self.pz_transfer_function_type == 'LAPLACE (HERTZ)':
+            twopi = 2 * pi
+            self.normalization_factor *= twopi ** (
+                len(self.poles) - len(self.zeros))
+            self.poles = [
+                ComplexWithUncertainties(
+                    x.real * twopi, x.imag * twopi,
+                    upper_uncertainty=x.upper_uncertainty * twopi,
+                    lower_uncertainty=x.lower_uncertainty * twopi)
+                for x in self.poles]
+            self.zeros = [
+                ComplexWithUncertainties(
+                    x.real * twopi, x.imag * twopi,
+                    upper_uncertainty=x.upper_uncertainty * twopi,
+                    lower_uncertainty=x.lower_uncertainty * twopi)
+                for x in self.zeros]
+            self.pz_transfer_function_type = 'LAPLACE (RADIANS/SECOND)'
+        else:
+            msg = (f"Can not convert transfer function type "
+                   f"'{self.pz_transfer_function_type}' to "
+                   f"'LAPLACE (RADIANS/SECOND)'")
+            raise ValueError(msg)
+
 
 class CoefficientsTypeResponseStage(ResponseStage):
     """
@@ -400,7 +429,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
             self._numerator = []
             return
         value = list(value) if isinstance(
-            value, compatibility.collections_abc.Iterable) else [value]
+            value, collections.abc.Iterable) else [value]
         if any(getattr(x, 'unit', None) is not None for x in value):
             msg = 'Setting Numerator/Denominator with a unit is deprecated.'
             warnings.warn(msg, ObsPyDeprecationWarning)
@@ -419,7 +448,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
             self._denominator = []
             return
         value = list(value) if isinstance(
-            value, compatibility.collections_abc.Iterable) else [value]
+            value, collections.abc.Iterable) else [value]
         if any(getattr(x, 'unit', None) is not None for x in value):
             msg = 'Setting Numerator/Denominator with a unit is deprecated.'
             warnings.warn(msg, ObsPyDeprecationWarning)
@@ -992,15 +1021,20 @@ class Response(ComparingObject):
             "VEL": ["M/S", "M/SEC"],
             "ACC": ["M/S**2", "M/(S**2)", "M/SEC**2", "M/(SEC**2)",
                     "M/S/S"]}
-        unit = None
+
         for key, value in unit_map.items():
             if i_u and i_u.upper() in value:
                 unit = key
-        if not unit:
-            msg = ("ObsPy does not know how to map unit '%s' to "
-                   "displacement, velocity, or acceleration - overall "
-                   "sensitivity will not be recalculated.") % i_u
-            raise ValueError(msg)
+                break
+        else:
+            unit = "DEF"
+            msg = (f"ObsPy can not map unit '{i_u}' to "
+                   f"displacement, velocity, or acceleration - "
+                   f"evalresp should still work and just use the response as "
+                   f"is. This might not be covered by tests, though, so "
+                   f"proceed with caution and report any unexpected "
+                   f"behavior.")
+            warnings.warn(msg)
 
         # Determine frequency if not given.
         if frequency is None:
@@ -1139,10 +1173,6 @@ class Response(ComparingObject):
 
         frequencies = np.asarray(frequencies)
 
-        # Whacky. Evalresp uses a global variable and uses that to scale the
-        # response if it encounters any unit that is not SI.
-        scale_factor = [1.0]
-
         def get_unit_mapping(key):
             try:
                 key = key.upper()
@@ -1195,24 +1225,29 @@ class Response(ComparingObject):
                 "MBAR": ew.ENUM_UNITS["PRESSURE"]}
             if key not in units_mapping:
                 if key is not None:
-                    msg = ("The unit '%s' is not known to ObsPy. It will be "
-                           "assumed to be displacement for the calculations. "
-                           "This mostly does the right thing but please "
-                           "proceed with caution.") % key
+                    msg = (f"The unit '{key}' is not known to ObsPy. It will "
+                           f"be passed in to evalresp as 'undefined'. This "
+                           f"should result in evalresp using the response as "
+                           f"is, without adding any integration or "
+                           f"differentiation and the 'output' parameter "
+                           f"(here: '{output}') not having any effect. Please "
+                           f"double check output data.")
                     warnings.warn(msg)
-                value = ew.ENUM_UNITS["DIS"]
+                value = ew.ENUM_UNITS["UNDEF_UNITS"]
             else:
                 value = units_mapping[key]
 
             # Scale factor with the same logic as evalresp.
             if key in ["CM/S**2", "CM/S", "CM/SEC", "CM"]:
-                scale_factor[0] = 1.0E2
+                scale_factor = 1.0E2
             elif key in ["MM/S**2", "MM/S", "MM/SEC", "MM"]:
-                scale_factor[0] = 1.0E3
+                scale_factor = 1.0E3
             elif key in ["NM/S**2", "NM/S", "NM/SEC", "NM"]:
-                scale_factor[0] = 1.0E9
+                scale_factor = 1.0E9
+            else:
+                scale_factor = 1.0
 
-            return value
+            return value, scale_factor
 
         all_stages = defaultdict(list)
 
@@ -1267,6 +1302,15 @@ class Response(ComparingObject):
                         "units of stage 2."
                     warnings.warn(msg)
 
+        # determine the scale factor from the first stage input units
+        # Evalresp (in the old version we still use) uses a whacky global
+        # variable and uses that to scale the response if it encounters any
+        # unit that is not SI but the way we use the library, the functions
+        # that set that global variable never get called, so do the same, just
+        # outside of evalresp for now
+        _, scale_factor = get_unit_mapping(
+            all_stages[stage_list[0]][0].input_units)
+
         for stage_number in stage_list:
             st = ew.Stage()
             st.sequence_no = stage_number
@@ -1276,8 +1320,8 @@ class Response(ComparingObject):
             blockette = all_stages[stage_number][0]
 
             # Write the input and output units.
-            st.input_units = get_unit_mapping(blockette.input_units)
-            st.output_units = get_unit_mapping(blockette.output_units)
+            st.input_units, _ = get_unit_mapping(blockette.input_units)
+            st.output_units, _ = get_unit_mapping(blockette.output_units)
 
             if isinstance(blockette, PolesZerosResponseStage):
                 blkt = ew.Blkt()
@@ -1600,8 +1644,10 @@ class Response(ComparingObject):
                 e, m = ew.ENUM_ERROR_CODES[rc]
                 raise e('calc_resp: ' + m)
 
-            # XXX: Check if this is really not needed.
-            # output *= scale_factor[0]
+            # XXX: We currently need to do this outside of evalresp since the
+            # functions evaluating and setting the global scale factor variable
+            # currently never get called
+            output *= scale_factor
 
         finally:
             clibevresp.curr_file.value = None
@@ -1982,7 +2028,8 @@ class Response(ComparingObject):
         return resp
 
 
-def paz_to_sacpz_string(paz, instrument_sensitivity):
+def paz_to_sacpz_string(paz, instrument_sensitivity,
+                        to_radians_per_second=True):
     """
     Returns SACPZ ASCII text representation of Response.
 
@@ -1990,9 +2037,21 @@ def paz_to_sacpz_string(paz, instrument_sensitivity):
     :param paz: Poles and Zeros response information
     :type instrument_sensitivity: :class:`InstrumentSensitivity`
     :param paz: Overall instrument sensitivity of response
+    :type to_radians_per_second: bool
+    :param to_radians_per_second: Whether to convert poles and zeros to
+        radians/s before returning SACPZ string. This should be done in most
+        cases as SAC is expecting radians/s.
     :rtype: str
     :returns: Textual SACPZ representation of poles and zeros response stage.
     """
+    if to_radians_per_second:
+        paz = copy.deepcopy(paz)
+        paz.to_radians_per_second()
+    if paz.pz_transfer_function_type != 'LAPLACE (RADIANS/SECOND)':
+        msg = ('Returning a SACPZ string from a PAZResponseStage that is not '
+               'radians/s. SAC is expecting SACPZ data to be in radians/s '
+               '(see #3334).')
+        warnings.warn(msg)
     # assemble output string
     out = []
     out.append("ZEROS %i" % len(paz.zeros))

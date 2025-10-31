@@ -44,19 +44,19 @@ class TestUTCDateTime:
         Tests importing from NumPy strings.
         """
         # some strange patterns
-        dt = UTC(np.string_("1970-01-01 12:23:34"))
+        dt = UTC(np.bytes_("1970-01-01 12:23:34"))
         assert dt == UTC(1970, 1, 1, 12, 23, 34)
-        dt = UTC(np.string_("1970,01,01,12:23:34"))
+        dt = UTC(np.bytes_("1970,01,01,12:23:34"))
         assert dt == UTC(1970, 1, 1, 12, 23, 34)
-        dt = UTC(np.string_("1970,001,12:23:34"))
+        dt = UTC(np.bytes_("1970,001,12:23:34"))
         assert dt == UTC(1970, 1, 1, 12, 23, 34)
-        dt = UTC(np.string_("20090701121212"))
+        dt = UTC(np.bytes_("20090701121212"))
         assert dt == UTC(2009, 7, 1, 12, 12, 12)
-        dt = UTC(np.string_("19700101"))
+        dt = UTC(np.bytes_("19700101"))
         assert dt == UTC(1970, 1, 1, 0, 0)
         # non ISO8601 strings should raise an exception
         with pytest.raises(Exception):
-            UTC(np.string_("1970,001,12:23:34"), iso8601=True)
+            UTC(np.bytes_("1970,001,12:23:34"), iso8601=True)
 
     def test_from_python_date_time(self):
         """

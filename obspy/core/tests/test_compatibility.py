@@ -20,10 +20,6 @@ class TestCompatibility:
             (15, -2, 0, int),
         ]
         for number, ndigits, expected, expected_type in test_list:
-            # this is a fix for py3.4 which cannot take None as ndigits
-            if ndigits is not None:
-                out = round(number, ndigits)
-            else:
-                out = round(number)
+            out = round(number, ndigits)
             assert out == expected
             assert isinstance(out, expected_type)

@@ -2,6 +2,6 @@ version: 2
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
-    target-branch: "maintenance_1.3.x"
+    target-branch: "maintenance_1.4.x"
     schedule:
       interval: "weekly"

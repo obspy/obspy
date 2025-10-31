@@ -2,10 +2,12 @@
 Obspy's testing configuration file.
 """
 import argparse
+import inspect
 import os
 import platform
 import shutil
 import sys
+import warnings
 from pathlib import Path
 from subprocess import run
 from contextlib import suppress
@@ -15,6 +17,24 @@ import pytest
 
 import obspy
 from obspy.core.util import NETWORK_MODULES
+# import some fixtures for reuse in imaging tests
+# work around dateutil running into this new DeprecationWarning on Python 3.12
+# This fails our CI runner that fails on any uncaught Warning. In principle we
+# ignore all DeprecationWarnings coming from our dependencies, but as this file
+# is imported during the pytest startup phase the warning ignore rules we have
+# in pytest.ini are not yet in effect at that time.
+# dateutil has this deprecation fixed in it's development branch already with
+# dateutil/dateutil#1285, but it turns out dateutil's last release was done in
+# 2023 0_o
+# Other approach would be to move those helpers here maybe, but that might be
+# quite a bit of work, so this seems fine for now
+with warnings.catch_warnings(record=True) as w:
+    msg = ('datetime.datetime.utcfromtimestamp.. is deprecated and scheduled '
+           'for removal in a future version. Use timezone-aware objects ')
+    warnings.filterwarnings(
+        'ignore', message=msg, category=DeprecationWarning, module='dateutil')
+    from obspy.signal.tests.test_spectral_estimation import (   # NOQA
+        _ppsd, _sample_data, _internal_sample_data)
 
 
 OBSPY_PATH = os.path.dirname(obspy.__file__)
@@ -25,6 +45,33 @@ REPORT_DEPENDENCIES = ['cartopy', 'flake8', 'geographiclib', 'pyproj',
                        'shapefile', 'pytest', 'pytest-json-report']
 
 # --- ObsPy fixtures
+
+
+@pytest.fixture(scope='package')
+def root():
+    """
+    Path to the obspy root directory (in which "core", "io", ... subdirs are)
+    """
+    return Path(inspect.getfile(obspy)).parent
+
+
+@pytest.fixture(scope='module')
+def datapath(request):
+    """
+    Path to the 'data' directory of the current 'tests' directory
+    """
+    module_path = Path(request.module.__file__)
+    datapath = module_path.parent / 'data'
+    return datapath
+
+
+@pytest.fixture(scope='module')
+def testdata(datapath):
+    """
+    Dictionary with full paths to test files of current module by filename
+    """
+    files = {path.name: path for path in datapath.glob('*')}
+    return files
 
 
 @pytest.fixture(scope='class')
@@ -65,6 +112,9 @@ def image_path(request, save_image_directory):
 
     These will be saved to obspy_test_images if --keep-images is selected.
     Using this fixture will also mark a test with "image".
+    Default filetype will be "png". Custom filetype for a test can be set by
+    marking the test with "image_path_suffix" marker and providing the filetype
+    (e.g. "pdf") as first argument of the marker.
     """
     parent_obj = getattr(request.node.parent, 'obj', None)
     node_name = request.node.name
@@ -74,7 +124,15 @@ def image_path(request, save_image_directory):
         else:
             parent_name = str(parent_obj.__class__.__name__)
         node_name = parent_name + '_' + node_name
-    new_path = save_image_directory / (node_name + '.png')
+    # determine what suffix to use for plot
+    # https://docs.pytest.org/en/7.1.x/how-to/
+    #     fixtures.html#using-markers-to-pass-data-to-fixtures
+    suffix_marker = request.node.get_closest_marker("image_path_suffix")
+    if suffix_marker is None:
+        suffix = 'png'
+    else:
+        suffix = suffix_marker.args[0]
+    new_path = save_image_directory / (node_name + f'.{suffix}')
     yield new_path
     # finally close all figs created by this test
     from matplotlib.pyplot import close

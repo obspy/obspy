@@ -2,17 +2,20 @@
 import copy
 import datetime
 import os
-import unittest
 import warnings
 
 from obspy import read_events, read_inventory
 from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.io.shapefile.core import (
     _write_shapefile, HAS_PYSHP, PYSHP_VERSION_AT_LEAST_1_2_11,
-    PYSHP_VERSION_WARNING)
+    PYSHP_VERSION_WARNING, PYSHP_VERSION)
+import pytest
 
 if HAS_PYSHP:
     import shapefile
+    if PYSHP_VERSION[0] >= 3:
+        # adapted the tests for changes in `__repr__` (see #3599).
+        from shapefile import Field
 
 
 SHAPEFILE_SUFFIXES = (".shp", ".shx", ".dbf", ".prj")
@@ -32,6 +35,8 @@ expected_catalog_fields = [
     ['MaxHorAzi', 'N', 7, 3],
     ['OriUncDesc', 'C', 40, 0],
     ['Magnitude', 'N', 8, 3]]
+if HAS_PYSHP and PYSHP_VERSION[0] >= 3:
+    expected_catalog_fields = [Field(*_) for _ in expected_catalog_fields]
 expected_catalog_records = [
     ['quakeml:us.anss.org/event/20120101052755.98',
      'quakeml:us.anss.org/origin/20120101052755.98',
@@ -71,6 +76,8 @@ expected_inventory_fields = [
     ['StartDate', 'D', 8, 0],
     ['EndDate', 'D', 8, 0],
     ['Channels', 'C', 254, 0]]
+if HAS_PYSHP and PYSHP_VERSION[0] >= 3:
+    expected_inventory_fields = [Field(*_) for _ in expected_inventory_fields]
 expected_inventory_records = [
     ['GR', 'FUR', 11.2752, 48.162899, 565.0, datetime.date(2006, 12, 16),
      None, '.HHZ,.HHN,.HHE,.BHZ,.BHN,.BHE,.LHZ,.LHN,.LHE,.VHZ,.VHN,.VHE'],
@@ -84,14 +91,20 @@ expected_inventory_records = [
      None, '.EHZ,.EHN,.EHE']]
 # set up expected results with extra 'Region' field
 expected_catalog_fields_with_region = copy.deepcopy(expected_catalog_fields)
-expected_catalog_fields_with_region.append(['Region', 'C', 50, 0])
+if HAS_PYSHP and PYSHP_VERSION[0] < 3:
+    expected_catalog_fields_with_region.append(['Region', 'C', 50, 0])
+elif HAS_PYSHP and PYSHP_VERSION[0] >= 3:
+    expected_catalog_fields_with_region.append(Field('Region', 'C', 50, 0))
 expected_catalog_records_with_region = copy.deepcopy(expected_catalog_records)
 expected_catalog_records_with_region[0].append('SOUTHEAST OF HONSHU, JAPAN')
 expected_catalog_records_with_region[1].append('GERMANY')
 # set up expected results with extra 'Comment' field
 expected_inventory_fields_with_comment = copy.deepcopy(
     expected_inventory_fields)
-expected_inventory_fields_with_comment.append(['Comment', 'C', 50, 0])
+if HAS_PYSHP and PYSHP_VERSION[0] < 3:
+    expected_inventory_fields_with_comment.append(['Comment', 'C', 50, 0])
+elif HAS_PYSHP and PYSHP_VERSION[0] >= 3:
+    expected_inventory_fields_with_comment.append(Field('Comment', 'C', 50, 0))
 expected_inventory_records_with_comment = copy.deepcopy(
     expected_inventory_records)
 expected_inventory_records_with_comment[0].append('Abc')
@@ -171,14 +184,8 @@ def _close_shapefile_reader(reader):
                 pass
 
 
-@unittest.skipIf(not HAS_PYSHP, 'pyshp not installed')
-class ShapefileTestCase(unittest.TestCase):
-    def setUp(self):
-        self.path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 'data')
-        self.catalog_shape_basename = os.path.join(self.path, 'catalog')
-        self.inventory_shape_basename = os.path.join(self.path, 'inventory')
-
+@pytest.mark.skipif(not HAS_PYSHP, reason='pyshp not installed')
+class TestShapefile():
     def test_write_catalog_shapefile(self):
         # read two events with uncertainties, one deserializes with "confidence
         # ellipsoid" origin uncertainty which is not yet implemented for
@@ -191,20 +198,19 @@ class ShapefileTestCase(unittest.TestCase):
                 _write_shapefile(cat, "catalog.shp")
             for w_ in w:
                 try:
-                    self.assertEqual(
-                        str(w_.message),
-                        'Encountered an event with origin uncertainty '
-                        'description of type "confidence ellipsoid". This is '
-                        'not yet implemented for output as shapefile. No '
-                        'origin uncertainty will be added to shapefile for '
-                        'such events.')
+                    assert str(w_.message) == \
+                        ('Encountered an event with origin uncertainty '
+                         'description of type "confidence ellipsoid". This is '
+                         'not yet implemented for output as shapefile. No '
+                         'origin uncertainty will be added to shapefile for '
+                         'such events.')
                 except AssertionError:
                     continue
                 break
             else:
                 raise Exception
             for suffix in SHAPEFILE_SUFFIXES:
-                self.assertTrue(os.path.isfile("catalog" + suffix))
+                assert os.path.isfile("catalog" + suffix)
             with open("catalog.shp", "rb") as fh_shp, \
                     open("catalog.dbf", "rb") as fh_dbf, \
                     open("catalog.shx", "rb") as fh_shx:
@@ -214,7 +220,7 @@ class ShapefileTestCase(unittest.TestCase):
                     got_fields=shp.fields, got_records=shp.records(),
                     expected_fields=expected_catalog_fields,
                     expected_records=expected_catalog_records)
-                self.assertEqual(shp.shapeType, shapefile.POINT)
+                assert shp.shapeType == shapefile.POINT
                 _close_shapefile_reader(shp)
 
     def test_write_catalog_shapefile_with_extra_field(self):
@@ -232,38 +238,37 @@ class ShapefileTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 warnings.filterwarnings('always')
                 # test some bad calls that should raise an Exception
-                with self.assertRaises(ValueError) as cm:
+                msg = (
+                    "list of values for each item in "
+                    "'extra_fields' must have same length as Catalog object")
+                with pytest.raises(ValueError, match=msg):
                     _write_shapefile(
                         cat, "catalog.shp",
                         extra_fields=bad_extra_fields_wrong_length)
-                self.assertEqual(
-                    str(cm.exception), "list of values for each item in "
-                    "'extra_fields' must have same length as Catalog object")
-                with self.assertRaises(ValueError) as cm:
+                msg = (
+                    "Conflict with existing field named "
+                    "'Magnitude'.")
+                with pytest.raises(ValueError, match=msg):
                     _write_shapefile(
                         cat, "catalog.shp",
                         extra_fields=bad_extra_fields_name_clash)
-                self.assertEqual(
-                    str(cm.exception), "Conflict with existing field named "
-                    "'Magnitude'.")
                 # now test a good call that should work
                 _write_shapefile(cat, "catalog.shp", extra_fields=extra_fields)
             for w_ in w:
                 try:
-                    self.assertEqual(
-                        str(w_.message),
-                        'Encountered an event with origin uncertainty '
-                        'description of type "confidence ellipsoid". This is '
-                        'not yet implemented for output as shapefile. No '
-                        'origin uncertainty will be added to shapefile for '
-                        'such events.')
+                    assert str(w_.message) == \
+                        ('Encountered an event with origin uncertainty '
+                         'description of type "confidence ellipsoid". This is '
+                         'not yet implemented for output as shapefile. No '
+                         'origin uncertainty will be added to shapefile for '
+                         'such events.')
                 except AssertionError:
                     continue
                 break
             else:
                 raise Exception
             for suffix in SHAPEFILE_SUFFIXES:
-                self.assertTrue(os.path.isfile("catalog" + suffix))
+                assert os.path.isfile("catalog" + suffix)
             with open("catalog.shp", "rb") as fh_shp, \
                     open("catalog.dbf", "rb") as fh_dbf, \
                     open("catalog.shx", "rb") as fh_shx:
@@ -273,13 +278,13 @@ class ShapefileTestCase(unittest.TestCase):
                     got_fields=shp.fields, got_records=shp.records(),
                     expected_fields=expected_catalog_fields_with_region,
                     expected_records=expected_catalog_records_with_region)
-                self.assertEqual(shp.shapeType, shapefile.POINT)
+                assert shp.shapeType == shapefile.POINT
                 _close_shapefile_reader(shp)
             # For some reason, on windows the files are still in use when
             # TemporaryWorkingDirectory tries to remove the directory.
-            self.assertTrue(fh_shp.closed)
-            self.assertTrue(fh_dbf.closed)
-            self.assertTrue(fh_shx.closed)
+            assert fh_shp.closed
+            assert fh_dbf.closed
+            assert fh_shx.closed
 
     def test_write_inventory_shapefile_with_extra_field(self):
         """
@@ -293,25 +298,23 @@ class ShapefileTestCase(unittest.TestCase):
 
         with TemporaryWorkingDirectory():
             # test some bad calls that should raise an Exception
-            with self.assertRaises(ValueError) as cm:
+            msg = "list of values for each item in " \
+                "'extra_fields' must have same length as the count of all " \
+                "Stations combined across all Networks."
+            with pytest.raises(ValueError, match=msg):
                 _write_shapefile(
                     inv, "inventory.shp",
                     extra_fields=bad_extra_fields_wrong_length)
-            self.assertEqual(
-                str(cm.exception), "list of values for each item in "
-                "'extra_fields' must have same length as the count of all "
-                "Stations combined across all Networks.")
-            with self.assertRaises(ValueError) as cm:
+            msg = "Conflict with existing field named " \
+                "'Station'."
+            with pytest.raises(ValueError, match=msg):
                 _write_shapefile(
                     inv, "inventory.shp",
                     extra_fields=bad_extra_fields_name_clash)
-            self.assertEqual(
-                str(cm.exception), "Conflict with existing field named "
-                "'Station'.")
             # now test a good call that should work
             _write_shapefile(inv, "inventory.shp", extra_fields=extra_fields)
             for suffix in SHAPEFILE_SUFFIXES:
-                self.assertTrue(os.path.isfile("inventory" + suffix))
+                assert os.path.isfile("inventory" + suffix)
             with open("inventory.shp", "rb") as fh_shp, \
                     open("inventory.dbf", "rb") as fh_dbf, \
                     open("inventory.shx", "rb") as fh_shx:
@@ -321,13 +324,13 @@ class ShapefileTestCase(unittest.TestCase):
                     got_fields=shp.fields, got_records=shp.records(),
                     expected_fields=expected_inventory_fields_with_comment,
                     expected_records=expected_inventory_records_with_comment)
-                self.assertEqual(shp.shapeType, shapefile.POINT)
+                assert shp.shapeType == shapefile.POINT
                 _close_shapefile_reader(shp)
             # For some reason, on windows the files are still in use when
             # TemporaryWorkingDirectory tries to remove the directory.
-            self.assertTrue(fh_shp.closed)
-            self.assertTrue(fh_dbf.closed)
-            self.assertTrue(fh_shx.closed)
+            assert fh_shp.closed
+            assert fh_dbf.closed
+            assert fh_shx.closed
 
     def test_write_catalog_shapefile_via_plugin(self):
         # read two events with uncertainties, one deserializes with "confidence
@@ -341,20 +344,19 @@ class ShapefileTestCase(unittest.TestCase):
                 cat.write("catalog.shp", "SHAPEFILE")
             for w_ in w:
                 try:
-                    self.assertEqual(
-                        str(w_.message),
-                        'Encountered an event with origin uncertainty '
-                        'description of type "confidence ellipsoid". This is '
-                        'not yet implemented for output as shapefile. No '
-                        'origin uncertainty will be added to shapefile for '
-                        'such events.')
+                    assert str(w_.message) == \
+                        ('Encountered an event with origin uncertainty '
+                         'description of type "confidence ellipsoid". This is '
+                         'not yet implemented for output as shapefile. No '
+                         'origin uncertainty will be added to shapefile for '
+                         'such events.')
                 except AssertionError:
                     continue
                 break
             else:
                 raise Exception
             for suffix in SHAPEFILE_SUFFIXES:
-                self.assertTrue(os.path.isfile("catalog" + suffix))
+                assert os.path.isfile("catalog" + suffix)
             with open("catalog.shp", "rb") as fh_shp, \
                     open("catalog.dbf", "rb") as fh_dbf, \
                     open("catalog.shx", "rb") as fh_shx:
@@ -364,7 +366,7 @@ class ShapefileTestCase(unittest.TestCase):
                     got_fields=shp.fields, got_records=shp.records(),
                     expected_fields=expected_catalog_fields,
                     expected_records=expected_catalog_records)
-                self.assertEqual(shp.shapeType, shapefile.POINT)
+                assert shp.shapeType == shapefile.POINT
                 _close_shapefile_reader(shp)
 
     def test_write_inventory_shapefile(self):
@@ -375,8 +377,7 @@ class ShapefileTestCase(unittest.TestCase):
                 _write_shapefile(inv, "inventory.shp")
             for w_ in w:
                 try:
-                    self.assertEqual(
-                        str(w_.message), PYSHP_VERSION_WARNING)
+                    assert str(w_.message) == PYSHP_VERSION_WARNING
                 except AssertionError:
                     continue
                 break
@@ -384,7 +385,7 @@ class ShapefileTestCase(unittest.TestCase):
                 if not PYSHP_VERSION_AT_LEAST_1_2_11:
                     raise AssertionError('pyshape version warning not shown')
             for suffix in SHAPEFILE_SUFFIXES:
-                self.assertTrue(os.path.isfile("inventory" + suffix))
+                assert os.path.isfile("inventory" + suffix)
             with open("inventory.shp", "rb") as fh_shp, \
                     open("inventory.dbf", "rb") as fh_dbf, \
                     open("inventory.shx", "rb") as fh_shx:
@@ -394,7 +395,7 @@ class ShapefileTestCase(unittest.TestCase):
                     got_fields=shp.fields, got_records=shp.records(),
                     expected_fields=expected_inventory_fields,
                     expected_records=expected_inventory_records)
-                self.assertEqual(shp.shapeType, shapefile.POINT)
+                assert shp.shapeType == shapefile.POINT
                 _close_shapefile_reader(shp)
 
     def test_write_inventory_shapefile_via_plugin(self):
@@ -405,8 +406,7 @@ class ShapefileTestCase(unittest.TestCase):
                 inv.write("inventory.shp", "SHAPEFILE")
             for w_ in w:
                 try:
-                    self.assertEqual(
-                        str(w_.message), PYSHP_VERSION_WARNING)
+                    assert str(w_.message) == PYSHP_VERSION_WARNING
                 except AssertionError:
                     continue
                 break
@@ -414,7 +414,7 @@ class ShapefileTestCase(unittest.TestCase):
                 if not PYSHP_VERSION_AT_LEAST_1_2_11:
                     raise AssertionError('pyshape version warning not shown')
             for suffix in SHAPEFILE_SUFFIXES:
-                self.assertTrue(os.path.isfile("inventory" + suffix))
+                assert os.path.isfile("inventory" + suffix)
             with open("inventory.shp", "rb") as fh_shp, \
                     open("inventory.dbf", "rb") as fh_dbf, \
                     open("inventory.shx", "rb") as fh_shx:
@@ -424,5 +424,5 @@ class ShapefileTestCase(unittest.TestCase):
                     got_fields=shp.fields, got_records=shp.records(),
                     expected_fields=expected_inventory_fields,
                     expected_records=expected_inventory_records)
-                self.assertEqual(shp.shapeType, shapefile.POINT)
+                assert shp.shapeType == shapefile.POINT
                 _close_shapefile_reader(shp)

@@ -10,12 +10,15 @@ dependencies:
   - decorator
   - lxml
   - requests
-  - setuptools
-  - sqlalchemy
+  # see pypa/setuptools#4480
+  - setuptools !=71.0.1
+  # see #3258
+  - sqlalchemy < 2.0
   # soft dependencies
   - cartopy
   - geographiclib
-  - pyshp
+  # pinning != 3.0.0 - see #3600
+  - pyshp != 3.0.0
   # tests
   - packaging
   - pyproj

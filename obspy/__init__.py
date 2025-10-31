@@ -31,7 +31,17 @@ import sys
 import warnings
 
 # don't change order
-from obspy.core.utcdatetime import UTCDateTime  # NOQA
+# ignore pkg resources deprecation warning for now
+# we really only need this here for one single reason: this file here gets
+# imported during the pytest startup phase before ignore rules in pytest.ini
+# take effect. otherwise we could just add this warning to the ignore list in
+# pytest.ini (see #3333)
+# The warning capture can be removed after #3333 gets finalized and merged
+with warnings.catch_warnings(record=True) as w:
+    msg = ('pkg_resources is deprecated as an API')
+    warnings.filterwarnings(
+        'ignore', message=msg, category=DeprecationWarning, module='obspy')
+    from obspy.core.utcdatetime import UTCDateTime  # NOQA
 from obspy.core.util import _get_version_string
 __version__ = _get_version_string(abbrev=10)
 from obspy.core.trace import Trace  # NOQA

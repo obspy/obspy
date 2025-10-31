@@ -270,6 +270,17 @@ void add_GcfSeg(GcfFile *obj, GcfSeg seg, int mode, double tol);
 void merge_GcfFile(GcfFile *obj, int mode, double tol);
 
 
+/* function init_GCFSeg_for_read() initializes a GcfSeg for reading from file.
+ * The passed uninitialized GcfSeg will be properly preallocated with a
+ * number of bytes depending on the passed mode
+ *
+ *  ARGUMENTS
+ *   seg         GcfSeg struct to hold parsed data block
+ *   mode        The read mode. See `gcf_read` for details
+ */
+void init_GcfSeg_for_read(GcfSeg *seg, int mode);
+
+
 /* function parse_gcf_block() parses a 1024 byte gcf data block
  * 
  *  ARGUMENTS
@@ -285,6 +296,20 @@ void merge_GcfFile(GcfFile *obj, int mode, double tol);
  *   NOTE: if return code is 3 or 4 no data have been decoded
  */
 int parse_gcf_block(unsigned char buffer[1024], GcfSeg *seg, int mode, int endian);
+
+
+/* function read_gcf_block() reads a 1024 byte gcf data block and updates the given GcfFile
+ *
+ *  ARGUMENTS
+ *   obj        the output GcfFile
+ *   tol        tolerance expressed as fraction of a sample (<0.5) when checking if
+ *                segments are aligned
+ *   For all other arguments, see parse_gcf_block
+ *
+ *  RETURN
+ *   function returns 1 if the data in buffer is not a valid data block, 0 otherwise
+ */
+int read_gcf_block(GcfFile *obj, unsigned char buffer[1024], GcfSeg *seg, int mode, int endian, double tol);
 
 
 /* function read_gcf() parses a gcf data file
@@ -306,8 +331,8 @@ int parse_gcf_block(unsigned char buffer[1024], GcfSeg *seg, int mode, int endia
  *                or where decoding data failed will not be merged.
  *                
  *  RETURN:
- *   function returns 0 if all went well, -1 if file could not be opened, 1 if file is
- *   not data file, Note, even if 0 is returned file may still contain errors in individual
+ *   function returns 0 if all went well, -1 if file could not be opened, > 0 if file is
+ *   not a data file, Note, even if 0 is returned file may still contain errors in individual
  *   segments.
  */
 int read_gcf(const char *f, GcfFile *obj, int mode);

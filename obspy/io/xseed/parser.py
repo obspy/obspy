@@ -18,6 +18,7 @@ import os
 import re
 import warnings
 import zipfile
+from pathlib import Path
 
 from lxml import etree
 from lxml.etree import parse as xmlparse
@@ -80,7 +81,7 @@ class Parser(object):
 
         The XML-SEED format was proposed in [Tsuboi2004]_.
 
-        The IRIS RESP format can be found at
+        The EarthScope/IRIS RESP format can be found at
         http://ds.iris.edu/ds/nodes/dmc/data/formats/resp/
 
     """
@@ -171,7 +172,11 @@ class Parser(object):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
         # try to transform everything into BytesIO object
-        if isinstance(data, str):
+        potential_filename_provided = None
+        if isinstance(data, (str, Path)):
+            if isinstance(data, Path):
+                data = str(data)
+            potential_filename_provided = data
             if re.search(r"://", data) is not None:
                 url = data
                 data = io.BytesIO()
@@ -229,7 +234,11 @@ class Parser(object):
                 raise
             self._format = 'XSEED'
         else:
-            raise IOError("First byte of data must be in [0-9<]")
+            msg = "First byte of data must be in [0-9<]"
+            if potential_filename_provided is not None \
+                    and not os.path.exists(potential_filename_provided):
+                msg += '. If a filename was provided, the file does not exist.'
+            raise IOError(msg)
 
     def get_xseed(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
@@ -662,7 +671,7 @@ class Parser(object):
         """
         Reads RESP files.
 
-        Reads IRIS RESP formatted data as produced with
+        Reads EarthScope/IRIS RESP formatted data as produced with
         'rdseed -f seed.test -R'.
 
         :type data: file or io.BytesIO
@@ -1435,9 +1444,9 @@ class Parser(object):
                             _list(b53.real_zero_error),
                             _list(b53.imaginary_zero_error)):
                         z = ComplexWithUncertainties(r, i)
-                        err = ComplexWithUncertainties(r_err, i_err)
-                        z.lower_uncertainty = z - err
-                        z.upper_uncertainty = z + err
+                        err = complex(r_err, i_err)
+                        z.lower_uncertainty = err
+                        z.upper_uncertainty = err
                         zeros.append(z)
                 poles = []
                 # Might somehow also not have zeros.
@@ -1447,9 +1456,9 @@ class Parser(object):
                             _list(b53.real_pole_error),
                             _list(b53.imaginary_pole_error)):
                         p = ComplexWithUncertainties(r, i)
-                        err = ComplexWithUncertainties(r_err, i_err)
-                        p.lower_uncertainty = p - err
-                        p.upper_uncertainty = p + err
+                        err = complex(r_err, i_err)
+                        p.lower_uncertainty = err
+                        p.upper_uncertainty = err
                         poles.append(p)
 
                 try:
@@ -1583,9 +1592,24 @@ class Parser(object):
                     34, b55.stage_input_units)
                 o_u = self.resolve_abbreviation(
                     34, b55.stage_output_units)
-                response_list = [
-                    ResponseListElement(f, a, p) for f, a, p in
-                    zip(b55.frequency, b55.amplitude, b55.phase_angle)]
+                if len([_i for _i in blkts if _i.id == 55]) == 1:
+                    response_list = [
+                        ResponseListElement(f, a, p) for f, a, p in
+                        zip(b55.frequency, b55.amplitude, b55.phase_angle)]
+                # allow mutiple blockette 55
+                else:
+                    _freq = []
+                    _amp = []
+                    _phase = []
+                    for _i in blkts:
+                        if _i.id == 55:
+                            _freq += _i.frequency
+                            _amp += _i.amplitude
+                            _phase += _i.phase_angle
+                    response_list = [
+                        ResponseListElement(f, a, p) for f, a, p in
+                        zip(_freq, _amp, _phase)]
+
                 response_stages.append(ResponseListResponseStage(
                     stage_sequence_number=b55.stage_sequence_number,
                     stage_gain=b58.sensitivity_gain if b58 else None,

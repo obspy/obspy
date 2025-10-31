@@ -3,7 +3,6 @@
 The obspy-mopad script test suite.
 """
 import io
-import os
 from itertools import product, zip_longest
 
 import numpy as np
@@ -17,7 +16,6 @@ class TestMopad:
     """
     Test cases for obspy-mopad script.
     """
-    path = os.path.join(os.path.dirname(__file__), 'images')
     mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
 
     def test_script_convert_type_sdr(self):
@@ -124,15 +122,13 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
     # obspy-mopad gmt
     #
 
-    def compare_gmt(self, exp_file, *args):
+    def compare_gmt(self, expected, *args):
         """
         Helper function that runs GMT and compares results.
         """
         with CatchOutput() as out:
             obspy_mopad(['gmt'] + list(args) +
                         [','.join(str(x) for x in self.mt)])
-
-        expected = os.path.join(self.path, exp_file)
 
         # Test headers
         with open(expected, 'rt') as expf:
@@ -154,36 +150,36 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         assert np.allclose(exp_data, out_data), \
                'Data does not match!'
 
-    def test_script_gmt_fill(self):
-        self.compare_gmt('mopad_fill.gmt',
+    def test_script_gmt_fill(self, testdata):
+        self.compare_gmt(testdata['mopad_fill.gmt'],
                          '-t', 'fill',
                          '--scaling', '2', '--color1', '3', '--color2', '5')
 
-    def test_script_gmt_lines(self):
-        self.compare_gmt('mopad_lines.gmt',
+    def test_script_gmt_lines(self, testdata):
+        self.compare_gmt(testdata['mopad_lines.gmt'],
                          '-t', 'lines',
                          '--scaling', '2', '--color1', '3', '--color2', '5')
 
-    def test_script_gmt_lines_stereo(self):
-        self.compare_gmt('mopad_lines_stereo.gmt',
+    def test_script_gmt_lines_stereo(self, testdata):
+        self.compare_gmt(testdata['mopad_lines_stereo.gmt'],
                          '-t', 'lines',
                          '--scaling', '2', '--color1', '3', '--color2', '5',
                          '--projection', 'stereo')
 
-    def test_script_gmt_lines_ortho(self):
-        self.compare_gmt('mopad_lines_ortho.gmt',
+    def test_script_gmt_lines_ortho(self, testdata):
+        self.compare_gmt(testdata['mopad_lines_ortho.gmt'],
                          '-t', 'lines',
                          '--scaling', '2', '--color1', '3', '--color2', '5',
                          '--projection', 'ortho')
 
-    def test_script_gmt_lines_lambo(self):
-        self.compare_gmt('mopad_lines_lambo.gmt',
+    def test_script_gmt_lines_lambo(self, testdata):
+        self.compare_gmt(testdata['mopad_lines_lambo.gmt'],
                          '-t', 'lines',
                          '--scaling', '2', '--color1', '3', '--color2', '5',
                          '--projection', 'stereo')
 
-    def test_script_gmt_event(self):
-        self.compare_gmt('mopad_ev.gmt',
+    def test_script_gmt_event(self, testdata):
+        self.compare_gmt(testdata['mopad_ev.gmt'],
                          '-t', 'ev',
                          '-r', '3')
 

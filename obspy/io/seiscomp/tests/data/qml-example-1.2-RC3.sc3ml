@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.11" version="0.11">
-  <EventParameters publicID="smi:nz.org.geonet/catalog/1">
+  <EventParameters>
+    <event publicID="smi:nz.org.geonet/event/2806038g">
+      <preferredOriginID>smi:nz.org.geonet/event/2806038g/origin/1</preferredOriginID>
+      <preferredMagnitudeID>smi:nz.org.geonet/event/2806038g/magnitude/1</preferredMagnitudeID>
+      <type>earthquake</type>
+      <originReference>smi:nz.org.geonet/event/2806038g/origin/1</originReference>
+    </event>
     <amplitude publicID="smi:nz.org.geonet/event/2806038g/amplitude/1/modified">
       <type>A</type>
       <amplitude>
         <value>1.0e-08</value>
       </amplitude>
       <timeWindow>
-        <reference>2007-10-10T14:40:39.055</reference>
+        <reference>2007-10-10T14:40:39.055Z</reference>
         <begin>0</begin>
         <end>0.51424</end>
       </timeWindow>
@@ -15,7 +21,7 @@
     </amplitude>
     <origin publicID="smi:nz.org.geonet/event/2806038g/origin/1">
       <time>
-        <value>2007-10-10T14:40:39.055</value>
+        <value>2007-10-10T14:40:39.055Z</value>
         <uncertainty>0.51424</uncertainty>
         <confidenceLevel>68.0</confidenceLevel>
       </time>
@@ -68,11 +74,5 @@
         <evaluationStatus>confirmed</evaluationStatus>
       </magnitude>
     </origin>
-    <event publicID="smi:nz.org.geonet/event/2806038g">
-      <preferredOriginID>smi:nz.org.geonet/event/2806038g/origin/1</preferredOriginID>
-      <preferredMagnitudeID>smi:nz.org.geonet/event/2806038g/magnitude/1</preferredMagnitudeID>
-      <type>earthquake</type>
-      <originReference>smi:nz.org.geonet/event/2806038g/origin/1</originReference>
-    </event>
   </EventParameters>
 </seiscomp>

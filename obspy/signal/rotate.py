@@ -50,7 +50,7 @@ def rotate_ne_rt(n, e, ba):
     return r, t
 
 
-def rotate_rt_ne(n, e, ba):
+def rotate_rt_ne(r, t, ba):
     """
     Rotates horizontal components of a seismogram.
 
@@ -59,9 +59,15 @@ def rotate_rt_ne(n, e, ba):
 
     This is the inverse transformation of the transformation described
     in :func:`rotate_ne_rt`.
+
+    :type r: :class:`~numpy.ndarray`
+    :param r: Data of the Radial component of the seismogram.
+    :type t: :class:`~numpy.ndarray`
+    :param t: Data of the Transverse component of the seismogram.
+    :returns: North and East component of seismogram.
     """
     ba = 360.0 - ba
-    return rotate_ne_rt(n, e, ba)
+    return rotate_ne_rt(r, t, ba)
 
 
 def rotate_zne_lqt(z, n, e, ba, inc):

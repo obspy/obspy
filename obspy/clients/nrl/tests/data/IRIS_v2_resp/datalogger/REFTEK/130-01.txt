@@ -1,0 +1,9 @@
+[Main]
+question = "What is the preamp gain ratio?"
+
+[32]
+path = "130-01_PG32.txt"
+
+[1]
+path = "130-01_PG1.txt"
+
