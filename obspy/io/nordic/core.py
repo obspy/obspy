@@ -836,7 +836,7 @@ def _read_event_id(tagged_lines, event):
         event_id = id_line.split('ID:')[-1].split(' ')[0].strip('dSLRD')
         break
     extra = event.setdefault('extra', {})
-    extra['nordic_event_id'] = \
+    event.extra['nordic_event_id'] = \
         {'value': event_id,
          'namespace': 'https://seis.geus.net/software/seisan/node239.html'}
     return event
@@ -1068,7 +1068,9 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime, **kwargs):
                                    waveform_id=pick.waveform_id)
             if 'AML' in pick.phase_hint:
                 # Amplitude for local magnitude - can be IAML, IAMLHF, AML
-                _amplitude.type = pick.phase_hint.removeprefix('I')  # 'AML'
+                _amplitude.type = pick.phase_hint[1:] \
+                    if pick.phase_hint.startswith('I') else pick.phase_hint
+
                 # Set to be evaluating a point in the trace
                 _amplitude.category = 'point'
                 # Default AML unit in seisan is nm (Page 139 of seisan
@@ -1229,7 +1231,9 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
                                    waveform_id=pick.waveform_id)
             if 'AML' in pick.phase_hint:
                 # Amplitude for local magnitude - can be IAML, IAMLHF, AML
-                _amplitude.type = pick.phase_hint.removeprefix('I')  # 'AML'
+                _amplitude.type = pick.phase_hint[1:]\
+                    if pick.phase_hint.startswith('I') else pick.phase_hint
+
                 # Set to be evaluating a point in the trace
                 _amplitude.category = 'point'
                 # Default AML unit in seisan is nm (Page 139 of seisan
@@ -1342,7 +1346,8 @@ def _check_baz_appvel_assignment(event):
         found_baz_associated_pick = False
         if 'BAZ' in pick.phase_hint and pick.backazimuth is not None:
             # Seisan phase name can be e.g. "BAZ-P"
-            baz_phase_type = pick.phase_hint.removeprefix('BAZ-')
+            baz_phase_type = pick.phase_hint[4:]\
+                if pick.phase_hint.startswith('BAZ-') else pick.phase_hint
             # Check if there is matching pick for the BAZ. THIS MEANS THAT
             # THE BAZ-line in Nordic file has to follow the actual time pick!
             for existing_pick in event.picks:
