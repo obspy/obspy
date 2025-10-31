@@ -15,7 +15,7 @@ from obspy.clients.syngine import Client
 from obspy.clients.base import DEFAULT_TESTING_USER_AGENT, ClientHTTPException
 
 
-BASE_URL = "http://service.iris.edu/irisws/syngine/1"
+BASE_URL = "https://service.iris.edu/irisws/syngine/1"
 pytestmark = pytest.mark.network
 
 
@@ -49,7 +49,7 @@ class TestClient():
 
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-            'http://service.iris.edu/irisws/syngine/1/info'
+            'https://service.iris.edu/irisws/syngine/1/info'
         assert p.call_args[1]["params"] == {'model': 'test_model'}
         assert p.call_args[1]["headers"] == \
             {'User-Agent': DEFAULT_TESTING_USER_AGENT}
@@ -75,7 +75,7 @@ class TestClient():
 
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-            'http://service.iris.edu/irisws/syngine/1/models'
+            'https://service.iris.edu/irisws/syngine/1/models'
         assert p.call_args[1]["params"] is None
         assert p.call_args[1]["headers"] == \
             {'User-Agent': DEFAULT_TESTING_USER_AGENT}
@@ -98,7 +98,7 @@ class TestClient():
 
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-            'http://service.iris.edu/irisws/syngine/1/version'
+            'https://service.iris.edu/irisws/syngine/1/version'
         assert p.call_args[1]["params"] is None
         assert p.call_args[1]["headers"] == \
             {'User-Agent': DEFAULT_TESTING_USER_AGENT}
@@ -114,7 +114,7 @@ class TestClient():
             buf.seek(0, 0)
             r.content = buf.read()
 
-        # http://service.iris.edu/irisws/syngine/1/query?network=IU&
+        # https://service.iris.edu/irisws/syngine/1/query?network=IU&
         # station=ANMO&components=ZRT&eventid=GCMT:M110302J
         with mock.patch("requests.get") as p:
             p.return_value = r
@@ -127,7 +127,7 @@ class TestClient():
 
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-            "http://service.iris.edu/irisws/syngine/1/query"
+            "https://service.iris.edu/irisws/syngine/1/query"
         assert p.call_args[1]["params"] == {
             "components": "ZRT",
             "eventid": "GCMT:M110302J",
@@ -138,7 +138,7 @@ class TestClient():
         assert p.call_args[1]["headers"] == \
             {"User-Agent": DEFAULT_TESTING_USER_AGENT}
 
-        # http://service.iris.edu/irisws/syngine/1/query?network=_GSN&
+        # https://service.iris.edu/irisws/syngine/1/query?network=_GSN&
         # components=Z&eventid=GCMT:M110302J&endtime=1800
         with mock.patch("requests.get") as p:
             p.return_value = r
@@ -152,7 +152,7 @@ class TestClient():
 
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-            "http://service.iris.edu/irisws/syngine/1/query"
+            "https://service.iris.edu/irisws/syngine/1/query"
         assert p.call_args[1]["params"] == {
             "components": "Z",
             "endtime": 1800.0,
@@ -163,7 +163,7 @@ class TestClient():
         assert p.call_args[1]["headers"] == \
             {"User-Agent": DEFAULT_TESTING_USER_AGENT}
 
-        # http://service.iris.edu/irisws/syngine/1/query?network=_GSN&
+        # https://service.iris.edu/irisws/syngine/1/query?network=_GSN&
         # components=Z&eventid=GCMT:M110302J&starttime=P-10&endtime=ScS%2B60
         with mock.patch("requests.get") as p:
             p.return_value = r
@@ -178,7 +178,7 @@ class TestClient():
 
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-            "http://service.iris.edu/irisws/syngine/1/query"
+            "https://service.iris.edu/irisws/syngine/1/query"
         assert p.call_args[1]["params"] == {
             "components": "Z",
             "starttime": "P-10",
@@ -214,7 +214,7 @@ class TestClient():
                                  sourcemomenttensor=[1, 2, 3, 4, 5, 6])
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-            "http://service.iris.edu/irisws/syngine/1/query"
+            "https://service.iris.edu/irisws/syngine/1/query"
         assert p.call_args[1]["params"] == {
             "model": "ak135f_5s",
             "format": "miniseed",
@@ -226,7 +226,7 @@ class TestClient():
                                  sourcedoublecouple=[1, 2, 3, 4])
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-            "http://service.iris.edu/irisws/syngine/1/query"
+            "https://service.iris.edu/irisws/syngine/1/query"
         assert p.call_args[1]["params"] == {
             "model": "ak135f_5s",
             "format": "miniseed",
@@ -238,7 +238,7 @@ class TestClient():
                                  sourceforce=[3.32, 4.23, 5.11])
         assert p.call_count == 1
         assert p.call_args[1]["url"] == \
-            "http://service.iris.edu/irisws/syngine/1/query"
+            "https://service.iris.edu/irisws/syngine/1/query"
         assert p.call_args[1]["params"] == {
             "model": "ak135f_5s",
             "format": "miniseed",

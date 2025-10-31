@@ -36,7 +36,7 @@ available providers are:
 ...     print("{0:<11} {1}".format(key,  URL_MAPPINGS[key]))  # doctest: +SKIP
 AUSPASS     http://auspass.edu.au
 BGR         http://eida.bgr.de
-EARTHSCOPE  http://service.iris.edu
+EARTHSCOPE  https://service.iris.edu
 EIDA        http://eida-federator.ethz.ch
 EMSC        http://www.seismicportal.eu
 ETH         http://eida.ethz.ch
@@ -47,8 +47,8 @@ ICGC        http://ws.icgc.cat
 IESDMC      http://batsws.earth.sinica.edu.tw
 INGV        http://webservices.ingv.it
 IPGP        http://ws.ipgp.fr
-IRIS        http://service.iris.edu
-IRISPH5     http://service.iris.edu
+IRIS        https://service.iris.edu
+IRISPH5     https://service.iris.edu
 ISC         http://www.isc.ac.uk
 KNMI        http://rdsa.knmi.nl
 KOERI       http://eida.koeri.boun.edu.tr

@@ -87,14 +87,14 @@ class TestBaseRoutingClient():
             "https://example.com": "1234",
             "http://example2.com": "1234",
             "http://example3.com": "1234",
-            "http://service.iris.edu": "1234"
+            "https://service.iris.edu": "1234"
         }
 
         c = self._cls_object(include_providers=["EARTHSCOPE",
                                                 "http://example.com"])
         assert c._filter_requests(split) == {
             "https://example.com": "1234",
-            "http://service.iris.edu": "1234"
+            "https://service.iris.edu": "1234"
         }
 
         c = self._cls_object(exclude_providers=["EARTHSCOPE",
@@ -116,7 +116,7 @@ class TestBaseRoutingClient():
             "https://example.com": "1234",
             "http://example2.com": "1234",
             "http://example3.com": "1234",
-            "http://service.iris.edu": "1234"
+            "https://service.iris.edu": "1234"
         }
         with mock.patch("obspy.clients.fdsn.client.Client") as p:
             mock_instance = p.return_value
@@ -166,7 +166,7 @@ class TestBaseRoutingClient():
             "https://example.com": "1234",
             "http://example2.com": "1234",
             "http://example3.com": "1234",
-            "http://service.iris.edu": "1234"
+            "https://service.iris.edu": "1234"
         }
         with mock.patch("obspy.clients.fdsn.client.Client") as p:
             mock_instance = p.return_value
