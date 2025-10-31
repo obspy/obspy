@@ -835,7 +835,7 @@ def _read_event_id(tagged_lines, event):
     for id_line, tag in id_lines:
         event_id = id_line.split('ID:')[-1].split(' ')[0].strip('dSLRD')
         break
-    extra = event.setdefault('extra', {})
+    event.setdefault('extra', {})
     event.extra['nordic_event_id'] = \
         {'value': event_id,
          'namespace': 'https://seis.geus.net/software/seisan/node239.html'}
