@@ -17,7 +17,8 @@ dependencies:
   # soft dependencies
   - cartopy
   - geographiclib
-  - pyshp
+  # pinning != 3.0.0 - see #3600
+  - pyshp != 3.0.0
   # tests
   - packaging
   - pyproj
