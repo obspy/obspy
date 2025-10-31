@@ -177,7 +177,9 @@ class TestNordicMethods:
         """
         Test reading of a compact Nordic file with only header lines.
         """
-        cat = read_nordic(testdata['collect.out'])
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_nordic(testdata['collect.out'])
         assert len(cat) == 3
         for event in cat:
             assert len(event.picks) == 0
