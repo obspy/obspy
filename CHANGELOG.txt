@@ -1,5 +1,6 @@
-Next release...
-====================================
+maintenance_1.4.x
+=================
+
 Changes:
  - obspy.io.nordic:
    * Parse ID-lines (type I) into event.extra['nordic_event_id]
@@ -10,7 +11,12 @@ Changes:
    * Fix bug where check for nordic format version crashed on long phase names
  - obspy.io.seisan:
    * Fix parsing of files written in int16
-
+ - obspy.io.shapefile:
+   * add support for pyshp v3 (see #3599)
+ - obspy.signal
+   * MSEEDMetadata: Computation of sample metrics replaced with vectorised
+     numpy code. Speedup of roughly factor 10 for integer data and 1.5 for
+     floating point data. (see #3621)
 
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================
@@ -25,7 +31,6 @@ Changes:
    * make sure to use a copy of `DEFAULT_SERVICES` when initializing a client
      instance while skipping service discovery, to avoid accidental changes to
      `DEFAULT_SERVICES` (see #3493)
-
 
 1.4.1 (doi: 10.5281/zenodo.11093256)
 ====================================
