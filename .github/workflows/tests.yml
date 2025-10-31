@@ -50,11 +50,11 @@ jobs:
             "target_url": "https://tests.obspy.org/?pr=${{ github.event.pull_request.number }}"
             }'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.x'
 
@@ -140,7 +140,7 @@ jobs:
       # set additional runtest options (--keep-images, --network, -W error)
       runtest_options: ${{ github.event_name == 'pull_request' && '--keep-images' || '' }} ${{ contains(matrix.options, 'network') && '--network' || '' }} ${{ contains(matrix.options, 'warnings') && '-W error' || '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -185,7 +185,7 @@ jobs:
           obspy-runtests --cov obspy --cov-report=xml:$PWD/coverage.xml --cov-append --report ${{ env.runtest_options }}
 
       - name: upload coverage
-        uses: codecov/codecov-action@v5.4.2
+        uses: codecov/codecov-action@v5.5.1
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure')
         with:
           flags: unittests
