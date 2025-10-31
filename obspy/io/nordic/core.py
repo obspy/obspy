@@ -467,11 +467,25 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1',
                 f = str(select_file)
     else:
         f = select_file
+
+    # Check if this is a compact catalog file: only hypocenters, no picks:
+    is_compact_select_file = False
+    tagged_lines = _get_line_tags(f=f)
+    if len(tagged_lines) == 1 and '1' in tagged_lines.keys():
+        is_compact_select_file = True
+    f.seek(0)
+
     wav_names = []
     event_str = []
     catalog = Catalog()
     for line in f:
-        if len(line.rstrip()) > 0:
+        if len(event_str) > 0 and is_compact_select_file:
+            catalog, wav_names = _extract_event(
+                event_str=event_str, catalog=catalog, wav_names=wav_names,
+                **kwargs)
+            event_str = []
+            event_str.append(line)
+        elif len(line.rstrip()) > 0:
             event_str.append(line)
         elif len(event_str) > 0:
             catalog, wav_names = _extract_event(
@@ -480,6 +494,7 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1',
                 **kwargs)
             event_str = []
     f.close()
+
     if len(event_str) > 0:
         # May occur if the last line of the file is not blank as it should be
         catalog, wav_names = _extract_event(
@@ -528,6 +543,7 @@ def _extract_event(event_str, catalog, wav_names, return_wavnames=False,
         wav_names.append(_readwavename(tagged_lines=tagged_lines['6']))
     new_event = _read_picks(tagged_lines=tagged_lines, new_event=new_event,
                             nordic_format=nordic_format, **kwargs)
+    new_event = _read_event_id(tagged_lines=tagged_lines, event=new_event)
     catalog += new_event
     return catalog, wav_names
 
@@ -798,6 +814,34 @@ def _read_comments(tagged_lines, event):
     return event
 
 
+def _read_event_id(tagged_lines, event):
+    """
+    Internal reader for ID line.
+
+    :type tagged_lines: dict
+    :param tagged_lines: dictionary of tagged lines
+    :type event: :class:`~obspy.core.event.event.Event`
+    :param event: Event to associate spectral info with
+
+    :returns:
+        event with event.extra.nordic_event_id set to event ID from Nordic file
+    """
+    if 'I' not in tagged_lines.keys():
+        return event
+    id_lines = tagged_lines['I']
+    if len(id_lines) > 1:
+        warnings.warn('Nordic file has more than one ID line, will use first' +
+                      'ID line only.')
+    for id_line, tag in id_lines:
+        event_id = id_line.split('ID:')[-1].split(' ')[0].strip('dSLRD')
+        break
+    event.setdefault('extra', {})
+    event.extra['nordic_event_id'] = \
+        {'value': event_id,
+         'namespace': 'https://seis.geus.net/software/seisan/node239.html'}
+    return event
+
+
 def _read_picks(tagged_lines, new_event, nordic_format='UKN', **kwargs):
     """
     Internal pick reader. Use read_nordic instead.
@@ -824,7 +868,10 @@ def _read_picks(tagged_lines, new_event, nordic_format='UKN', **kwargs):
                     tagged_lines[tag], key=lambda tup: tup[1])])
         except KeyError:
             pass
-    header = sorted(tagged_lines['7'], key=lambda tup: tup[1])[0][0]
+    try:
+        header = sorted(tagged_lines['7'], key=lambda tup: tup[1])[0][0]
+    except IndexError:  # Compact catalog file without picks?!
+        pass
 
     if nordic_format == 'UKN':
         nordic_format, phase_ok = check_nordic_format_version(pickline)
@@ -877,9 +924,11 @@ def check_nordic_format_version(pickline):
         if line.isspace():
             return nordic_format, is_phase
 
-        old_format_secs = line[23:28].strip(' ')
+        old_format_secs = line[24:28].strip(' ')
         # Check whether the old-formatted seconds are a float rather than int.
         # If they are int, then it is probably new nordic format.
+        # (Compare only from char 24 to avoid letters from phase hint in new
+        # format)
         try:
             comp_str = old_format_secs.replace(' ', '').replace('A', '')
             if str(int(comp_str)) == old_format_secs:
@@ -1017,9 +1066,11 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime, **kwargs):
                                    period=_float_conv(line[41:45]),
                                    pick_id=pick.resource_id,
                                    waveform_id=pick.waveform_id)
-            if pick.phase_hint == 'IAML':
-                # Amplitude for local magnitude
-                _amplitude.type = 'AML'
+            if 'AML' in pick.phase_hint:
+                # Amplitude for local magnitude - can be IAML, IAMLHF, AML
+                _amplitude.type = pick.phase_hint[1:] \
+                    if pick.phase_hint.startswith('I') else pick.phase_hint
+
                 # Set to be evaluating a point in the trace
                 _amplitude.category = 'point'
                 # Default AML unit in seisan is nm (Page 139 of seisan
@@ -1027,6 +1078,8 @@ def _read_picks_nordic_old(pickline, new_event, header, evtime, **kwargs):
                 _amplitude.generic_amplitude /= 1e9
                 _amplitude.unit = 'm'
                 _amplitude.magnitude_hint = 'ML'
+            elif pick.phase_hint.startswith('A'):
+                _amplitude.type = pick.phase_hint
             else:
                 # Generic amplitude type
                 _amplitude.type = 'A'
@@ -1176,9 +1229,11 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
                                    period=_float_conv(line[44:50]),
                                    pick_id=pick.resource_id,
                                    waveform_id=pick.waveform_id)
-            if pick.phase_hint == 'IAML':
-                # Amplitude for local magnitude
-                _amplitude.type = 'AML'
+            if 'AML' in pick.phase_hint:
+                # Amplitude for local magnitude - can be IAML, IAMLHF, AML
+                _amplitude.type = pick.phase_hint[1:]\
+                    if pick.phase_hint.startswith('I') else pick.phase_hint
+
                 # Set to be evaluating a point in the trace
                 _amplitude.category = 'point'
                 # Default AML unit in seisan is nm (Page 139 of seisan
@@ -1186,6 +1241,8 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
                 _amplitude.generic_amplitude /= 1e9
                 _amplitude.unit = 'm'
                 _amplitude.magnitude_hint = 'ML'
+            elif pick.phase_hint.startswith('A'):
+                _amplitude.type = pick.phase_hint
             else:
                 # Generic amplitude type
                 _amplitude.type = 'A'
@@ -1274,8 +1331,61 @@ def _read_picks_nordic_new(pickline, new_event, header, evtime, **kwargs):
         # with new information (BAZ, slowness etc.)
         if not (found_baz_associated_pick or is_coda_ref_pick):
             new_event.picks.append(pick)
+    new_event = _check_baz_appvel_assignment(new_event)
 
     return new_event
+
+
+def _check_baz_appvel_assignment(event):
+    """
+    When a BAZ-line comes before the respective pick line, then we need to
+    check afterwards whether all baz - app-vel values are properly assigned
+    """
+    remove_pick_list = []
+    for pick in event.picks:
+        found_baz_associated_pick = False
+        if 'BAZ' in pick.phase_hint and pick.backazimuth is not None:
+            # Seisan phase name can be e.g. "BAZ-P"
+            baz_phase_type = pick.phase_hint[4:]\
+                if pick.phase_hint.startswith('BAZ-') else pick.phase_hint
+            # Check if there is matching pick for the BAZ. THIS MEANS THAT
+            # THE BAZ-line in Nordic file has to follow the actual time pick!
+            for existing_pick in event.picks:
+                if (existing_pick.waveform_id == pick.waveform_id and
+                        existing_pick.phase_hint == baz_phase_type and
+                        existing_pick.time == pick.time and
+                        not existing_pick == pick):
+                    # pick = existing_pick  # wrong, right??
+                    found_baz_associated_pick = True
+                    break
+            # BAZ-phase name doesn't have to specify the associated phase
+            # name - as a secondary resort, compare pick times only.
+            if not found_baz_associated_pick:
+                for existing_pick in event.picks:
+                    if (existing_pick.waveform_id == pick.waveform_id and
+                            existing_pick.time == pick.time and
+                            not _is_iasp_ampl_phase(existing_pick.phase_hint)
+                            and not existing_pick == pick):
+                        # pick = existing_pick
+                        found_baz_associated_pick = True
+                        break
+            if not found_baz_associated_pick:
+                continue
+            existing_pick.backazimuth = pick.backazimuth
+            if pick.horizontal_slowness:
+                existing_pick.horizontal_slowness = pick.horizontal_slowness
+            remove_pick_list.append(pick)
+            for amplitude in event.amplitudes:
+                if amplitude.pick_id == pick.resource_id:
+                    amplitude.pick_id = existing_pick.resource_id
+            for origin in event.origins:
+                for arrival in origin.arrivals:
+                    if arrival.pick_id == pick.resource_id:
+                        arrival.pick_id = existing_pick.resource_id
+    # Remove the BAZ-picks that have become obsolete:
+    for pick in remove_pick_list:
+        event.picks.remove(pick)
+    return event
 
 
 def readwavename(sfile, encoding='latin-1'):
@@ -1604,10 +1714,8 @@ def _write_nordic(event, filename, userid='OBSP', evtype='L', outdir='.',
             except AttributeError:
                 pass
     # Write line 2 (type: I) of s-file
-    sfile.write(
-        " Action:ARG {0} OP:{1} STATUS:               ID:{2}     I\n".format(
-            datetime.datetime.now().strftime("%y-%m-%d %H:%M"),
-            userid.ljust(4)[0:4], evtime.strftime("%Y%m%d%H%M%S")))
+    event_id_line = _write_event_id_line(event, userid=userid)
+    sfile.write(event_id_line)
     # Write line-type 6 of s-file
     for wavefile in wavefiles:
         # Do not write names that do not actually link to a waveform file
@@ -1786,7 +1894,10 @@ def _write_high_accuracy_origin(origin):
         depth = ''
     evtime = origin.time
     if not evtime:
-        return
+        return ''
+    # Don't write high-accuracy line if there is no location at all
+    if not lat and not lon and not depth:
+        return ''
 
     # Cope with differences in event uncertainty naming
     if origin.quality and origin.quality['standard_error']:
@@ -1987,8 +2098,8 @@ def _write_comment(comment):
         comment_line[-1] = '6'
 
     # Check if it's a type-I line comment:
-    if "ACTION" in comment_str.upper() and comment_str[-2:] == ' I':
-        comment_line[-1] = 'I'
+    # if "ACTION" in comment_str.upper() and comment_str[-2:] == ' I':
+    #     comment_line[-1] = 'I'
 
     n_comment_chars = len(comment_str)
     if n_comment_chars > 78:
@@ -1999,6 +2110,36 @@ def _write_comment(comment):
     comment_line[1:n_comment_chars+1] = comment_str[:n_comment_chars]
     comment_line = ''.join(comment_line)
     return comment_line
+
+
+def _write_event_id_line(event, userid=''):
+    """
+    Write type-I line from value in event.extra['nordic_event_id']['value'] if
+    available, otherwise define event-ID from origin time.
+    """
+    id_line_str = (
+        " Action:ARG {0} OP:{1} STATUS:               ID:{2}     I\n")
+    if hasattr(event, 'extra') and 'nordic_event_id' in event.extra.keys():
+        id_line = id_line_str.format(
+            datetime.datetime.now().strftime("%y-%m-%d %H:%M"),
+            userid.ljust(4)[0:4],
+            event.extra.get('nordic_event_id')['value'])
+    else:
+        # Determine name from origin time
+        try:
+            origin = event.preferred_origin() or event.origins[0]
+        except IndexError:
+            msg = 'Need at least one origin with at least an origin time'
+            raise NordicParsingError(msg)
+        evtime = origin.time
+        if not evtime:
+            msg = ('event has an origin, but time is not populated.  ' +
+                   'This is required!')
+            raise NordicParsingError(msg)
+        id_line = id_line_str.format(
+            datetime.datetime.now().strftime("%y-%m-%d %H:%M"),
+            userid.ljust(4)[0:4], evtime.strftime("%Y%m%d%H%M%S"))
+    return id_line
 
 
 def nordpick(event, high_accuracy=True, nordic_format='OLD'):
@@ -2144,10 +2285,14 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     else:
                         amp = None
                     coda = ' '
-                    mag_hint = (amplitude.magnitude_hint or amplitude.type)
+                    mag_hint = (amplitude.type or amplitude.magnitude_hint)
                     if (mag_hint is not None and
                             mag_hint.upper() in ['AML', 'ML']):
-                        phase_hint = 'IAML'
+                        if nordic_format == 'OLD':
+                            phase_hint = 'IAML'
+                            impulsivity = ' '
+                    if mag_hint.startswith('AML'):
+                        phase_hint = 'I' + mag_hint
                         impulsivity = ' '
                 else:
                     coda = str(int(amplitude.generic_amplitude))
@@ -2307,10 +2452,12 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                             and _is_iasp_ampl_phase(pick.phase_hint)):
                         is_amp_pick = True
                     mag_hint = (
-                        amplitudes[j].magnitude_hint or amplitudes[j].type)
+                        amplitudes[j].type or amplitudes[j].magnitude_hint)
                     if (mag_hint is not None and
                             mag_hint.upper() in ['AML', 'ML']):
                         amp_phase_hints.append('IAML')
+                    elif mag_hint.startswith('AML'):
+                        amp_phase_hints.append('I' + mag_hint)
                     else:
                         if amplitudes[j].type is not None:
                             amp_phase_hints.append(amplitudes[j].type)
@@ -2319,7 +2466,20 @@ def nordpick(event, high_accuracy=True, nordic_format='OLD'):
                     amp_eval_modes.append(' ' or INV_EVALUTATION_MAPPING.get(
                         amplitude.evaluation_mode, None))
                     amp_finalweights.append('  ')
-                    amp_par1s.append(_str_conv(amp, rounded=1).rjust(7)[0:7])
+                    # Amplitudes can be written without exponent; gives better
+                    # precision for small numbers.
+                    amp_str = str("{:7.5g}".format(amp))
+                    # If exponent is needed, limit width:
+                    if 'e' in amp_str:
+                        amp_str = str("{:7.2g}".format(amp))
+                    # With scientific e-notation, check if there is a decimal
+                    # point. Otherwise Fortran may read the value incorrectly
+                    # (e.g., for valye 100, Python writes '1e+02', but Fortran
+                    # reads value as 10. Fortran would understand 1.0e+02
+                    # correctly)
+                    if 'e' in amp_str and '.' not in amp_str:
+                        amp_str = str("{:#7.2g}".format(amp))
+                    amp_par1s.append(amp_str)
                     amp_par2s.append(
                         _str_conv(peri, rounded=peri_round).rjust(6)[0:6])
                     # Get StationMagnitude that corresponds to the amplitude to

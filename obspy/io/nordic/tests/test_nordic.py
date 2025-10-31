@@ -147,6 +147,8 @@ class TestNordicMethods:
             #                  test_ev.amplitudes[1].snr)
             assert read_ev.amplitudes[1].category == \
                 test_ev.amplitudes[1].category
+            assert read_ev.extra.get('nordic_event_id')['value'] == \
+                test_ev.extra.get('nordic_event_id')['value']
 
     def test_write_read_quakeml(self, testdata):
         """
@@ -170,6 +172,17 @@ class TestNordicMethods:
             for event_1, event_2 in zip(cat, cat_back):
                 _assert_similarity(event_1=event_1, event_2=event_2,
                                    strict=False)
+
+    def test_read_compact_file(self, testdata):
+        """
+        Test reading of a compact Nordic file with only header lines.
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            cat = read_nordic(testdata['collect.out'])
+        assert len(cat) == 3
+        for event in cat:
+            assert len(event.picks) == 0
 
     def test_fail_writing(self):
         """
@@ -1286,6 +1299,11 @@ def full_test_event():
     test_event.origins.append(Origin(
         time=UTCDateTime("2012-03-26") + 1.2, latitude=45.0, longitude=25.0,
         depth=15000))
+    test_event.extra = {
+        'nordic_event_id': {
+            'value': '20120326000001',
+            'namespace':
+                'https://seis.geus.net/software/seisan/node239.html'}}
     test_event.event_descriptions.append(EventDescription())
     test_event.event_descriptions[0].text = 'LE'
     test_event.creation_info = CreationInfo(agency_id='TES')
