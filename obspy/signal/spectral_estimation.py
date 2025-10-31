@@ -356,7 +356,7 @@ class PPSD(object):
                 be skipped entirely. [McNamara2004]_ merge gappy
                 traces by filling with zeros. This results in a clearly
                 identifiable outlier psd line in the PPSD visualization. Select
-                `skip_on_gaps=False` to follow this convention. The default 
+                `skip_on_gaps=False` to follow this convention. The default
                 `skip_on_gaps=True` avoids filling gaps with zeros which might
                 result in some data segments shorter than `ppsd_length` not
                 used in the PPSD.
@@ -1588,7 +1588,7 @@ class PPSD(object):
         return self._split_lists(self.times_processed, self.psd_values)
 
     def plot_spectrogram(self, cmap=obspy_sequential, clim=None, grid=True,
-                         filename=None, show=True, axes=None, flip=False, 
+                         filename=None, show=True, axes=None, flip=False,
                          datelabels=True, ylabel=True, idlabel=False):
         """
         Plot the temporal evolution of the PSD in a spectrogram-like plot.
@@ -1624,9 +1624,9 @@ class PPSD(object):
         :param idlabel: If True, adds trace.id label (default False), useful
             for subplots.
         """
-        
+
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import AutoMinorLocator 
+        from matplotlib.ticker import AutoMinorLocator
 
         if axes is None:
             fig, ax = plt.subplots()
@@ -1643,13 +1643,13 @@ class PPSD(object):
             if not flip:
                 meshgrid_x, meshgrid_y = np.meshgrid(xedges, yedges)
                 data = np.array(psds).T
-                quadmesh = ax.pcolormesh(meshgrid_x, meshgrid_y, data, cmap=cmap,
-                                     zorder=-1)
+                quadmesh = ax.pcolormesh(meshgrid_x, meshgrid_y, data,
+                                         cmap=cmap, zorder=-1)
             else:
                 meshgrid_x, meshgrid_y = np.meshgrid(yedges, xedges)
                 data = np.array(psds)
-                quadmesh = ax.pcolormesh(meshgrid_x, meshgrid_y, data, cmap=cmap,
-                                     zorder=-1)
+                quadmesh = ax.pcolormesh(meshgrid_x, meshgrid_y, data,
+                                         cmap=cmap, zorder=-1)
             quadmeshes.append(quadmesh)
 
         if clim is None:
@@ -1659,7 +1659,7 @@ class PPSD(object):
 
         for quadmesh in quadmeshes:
             quadmesh.set_clim(*clim)
-            
+
         if grid:
             ax.grid()
 
@@ -1698,8 +1698,7 @@ class PPSD(object):
             ax.set_xlim(yedges[0], yedges[-1])
 
         if idlabel:
-            ax.legend([],[],title=self.id,labelspacing=-.2)
-
+            ax.legend([], [], title=self.id, abelspacing=-.2)
         try:
             ax.set_facecolor('0.8')
         # mpl <2 has different API for setting Axes background color
