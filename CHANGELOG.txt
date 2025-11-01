@@ -12,7 +12,8 @@ Changes:
    * inventory: additional formatting tweaks to expanded channel information
      (see #3261)
    * replace pkg_resources with importlib for internal entry point and plugin
-     handling (should not affect users, see #3333)
+     handling, add compatibility code for py 3.8 and 3.9 (should not affect
+     users, see #3333)
    * read(): better support for reading from file-like objects in many plugins
      (see #3346)
    * allow to specify Trace and Stream filter frequencies as arguments
