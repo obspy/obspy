@@ -24,7 +24,7 @@ def _get_default_eps(group, subgroup=None):
     eps = _get_entry_points(group, subgroup=subgroup)
     if sys.version_info.minor < 10:
         eps = {ep: f for ep, f in eps.items()
-           if any(m in f.group for m in DEFAULT_MODULES)}
+           if any(m in f.value for m in DEFAULT_MODULES)}
     else:
         eps = {ep: f for ep, f in eps.items()
                if any(m in f.module for m in DEFAULT_MODULES)}
@@ -237,11 +237,14 @@ class TestWaveformPlugins:
         # seems safe unless custom installed plugins come into play, but we can
         # not test these here properly anyway
         for f in formats:
-            path = Path(root, *f.module.split('.')[1:-1])
+            if sys.version_info.minor < 10:
+                path = Path(root, *f.value.split('.')[1:-1])
+            else:
+                path = Path(root, *f.module.split('.')[1:-1])
             path = path / 'tests' / 'data'
-            all_paths.append(path)
+            all_paths.append(str(path))
             if os.path.exists(path):
-                paths[f.name] = path
+                paths[f.name] = str(path)
 
         msg = 'Test data directories do not exist:\n    '
         assert len(paths) > 0, msg + '\n    '.join(all_paths)
@@ -489,11 +492,18 @@ class TestWaveformPlugins:
         format or deduced from the filename. The former overwrites the latter.
         """
         # Get format name and name of the write function.
-        formats = [(key, value.module) for key, value in
-                   _get_default_eps('obspy.plugin.waveform',
-                                    'writeFormat').items()
-                   # Only test plugins that are actually part of ObsPy.
-                   if value.dist.name == "obspy"]
+        if sys.version_info.minor < 10:
+          formats = [(key, value.value) for key, value in
+                     _get_default_eps('obspy.plugin.waveform',
+                                      'writeFormat').items()
+                     # Only test plugins that are actually part of ObsPy.
+                     if value.dist.name == "obspy"]
+        else:
+          formats = [(key, value.module) for key, value in
+                     _get_default_eps('obspy.plugin.waveform',
+                                      'writeFormat').items()
+                     # Only test plugins that are actually part of ObsPy.
+                     if value.dist.name == "obspy"]
 
         # Test for stream as well as for trace.
         stream_trace = [read(), read()[0]]
