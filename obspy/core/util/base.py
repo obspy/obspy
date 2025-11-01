@@ -256,6 +256,7 @@ def _get_entry_points(group, subgroup=None):
                         features[ep.name] = ep
                         break
         else:
+            features = {}
             for ep in eps:
                 # workaround to get the dist dict populated here
                 # from the debug it seems format_ep.dist.name contains "obspy"
