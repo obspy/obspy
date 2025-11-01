@@ -387,6 +387,32 @@ SCIPY_VERSION = get_dependency_version('scipy')
 MATPLOTLIB_VERSION = get_dependency_version('matplotlib')
 CARTOPY_VERSION = get_dependency_version('cartopy')
 
+def get_dist_name(entry_point):
+    # pkg_resources style
+    if hasattr(entry_point, 'dist') and hasattr(entry_point.dist, 'name'):
+        return entry_point.dist.name
+
+    # importlib.metadata style (multiple approaches)
+    if hasattr(entry_point, 'dist'):
+        # Try Python 3.10+ approach
+        try:
+            from importlib.metadata import distribution
+            dist = distribution(entry_point.dist)
+            return dist.metadata['Name']
+        except:
+            return str(entry_point.dist)
+
+    # Fallback for older importlib.metadata versions
+    if hasattr(entry_point, 'origin') and entry_point.origin:
+        import os, re
+        path = entry_point.origin
+        dist_info_dir = os.path.basename(os.path.dirname(path))
+        match = re.match(r'(.+?)(?:-\d+.*)?.dist-info', dist_info_dir)
+        if match:
+            return match.group(1)
+
+    # Last resort
+    return entry_point.name.split('.')[0]
 
 def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
@@ -405,7 +431,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
         for format_ep in eps.values():
             # search isFormat for given entry point
             is_format = buffered_load_entry_point(
-                format_ep.dist.name,
+                get_disp_name(format_ep),
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
             # If it is a file-like object, store the position and restore it
@@ -435,7 +461,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     try:
         # search readFormat for given entry point
         read_format = buffered_load_entry_point(
-            format_ep.dist.name,
+            get_disp_name(format_ep),
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
             'readFormat')
     except ImportError:
