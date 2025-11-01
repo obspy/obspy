@@ -24,7 +24,7 @@ def _get_default_eps(group, subgroup=None):
     eps = _get_entry_points(group, subgroup=subgroup)
     if sys.version_info.minor < 10:
         eps = {ep: f for ep, f in eps.items()
-           if any(m in f.value for m in DEFAULT_MODULES)}
+               if any(m in f.value for m in DEFAULT_MODULES)}
     else:
         eps = {ep: f for ep, f in eps.items()
                if any(m in f.module for m in DEFAULT_MODULES)}
@@ -493,13 +493,13 @@ class TestWaveformPlugins:
         """
         # Get format name and name of the write function.
         if sys.version_info.minor < 10:
-          formats = [(key, value.value) for key, value in
+            formats = [(key, value.value) for key, value in
                      _get_default_eps('obspy.plugin.waveform',
                                       'writeFormat').items()
                      # Only test plugins that are actually part of ObsPy.
                      if value.dist.name == "obspy"]
         else:
-          formats = [(key, value.module) for key, value in
+            formats = [(key, value.module) for key, value in
                      _get_default_eps('obspy.plugin.waveform',
                                       'writeFormat').items()
                      # Only test plugins that are actually part of ObsPy.
