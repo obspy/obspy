@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-IRIS Web service client for ObsPy.
+EarthScope (former IRIS) Web service client for ObsPy.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -32,10 +32,10 @@ DEFAULT_SERVICE_VERSIONS = {"timeseries": 1, "sacpz": 1, "resp": 1,
 
 class Client(object):
     """
-    IRIS Web service request client.
+    EarthScope Web service request client.
 
     :type base_url: str, optional
-    :param base_url: Base URL of the IRIS Web service (default
+    :param base_url: Base URL of the EarthScope Web service (default
         is ``'http://service.iris.edu/irisws'``).
     :type user: str, optional
     :param user: The user name used for authentication with the Web
@@ -77,7 +77,7 @@ class Client(object):
                  user="", password="", timeout=20, debug=False,
                  user_agent=DEFAULT_USER_AGENT, major_versions={}):
         """
-        Initializes the IRIS Web service client.
+        Initializes the EarthScope Web service client.
 
         See :mod:`obspy.clients.iris` for all parameters.
         """
@@ -167,7 +167,7 @@ class Client(object):
                    starttime, endtime, filter=[], filename=None,
                    output='miniseed', **kwargs):
         """
-        Low-level interface for `timeseries` Web service of IRIS
+        Low-level interface for `timeseries` Web service of EarthScope
         (http://service.iris.edu/irisws/timeseries/)- release 1.3.5
         (2012-06-07).
 
@@ -284,7 +284,7 @@ class Client(object):
             ``'audio'``
                 audio WAV file
             ``'miniseed'``
-                IRIS MiniSEED format
+                MiniSEED format
             ``'plot'``
                 A simple plot of the time series
             ``'saca'``
@@ -350,7 +350,7 @@ class Client(object):
     def resp(self, network, station, location="*", channel="*",
              starttime=None, endtime=None, filename=None, **kwargs):
         """
-        Low-level interface for `resp` Web service of IRIS
+        Low-level interface for `resp` Web service of EarthScope
         (http://service.iris.edu/irisws/resp/) - 1.4.1 (2011-04-14).
 
         This method provides access to channel response information in the SEED
@@ -444,7 +444,7 @@ class Client(object):
     def sacpz(self, network, station, location="*", channel="*",
               starttime=None, endtime=None, filename=None, **kwargs):
         """
-        Low-level interface for `sacpz` Web service of IRIS
+        Low-level interface for `sacpz` Web service of EarthScope
         (http://service.iris.edu/irisws/sacpz/) - release 1.1.1 (2012-1-9).
 
         This method provides access to instrument response information
@@ -542,7 +542,7 @@ class Client(object):
 
     def distaz(self, stalat, stalon, evtlat, evtlon):
         """
-        Low-level interface for `distaz` Web service of IRIS
+        Low-level interface for `distaz` Web service of EarthScope
         (http://service.iris.edu/irisws/distaz/) - release 1.0.3 (2016).
 
         This method will calculate the great-circle angular distance, azimuth,
@@ -607,7 +607,7 @@ class Client(object):
 
     def flinnengdahl(self, lat, lon, rtype="both"):
         """
-        Low-level interface for `flinnengdahl` Web service of IRIS
+        Low-level interface for `flinnengdahl` Web service of EarthScope
         (http://service.iris.edu/irisws/flinnengdahl/) - release 1.1
         (2011-06-08).
 
@@ -670,7 +670,7 @@ class Client(object):
                    noheader=False, traveltimeonly=False, rayparamonly=False,
                    mintimeonly=False, filename=None):
         """
-        Low-level interface for `traveltime` Web service of IRIS
+        Low-level interface for `traveltime` Web service of EarthScope
         (http://service.iris.edu/irisws/traveltime/) - release 1.1.1
         (2012-05-15).
 
@@ -817,12 +817,12 @@ class Client(object):
                  width=800, height=600, annotate=True, output='plot',
                  filename=None, **kwargs):
         """
-        Low-level interface for `evalresp` Web service of IRIS
+        Low-level interface for `evalresp` Web service of EarthScope
         (http://service.iris.edu/irisws/evalresp/) - release 1.0.0
         (2011-08-11).
 
         This method evaluates instrument response information stored at the
-        IRIS DMC and outputs ASCII data or
+        EarthScope DMC and outputs ASCII data or
         `Bode Plots <https://en.wikipedia.org/wiki/Bode_plots>`_.
 
         :type network: str

@@ -21,8 +21,12 @@ class TestRealTimeSignal():
     @pytest.fixture(scope="function")
     def trace(self, testdata):
         # read test data as float64
+        # this test data file is actually suffering from the floating point
+        # issue handled in #3408, so set the buggy sampling rate to keep all
+        # the tests in original form
         self.orig_trace = read(
-            testdata['II.TLY.BHZ.SAC'], format="SAC", dtype=np.float64)[0]
+            testdata['II.TLY.BHZ.SAC'], format="SAC", dtype=np.float64,
+            round_sampling_interval=False)[0]
         # make really sure test data is float64
         self.orig_trace.data = np.require(self.orig_trace.data, np.float64)
         self.orig_trace_chunks = self.orig_trace / NUM_PACKETS

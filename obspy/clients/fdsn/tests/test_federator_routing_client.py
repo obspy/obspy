@@ -14,14 +14,17 @@ from packaging.version import parse as parse_version
 import pytest
 
 import obspy
+from obspy.core.util.base import CatchAndAssertWarnings
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+from obspy.clients.fdsn import RoutingClient
 from obspy.clients.fdsn.routing.federator_routing_client import \
     FederatorRoutingClient
 
 
 _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
-pytestmark = pytest.mark.network
 
 
+@pytest.mark.network
 class TestFederatorRoutingClient():
     @classmethod
     def setup_class(cls):
@@ -34,6 +37,67 @@ class TestFederatorRoutingClient():
         # make sure it is larger.
         assert parse_version(self.client.get_service_version()) >= \
             parse_version("1.1.1")
+
+    def test_get_waveforms_integration_test(self):
+        """
+        Integration test that does not mock anything but actually downloads
+        things.
+        """
+        st = self.client.get_waveforms(
+            starttime=obspy.UTCDateTime(2017, 1, 1),
+            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
+            latitude=35.0, longitude=-110, maxradius=0.3,
+            channel="LHZ")
+        # This yields 1 channel at the time of writing this test - I assume
+        # it is unlikely to every yield less. So this test should be fairly
+        # stable.
+        assert len(st) >= 1
+
+        # Same with the bulk request.
+        st2 = self.client.get_waveforms_bulk(
+            [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
+              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
+            latitude=35.0, longitude=-110, maxradius=0.3)
+        assert len(st2) >= 1
+
+        assert st == st2
+
+    def test_get_stations_integration_test(self):
+        """
+        Integration test that does not mock anything but actually downloads
+        things.
+        """
+        inv = self.client.get_stations(
+            starttime=obspy.UTCDateTime(2017, 1, 1),
+            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
+            latitude=35.0, longitude=-110, maxradius=0.3, network="TA",
+            channel="LHZ", level="station")
+        # This yields 1 network at the time of writing this test - I assume
+        # it is unlikely to every yield less. So this test should be fairly
+        # stable.
+        assert len(inv) >= 1
+
+        # Again repeat with the bulk request.
+        inv2 = self.client.get_stations_bulk(
+            [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
+              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
+            latitude=35.0, longitude=-110, maxradius=0.3,
+            level="station")
+        assert len(inv2) >= 1
+        inv2 = inv2.select(network="TA")
+
+        # The results should be basically identical - they will still differ
+        # because times stamps and also order might change slightly.
+        # But the get_contents() method should be safe enough.
+        assert inv.get_contents() == inv2.get_contents()
+
+
+class TestFederatorRoutingClientNoNetwork():
+    @classmethod
+    def setup_class(cls):
+        cls.client = FederatorRoutingClient()
+        cls._cls = ("obspy.clients.fdsn.routing.federator_routing_client."
+                    "FederatorRoutingClient")
 
     def test_response_splitting(self):
         data = """
@@ -289,55 +353,18 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
                 "AA", "BB", "", "LHZ", obspy.UTCDateTime(2016, 1, 1),
                 obspy.UTCDateTime(2016, 1, 2)]], network="BB")
 
-    def test_get_waveforms_integration_test(self):
+    def test_iris_deprecation(self):
         """
-        Integration test that does not mock anything but actually downloads
-        things.
+        Test deprecation warning for "iris-federator" routing type
         """
-        st = self.client.get_waveforms(
-            starttime=obspy.UTCDateTime(2017, 1, 1),
-            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
-            latitude=35.0, longitude=-110, maxradius=0.3,
-            channel="LHZ")
-        # This yields 1 channel at the time of writing this test - I assume
-        # it is unlikely to every yield less. So this test should be fairly
-        # stable.
-        assert len(st) >= 1
-
-        # Same with the bulk request.
-        st2 = self.client.get_waveforms_bulk(
-            [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
-              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
-            latitude=35.0, longitude=-110, maxradius=0.3)
-        assert len(st2) >= 1
-
-        assert st == st2
-
-    def test_get_stations_integration_test(self):
-        """
-        Integration test that does not mock anything but actually downloads
-        things.
-        """
-        inv = self.client.get_stations(
-            starttime=obspy.UTCDateTime(2017, 1, 1),
-            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
-            latitude=35.0, longitude=-110, maxradius=0.3, network="TA",
-            channel="LHZ", level="station")
-        # This yields 1 network at the time of writing this test - I assume
-        # it is unlikely to every yield less. So this test should be fairly
-        # stable.
-        assert len(inv) >= 1
-
-        # Again repeat with the bulk request.
-        inv2 = self.client.get_stations_bulk(
-            [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
-              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
-            latitude=35.0, longitude=-110, maxradius=0.3,
-            level="station")
-        assert len(inv2) >= 1
-        inv2 = inv2.select(network="TA")
-
-        # The results should be basically identical - they will still differ
-        # because times stamps and also order might change slightly.
-        # But the get_contents() method should be safe enough.
-        assert inv.get_contents() == inv2.get_contents()
+        mock_path = (
+            'obspy.clients.fdsn.routing.federator_routing_client.'
+            'FederatorRoutingClient.__init__')
+        msg = ("IRIS is now EarthScope, please consider changing the "
+               "'routing_type' to 'earthscope-federator'.")
+        with mock.patch(mock_path) as p:
+            p.return_value = None
+            with CatchAndAssertWarnings(
+                    expected=[(ObsPyDeprecationWarning, msg)]):
+                client = RoutingClient("iris-federator")
+        assert isinstance(client, FederatorRoutingClient)

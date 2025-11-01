@@ -37,14 +37,14 @@ from obspy.io.stationxml.core import _read_floattype
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
-SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12']
+SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12', '0.13']
 SCHEMA_NAMESPACE_BASE = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema"
 
 
 def _get_schema_namespace(version_string):
     """
-    >>> print(_get_schema_namespace('0.12'))
-    http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.12
+    >>> print(_get_schema_namespace('0.13'))
+    http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.13
     """
     namespace = "%s/%s" % (SCHEMA_NAMESPACE_BASE, version_string)
     return namespace
@@ -91,7 +91,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
     """
     root = etree.parse(path_or_file_object).getroot()
 
-    # Code can be used for version 0.6 to 0.12 (Seiscomp 4.x)
+    # Code can be used for version 0.6 to 0.13 (Seiscomp 6.x)
     for version in SCHEMA_VERSION:
         namespace = _get_schema_namespace(version)
         if root.find("{%s}%s" % (namespace, "Inventory")) is not None:
@@ -518,7 +518,7 @@ def _read_channel(instrumentation_register, cha_element, _ns):
     if match:
         namespace = match.group(1)
     else:
-        namespace = _get_schema_namespace('0.12')
+        namespace = _get_schema_namespace('0.13')
     channel.extra = {'format': {
         'value': _tag2obj(cha_element, _ns("format"), str),
         # storage format of channel not supported by StationXML1.1 anymore,

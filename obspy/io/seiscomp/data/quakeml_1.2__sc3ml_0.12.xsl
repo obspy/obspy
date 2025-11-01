@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-QuakeML 1.2 to SC3ML 0.12 stylesheet converter
+QuakeML 1.2 to SCML (SeisComPML) 0.12 stylesheet converter
 
 Author:
     EOST (École et Observatoire des Sciences de la Terre)
+    Stephan Herrnkind <herrnkind@gempa.de>
 Copyright:
     The ObsPy Development Team (devs@obspy.org)
 License:
@@ -13,72 +14,102 @@ License:
 Usage
 =====
 
-This stylesheet converts a QuakeML to a SC3ML document. It may be invoked using
+This stylesheet converts a QuakeML to a SCML document. It may be invoked using
 xalan or xsltproc:
 
     xalan -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.12.xsl -out sc3ml.xml
     xsltproc quakeml_1.2__sc3ml_0.12.xsl quakeml.xml > sc3ml.xml
 
 Due to the QuakeML ID schema the public IDs used by QuakeML are rather long
-and may cause problems in SeisComP application when displaying or processing
-them. Especially the slash causes problems, e.g. when an event ID is used on
+and may cause problems in SeisComP applications when displaying or processing
+them. Especially the slash causes problems, e.g., when an event ID is used on
 the command line or in a directory structure. To remove the ID prefix during
 the conversion you may use the ID_PREFIX parameter:
 
-    xalan -param ID_PREFIX "'smi:org.gfz-potsdam.de/geofon/'" -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.12.xsl -out sc3ml.xml
-    xsltproc -stringparam ID_PREFIX smi:org.gfz-potsdam.de/geofon/ quakeml_1.2__sc3ml_0.12.xsl quakeml.xml > sc3ml.xml
+    xalan -param ID_PREFIX "smi:org.gfz-potsdam.de/geofon/" -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.12.xsl -out scml.xml
+    xsltproc -stringparam ID_PREFIX smi:org.gfz-potsdam.de/geofon/ quakeml_1.2__sc3ml_0.12.xsl quakeml.xml > scml.xml
+
+Other variable exist which control
+  - the eventID format (BUILD_EVENT_ID),
+  - the mapping of Magnitudes to Origins (GUESS_MAG_ORIGIN) or
+  - the creation of unique ids (EVENT_INFO_ID)
+
+
+Profiles
+````````
+
+The following table collects recommendated parameters setting for the QuakeML
+import from different agencies:
+
+Agency   ID_PREFIX             BUILD_EVENT_ID  GUESS_MAG_ORIGIN  EVENT_INFO_ID
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+USGS     quakeml:us.anss.org/  2               3                 1
+
 
 Transformation
 ==============
 
-QuakeML and SC3ML are quite similar schemas. Nevertheless some differences
+QuakeML and SCML are quite similar schemas. Nevertheless some differences
 exist.
+
 
 ID restrictions
 ```````````````
 
-SC3ML does not enforce any particular ID restriction unlike QuakeML. It isn't
-a problem to convert from QuakeML to SC3ML.
+SCML does not enforce any particular ID restriction unlike QuakeML. It isn't
+a problem to convert from QuakeML to SCML. However, the QuakeML ID prefix may
+be removed during the conversion, see ID_PREFIX variable.
 
-Repositioning and creation of nodes
-```````````````````````````````````
 
-In SC3ML all information is grouped under the EventParameters element.
+Repositioning and creation of elements
+``````````````````````````````````````
 
-    <EventParameters>               <eventParameters>
-                                        <event>
-        <pick/>                             <pick/>
-        <amplitude/>                        <amplitude/>
-        <reading/>
-        <origin>                            <origin/>
-            <stationMagnitude/>             <stationMagnitude/>
-            <magnitude/>                    <magnitude/>
-        </origin>
-        <focalMechanism/>                   <focalMechanism/>
-        <event/>                        </event>
-    </EventParameters>              </eventParameters>
+QuakeML groups all elements under the event element where SCML places elements
+which might exist independent of an event, such as picks, amplitudes or origins
+directly under the EventParameters element. Furthermore SCML does not support
+magnitudes independent of an origin.
 
-Since origins and focalMechanism aren't in an event anymore, OriginReferences
-and FocalMechanismReferences need to be created.
+QuakeML                        SCML
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+<eventParameters>              <EventParameters>
+    <event>
+        <pick/>                    <pick/>
+        <amplitude/>               <amplitude/>
+                                   <reading/>
+        <origin/>                  <origin>
+        <stationMagnitude/>            <stationMagnitude/>
+        <magnitude/>                   <magnitude/>
+                                    </origin>
+        <focalMechanism/>          <focalMechanism/>
+    </event>                       <event/>
+</eventParameters>             </EventParameters>
 
-Some nodes are also mandatory in SC3ML which aren't in QuakeML:
+In SCML an event
+- uses Origin- and FocalMechanismReferences to associate Origins and
+  FocalMechanisms,
+- Picks are associated via the Arrivals of an Origin and
+- Amplitudes are connected via StationMagnitudes of an Origin
+
+Some elements are mandatory in SCML but aren't in QuakeML:
 - event/description/type
 - dataUsed/stationCount
 - dataUsed/componentCount
 - amplitude/type
+
 
 Renaming of nodes
 `````````````````
 
 The following table lists the mapping of names between both schema:
 
-Parent              QuakeML name                SC3 name
+Parent              QuakeML name                SCML name
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 seiscomp            eventParameters             EventParameters
-arrival             [copied from following fields if true] weight
-                    timeUsed                    timeWeight
-                    horizontalSlownessUsed      horizontalSlownessWeight
-                    backazimuthUsed             backazimuthWeight
+arrival             [value copied from fields   weight
+                    below in order of listing]
+                    timeWeight                  timeUsed (bool)
+                    horizontalSlownessWeight    horizontalSlownessUsed (bool)
+                    backazimuthWeight           backazimuthUsed (bool)
 arrival             takeoffAngle (RealQuantity) takeOffAngle (double)
 magnitude           mag                         magnitude
 stationMagnitude    mag                         magnitude
@@ -88,21 +119,24 @@ momentTensor        category                    method
 comment             @id (attribute)             id
 waveformID          text()                      resourceURI
 
+
 Enumerations
 ````````````
 
 Both schema use enumerations. Numerous mappings are applied.
 
+
 Unit conversion
 ```````````````
 
 QuakeML uses meter for origin depth, origin uncertainty and confidence
-ellipsoid, SC3ML uses kilometer.
+ellipsoid, SCML uses kilometer.
+
 
 Unmapped node
 `````````````
 
-The following nodes can not be mapped to the SC3ML schema, thus their data is
+The following nodes can not be mapped to the SCML schema, thus their data is
 lost:
 
 Parent              Element lost
@@ -117,23 +151,54 @@ dataUsed            longestPeriod
 momentTensor        inversionType
 focalMechanism      waveformID
 
+
 Nodes order
 ```````````
 
-Unlike SC3ML, QuakeML nodes can appear in any order. They must be reordered for
-SC3ML. Unnecessary attributes must also be removed.
+Unlike SCML, QuakeML nodes can appear in any order. They must be reordered for
+SCML. Unnecessary attributes must also be removed.
+
+Missing of mandatory elements - Shortcoming of QuakeML validation
+`````````````````````````````````````````````````````````````````
+
+Some elements are marked as mandatory in QuakeML (minOccurs=1) but since they
+are defined in a xs:choice collection schema validators fail to detect the
+absence of such mandatory elements. E.g., it is possible to produce a valid
+QuakeML document containing an arrival without a phase definition.
+
 
 Change log
 ==========
 
 * 16.06.2021: Add ID_PREFIX parameter allowing to strip QuakeML ID prefix from
-  publicIDs and references thereof
+  publicIDs and references thereof.
 
 * 17.06.2021: Starting with schema version 0.12 SeisComP ML supports the
   confidenceLevel parameter in the originUncertainty element. This version
   no longer strips this field. Also support for ISO time stamps without a
   trailing slash was added, hence the Z no longer needs to be added to time
   values.
+
+* 22.06.2021: Add Z suffix to xs:dateTime values.
+
+* 18.01.2023:
+  - Add GUESS_MAG_ORIGIN switch allowing to map magnitudes to origins
+    without an originID reference.
+  - Add BUILD_EVENT_ID switch to construct event publicID from
+    - last path component of the URI only or
+    - by concatenating catalog:eventsource and catalog:eventid attribute as
+      used, e.g., by USGS
+  - No longer add Z suffix as SeisComP 5 supports dates without it.
+  - In the absence of a stationSagnitude/waveformID the waveformID will be copied
+    from the referenced amplitude if any.
+  - Add EVENT_INFO_ID switch which creates unique publicIDs by appending the
+    event publicID and event creation time.
+  - Add value of '0' for unset dataUsed/stationCount|componentCount.
+  - In the absence of the mandatory arrival/phase element phaseHint of the referenced
+    pick is used. If neither a phaseHint is available the phase is set to an empty
+    value.
+  - Remove ID_PREFIX from comment/id and waveformID/resourceURI
+
 -->
 <xsl:stylesheet version="1.0"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -142,13 +207,43 @@ Change log
         xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.12"
         xmlns:qml="http://quakeml.org/xmlns/bed/1.2"
         xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"
-        exclude-result-prefixes="xsl xs ext q qml">
+        xmlns:catalog="http://anss.org/xmlns/catalog/0.1"
+        exclude-result-prefixes="xsl xs ext q qml catalog">
     <xsl:output method="xml" encoding="UTF-8" indent="yes"/>
     <xsl:strip-space elements="*"/>
 
-    <!-- Define parameters-->
+    <!--
+         Define parameters which may be passed to this script.
+    -->
+
+    <!-- Prefix to be removed from any publicID -->
     <xsl:param name="ID_PREFIX" select="'smi:org.gfz-potsdam.de/geofon/'"/>
+
+    <!-- PublicID representing an empty value -->
     <xsl:param name="ID_PREFIX_NA" select="concat($ID_PREFIX, 'NA')"/>
+
+    <!-- In QuakeML a magnitude references to its origin via the originID
+         element. Some catalogs don't set this element. The GUESS_MAG_ORIGIN
+         variable represents a bit mask with certain guessing strategies:
+         0: Don't guess the origin.
+         1: Single origin. If the document contains only one origin all
+            magnitudes and stationMagnitudes without an originID reference will
+            be mapped to the single origin.
+         2: Preferred origin. Map magnitutes and stationMagnitudes without an
+            origin reference to the preferredOrigin. -->
+    <xsl:param name="GUESS_MAG_ORIGIN" select="0"/>
+
+    <!-- Special rules for the contruction of the event publicID:
+         0: Use ID as is but remove ID_PREFIX as done with any other publicIDs
+         1: Extract only the last path component of the URI
+         2: Combine event attributes catalog:eventsource and catalog:eventid.
+            E.g., this option is suitable for the USGS QuakeML flavor.
+    -->
+    <xsl:param name="BUILD_EVENT_ID" select="0"/>
+
+    <!-- Make all public IDs unique by appending event publicID and the event
+         creation time -->
+    <xsl:param name="EVENT_INFO_ID" select="0"/>
 
     <!-- Define some global variables -->
     <xsl:variable name="version" select="'0.12'"/>
@@ -160,6 +255,36 @@ Change log
     <xsl:key name="amplitude_key" match="qml:amplitude" use="@publicID"/>
     <xsl:key name="origin_key" match="qml:origin" use="@publicID"/>
     <xsl:key name="focalMechanism_key" match="qml:focalMechanism" use="@publicID"/>
+
+
+<!--
+    ***************************************************************************
+    Utility functions
+    ***************************************************************************
+-->
+
+    <!-- Reverse seach $delimiter in $string. 'tokenize' only available with
+         XSLT 2.0 -->
+    <xsl:template name="substring-after-last">
+        <xsl:param name="string"/>
+        <xsl:param name="delimiter"/>
+
+        <!-- Extract the string which comes after the first occurence -->
+        <xsl:variable name="remainder" select="substring-after($string, $delimiter)"/>
+
+        <xsl:choose>
+             <!-- If it still contains the search string the recursively process -->
+             <xsl:when test="$delimiter and contains($remainder, $delimiter)">
+                  <xsl:call-template name="substring-after-last">
+                       <xsl:with-param name="string" select="$remainder"/>
+                       <xsl:with-param name="delimiter" select="$delimiter"/>
+                  </xsl:call-template>
+             </xsl:when>
+             <xsl:otherwise>
+                  <xsl:value-of select="$remainder"/>
+             </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
 
 <!--
     ***************************************************************************
@@ -178,13 +303,17 @@ Change log
     <!-- Starting point: Match the root node and select the EventParameters
          node -->
     <xsl:template match="/">
-        <!-- Write a disordered sc3ml in this variable. It will be ordered in
-             a second time. -->
+        <!-- Write a disordered SCML in this variable. It will be ordered in
+             a second run. -->
         <xsl:variable name="disordered">
             <xsl:for-each select="./q:quakeml/qml:eventParameters">
                 <EventParameters>
-                    <xsl:apply-templates select="@publicID"/>
-                    <xsl:apply-templates/>
+                    <xsl:attribute name="{$PID}">
+                        <xsl:call-template name="removeIDPrefix">
+                            <xsl:with-param name="id" select="@publicID"/>
+                        </xsl:call-template>
+                    </xsl:attribute>
+                    <xsl:apply-templates select="qml:event"/>
                 </EventParameters>
             </xsl:for-each>
         </xsl:variable>
@@ -198,7 +327,12 @@ Change log
     <xsl:template match="qml:event">
         <!-- Create event node -->
         <xsl:element name="{local-name()}">
-            <xsl:apply-templates select="@*"/>
+            <!-- Special rules for the construction of the event publicID -->
+            <xsl:attribute name="{$PID}">
+                <xsl:call-template name="eventID">
+                    <xsl:with-param name="event" select="current()"/>
+                </xsl:call-template>
+            </xsl:attribute>
             <xsl:apply-templates/>
 
             <!-- Create origin references -->
@@ -239,24 +373,46 @@ Change log
             </xsl:element>
         </xsl:for-each>
 
+        <!-- Definition of fallback origin if GUESS_MAG_ORIGIN is set to a
+             value greater than 0. -->
+        <xsl:variable name="fallback_origin_id">
+            <xsl:choose>
+                <!-- Single origin -->
+                <xsl:when test="floor($GUESS_MAG_ORIGIN div 1) mod 2 = 1 and count(qml:origin) = 1">
+                    <xsl:value-of select="qml:origin[1]/@publicID"/>
+                </xsl:when>
+                <!-- Preferred origin -->
+                <xsl:when test="floor($GUESS_MAG_ORIGIN div 2) mod 2 = 1">
+                    <xsl:value-of select="qml:preferredOriginID/text()"/>
+                </xsl:when>
+            </xsl:choose>
+        </xsl:variable>
+
         <!-- Copy origins and remove duplicates -->
         <xsl:for-each select="qml:origin[count(. | key('origin_key', @publicID)[1]) = 1]">
             <xsl:element name="{local-name()}">
                 <xsl:apply-templates select="@*"/>
 
-                <!-- Copy magnitudes and remove duplicates -->
-                <xsl:for-each select="../qml:magnitude[qml:originID/text()=current()/@publicID]">
+                <!-- Copy magnitudes -->
+                <xsl:for-each select="../qml:magnitude[qml:originID/text()=current()/@publicID or (
+                                      not(qml:originID) and current()/@publicID = $fallback_origin_id)]">
                     <xsl:element name="{local-name()}">
                         <xsl:apply-templates select="@*"/>
                         <xsl:apply-templates/>
                     </xsl:element>
                 </xsl:for-each>
 
-                <!-- Copy stations magnitudes and remove duplicates -->
-                <xsl:for-each select="../qml:stationMagnitude[qml:originID/text()=current()/@publicID]">
+                <!-- Copy stations magnitudes -->
+                <xsl:for-each select="../qml:stationMagnitude[qml:originID/text()=current()/@publicID or (
+                                      not(qml:originID) and current()/@publicID = $fallback_origin_id)]">
                     <xsl:element name="{local-name()}">
                         <xsl:apply-templates select="@*"/>
                         <xsl:apply-templates/>
+
+                        <!-- use waveformID of referenced amplitude as fallback -->
+                        <xsl:if test="not(qml:waveformID)">
+                            <xsl:apply-templates select="../qml:amplitude[current()/qml:amplitudeID/text()=@publicID][1]/qml:waveformID"/>
+                        </xsl:if>
                     </xsl:element>
                 </xsl:for-each>
 
@@ -288,14 +444,31 @@ Change log
     <xsl:template match="qml:dataUsed">
         <xsl:element name="{local-name()}">
             <xsl:if test="not(qml:stationCount)">
-                <xsl:element name="stationCount"/>
+                <xsl:element name="stationCount">
+                    <xsl:value-of select="0"/>
+                </xsl:element>
             </xsl:if>
             <xsl:if test="not(qml:componentCount)">
-                <xsl:element name="componentCount"/>
+                <xsl:element name="componentCount">
+                    <xsl:value-of select="0"/>
+                </xsl:element>
             </xsl:if>
             <xsl:apply-templates/>
         </xsl:element>
     </xsl:template>
+
+    <!-- Create mandatory element arrival/phase -->
+    <xsl:template match="qml:arrival">
+        <xsl:element name="{local-name()}">
+            <xsl:if test="not(qml:phase)">
+                <xsl:element name="phase">
+                    <xsl:value-of select="../../qml:pick[current()/qml:pickID/text()=@publicID]/qml:phaseHint/text()"/>
+                </xsl:element>
+            </xsl:if>
+            <xsl:apply-templates/>
+        </xsl:element>
+    </xsl:template>
+
 
 <!--
     ***************************************************************************
@@ -371,7 +544,9 @@ Change log
         <xsl:element name="{local-name()}">
             <xsl:if test="@id != ''">
                 <xsl:element name="id">
-                    <xsl:value-of select="@id"/>
+                    <xsl:call-template name="removeIDPrefix">
+                        <xsl:with-param name="id" select="@id"/>
+                    </xsl:call-template>
                 </xsl:element>
             </xsl:if>
             <xsl:apply-templates/>
@@ -384,7 +559,9 @@ Change log
             <xsl:apply-templates select="@*"/>
             <xsl:if test="current() != ''">
                 <xsl:element name="resourceURI">
-                    <xsl:value-of select="."/>
+                    <xsl:call-template name="removeIDPrefix">
+                        <xsl:with-param name="id" select="."/>
+                    </xsl:call-template>
                 </xsl:element>
             </xsl:if>
         </xsl:element>
@@ -434,7 +611,7 @@ Change log
     ***************************************************************************
 -->
 
-    <!-- Origin depth, SC3ML uses kilometer, QuakeML meter -->
+    <!-- Origin depth, SCML uses kilometer, QuakeML meter -->
     <xsl:template match="qml:origin/qml:depth/qml:value
                          | qml:origin/qml:depth/qml:uncertainty
                          | qml:origin/qml:depth/qml:lowerUncertainty
@@ -549,7 +726,6 @@ Change log
                 <xsl:when test="$p='origin' and $v='uncertainty'">OriginUncertainty</xsl:when>
                 <xsl:when test="$v='arrival'">Arrival</xsl:when>
                 <xsl:when test="$v='origin'">Origin</xsl:when>
-                <xsl:when test="$v='EventParameters'">EventParameters</xsl:when>
                 <xsl:otherwise/>
             </xsl:choose>
         </xsl:variable>
@@ -566,7 +742,7 @@ Change log
                     <!-- Only copy allowed attributes -->
                     <xsl:for-each select="$schema//xs:complexType[@name=$name]
                                           /xs:attribute/@name">
-                        <xsl:apply-templates select="$current/@*[local-name()=current()]"/>
+                        <xsl:copy-of select="$current/@*[local-name()=current()]"/>
                     </xsl:for-each>
                     <!-- Reorder nodes according to the XSD -->
                     <xsl:for-each select="$schema//xs:complexType[@name=$name]
@@ -579,8 +755,28 @@ Change log
         </xsl:element>
     </xsl:template>
 
-    <!-- Removes ID_PREFIX, if the remainder is 'NA' an empty string is returned -->
+    <!-- Converts a publicID -->
     <xsl:template name="convertID">
+        <xsl:param name="id"/>
+        <xsl:variable name="res">
+            <xsl:call-template name="removeIDPrefix">
+                <xsl:with-param name="id" select="$id"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:choose>
+            <xsl:when test="$EVENT_INFO_ID != 0">
+                <xsl:call-template name="eventInfoID">
+                    <xsl:with-param name="id" select="$res"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="$res"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- Removes ID_PREFIX, if the remainder is 'NA' an empty string is returned -->
+    <xsl:template name="removeIDPrefix">
         <xsl:param name="id"/>
         <xsl:choose>
             <xsl:when test="$id=$ID_PREFIX_NA">
@@ -593,6 +789,41 @@ Change log
                 <xsl:value-of select="$id"/>
             </xsl:otherwise>
         </xsl:choose>
+    </xsl:template>
+
+    <!-- Special rules for the construction of the event publicID -->
+    <xsl:template name="eventID">
+        <xsl:param name="event"/>
+        <xsl:choose>
+            <!-- Use last id path component -->
+            <xsl:when test="$BUILD_EVENT_ID = 1">
+                <xsl:call-template name="substring-after-last">
+                    <xsl:with-param name="string" select="$event/@publicID"/>
+                    <xsl:with-param name="delimiter" select="'/'"/>
+                </xsl:call-template>
+            </xsl:when>
+            <!-- Use catalog:eventsource and catalog:eventid -->
+            <xsl:when test="$BUILD_EVENT_ID = 2">
+                <xsl:value-of select="concat($event/@catalog:eventsource, $event/@catalog:eventid)"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:call-template name="removeIDPrefix">
+                    <xsl:with-param name="id" select="$event/@publicID"/>
+                </xsl:call-template>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- Adds eventID and event creation time to id parameter -->
+    <xsl:template name="eventInfoID">
+        <xsl:param name="id"/>
+        <xsl:variable name="event" select="ancestor::*[last()-2]"/>
+        <xsl:variable name="eventID">
+            <xsl:call-template name="eventID">
+                <xsl:with-param name="event" select="$event"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:value-of select="concat($id, '/', $eventID, '/', $event/qml:creationInfo/qml:creationTime)"/>
     </xsl:template>
 
     <!-- Remove ID_PREFIX from publicID attributes -->
@@ -608,12 +839,44 @@ Change log
             </xsl:attribute>
         </xsl:if>
     </xsl:template>
+
+    <!-- Generic template for all remaining attributes -->
     <xsl:template match="@*">
         <xsl:copy-of select="."/>
     </xsl:template>
 
-    <!-- Value of ID nodes must be stripped from ID_PREFIX -->
-    <xsl:template match="qml:agencyURI|qml:authorURI|qml:pickID|qml:methodID|qml:earthModelID|qml:amplitudeID|qml:originID|qml:stationMagnitudeID|qml:preferredOriginID|qml:preferredMagnitudeID|qml:originReference|qml:filterID|qml:slownessMethodID|qml:pickReference|qml:amplitudeReference|qml:referenceSystemID|qml:triggeringOriginID|qml:derivedOriginID|momentMagnitudeID|qml:preferredFocalMechanismID|qml:focalMechanismReference|qml:momentMagnitudeID|qml:greensFunctionID">
+    <!-- ID nodes which must be stripped from ID_PREFIX -->
+    <xsl:template match="qml:agencyURI
+                       | qml:authorURI
+                       | qml:greensFunctionID
+                       | qml:filterID
+                       | qml:methodID
+                       | qml:earthModelID
+                       | qml:referenceSystemID
+                       | qml:slownessMethodID">
+        <xsl:variable name="id">
+            <xsl:call-template name="removeIDPrefix">
+                <xsl:with-param name="id" select="string(.)"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:if test="$id != ''">
+            <xsl:element name="{local-name()}">
+                <xsl:value-of select="$id"/>
+            </xsl:element>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ID nodes referencing public objects: Remove ID_PREFIX and optionally ensure ID uniqueness. -->
+    <xsl:template match="qml:derivedOriginID
+                       | qml:momentMagnitudeID
+                       | qml:triggeringOriginID
+                       | qml:pickID
+                       | qml:stationMagnitudeID
+                       | qml:originID
+                       | qml:amplitudeID
+                       | qml:preferredOriginID
+                       | qml:preferredMagnitudeID
+                       | qml:preferredFocalMechanismID">
         <xsl:variable name="id">
             <xsl:call-template name="convertID">
                 <xsl:with-param name="id" select="string(.)"/>
@@ -621,7 +884,6 @@ Change log
         </xsl:variable>
         <xsl:if test="$id != ''">
             <xsl:element name="{local-name()}">
-                <xsl:apply-templates select="@*"/>
                 <xsl:value-of select="$id"/>
             </xsl:element>
         </xsl:if>

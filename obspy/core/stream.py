@@ -28,7 +28,8 @@ from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
                                   _read_from_plugin, _generic_reader)
 from obspy.core.util.decorator import (map_example_filename,
                                        raise_if_masked, uncompress_file)
-from obspy.core.util.misc import get_window_times, buffered_load_entry_point
+from obspy.core.util.misc import (
+    get_window_times, buffered_load_entry_point, ptp)
 from obspy.core.util.obspy_types import ObsPyException
 
 
@@ -211,10 +212,12 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         if isinstance(pathname_or_url, Path):
             pathname_or_url = str(pathname_or_url)
         # try to give more specific information why the stream is empty
-        if has_magic(pathname_or_url) and not glob(pathname_or_url):
+        if isinstance(pathname_or_url, str) and \
+                has_magic(pathname_or_url) and not glob(pathname_or_url):
             raise Exception("No file matching file pattern: %s" %
                             pathname_or_url)
-        elif not has_magic(pathname_or_url) and \
+        elif isinstance(pathname_or_url, str) and \
+                not has_magic(pathname_or_url) and \
                 not Path(pathname_or_url).is_file():
             raise IOError(2, "No such file or directory", pathname_or_url)
         # Only raise error if no start/end time has been set. This
@@ -1972,20 +1975,23 @@ class Stream(object):
             # Check sampling rate.
             sr.setdefault(trace.id, trace.stats.sampling_rate)
             if trace.stats.sampling_rate != sr[trace.id]:
-                msg = "Can't merge traces with same ids but differing " + \
-                      "sampling rates!"
+                msg = (f"Can not merge traces with same ids ({trace.id}) but "
+                       f"differing sampling rates ({sr[trace.id]}, "
+                       f"{trace.stats.sampling_rate})!")
                 raise Exception(msg)
             # Check dtype.
             dtype.setdefault(trace.id, trace.data.dtype)
             if trace.data.dtype != dtype[trace.id]:
-                msg = "Can't merge traces with same ids but differing " + \
-                      "data types!"
+                msg = (f"Can not merge traces with same ids ({trace.id}) but "
+                       f"differing data types ({dtype[trace.id]}, "
+                       f"{trace.data.dtype})!")
                 raise Exception(msg)
             # Check calibration factor.
             calib.setdefault(trace.id, trace.stats.calib)
             if trace.stats.calib != calib[trace.id]:
-                msg = "Can't merge traces with same ids but differing " + \
-                      "calibration factors.!"
+                msg = (f"Can not merge traces with same ids ({trace.id}) but "
+                       f"differing calibration factors ({calib[trace.id]}, "
+                       f"{trace.stats.calib})!")
                 raise Exception(msg)
 
     def merge(self, method=0, fill_value=None, interpolation_samples=0,
@@ -2181,7 +2187,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     @raise_if_masked
-    def filter(self, type, **options):
+    def filter(self, type, *args, **options):
         """
         Filter the data of all traces in the Stream.
 
@@ -2189,7 +2195,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: String that specifies which filter is applied (e.g.
             ``"bandpass"``). See the `Supported Filter`_ section below for
             further details.
-        :param options: Necessary keyword arguments for the respective filter
+        :param args: Only filter frequency/frequencies can be specified
+            as argument(s). Alternatively filter frequencies can be specified
+            as keyword arguments.
+        :param options: Keyword arguments for the respective filter
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
             ``"bandpass"``)
 
@@ -2242,7 +2251,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st.plot()
         """
         for tr in self:
-            tr.filter(type, **options)
+            tr.filter(type, *args, **options)
         return self
 
     def trigger(self, type, **options):
@@ -2763,7 +2772,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # handled separately
         seed_id_groups = {}
         for tr in self:
-            net, sta, loc, cha = tr.id.split(".")
+            net = tr.stats.network
+            sta = tr.stats.station
+            loc = tr.stats.location
+            cha = tr.stats.channel
             if not len(cha):
                 msg = "Channel code must be at least one character long."
                 raise ValueError(msg)
@@ -3342,13 +3354,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 raise ValueError(msg)
             if 'starttime' not in header and time_tol > 0:
                 times = [tr.stats.starttime for tr in traces]
-                if np.ptp(times) <= time_tol:
+                if ptp(times) <= time_tol:
                     # use high median as starttime
                     header['starttime'] = sorted(times)[len(times) // 2]
             header['stack'] = AttribDict(group=groupid, count=len(traces),
                                          type=stack_type)
             npts_all = [len(tr) for tr in traces]
-            npts_dif = np.ptp(npts_all)
+            npts_dif = ptp(npts_all)
             npts = min(npts_all)
             if npts_dif > npts_tol:
                 msg = ('Difference of number of points of the traces is higher'
@@ -3396,7 +3408,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             sampling_rate = float(items[6])
             npts = int(items[8])
             tr = Trace()
-            tr.data = np.ones(npts, dtype=np.float_)
+            tr.data = np.ones(npts, dtype=np.float64)
             tr.stats.station = sta
             tr.stats.network = net
             tr.stats.location = loc
@@ -3631,6 +3643,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 tr.data = new_data
                 tr.stats.channel = tr.stats.channel[:-1] + component
             self.traces += traces
+        return self
+
+    def newbyteorder(self, byteorder='native'):
+        """
+        Change byteorder of the data
+
+        For details see
+        :meth:`Trace.newbyteorder <obspy.core.trace.Trace.newbyteorder>`.
+        """
+        for tr in self:
+            tr.newbyteorder(byteorder)
         return self
 
 

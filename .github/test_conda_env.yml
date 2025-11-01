@@ -10,13 +10,17 @@ dependencies:
   - numpy
   - scipy
   - requests
-  - setuptools
+  # see pypa/setuptools#4480
+  - setuptools !=71.0.1
   # see #3258
   - sqlalchemy < 2.0
   # soft dependencies
   - cartopy
   - geographiclib
-  - pyshp
+  # Pinning version != 3.0.0 for the tests
+  # because of doctest failures linked to hardcoded
+  # doctest.NORMALIZE_WHITESPACE = 1 (see #3600)
+  - pyshp != 3.0.0
   # tests
   - packaging
   - pyproj

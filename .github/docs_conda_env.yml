@@ -14,7 +14,8 @@ dependencies:
   - numpy
   - scipy
   - requests  
-  - setuptools
+  # see pypa/setuptools#4480
+  - setuptools !=71.0.1
   # see #3258
   - sqlalchemy < 2.0
   # docs
@@ -27,3 +28,4 @@ dependencies:
   - sphinx_rtd_theme
   # deps used in tutorial but not working anymore
   #- mlpy
+  - doc2dash  # for building docset for dash/zeal

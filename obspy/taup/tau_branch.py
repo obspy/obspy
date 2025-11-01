@@ -450,15 +450,15 @@ class TauBranch(object):
         Store all attributes for serialization in a structured array.
         """
         dtypes = [('debug', np.bool_),
-                  ('bot_depth', np.float_),
-                  ('dist', np.float_, self.dist.shape),
+                  ('bot_depth', np.float64),
+                  ('dist', np.float64, self.dist.shape),
                   ('is_p_wave', np.bool_),
-                  ('max_ray_param', np.float_),
-                  ('min_ray_param', np.float_),
-                  ('min_turn_ray_param', np.float_),
-                  ('tau', np.float_, self.tau.shape),
-                  ('time', np.float_, self.time.shape),
-                  ('top_depth', np.float_)]
+                  ('max_ray_param', np.float64),
+                  ('min_ray_param', np.float64),
+                  ('min_turn_ray_param', np.float64),
+                  ('tau', np.float64, self.tau.shape),
+                  ('time', np.float64, self.time.shape),
+                  ('top_depth', np.float64)]
         arr = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
             key = dtype[0]

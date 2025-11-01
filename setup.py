@@ -44,6 +44,8 @@ from setuptools import Extension, find_packages, setup
 # The minimum python version which can be used to run ObsPy
 # TODO: when dropping support for Python 3.9 some workarounds can be removed in
 # the entry point lookup routines, see #3333
+# XXX when dropping Python 3.9, get rid of socket.timeout and just use
+# TimeoutError, e.g. in fdsn/client.py
 MIN_PYTHON_VERSION = (3, 8)
 
 # Fail fast if the user is on an unsupported version of python.
@@ -117,8 +119,8 @@ EXTRAS_REQUIRES['all'] = [dep for depl in EXTRAS_REQUIRES.values()
 # package specific settings
 KEYWORDS = [
     'ALSEP', 'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
-    'beamforming', 'cross correlation', 'database', 'dataless',
-    'Dataless SEED', 'DMX', 'earthquakes', 'Earthworm', 'EIDA',
+    'beamforming', 'cross correlation', 'CYBERSHAKE', 'database', 'dataless',
+    'Dataless SEED', 'DMX', 'earthquakes', 'EarthScope', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
     'focal mechanism', 'FOCMEC', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P',
     'IASPEI', 'imaging', 'IMS', 'instrument correction',
@@ -127,8 +129,8 @@ KEYWORDS = [
     'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS', 'PDAS',
     'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
     'REFTEK130', 'RG-1.6', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
-    'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN',
-    'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
+    'SAGE', 'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
+    'SEISAN', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
     'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston', 'XML-SEED',
@@ -181,6 +183,7 @@ ENTRY_POINTS = {
         'ALSEP_PSE = obspy.io.alsep.core',
         'ALSEP_WTN = obspy.io.alsep.core',
         'ALSEP_WTH = obspy.io.alsep.core',
+        'CYBERSHAKE = obspy.io.cybershake.core'
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -315,6 +318,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.ALSEP_WTH': [
         'isFormat = obspy.io.alsep.core:_is_wth',
         'readFormat = obspy.io.alsep.core:_read_wth',
+        ],
+    'obspy.plugin.waveform.CYBERSHAKE': [
+        'isFormat = obspy.io.cybershake.core:_is_cybershake',
+        'readFormat = obspy.io.cybershake.core:_read_cybershake'
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
@@ -549,11 +556,8 @@ ENTRY_POINTS = {
         'kaiser = scipy.signal.windows:kaiser',
         'nuttall = scipy.signal.windows:nuttall',
         'parzen = scipy.signal.windows:parzen',
-        # TODO slepian has been removed from scipy with version 1.6.0
-        # see https://docs.scipy.org/doc/scipy/release/1.1.0-notes.html
-        # see https://docs.scipy.org/doc/scipy/release/1.6.0-notes.html
-        'slepian = scipy.signal.windows:slepian',
         'triang = scipy.signal.windows:triang',
+        'dpss = scipy.signal.windows:dpss',
         ],
     'obspy.plugin.trigger': [
         'recstalta = obspy.signal.trigger:recursive_sta_lta',
@@ -815,6 +819,7 @@ def setupPackage():
             'Programming Language :: Python :: 3.9',
             'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: 3.11',
+            'Programming Language :: Python :: 3.12',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,

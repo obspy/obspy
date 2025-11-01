@@ -27,7 +27,8 @@ class EIDAWSRoutingClient(BaseRoutingClient):
     station information at each data center with additional constraints
     (e.g. latitude/longitude/...) and use that information for the final
     waveform query. This means that with ObsPy the EIDA routing client
-    behaves very similar to the IRIS federator routing client.
+    behaves very similar to the EarthScope (former IRIS) federator routing
+    client.
     """
     def __init__(self, url="http://www.orfeus-eu.org/eidaws/routing/1",
                  include_providers=None, exclude_providers=None,

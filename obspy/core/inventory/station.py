@@ -76,7 +76,7 @@ class Station(BaseNode):
         :type external_references: list of
             :class:`~obspy.core.inventory.util.ExternalReference`
         :param external_references: URI of any type of external report, such as
-            IRIS data reports or dataless SEED volumes.
+            EarthScope/IRIS data reports or dataless SEED volumes.
         :type description: str
         :param description: A description of the resource
         :type comments: list of :class:`~obspy.core.inventory.util.Comment`

@@ -10,6 +10,7 @@ Test suite for the response handling.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import warnings
+from copy import deepcopy
 from math import pi
 
 import numpy as np
@@ -20,10 +21,9 @@ from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
     _pitick2latex, PolesZerosResponseStage, PolynomialResponseStage, Response,
     ResponseListResponseStage, ResponseListElement, InstrumentSensitivity)
-from obspy.core.util import CatchAndAssertWarnings
+from obspy.core.util.base import CatchAndAssertWarnings
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.obspy_types import ComplexWithUncertainties
-from obspy.core.util.testing import WarningsCapture
 from obspy.signal.invsim import evalresp
 from obspy.io.xseed import Parser
 
@@ -113,7 +113,7 @@ class TestResponse:
         Tests the response plot.
         """
         resp = read_inventory()[0][0][0].response
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
                       outfile=image_path)
 
@@ -122,7 +122,7 @@ class TestResponse:
         Tests the response plot in degrees.
         """
         resp = read_inventory()[0][0][0].response
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
                       plot_degrees=True, outfile=image_path)
 
@@ -174,7 +174,7 @@ class TestResponse:
         t_samp = 1.0 / sampling_rate
         nfft = 100
 
-        with WarningsCapture():
+        with CatchAndAssertWarnings():
             cpx_response, freq = inv[0][0][0].response.get_evalresp_response(
                 t_samp=t_samp, nfft=nfft, output="VEL", start_stage=None,
                 end_stage=None)
@@ -537,6 +537,91 @@ class TestResponse:
             data = resp.get_evalresp_response_for_frequencies(freqs)
         assert resp.instrument_sensitivity.value == overall_sensitivity
         assert np.abs(data).tolist() == [overall_sensitivity] * len(freqs)
+
+    def test_non_SI_unit_input_first_stage(self, testdata):
+        """
+        Regression test for #3369
+
+        Test that non-SI units input (e.g. nanometer/second) is properly taken
+        into account when removing the instrument response, i.e. the additional
+        scaling factor (e.g. 1e09 for nm/s) is applied to the output.
+
+        The change in that issue affects
+        Response._call_eval_resp_for_frequencies() which in turn gets called
+        by..
+         - Response._get_overall_sensitivity_and_gain()
+         - Response.get_evalresp_response_for_frequencies()
+
+        Test all of those three for good measure.
+        """
+        inv = read_inventory(testdata['SL_BOJS_LHZ.xml'], "STATIONXML")
+
+        # original data has nm/s as a non-SI input unit. setup clones with some
+        # different input units
+        inv_nms = inv
+        inv_ms = inv_nms.copy()
+        inv_ms[0][0][0].response.instrument_sensitivity.input_units = 'm/s'
+        inv_ms[0][0][0].response.instrument_sensitivity.value *= 1e9
+        inv_ms[0][0][0].response.response_stages[0].input_units = 'm/s'
+        inv_ms[0][0][0].response.response_stages[0].stage_gain *= 1e9
+        inv_mms = inv_nms.copy()
+        inv_mms[0][0][0].response.instrument_sensitivity.input_units = 'mm/s'
+        inv_mms[0][0][0].response.instrument_sensitivity.value *= 1e6
+        inv_mms[0][0][0].response.response_stages[0].input_units = 'mm/s'
+        inv_mms[0][0][0].response.response_stages[0].stage_gain *= 1e6
+        inv_cms = inv_nms.copy()
+        inv_cms[0][0][0].response.instrument_sensitivity.input_units = 'cm/s'
+        inv_cms[0][0][0].response.instrument_sensitivity.value *= 1e7
+        inv_cms[0][0][0].response.response_stages[0].input_units = 'cm/s'
+        inv_cms[0][0][0].response.response_stages[0].stage_gain *= 1e7
+
+        # test at two frequencies in the flat response part
+        freqs = [0.01, 0.1]
+        expected = [1.84e+09, 1.85e+09]
+
+        for inv in (inv_nms, inv_ms, inv_mms, inv_cms):
+            resp = inv[0][0][0].response
+
+            # test _call_eval_resp_for_frequencies()
+            got, _ = resp._call_eval_resp_for_frequencies(
+                freqs, output='VEL', start_stage=None, end_stage=None)
+            got = np.abs(got)
+            np.testing.assert_allclose(got, expected, rtol=1e-2)
+
+            # test get_evalresp_response_for_frequencies()
+            got = resp.get_evalresp_response_for_frequencies(
+                freqs, output='VEL', start_stage=None, end_stage=None)
+            got = np.abs(got)
+            np.testing.assert_allclose(got, expected, rtol=1e-2)
+
+            # test _get_overall_sensitivity_and_gain()
+            got = [resp._get_overall_sensitivity_and_gain(f, output='VEL')[1]
+                   for f in freqs]
+            np.testing.assert_allclose(got, expected, rtol=1e-2)
+
+    def test_pazresponsestage_hertz_to_radians(self, testdata):
+        """
+        Tests converting a PAZResponseStage from Hertz to Radians/s
+        """
+        inv = read_inventory(testdata['G_CAN__LHZ.xml'], 'STATIONXML')
+        paz_before = inv[0][0][0].response.response_stages[0]
+        paz_after = deepcopy(paz_before)
+        paz_after.to_radians_per_second()
+
+        expected_zeros = [0j, 0j]
+        expected_poles = [-1.233948e-02+1.234319e-02j,
+                          -1.233948e-02-1.234319e-02j,
+                          -3.917566e+01+4.912339e+01j,
+                          -3.917566e+01-4.912339e+01j]
+
+        assert paz_before.pz_transfer_function_type == 'LAPLACE (HERTZ)'
+        assert paz_after.pz_transfer_function_type == \
+            'LAPLACE (RADIANS/SECOND)'
+        assert round(paz_after.normalization_factor, 3) == 3.959488e+03
+        np.testing.assert_allclose(
+            paz_after.zeros, expected_zeros, rtol=1e-6)
+        np.testing.assert_allclose(
+            paz_after.poles, expected_poles, rtol=1e-6)
 
     def test_unknown_units_PA_recalculate_sensitivity(self, testdata):
         """

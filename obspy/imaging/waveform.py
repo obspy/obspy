@@ -1011,24 +1011,43 @@ class WaveformPlotting(object):
         if not count:
             # Up to 15 time units and if it's a full number, show every unit.
             if time_value <= 15 and time_value % 1 == 0:
-                count = int(time_value)
+                count = int(time_value) + 1
             # Otherwise determine whether they are divisible for numbers up to
             # 15. If a number is not divisible just show 10 units.
             else:
-                count = 10
                 for _i in range(15, 1, -1):
                     if time_value % _i == 0:
-                        count = _i
+                        count = _i + 1
                         break
+                else:
+                    # these are really weird cases with interval being
+                    # relatively large primes like "interval=17" and will
+                    # likely lead to ugly tick labels, but not much we can do,
+                    # just weird parameter choice
+                    count = 10
             # Show at least 5 ticks.
-            if count < 5:
-                count = 5
+            if count < 2:
+                msg = 'Number of x ticks ({count:s}) can not be less than two.'
+                raise ValueError(msg)
+            while count < 5:
+                count *= 2
         # Everything can be overwritten by user-specified number of ticks.
         if self.number_of_ticks:
             count = self.number_of_ticks
         # Calculate and set ticks.
         ticks = np.linspace(0.0, max_value, count)
-        ticklabels = ['%i' % _i for _i in np.linspace(0.0, time_value, count)]
+        ticklabels = []
+        for _i in np.linspace(0.0, time_value, count):
+            # it is not the responsibility of this tick labeling part to do
+            # anything fancy, if ticks are at points with endless decimals, the
+            # problem is with the selection of the ticks (e.g. weird choice of
+            # "number_of_ticks"). just avoid labeling with '.0' suffix if we
+            # indeed have an integer at hand
+            if int(_i) == _i:
+                _label = f'{_i:.0f}'
+            else:
+                _label = str(_i)
+            ticklabels.append(_label)
         self.axis[0].set_xticks(ticks)
         self.axis[0].set_xticklabels(ticklabels, rotation=self.tick_rotation,
                                      size=self.x_labels_size)
@@ -1233,10 +1252,20 @@ class WaveformPlotting(object):
         self._tr_delta = np.empty(self._tr_num)
         # TODO dynamic DATA_MAXLENGTH according to dpi
         for _i, tr in enumerate(self.stream):
-            if len(tr.data) >= self.max_npts:
+            method_ = self.plotting_method
+            if method_ is None:
+                if len(tr.data) >= self.max_npts:
+                    method_ = "fast"
+                else:
+                    method_ = "full"
+            method_ = method_.lower()
+            if method_ == 'fast':
                 tmp_data = signal.resample(tr.data, self.max_npts)
-            else:
+            elif method_ == 'full':
                 tmp_data = tr.data
+            else:
+                msg = "Invalid plot method: '%s'" % method_
+                raise ValueError(msg)
             # Initialising trace stats
             self._tr_data.append(tmp_data)
             self._tr_starttimes.append(tr.stats.starttime)
