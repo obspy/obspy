@@ -27,6 +27,7 @@ from pathlib import PurePath
 
 import numpy as np
 
+from obspy.core.util.attribdict import (AttribDict)
 from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 
 
@@ -247,12 +248,19 @@ def _get_entry_points(group, subgroup=None):
         if subgroup:
             features = {}
             for ep in eps:
+                # workaround to get the dist dict populated here
+                # from the debug it seems format_ep.dist.name contains "obspy"
+                ep.dist = AttribDict({"name": ep.value.split(".")[0]})
                 for sub_ep in eps_all[f'{group}.{ep.name}']:
                     if sub_ep.name == subgroup:
                         features[ep.name] = ep
                         break
         else:
-            features = {ep.name: ep for ep in eps}
+            for ep in eps:
+                # workaround to get the dist dict populated here
+                # from the debug it seems format_ep.dist.name contains "obspy"
+                ep.dist = AttribDict({"name": ep.value.split(".")[0]})
+                features[ep.name] = ep
     else:
         eps = importlib.metadata.entry_points(group=group)
         if subgroup:
