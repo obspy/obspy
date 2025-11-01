@@ -284,7 +284,14 @@ def _get_entry_points(group, subgroup=None):
         # compatibility workaround for Python 3.8 and 3.9
         eps_all = importlib.metadata.entry_points()
 
-        eps = eps_all[group]
+        try:
+            eps = eps_all[group]
+        except KeyError:
+            eps = {}
+            for key, ep in eps.items():
+                if group in key:
+                    eps[key] = ep
+
         if subgroup:
             features = {}
             for ep in eps:
