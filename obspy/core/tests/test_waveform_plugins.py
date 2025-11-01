@@ -21,8 +21,12 @@ from obspy.core.util.misc import buffered_load_entry_point, _ENTRY_POINT_CACHE
 
 def _get_default_eps(group, subgroup=None):
     eps = _get_entry_points(group, subgroup=subgroup)
-    eps = {ep: f for ep, f in eps.items()
-           if any(m in f.module for m in DEFAULT_MODULES)}
+    if sys.version_info.minor < 10:
+        eps = {ep: f for ep, f in eps.items()
+           if any(m in f.group for m in DEFAULT_MODULES)}
+    else:
+        eps = {ep: f for ep, f in eps.items()
+               if any(m in f.module for m in DEFAULT_MODULES)}
     return eps
 
 
