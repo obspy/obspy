@@ -606,7 +606,8 @@ def buffered_load_entry_point(dist, group, name):
             # information attached to them, so we have to check if any matching
             # entry point we find is listed in that distribution's entry point
             # list
-            dist_eps = importlib.metadata.distribution(group.split(".")[0]).entry_points
+            dist_eps = (importlib.metadata.distribution(group.split(".")[0])
+                        .entry_points)
 
             eps = list(
                 ep for ep in

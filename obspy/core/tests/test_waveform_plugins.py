@@ -494,16 +494,16 @@ class TestWaveformPlugins:
         # Get format name and name of the write function.
         if sys.version_info.minor < 10:
             formats = [(key, value.value) for key, value in
-                     _get_default_eps('obspy.plugin.waveform',
-                                      'writeFormat').items()
-                     # Only test plugins that are actually part of ObsPy.
-                     if value.dist.name == "obspy"]
+                       _get_default_eps('obspy.plugin.waveform',
+                                        'writeFormat').items()
+                       # Only test plugins that are actually part of ObsPy.
+                       if value.dist.name == "obspy"]
         else:
             formats = [(key, value.module) for key, value in
-                     _get_default_eps('obspy.plugin.waveform',
-                                      'writeFormat').items()
-                     # Only test plugins that are actually part of ObsPy.
-                     if value.dist.name == "obspy"]
+                       _get_default_eps('obspy.plugin.waveform',
+                                        'writeFormat').items()
+                       # Only test plugins that are actually part of ObsPy.
+                       if value.dist.name == "obspy"]
 
         # Test for stream as well as for trace.
         stream_trace = [read(), read()[0]]

@@ -301,7 +301,7 @@ def _get_entry_points(group, subgroup=None):
                         ep.dist.name = get_entry_point_dist_name(ep)
                 else:
                     ep.dist = AttribDict({"name":
-                                              get_entry_point_dist_name(ep)})
+                                          get_entry_point_dist_name(ep)})
                 for sub_ep in eps_all[f'{group}.{ep.name}']:
                     if sub_ep.name == subgroup:
                         features[ep.name] = ep
@@ -315,7 +315,7 @@ def _get_entry_points(group, subgroup=None):
                         ep.dist.name = get_entry_point_dist_name(ep)
                 else:
                     ep.dist = AttribDict({"name":
-                                              get_entry_point_dist_name(ep)})
+                                          get_entry_point_dist_name(ep)})
                 features[ep.name] = ep
     else:
         eps = importlib.metadata.entry_points(group=group)
