@@ -283,7 +283,11 @@ def _get_entry_points(group, subgroup=None):
     if sys.version_info.minor < 10:
         # compatibility workaround for Python 3.8 and 3.9
         eps_all = importlib.metadata.entry_points()
-        eps = eps_all[group]
+        eps = []
+        for key, ep in eps_all:
+            if group in key:
+                eps.append(ep)
+
         if subgroup:
             features = {}
             for ep in eps:
