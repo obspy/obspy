@@ -223,6 +223,44 @@ def get_example_file(filename):
     raise OSError(msg)
 
 
+def get_entry_point_dist_name(entry_point):
+    """
+    Gets the distribution name from an entry point regardless of whether
+    it comes from pkg_resources or importlib.metadata.
+
+    :param entry_point: An EntryPoint object from pkg_resources or importlib.metadata
+    :return: The distribution name as a string
+    """
+    # Check for pkg_resources style EntryPoint
+    if hasattr(entry_point, 'dist') and hasattr(entry_point.dist, 'name'):
+        return entry_point.dist.name
+
+    # Check for importlib.metadata style EntryPoint
+    if hasattr(entry_point, 'dist'):
+        # Python 3.10+ approach where ep.dist might be the distribution name
+        try:
+            from importlib.metadata import distribution
+            dist = distribution(entry_point.dist)
+            return dist.metadata['Name']
+        except:
+            return str(entry_point.dist)
+
+    # Fallback for older importlib.metadata versions
+    import os
+    import re
+
+    if hasattr(entry_point, 'origin') and entry_point.origin:
+        # Extract distribution name from the path
+        path = entry_point.origin
+        dist_info_dir = os.path.basename(os.path.dirname(path))
+        match = re.match(r'(.+?)(?:-\d+.*)?.dist-info', dist_info_dir)
+        if match:
+            return match.group(1)
+
+    # Last resort
+    return entry_point.name.split('.')[0]
+
+
 def _get_entry_points(group, subgroup=None):
     """
     Gets a dictionary of all available plug-ins of a group or subgroup.
@@ -249,8 +287,7 @@ def _get_entry_points(group, subgroup=None):
             features = {}
             for ep in eps:
                 # workaround to get the dist dict populated here
-                # from the debug it seems format_ep.dist.name contains "obspy"
-                ep.dist = AttribDict({"name": ep.value.split(".")[0]})
+                ep.dist = AttribDict({"name": get_entry_point_dist_name(ep)})
                 for sub_ep in eps_all[f'{group}.{ep.name}']:
                     if sub_ep.name == subgroup:
                         features[ep.name] = ep
@@ -259,8 +296,7 @@ def _get_entry_points(group, subgroup=None):
             features = {}
             for ep in eps:
                 # workaround to get the dist dict populated here
-                # from the debug it seems format_ep.dist.name contains "obspy"
-                ep.dist = AttribDict({"name": ep.value.split(".")[0]})
+                ep.dist = AttribDict({"name": get_entry_point_dist_name(ep)})
                 features[ep.name] = ep
     else:
         eps = importlib.metadata.entry_points(group=group)
