@@ -284,7 +284,7 @@ def _get_entry_points(group, subgroup=None):
         # compatibility workaround for Python 3.8 and 3.9
         eps_all = importlib.metadata.entry_points()
         eps = []
-        for key, ep in eps_all:
+        for key, ep in eps_all.items():
             if group in key:
                 eps.append(ep)
 
