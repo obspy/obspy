@@ -228,7 +228,8 @@ def get_entry_point_dist_name(entry_point):
     Gets the distribution name from an entry point regardless of whether
     it comes from pkg_resources or importlib.metadata.
 
-    :param entry_point: An EntryPoint object from pkg_resources or importlib.metadata
+    :param entry_point: An EntryPoint object from pkg_resources
+     or importlib.metadata
     :return: The distribution name as a string
     """
     # Check for pkg_resources style EntryPoint
@@ -258,7 +259,7 @@ def get_entry_point_dist_name(entry_point):
             return match.group(1)
 
     # Last resort
-    return entry_point.name.split('.')[0]
+    return entry_point.value.split('.')[0]
 
 
 def _get_entry_points(group, subgroup=None):
