@@ -387,7 +387,6 @@ SCIPY_VERSION = get_dependency_version('scipy')
 MATPLOTLIB_VERSION = get_dependency_version('matplotlib')
 CARTOPY_VERSION = get_dependency_version('cartopy')
 
-
 def get_dist_name(entry_point):
     # pkg_resources style
     if hasattr(entry_point, 'dist') and hasattr(entry_point.dist, 'name'):
@@ -415,7 +414,6 @@ def get_dist_name(entry_point):
     # Last resort
     return entry_point.name.split('.')[0]
 
-
 def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
@@ -433,7 +431,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
         for format_ep in eps.values():
             # search isFormat for given entry point
             is_format = buffered_load_entry_point(
-                get_dist_name(format_ep),
+                get_disp_name(format_ep),
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
             # If it is a file-like object, store the position and restore it
@@ -463,7 +461,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     try:
         # search readFormat for given entry point
         read_format = buffered_load_entry_point(
-            get_dist_name(format_ep),
+            get_disp_name(format_ep),
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
             'readFormat')
     except ImportError:
