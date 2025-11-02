@@ -434,16 +434,20 @@ class TestClient():
             assert len(st) == 1
 
     def test_reading_saczip_files(self):
-        st = self.c.get_waveforms(
-            model="test", network="IU", station="ANMO",
-            eventid="GCMT:C201002270634A", starttime="P-10",
-            endtime="P+10", components="Z", format="saczip")
+        with pytest.warns(UserWarning,
+                          match="Sample spacing read from SAC"):
+            st = self.c.get_waveforms(
+                model="test", network="IU", station="ANMO",
+                eventid="GCMT:C201002270634A", starttime="P-10",
+                endtime="P+10", components="Z", format="saczip")
         assert len(st) == 1
         # Same with bulk request.
-        st_bulk = self.c.get_waveforms_bulk(
-            model="test", bulk=[("IU", "ANMO")],
-            eventid="GCMT:C201002270634A", starttime="P-10",
-            endtime="P+10", components="Z", format="saczip")
+        with pytest.warns(UserWarning,
+                          match="Sample spacing read from SAC"):
+            st_bulk = self.c.get_waveforms_bulk(
+                model="test", bulk=[("IU", "ANMO")],
+                eventid="GCMT:C201002270634A", starttime="P-10",
+                endtime="P+10", components="Z", format="saczip")
         assert len(st_bulk) == 1
 
         assert st == st_bulk
