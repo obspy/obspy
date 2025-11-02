@@ -66,8 +66,8 @@ class TestEWClient:
         """Return a stream fetched from the test ew client with no cleanup."""
         kwargs = dict(
             network='AV',
-            station='ACH',
-            channel='BHZ',
+            station='AKV',
+            channel='BHE',
             cleanup=False,
         )
         return self.try_get_stream(ew_client, kwargs)
