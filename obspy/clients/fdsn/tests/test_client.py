@@ -114,7 +114,7 @@ class TestClient():
             Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
                    user="nobody@iris.edu", password="anonymous")
 
-    @pytest.mark.skip(reason='data no longer available')
+    # @pytest.mark.skip(reason='data no longer available')
     def test_trim_stream_after_get_waveform(self):
         """
         Tests that stream is properly trimmed to user requested times after
@@ -122,7 +122,7 @@ class TestClient():
         """
         c = Client(
             service_mappings={'dataselect':
-                              'http://ws.ipgp.fr/fdsnws/dataselect/1'})
+                              'https://ws.ipgp.fr/fdsnws/dataselect/1'})
         starttime = UTCDateTime('2016-11-01T00:00:00')
         endtime = UTCDateTime('2016-11-01T00:00:10')
         stream = c.get_waveforms('G', 'PEL', '*', 'LHZ', starttime, endtime)
@@ -1123,18 +1123,20 @@ class TestClient():
                         new_callable=mock.PropertyMock,
                         return_value=False):
             with pytest.raises(FDSNNoAuthenticationServiceException):
-                Client(eida_token="TEST")
+                Client("GFZ", eida_token="TEST", _discover_services=False)
 
         with pytest.raises(FDSNDoubleAuthenticationException):
-            Client("EARTHSCOPE", eida_token="TEST", user="TEST")
+            Client("GFZ", eida_token="TEST", user="TEST",
+                   _discover_services=False)
 
+        download_url_mock.reset_mock()
         download_url_mock.return_value = (401, None)
         with pytest.raises(FDSNUnauthorizedException):
-            self.client.get_stations()
+            self.client.get_stations(network='00', station='123')
 
         download_url_mock.return_value = (403, None)
         with pytest.raises(FDSNForbiddenException):
-            self.client.get_stations()
+            self.client.get_stations(network='00', station='123')
 
     def test_no_service_exception(self):
         """
@@ -1144,11 +1146,12 @@ class TestClient():
         with pytest.raises(FDSNNoServiceException):
             Client("http://nofdsnservice.org")
 
-    @pytest.mark.skip(reason='Token is expired')
+    @pytest.mark.skip(reason='EIDA token is expired')
     def test_eida_token_resolution(self, testdata):
         """
         Tests that EIDA tokens are resolved correctly and new credentials get
         installed with the opener of the Client.
+
         """
         token = testdata['eida_token.txt']
         with open(token, 'rb') as fh:
