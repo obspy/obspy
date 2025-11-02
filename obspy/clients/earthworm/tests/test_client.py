@@ -101,12 +101,10 @@ class TestEWClient:
         assert trace.stats.channel == 'BHE'
 
     @skip_on_network_error
-    #@pytest.mark.skip(reason='Example data AV.ACH..BHZ no longer valid')
+    @pytest.mark.skip(reason='Example data AV.AKV..BHE no longer valid')
     def test_get_waveform_no_cleanup(self, ew_client, ew_stream_no_cleanup):
         """
         Tests get_waveforms method again, 1 channel no cleanup.
-
-        note: one day AV.ACH..BHE may not return a split stream
         """
         # example 2 -- 1 channel, no cleanup
         ew_stream = ew_stream_no_cleanup
@@ -120,9 +118,9 @@ class TestEWClient:
         assert ew_stream[-1].stats.endtime <= self.end + delta
         for trace in ew_stream:
             assert trace.stats.network == 'AV'
-            assert trace.stats.station == 'ACH'
+            assert trace.stats.station == 'AKV'
             assert trace.stats.location in ('--', '')
-            assert trace.stats.channel == 'BHZ'
+            assert trace.stats.channel == 'BHE'
 
     @skip_on_network_error
     def test_get_waveform_widlcard(self, ew_client, ew_stream_wildcard):
