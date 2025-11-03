@@ -68,34 +68,34 @@ class ISFReader(object):
     encoding = 'UTF-8'
     resource_id_prefix = 'smi:local'
 
-    def __init__(self, fh, **kwargs):
+    def __init__(self, fh, skip_orphan=True, origin_specific_to_comments=False,
+                 _no_uuid_hashes=False, **kwargs):
         """
         :param fh: File handle to read from.
         :type fh: file-like object
-        :param _no_uuid_hashes: Default False.
-            If True, resource identifiers will not
-            get uuid hashes appended to them.
-            This is mainly useful for testing purposes.
-        :type _no_uuid_hashes: bool
-        :param skip_orphan: Default True.
+        :param skip_orphan:
             If False, orphan phase blocks will be skipped
             (i.e. if no origin could be assigned to the phase block).
         :type skip_orphan: bool
-        :param origin_specific_to_comments: Default False.
+        :param origin_specific_to_comments:
             If True, origin-specific data in orphan phase blocks
             will be stored as text in the Pick.comments attribute.
             This is against the spirit of QuakeML.
             Used to maintain backward compatibility.
         :type origin_specific_to_comments: bool
+        :param _no_uuid_hashes:
+            If True, resource identifiers will not
+            get uuid hashes appended to them.
+            This is mainly useful for testing purposes.
+        :type _no_uuid_hashes: bool
         """
         self.lines = [_decode_if_possible(line, self.encoding).rstrip()
                       for line in fh.readlines()
                       if line.strip()]
         self.cat = Catalog()
-        self._no_uuid_hashes = kwargs.get('_no_uuid_hashes', False)
-        self.skip_orphan = kwargs.get('skip_orphan', True)
-        self.origin_specific_to_comments = kwargs.get(
-            'origin_specific_to_comments', False)
+        self._no_uuid_hashes = _no_uuid_hashes
+        self.skip_orphan = skip_orphan
+        self.origin_specific_to_comments = origin_specific_to_comments
 
     def deserialize(self):
         if not self.lines:
