@@ -588,7 +588,6 @@ class ISFReader(object):
                       obspy.core.event.Amplitude or None,
                       obspy.core.event.StationMagnitude or None,
                       obspy.core.event.Arrival or None)
-        :meta private:
         """
 
         # It is called with the values_to_comments argument set to True
@@ -842,7 +841,6 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
         position after the function has been called.
     :type reset_fp: bool
     :param file_mode: Mode to open file in if necessary.
-    :meta private:
     """
     try:
         position = filename_or_buf.tell()
@@ -891,7 +889,6 @@ def _read_ims10_bulletin(filename_or_buf, **kwargs):
     :raises: :class:`~obspy.core.ObsPyReadingError` on problems to read file
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: Catalog object
-    :meta public:
     """
 
     # The default behavior is to skip orphaned phase blocks.
@@ -930,7 +927,6 @@ def __read_ims10_bulletin(fh, **kwargs):  # NOQA
     object.
 
     :param fh: File or file-like object
-    :meta private:
     """
     return ISFReader(fh, **kwargs).deserialize()
 
@@ -944,7 +940,6 @@ def _is_ims10_bulletin(filename_or_buf, **kwargs):
         object.
     :rtype: bool
     :return: ``True`` if ISF IMS1.0 bulletin file.
-    :meta public:
     """
     try:
         return _buffer_proxy(filename_or_buf, __is_ims10_bulletin,
