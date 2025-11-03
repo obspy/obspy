@@ -69,6 +69,25 @@ class ISFReader(object):
     resource_id_prefix = 'smi:local'
 
     def __init__(self, fh, **kwargs):
+        """
+        :param fh: File handle to read from.
+        :type fh: file-like object
+        :param _no_uuid_hashes: Default False.
+            If True, resource identifiers will not
+            get uuid hashes appended to them.
+            This is mainly useful for testing purposes.
+        :type _no_uuid_hashes: bool
+        :param skip_orphan: Default True.
+            If False, orphan phase blocks will be skipped
+            (i.e. if no origin could be assigned to the phase block).
+        :type skip_orphan: bool
+        :param origin_specific_to_comments: Default False.
+            If True, origin-specific data in orphan phase blocks
+            will be stored as text in the Pick.comments attribute.
+            This is against the spirit of QuakeML.
+            Used to maintain backward compatibility.
+        :type origin_specific_to_comments: bool
+        """
         self.lines = [_decode_if_possible(line, self.encoding).rstrip()
                       for line in fh.readlines()
                       if line.strip()]
@@ -659,6 +678,7 @@ class ISFReader(object):
         if slowness_defining_flag == 'S':
             horizontal_slowness_weight = 1
         # TAS flag (T, A, S, or _) not implemented in QuakeML
+        # but reflects in the weights above
         if values_to_comments:
             comments.append('TAS flag: "{}"'.format(line[73:76]))
 
@@ -773,8 +793,12 @@ class ISFReader(object):
                     amplitude_id=amplitude_id, waveform_id=waveform_id,
                     comments=[self._make_comment(comment)] if comment else []
                     )
-            if origin_id is None:
-                setattr(station_magnitude, 'origin_id', None)
+            # QuakeML in the ObsPy implementation stores <stationMagnitude>
+            # <originID> as a string, even if the StationMagnitude.origin_id
+            # attribute is set to None or missing it results
+            # in <originID>None</originID> in the XML file.
+            # if origin_id is None:
+            #     delattr(station_magnitude, 'origin_id')
             for key in ['mag_errors']:
                 setattr(station_magnitude, key, None)
         else:
@@ -856,33 +880,41 @@ def _read_ims10_bulletin(filename_or_buf, **kwargs):
         (distance, azimuth, residuals, defining flags).
         In previous versions, origin-specific data was always stored as text
         in the Pick.comments object.
-        Now this data is stored in the Arrival object according to QukaML.
+        Now this data is stored in the Arrival object according to QukeML.
         If it was not possible to assign the preferred origin (e.g., because
         multiple origins are given and the #PRIME or #OrigID tag is not present
         ), a warning is issued and the parsing of this phase block is skipped.
 
-        This default behavior can be changed by setting two optional arguments.
-        By setting `skip_orphan` to False and
-        `origin_specific_to_comments` to True, the phase block is analyzed even
-        if the preferred origin cannot be assigned.
-        However, since origin-specific data cannot be stored in the Arrival
-        object without a valid origin_id, this data is stored as text
-        in the Pick.comments attributes, similar to previous versions.
-
     :type file: str or :class:`~pathlib.Path` or
         file-like object( e.g. `ByesIO`)
     :param filename_or_buf: bulletin file to read
-    :param skip_orphan: Default True.
-        If False, orphan phase blocks will be skipped
-        (i.e. if no origin could be assigned to the phase block).
-    :param origin_specific_to_comments: Default False.
-        If True, origin-specific data in orphan phase blocks
-        will be stored as text in the Pick.comments
     :raises: :class:`~obspy.core.ObsPyReadingError` on problems to read file
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: Catalog object
     :meta public:
     """
+
+    # The default behavior is to skip orphaned phase blocks.
+    # This can be changed by calling the _read_ims10_bulletin function with
+    # two keyword arguments `skip_orphan` and `origin_specific_to_comments`.
+    # By setting `skip_orphan` to False and
+    # `origin_specific_to_comments` to True, the phase block is analyzed even
+    # if the preferred origin cannot be assigned.
+    # However, since origin-specific data cannot be stored in the Arrival
+    # object without a valid origin_id, this data is stored as text
+    # in the Pick.comments attributes, similar to previous versions.
+    # :param skip_orphan: Default True.
+    #     If False, orphan phase blocks will be skipped
+    #     (i.e. if no origin could be assigned to the phase block).
+    # :param origin_specific_to_comments: Default False.
+    #     If True, origin-specific data in orphan phase blocks
+    #     will be stored as text in the Pick.comments
+    # Use of these two options is not recommended,
+    # as the resulting Catalog object will not be fully
+    # in accordance with the QuakeML standard.
+    # They are only provided for backward compatibility.
+    # See the ISFReader.__init__ method docstring for details.
+
     try:
         return _buffer_proxy(filename_or_buf, __read_ims10_bulletin,
                              reset_fp=False, **kwargs)
