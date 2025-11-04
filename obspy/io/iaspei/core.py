@@ -308,10 +308,19 @@ class ISFReader(object):
         if len(event.origins) == 1:
             event.preferred_origin_id = event.origins[0].resource_id.id
             return
+        # number of origins tagged as #PRIME
+        n_prime = 0
         for origin in event.origins:
             for comment in origin.comments:
                 if "#PRIME" in comment.text.upper():
+                    n_prime += 1
                     event.preferred_origin_id = origin.resource_id.id
+                    break  # stop searching comments for this origin
+        if n_prime > 1:
+            msg = ('Multiple origins tagged as #PRIME for event {}, '
+                   'The last one tagged was taken as preferred.'.format(
+                       event.resource_id))
+            warnings.warn(msg)
 
     def _read_magnitudes(self):
         event = self.cat[-1]
@@ -900,17 +909,6 @@ def _read_ims10_bulletin(filename_or_buf, **kwargs):
     # However, since origin-specific data cannot be stored in the Arrival
     # object without a valid origin_id, this data is stored as text
     # in the Pick.comments attributes, similar to previous versions.
-    # :param skip_orphan: Default True.
-    #     If False, orphan phase blocks will be skipped
-    #     (i.e. if no origin could be assigned to the phase block).
-    # :param origin_specific_to_comments: Default False.
-    #     If True, origin-specific data in orphan phase blocks
-    #     will be stored as text in the Pick.comments
-    # Use of these two options is not recommended,
-    # as the resulting Catalog object will not be fully
-    # in accordance with the QuakeML standard.
-    # They are only provided for backward compatibility.
-    # See the ISFReader.__init__ method docstring for details.
 
     try:
         return _buffer_proxy(filename_or_buf, __read_ims10_bulletin,
