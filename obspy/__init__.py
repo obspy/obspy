@@ -68,24 +68,6 @@ _add_format_plugin_table(Stream.write, "waveform", "write", numspaces=8)
 _add_format_plugin_table(Catalog.write, "event", "write", numspaces=8)
 _add_format_plugin_table(Inventory.write, "inventory", "write", numspaces=8)
 
-if int(sys.version[0]) < 3:
-    raise ImportError("""You are running ObsPy >= 1.3 on Python 2
-
-ObsPy version 1.3 and above is not compatible with Python 2, and you still
-ended up with this version installed. This should not have happened.
-Make sure you have pip >= 9.0 and setuptools >= 24.2:
-
- $ pip install pip setuptools --upgrade
-
-Your choices:
-
-- Upgrade to Python 3.
-
-- Install an older version of ObsPy:
-
- $ pip install 'obspy<1.3'
-""")
-
 
 if __name__ == '__main__':
     import doctest
