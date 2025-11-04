@@ -43,18 +43,18 @@ EMSC        https://www.seismicportal.eu
 ETH         https://eida.ethz.ch
 GEOFON      https://geofon.gfz-potsdam.de
 GEONET      https://service.geonet.org.nz
-GFZ         http://geofon.gfz-potsdam.de
+GFZ         https://geofon.gfz-potsdam.de
 ICGC        https://ws.icgc.cat
 IESDMC      http://batsws.earth.sinica.edu.tw
 IGN         http://fdsnws.sismologia.ign.es
 INGV        https://webservices.ingv.it
-IPGP        http://ws.ipgp.fr
+IPGP        https://ws.ipgp.fr
 IRIS        https://service.iris.edu
 IRISDMC     https://service.iris.edu
 IRISPH5     https://service.iris.edu
 ISC         https://www.isc.ac.uk
 KAGSR       http://sdis.emsd.ru
-KNMI        http://rdsa.knmi.nl
+KNMI        https://rdsa.knmi.nl
 KOERI       https://eida.koeri.boun.edu.tr
 LMU         https://erde.geophysik.uni-muenchen.de
 NCEDC       https://service.ncedc.org
@@ -70,7 +70,7 @@ SCEDC       https://service.scedc.caltech.edu
 TEXNET      http://rtserve.beg.utexas.edu
 UIB-NORSAR  https://eida.geo.uib.no
 USGS        https://earthquake.usgs.gov
-USP         http://sismo.iag.usp.br
+USP         https://sismo.iag.usp.br
 
 (1) :meth:`~obspy.clients.fdsn.client.Client.get_waveforms()`: The following
     example illustrates how to request and plot 60 minutes of the ``"LHZ"``
