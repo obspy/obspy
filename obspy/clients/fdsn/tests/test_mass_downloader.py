@@ -13,7 +13,6 @@ import copy
 import logging
 import os
 import shutil
-import sys
 import tempfile
 from http.client import HTTPException
 from socket import timeout as socket_timeout
