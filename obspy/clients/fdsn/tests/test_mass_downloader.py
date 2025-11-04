@@ -15,13 +15,11 @@ import os
 import shutil
 import sys
 import tempfile
+from http.client import HTTPException
 from socket import timeout as socket_timeout
 from unittest import mock
 
 import pytest
-
-from http.client import HTTPException
-
 import numpy as np
 
 import obspy
