@@ -363,6 +363,33 @@ class TestMSEEDReadingAndWriting():
         for _i in range(5):
             assert stream[0].data[_i] == data[_i]
 
+        # Test reading from np.ndarray.
+        np_buffer = np.fromfile(testfile, dtype=np.int8)
+        stream = _read_mseed(np_buffer)
+        stream.verify()
+        assert stream[0].stats.network == 'NL'
+        assert stream[0].stats['station'] == 'HGN'
+        assert stream[0].stats.get('location') == '00'
+        assert stream[0].stats.npts == 11947
+        assert stream[0].stats['sampling_rate'] == 40.0
+        assert stream[0].stats.get('channel') == 'BHZ'
+        for _i in range(5):
+            assert stream[0].data[_i] == data[_i]
+
+        # Test reading from anything that exposes the buffer interface
+        stream = _read_mseed(np_buffer.tobytes())
+        stream.verify()
+        assert stream[0].stats.network == 'NL'
+        assert stream[0].stats['station'] == 'HGN'
+        assert stream[0].stats.get('location') == '00'
+        assert stream[0].stats.npts == 11947
+        assert stream[0].stats['sampling_rate'] == 40.0
+        assert stream[0].stats.get('channel') == 'BHZ'
+        for _i in range(5):
+            assert stream[0].data[_i] == data[_i]
+
+        # Test of reading huge file missing here
+
     def test_read_partial_time_window_from_file(self, testdata):
         """
         Uses obspy.io.mseed.mseed._read_mseed to read only read a certain time
