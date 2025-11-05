@@ -13,7 +13,7 @@ builtin methods, see e.g.
 
 For full control over the projection and map extent, a custom map can be
 set up (e.g. following the examples in the
-`cartopy documentation <https://scitools.org.uk/cartopy/docs/latest/gallery/index.html>`_),
+`cartopy documentation <https://cartopy.readthedocs.io/stable/gallery/index.html>`_),
 and then be reused for plots of
 e.g. :class:`~obspy.core.inventory.inventory.Inventory` or
 :class:`~obspy.core.event.catalog.Catalog` objects:
@@ -53,7 +53,7 @@ our SRTM data file (from CGIAR_) look like this::
 * GeoTiff elevation data is available e.g. from ASTER_
 * Shading/Illumination can be added.
 
-.. _cartopy: https://scitools.org.uk/cartopy/docs/latest/
+.. _cartopy: https://cartopy.readthedocs.io/stable/
 .. _pypi: https://pypi.org/project/Cartopy/
 .. _here: https://examples.obspy.org/srtm_1240-1300E_4740-4750N.asc.gz
 .. _CGIAR: https://srtm.csi.cgiar.org/

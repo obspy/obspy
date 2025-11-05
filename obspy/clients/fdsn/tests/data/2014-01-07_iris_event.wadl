@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <application xmlns="http://wadl.dev.java.net/2009/02">
    <doc title="FDSN event web service 1.0"/>
-   <resources base="http://service.iris.edu/fdsnws/event/1/">
+   <resources base="https://service.iris.edu/fdsnws/event/1/">
       <resource path="/">
          <method id="index" name="GET">
             <response>
