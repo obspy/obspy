@@ -206,11 +206,11 @@ AF CER -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 AF CVNA -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 
 DATACENTER=IRISDMC,http://ds.iris.edu
-DATASELECTSERVICE=http://service.iris.edu/fdsnws/dataselect/1/
-STATIONSERVICE=http://service.iris.edu/fdsnws/station/1/
-EVENTSERVICE=http://service.iris.edu/fdsnws/event/1/
-SACPZSERVICE=http://service.iris.edu/irisws/sacpz/1/
-RESPSERVICE=http://service.iris.edu/irisws/resp/1/
+DATASELECTSERVICE=https://service.iris.edu/fdsnws/dataselect/1/
+STATIONSERVICE=https://service.iris.edu/fdsnws/station/1/
+EVENTSERVICE=https://service.iris.edu/fdsnws/event/1/
+SACPZSERVICE=https://service.iris.edu/irisws/sacpz/1/
+RESPSERVICE=https://service.iris.edu/irisws/resp/1/
 AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         """
@@ -230,7 +230,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 
         assert p1.call_count == 1
         assert p1.call_args[0][0] == \
-            "http://service.iris.edu/irisws/fedcatalog/1/query"
+            "https://service.iris.edu/irisws/fedcatalog/1/query"
         assert p1.call_args[1]["data"] == (
             b"format=request\n"
             b"A* C* -- LHZ 2017-01-01T00:00:00.000000 "
@@ -240,7 +240,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
             "http://geofon.gfz-potsdam.de": (
                 "AF CER -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00\n"
                 "AF CVNA -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00"),
-            "http://service.iris.edu": (
+            "https://service.iris.edu": (
                 "AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00\n"
                 "AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00")}
         assert p2.call_args[1] == {"longestonly": True, "minimumlength": 2}
@@ -304,11 +304,11 @@ AF CER -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 AF CVNA -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 
 DATACENTER=IRISDMC,http://ds.iris.edu
-DATASELECTSERVICE=http://service.iris.edu/fdsnws/dataselect/1/
-STATIONSERVICE=http://service.iris.edu/fdsnws/station/1/
-EVENTSERVICE=http://service.iris.edu/fdsnws/event/1/
-SACPZSERVICE=http://service.iris.edu/irisws/sacpz/1/
-RESPSERVICE=http://service.iris.edu/irisws/resp/1/
+DATASELECTSERVICE=https://service.iris.edu/fdsnws/dataselect/1/
+STATIONSERVICE=https://service.iris.edu/fdsnws/station/1/
+EVENTSERVICE=https://service.iris.edu/fdsnws/event/1/
+SACPZSERVICE=https://service.iris.edu/irisws/sacpz/1/
+RESPSERVICE=https://service.iris.edu/irisws/resp/1/
 AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         """
@@ -328,7 +328,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 
         assert p1.call_count == 1
         assert p1.call_args[0][0] == \
-            "http://service.iris.edu/irisws/fedcatalog/1/query"
+            "https://service.iris.edu/irisws/fedcatalog/1/query"
         assert p1.call_args[1]["data"] == (
             b"level=network\n"
             b"format=request\n"
@@ -339,7 +339,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
             "http://geofon.gfz-potsdam.de": (
                 "AF CER -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00\n"
                 "AF CVNA -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00"),
-            "http://service.iris.edu": (
+            "https://service.iris.edu": (
                 "AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00\n"
                 "AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00")}
         assert p2.call_args[1] == {"level": "network"}

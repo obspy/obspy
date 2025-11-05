@@ -27,6 +27,8 @@ Changes:
      current msindex (see #3403)
  - obspy.clients.fdsn
    * Natural Resources Canada (NRCAN) added to list of known clients
+   * Spanish National Geographic Institute (IGN) added to known clients
+   * Various FDSNWS URL mappings updated to https
    * A FDSNNoServiceException is now raised instead of a ValueError when
      querying a webservice not present in Client.services  (see #3483)
    * make it possible to opt out of server side gzip compression (see #3469)

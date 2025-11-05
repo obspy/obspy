@@ -25,7 +25,7 @@ class Client(WaveformClient, HTTPClient):
     """
     Client for the EarthScope/IRIS Syngine service.
     """
-    def __init__(self, base_url="http://service.iris.edu/irisws/syngine/1",
+    def __init__(self, base_url="https://service.iris.edu/irisws/syngine/1",
                  user_agent=DEFAULT_USER_AGENT, debug=False, timeout=20):
         """
         Initializes a Syngine Client.
