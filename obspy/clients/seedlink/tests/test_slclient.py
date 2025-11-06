@@ -28,7 +28,7 @@ class TestSLClient():
         __name__ != '__main__', reason='test must be started manually')
     def test_info(self):
         sl_client = SLClient()
-        sl_client.slconn.set_sl_address("geofon.gfz-potsdam.de:18000")
+        sl_client.slconn.set_sl_address("geofon.gfz.de:18000")
         sl_client.infolevel = "ID"
         sl_client.verbose = 2
         sl_client.initialize()
@@ -38,7 +38,7 @@ class TestSLClient():
         __name__ != '__main__', reason='test must be started manually')
     def test_time_window(self):
         sl_client = SLClient()
-        sl_client.slconn.set_sl_address("geofon.gfz-potsdam.de:18000")
+        sl_client.slconn.set_sl_address("geofon.gfz.de:18000")
         sl_client.multiselect = ("GE_STU:BHZ")
         # set a time window from 2 min - 1 min in the past
         dt = UTCDateTime()

@@ -41,9 +41,9 @@ EARTHSCOPE  https://service.iris.edu
 EIDA        http://eida-federator.ethz.ch
 EMSC        https://www.seismicportal.eu
 ETH         https://eida.ethz.ch
-GEOFON      https://geofon.gfz-potsdam.de
+GEOFON      https://geofon.gfz.de
 GEONET      https://service.geonet.org.nz
-GFZ         https://geofon.gfz-potsdam.de
+GFZ         https://geofon.gfz.de
 ICGC        https://ws.icgc.cat
 IESDMC      http://batsws.earth.sinica.edu.tw
 IGN         http://fdsnws.sismologia.ign.es
