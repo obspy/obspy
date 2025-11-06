@@ -107,7 +107,7 @@ def main():
     # create SeedLink client
     sl_client = MySLClient(rt_trace=rttrace)
     #
-    sl_client.slconn.set_sl_address("geofon.gfz-potsdam.de:18000")
+    sl_client.slconn.set_sl_address("geofon.gfz.de:18000")
     sl_client.multiselect = ("GE_STU:BHZ")
     #
     # slClient.slconn.set_sl_address("discovery.rm.ingv.it:39962")
