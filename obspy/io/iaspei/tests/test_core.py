@@ -43,8 +43,9 @@ class TestIASPEI():
                     origin.origin_uncertainty.confidence_ellipsoid = None
                 # QuakeML reader seems to add empty QuantityError for
                 # pick.horizontal_slowness_errors
-                for key in ['time_errors', 'longitude_errors',
-                            'latitude_errors', 'depth_errors']:
+                for key in ['longitude_errors', 'latitude_errors',
+                            # 'depth_errors', 'time_errors',
+                            ]:
                     setattr(origin, key, None)
             for station_magnitude in event.station_magnitudes:
                 setattr(station_magnitude.waveform_id, 'network_code', None)

@@ -29,6 +29,7 @@
         <depth>
           <value>0.0</value>
         </depth>
+        <depthType>from location</depthType>
         <timeFixed>false</timeFixed>
         <epicenterFixed>false</epicenterFixed>
         <creationInfo>
@@ -48,8 +49,13 @@
         <depth>
           <value>6000.0</value>
         </depth>
+        <depthType>from location</depthType>
         <timeFixed>false</timeFixed>
         <epicenterFixed>false</epicenterFixed>
+        <quality>
+          <usedPhaseCount>96</usedPhaseCount>
+          <standardError>1.5</standardError>
+        </quality>
         <creationInfo>
           <author>USCGS</author>
         </creationInfo>
@@ -57,6 +63,7 @@
       <origin publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/origin/9093437">
         <time>
           <value>1967-01-30T01:20:28.170000Z</value>
+          <uncertainty>0.15</uncertainty>
         </time>
         <latitude>
           <value>41.0502</value>
@@ -67,8 +74,13 @@
         <depth>
           <value>5000.0</value>
         </depth>
+        <depthType>operator assigned</depthType>
         <timeFixed>false</timeFixed>
-        <epicenterFixed>true</epicenterFixed>
+        <epicenterFixed>false</epicenterFixed>
+        <quality>
+          <usedPhaseCount>76</usedPhaseCount>
+          <usedStationCount>70</usedStationCount>
+        </quality>
         <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
           <text> (Spitak, Armenia)</text>
         </comment>
@@ -105,6 +117,7 @@
         <depth>
           <value>33000.0</value>
         </depth>
+        <depthType>from location</depthType>
         <timeFixed>false</timeFixed>
         <epicenterFixed>false</epicenterFixed>
         <creationInfo>
@@ -124,8 +137,14 @@
         <depth>
           <value>10000.0</value>
         </depth>
+        <depthType>operator assigned</depthType>
         <timeFixed>false</timeFixed>
-        <epicenterFixed>true</epicenterFixed>
+        <epicenterFixed>false</epicenterFixed>
+        <quality>
+          <usedPhaseCount>168</usedPhaseCount>
+          <usedStationCount>144</usedStationCount>
+          <standardError>1.43</standardError>
+        </quality>
         <creationInfo>
           <author>EHB</author>
         </creationInfo>
@@ -140,6 +159,7 @@
       <origin publicID="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/origin/1838613">
         <time>
           <value>1967-01-30T01:20:28.700000Z</value>
+          <uncertainty>0.2</uncertainty>
         </time>
         <latitude>
           <value>41.09</value>
@@ -150,8 +170,17 @@
         <depth>
           <value>11000.0</value>
         </depth>
+        <depthType>constrained by depth phases</depthType>
         <timeFixed>false</timeFixed>
         <epicenterFixed>false</epicenterFixed>
+        <quality>
+          <usedPhaseCount>150</usedPhaseCount>
+          <usedStationCount>153</usedStationCount>
+          <standardError>1.85</standardError>
+          <azimuthalGap>21.0</azimuthalGap>
+          <minimumDistance>1.0</minimumDistance>
+          <maximumDistance>120.0</maximumDistance>
+        </quality>
         <comment id="smi:local/a1520fea-9164-4f27-bea3-d135bf2e9b24/comment">
           <text>location method: inversion</text>
         </comment>

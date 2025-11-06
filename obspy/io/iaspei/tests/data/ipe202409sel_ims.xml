@@ -16,6 +16,7 @@
         </time>
         <latitude/>
         <longitude/>
+        <depthType>from location</depthType>
         <timeFixed>false</timeFixed>
         <epicenterFixed>false</epicenterFixed>
         <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
@@ -91,6 +92,7 @@
       <origin publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032257">
         <time>
           <value>2024-09-01T12:33:19.910000Z</value>
+          <uncertainty>0.34</uncertainty>
         </time>
         <latitude>
           <value>49.8219</value>
@@ -101,8 +103,17 @@
         <depth>
           <value>1000.0</value>
         </depth>
+        <depthType>operator assigned</depthType>
         <timeFixed>false</timeFixed>
-        <epicenterFixed>true</epicenterFixed>
+        <epicenterFixed>false</epicenterFixed>
+        <quality>
+          <usedPhaseCount>9</usedPhaseCount>
+          <usedStationCount>5</usedStationCount>
+          <standardError>0.17</standardError>
+          <azimuthalGap>280.0</azimuthalGap>
+          <minimumDistance>0.66</minimumDistance>
+          <maximumDistance>1.6</maximumDistance>
+        </quality>
         <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
           <text>location method: inversion</text>
         </comment>
@@ -344,6 +355,7 @@
       <origin publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032696">
         <time>
           <value>2024-09-10T00:25:55.180000Z</value>
+          <uncertainty>0.31</uncertainty>
         </time>
         <latitude>
           <value>49.8293</value>
@@ -354,8 +366,17 @@
         <depth>
           <value>1000.0</value>
         </depth>
+        <depthType>operator assigned</depthType>
         <timeFixed>false</timeFixed>
-        <epicenterFixed>true</epicenterFixed>
+        <epicenterFixed>false</epicenterFixed>
+        <quality>
+          <usedPhaseCount>13</usedPhaseCount>
+          <usedStationCount>9</usedStationCount>
+          <standardError>0.12</standardError>
+          <azimuthalGap>280.0</azimuthalGap>
+          <minimumDistance>0.27</minimumDistance>
+          <maximumDistance>1.61</maximumDistance>
+        </quality>
         <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
           <text>location method: inversion</text>
         </comment>

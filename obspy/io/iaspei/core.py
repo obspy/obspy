@@ -17,7 +17,7 @@ from obspy.core.event import (
     Catalog, Event, Origin, Comment, EventDescription, OriginUncertainty,
     QuantityError, OriginQuality, CreationInfo, Magnitude, ResourceIdentifier,
     Pick, StationMagnitude, WaveformStreamID, Amplitude, Arrival)
-from obspy.core.event.header import AmplitudeUnit
+from obspy.core.event.header import AmplitudeUnit, OriginDepthType
 from obspy.core.util.obspy_types import ObsPyReadingError
 from obspy.io.iaspei.util import (
     float_or_none, int_or_none, fixed_flag, evaluation_mode_and_status,
@@ -51,6 +51,12 @@ EVENT_TYPE_CERTAINTY = {
     }
 LOCATION_METHODS = {'i': 'inversion', 'p': 'pattern recognition',
                     'g': 'ground truth', 'o': 'other', '': None}
+
+# Convert GSE2 depth flag to ObsPy depth type
+DEPTH_TYPES = {
+    'f': OriginDepthType('operator assigned'),
+    'd': OriginDepthType('constrained by depth phases'),
+}
 
 
 class ISFEndOfFile(StopIteration):
@@ -384,7 +390,7 @@ class ISFReader(object):
         depth = float_or_none(line[71:76], multiplier=1e3)
         # 77      a1    fixed flag (f = fixed depth station, d = depth phases,
         #                           blank if not a fixed depth)
-        depth_fixed = fixed_flag(line[76])
+        depth_type_flag = line[76].lower()
         # 79-82   f4.1  depth error 90% ([m]; blank if fixed depth)
         depth_error = float_or_none(line[78:82], multiplier=1e3)
         # 84-87   i4    number of defining phases
@@ -416,9 +422,17 @@ class ISFReader(object):
         # 129-136 a8    origin identification
         origin_id = self._construct_id(['origin', line[128:136].strip()])
 
-        # do some combinations
+        # process items
+        # convert GSE to ObsPy depth type
+        try:
+            depth_type = DEPTH_TYPES[depth_type_flag.strip()]
+        except KeyError:
+            depth_type = OriginDepthType('from location')
+        # assemble depth error
+        # if depth_error is not None
         depth_error = depth_error and dict(uncertainty=depth_error,
                                            confidence_level=90)
+        # assemble origin uncertainty
         if all(v is not None for v in (_uncertainty_major_m,
                                        _uncertainty_minor_m,
                                        _uncertainty_major_azimuth)):
@@ -434,11 +448,17 @@ class ISFReader(object):
                 setattr(origin_uncertainty, key, None)
         else:
             origin_uncertainty = None
+        # assemble origin quality
         origin_quality = OriginQuality(
             standard_error=rms, used_phase_count=used_phase_count,
             used_station_count=used_station_count, azimuthal_gap=azimuthal_gap,
             minimum_distance=minimum_distance,
             maximum_distance=maximum_distance)
+        # Check for any quality information present
+        res = any(vars(origin_quality).values())
+        if not res:
+            origin_quality = None
+
         comments = []
         if location_method:
             comments.append(
@@ -449,16 +469,19 @@ class ISFReader(object):
             creation_info = None
         # assemble whole event
         origin = Origin(
-            time=time, resource_id=origin_id, longitude=longitude,
-            latitude=latitude, depth=depth, depth_errors=depth_error,
-            origin_uncertainty=origin_uncertainty, time_fixed=time_fixed,
-            epicenter_fixed=epicenter_fixed or depth_fixed,
-            origin_quality=origin_quality,
-            comments=comments, creation_info=creation_info)
+                   resource_id=origin_id,
+                   time=time, time_errors=time_error, time_fixed=time_fixed,
+                   longitude=longitude, latitude=latitude,
+                   origin_uncertainty=origin_uncertainty,
+                   epicenter_fixed=epicenter_fixed,
+                   depth=depth, depth_errors=depth_error,
+                   depth_type=depth_type, quality=origin_quality,
+                   comments=comments, creation_info=creation_info)
         # event init always sets an empty QuantityError, even when specifying
         # None, which is strange
-        for key in ('time_errors', 'longitude_errors', 'latitude_errors',
-                    'depth_errors'):
+        for key in ('longitude_errors', 'latitude_errors',
+                    # 'depth_errors', 'time_errors',
+                    ):
             setattr(origin, key, None)
         return origin, event_type, event_type_certainty
 
