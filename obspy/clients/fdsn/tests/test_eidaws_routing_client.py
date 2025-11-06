@@ -118,7 +118,7 @@ class TestEIDAWSRoutingClientNoNetwork():
 
     def test_response_splitting(self):
         data = """
-http://geofon.gfz-potsdam.de/fdsnws/station/1/query
+http://geofon.gfz.de/fdsnws/station/1/query
 NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
 
 http://www.orfeus-eu.org/fdsnws/station/1/query
@@ -138,7 +138,7 @@ ND * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
         # fdsn implementation and the POST payload ready to be submitted.
         assert EIDAWSRoutingClient._split_routing_response(data) == \
             {
-                "http://geofon.gfz-potsdam.de": (
+                "http://geofon.gfz.de": (
                     "NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00"),
                 "http://www.orfeus-eu.org": (
                     "NS * * * 2017-01-01T00:00:00 2017-01-01T00:10:00\n"
@@ -152,14 +152,14 @@ ND * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
                     "ND * * * 2017-01-01T00:00:00 2017-01-01T00:10:00")}
 
         data = """
-http://geofon.gfz-potsdam.de/fdsnws/station/1/query
+http://geofon.gfz.de/fdsnws/station/1/query
 NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00
         """.strip()
         # This should return a dictionary that contains the root URL of each
         # fdsn implementation and the POST payload ready to be submitted.
         assert EIDAWSRoutingClient._split_routing_response(data) == \
             {
-                "http://geofon.gfz-potsdam.de": (
+                "http://geofon.gfz.de": (
                     "NU * * * 2017-01-01T00:00:00 2017-01-01T00:10:00")}
 
     def test_response_splitting_fdsnws_subdomain(self):
