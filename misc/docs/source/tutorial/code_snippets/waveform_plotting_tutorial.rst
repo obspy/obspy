@@ -114,13 +114,25 @@ by setting parameter ``type`` to ``'section'``:
 
     >>> stream.plot(type='section')
 
-To plot a record section the ObsPy header ``trace.stats.distance`` (Offset) must be 
-defined in meters. Or a geographical location ``trace.stats.coordinates.latitude`` & 
-``trace.stats.coordinates.longitude`` must be defined if the section is plotted in 
-great circle distances (``dist_degree=True``) along with parameter ``ev_coord``. 
+To plot a record section the ObsPy header ``trace.stats.distance`` (Offset) must be
+defined in meters. Or a geographical location ``trace.stats.coordinates.latitude`` &
+``trace.stats.coordinates.longitude`` must be defined if the section is plotted in
+great circle distances (``dist_degree=True``) along with parameter ``ev_coord``.
 For further information please see :meth:`~obspy.core.stream.Stream.plot`
 
 .. plot:: tutorial/code_snippets/waveform_plotting_tutorial_6.py
+
+----------------------------------------------------
+Plotting a Stream or a Record Section with TimeMarks
+----------------------------------------------------
+
+A :class:`~obspy.core.stream.Stream` object plot with type equal to section,
+normal or relative can be shown with time-marks information by adding the option
+``plot_time_marks=True``. Of course, th other necessary parameters (depending
+on type) must be provided as well.
+For further information please see :meth:`~obspy.core.stream.Stream.plot`
+
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_8.py
 
 --------------------
 Plot & Color Options
