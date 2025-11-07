@@ -182,6 +182,10 @@ def _read_stationxml(path_or_file_object, level='response'):
     inv = obspy.core.inventory.Inventory(networks=networks, source=source,
                                          sender=sender, created=created,
                                          module=module, module_uri=module_uri)
+
+    # Do not forget to attach the nsmap namespaces to the root element.
+    inv._namespaces = root.nsmap
+
     _read_extra(root, inv)  # read extra tags from root element
     return inv
 
@@ -895,8 +899,13 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
     :param nsmap: Additional custom namespace abbreviation
         mappings (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
     """
+
     if nsmap is None:
-        nsmap = {}
+        try:
+            nsmap = inventory._namespaces
+        except AttributeError:
+            nsmap = {}
+
     elif None in nsmap:
         msg = ("Custom namespace mappings do not allow redefinition of "
                "default StationXML namespace (key `None`). "
@@ -1245,7 +1254,7 @@ def _write_io_units(parent, obj):
     etree.SubElement(sub, "Name").text = \
         str(obj.output_units)
     _obj2tag(sub, "Description", obj.output_units_description)
-    _write_extra(parent, obj)
+    _write_extra(sub, obj)
 
 
 def _write_polynomial_common_fields(element, polynomial):
@@ -1463,7 +1472,7 @@ def _write_equipment(parent, equipment, tag="Equipment"):
     for calibration_date in equipment.calibration_dates:
         etree.SubElement(equipment_elem, "CalibrationDate").text = \
             str(calibration_date)
-    _write_extra(parent, equipment)
+    _write_extra(equipment_elem, equipment)
 
 
 def _write_site(parent, site):
@@ -1475,7 +1484,7 @@ def _write_site(parent, site):
     _obj2tag(site_elem, "County", site.county)
     _obj2tag(site_elem, "Region", site.region)
     _obj2tag(site_elem, "Country", site.country)
-    _write_extra(parent, site)
+    _write_extra(site_elem, site)
 
 
 def _write_comment(parent, comment):
@@ -1494,7 +1503,7 @@ def _write_comment(parent, comment):
             str(comment.end_effective_time)
     for author in comment.authors:
         _write_person(comment_elem, author, "Author")
-    _write_extra(parent, comment)
+    _write_extra(comment_elem, comment)
 
 
 def _write_data_availability(parent, data_availability):
@@ -1541,7 +1550,7 @@ def _write_person(parent, person, tag_name):
         etree.SubElement(person_elem, "Email").text = email
     for phone in person.phones:
         _write_phone(person_elem, phone)
-    _write_extra(parent, person)
+    _write_extra(person_elem, person)
 
 
 def _write_phone(parent, phone):
@@ -1554,7 +1563,7 @@ def _write_phone(parent, phone):
             str(phone.country_code)
     etree.SubElement(phone_elem, "AreaCode").text = str(phone.area_code)
     etree.SubElement(phone_elem, "PhoneNumber").text = phone.phone_number
-    _write_extra(parent, phone)
+    _write_extra(phone_elem, phone)
 
 
 def _write_element(parent, element, name):
