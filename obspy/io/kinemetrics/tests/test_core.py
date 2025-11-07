@@ -59,7 +59,7 @@ class TestCore():
             # The is_evt() method should not change the file pointer.
             assert buf.tell() == 0
 
-    def test_read_via_obspy(self, testdata):
+    def test_read_via_obspy1(self, testdata):
         """
         Read files via obspy.core.stream.read function.
         """
@@ -78,12 +78,16 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.0
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
-        # 2
+    def test_read_via_obspy2(self, testdata):
+        """
+        Read files via obspy.core.stream.read function.
+        """
         filename = testdata['BX456_MOLA-02351.evt']
         st = read(filename, apply_calib=True)
         st.verify()
@@ -104,8 +108,9 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
+        assert st[0].stats.calib == 1.0
 
-    def test_reading_via_obspy_and_bytesio(self, testdata):
+    def test_read_via_obspy_and_bytesio1(self, testdata):
         """
         Test the reading of Evt files from BytesIO objects.
         """
@@ -127,11 +132,16 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.0
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
+    def test_read_via_obspy_and_bytesio2(self, testdata):
+        """
+        Test the reading of Evt files from BytesIO objects.
+        """
         # 2
         filename = testdata['BX456_MOLA-02351.evt']
         with open(filename, "rb") as fh:
@@ -156,8 +166,9 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
+        assert st[0].stats.calib == 1.0
 
-    def test_read_via_module(self, testdata):
+    def test_read_via_module1(self, testdata):
         """
         Read files via obspy.io.kinemetrics.core.read_evt function.
         """
@@ -176,12 +187,16 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.0
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
-        # 2
+    def test_read_via_module2(self, testdata):
+        """
+        Read files via obspy.io.kinemetrics.core.read_evt function.
+        """
         filename = testdata['BX456_MOLA-02351.evt']
         st = read_evt(filename, apply_calib=True)
         st.verify()
@@ -226,6 +241,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.0
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
@@ -255,6 +271,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
+        assert st[0].stats.calib == 1.0
 
     def verify_stats_evt(self, evt_stats):
         dico = {'chan_fullscale': 2.5, 'chan_sensorgain': 1,
@@ -330,6 +347,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.1694431304931641e-06
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0_raw(st[0].data)

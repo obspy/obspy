@@ -16,7 +16,7 @@ def is_evt(filename_or_object):
     """
     Checks whether a file is Evt or not.
 
-    :type filename_or_object: str or file-like object
+    :type filename_or_object: filename or file-like object
     :param filename_or_object: Evt file to be checked
     :rtype: bool
     :return: ``True`` if a Evt file, ``False`` otherwise
