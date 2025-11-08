@@ -21,17 +21,17 @@ from obspy.io.sitexml.core import ValueWithUncertainty
 from obspy.io.sitexml.sitexml import validate_sitexml
 
 # Define some constants for writing SiteXML files.
-SCHEMA_VERSION = "1.2"
+SCHEMA_VERSION = "1.3"
 NAMESPACE = "http://www.orfeus-eu.org/xml/site/1"
 #READABLE_VERSIONS = ("1.0", "1.1", "1.2")
 
 def _write_sitexml(sera_site, file_or_file_object, validate=False,
 					  nsmap=None):
 	"""
-	Writes an inventory object to a buffer.
+	Writes a sera_site object to a buffer.
 
-	:type sitexml: :class:`~obspy.io.sitexml.core.SERASite`
-	:param sitexml: The sitexml instance to be written.
+	:type sera_site: :class:`~obspy.io.sitexml.core.SERASite`
+	:param sera_site: The sitexml instance to be written.
 	:param file_or_file_object: The file or file-like object to be written to.
 	:type validate: bool
 	:param validate: If True, the created document will be validated with the
@@ -55,7 +55,7 @@ def _write_sitexml(sera_site, file_or_file_object, validate=False,
 	root = etree.Element("SERA_quakeml", nsmap=nsmap)
 	
 	etree.SubElement(root, "schemaVersion").text = SCHEMA_VERSION
-	etree.SubElement(root, "created").text = str(sera_site.created)
+	etree.SubElement(root, "creationTime").text = str(sera_site.created)
 
 	if sera_site.site_owner:
 		_write_site_owner(root, sera_site.site_owner)
@@ -108,7 +108,7 @@ def _write_site_owner(parent, site_owner):
 	
 	contact_elem = etree.SubElement(site_owner_elem, "contact")
 
-	attribs = {"personID": site_owner.personID} if site_owner.personID else None
+	attribs = {"publicID": site_owner.personID} if site_owner.personID else None
 	person_elem = etree.SubElement(contact_elem, "person", attribs)
 	_obj2tag(person_elem, "firstname", site_owner.person_firstname)
 	_obj2tag(person_elem, "lastname", site_owner.person_lastname)
@@ -116,16 +116,16 @@ def _write_site_owner(parent, site_owner):
 	_obj2tag(person_elem, "homepage", site_owner.person_homepage)
 	
 	affiliation_elem = etree.SubElement(contact_elem, "affiliation")
-	_obj2tag(affiliation_elem, "department", site_owner.affiliation_department)
-	_obj2tag(affiliation_elem, "function", site_owner.affiliation_function)
 	
-	institution_elem = etree.SubElement(affiliation_elem, "institution")
-	identifier_elem = etree.SubElement(institution_elem, "identifier")
-	_obj2tag(identifier_elem, "resourceID", site_owner.institution_ID)
+	attribs = {"publicID": site_owner.institutionID} if site_owner.institutionID else None
+	institution_elem = etree.SubElement(affiliation_elem, "institution", attribs)	
 	_obj2tag(institution_elem, "name", site_owner.institution_name)
 	_obj2tag(institution_elem, "mbox", site_owner.institution_mbox)
 	_obj2tag(institution_elem, "phone", site_owner.institution_phone)
 	_obj2tag(institution_elem, "homepage", site_owner.institution_homepage)
+	_obj2tag(affiliation_elem, "department", site_owner.affiliation_department)
+	_obj2tag(affiliation_elem, "function", site_owner.affiliation_function)
+
 	
 	postal_address_elem = etree.SubElement(institution_elem, "postalAddress")
 	_obj2tag(postal_address_elem, "streetAddress", site_owner.address_street)
@@ -138,8 +138,10 @@ def _write_site_owner(parent, site_owner):
 	
 def _write_site_description(parent, site_description):
 
-	site_description_elem = etree.SubElement(parent, "siteDescription")
+	attribs = {"publicID": site_description.publicID} if site_description.publicID else None
+	site_description_elem = etree.SubElement(parent, "siteDescription", attribs)
 
+	_obj2tag(site_description_elem, "station", site_description.station_code)
 	_write_value(site_description_elem, "latitude", 
 				site_description.latitude)
 	
@@ -155,19 +157,27 @@ def _write_site_description(parent, site_description):
 	_write_value(site_description_elem, "maxDistanceFromStation", 
 				site_description.max_distance_from_station)
 	
+	if site_description.topographyA or site_description.topographyB:
+		site_topography_elem = etree.SubElement(site_description_elem, "siteTopography")
+		_obj2tag(site_topography_elem, "schemeA", site_description.topographyA)
+		_obj2tag(site_topography_elem, "schemeB", site_description.topographyB)
+
 	site_morphology_elem = etree.SubElement(site_description_elem, "siteMorphology")
 	_obj2tag(site_morphology_elem, "morphology", site_description.morphology)
 	
-	if site_description.topologyA or site_description.topologyB:
-		site_topology_elem = etree.SubElement(site_morphology_elem, "siteTopology")
-		_obj2tag(site_topology_elem, "schemeA", site_description.topologyA)
-		_obj2tag(site_topology_elem, "schemeB", site_description.topologyB)
+	_write_site_indicator(site_morphology_elem, "siteClassEC8", 
+					   site_description.ec8)
+	_write_site_indicator(site_morphology_elem, "bedrockDepth", 
+					   site_description.bedrock_depth)
+	_write_site_indicator(site_morphology_elem, "h800", 
+					   site_description.h800)
+	_write_site_indicator(site_morphology_elem, "geologicalUnit", 
+					   site_description.geological_unit)
 
-	_write_site_indicator(site_morphology_elem, "siteClassEC8", site_description.ec8)
-	_write_site_indicator(site_morphology_elem, "bedrockDepth", site_description.bedrock_depth)
-	_write_site_indicator(site_morphology_elem, "h800", site_description.h800)
-	# Bellow also write mapscale and geomap if available
-	_write_site_indicator(site_morphology_elem, "geologicalUnit", site_description.geological_unit)
+	_obj2tag(site_description_elem, "preferredSiteAnalysisID", 
+		  site_description.preferred_site_analysisID)
+	_obj2tag(site_description_elem, "preferredVelocityProfileID", 
+		  site_description.preferred_velocity_profileID)
 
 def _write_site_characterization(parent, site_characterization):
 
@@ -175,37 +185,77 @@ def _write_site_characterization(parent, site_characterization):
 	site_characterization_elem = etree.SubElement(parent, 
 						"siteCharacterizationParameters", attribs)
 	
-	attribs = {"publicID": site_characterization.analysis_publicID} if site_characterization.analysis_publicID else None
-	analysis_elem = etree.SubElement(site_characterization_elem, "Analysis", attribs)
+	if site_characterization.analysis:
+		for analysis in site_characterization.analysis:
+			
+			attribs = {"publicID": analysis.publicID} if analysis.publicID else None
+			analysis_elem = etree.SubElement(site_characterization_elem, "analysis", attribs)
 
-	_write_site_indicator(analysis_elem, 
-					   "resonanceFrequency", 
-					   site_characterization.resonance_frequency)
-	_write_site_indicator(analysis_elem, 
-					   "velocityS30", 
-					   site_characterization.velocity_s30)
-	
-	_obj2tag(analysis_elem, 
-		  "velocityProfileCount", 
-		  site_characterization.velocity_profile_count)
-	_obj2tag(analysis_elem, 
-		  "sptLogsCount", 
-		  site_characterization.spt_logs_count)
-	_obj2tag(analysis_elem, 
-		  "cptLogsCount", 
-		  site_characterization.cpt_logs_count)
-	_obj2tag(analysis_elem, 
-		  "boreholeLogsCount", 
-		  site_characterization.borehole_logs_count)
+			_obj2tag(analysis_elem, "siteDescriptionID", analysis.site_descriptionID)
 
-	if site_characterization.velocity_profile:
-		_write_velocity_profile(site_characterization_elem, 
-						  site_characterization.velocity_profile)
-	
+			# TODOs
+			# Write CreationInfo
+			# Write Comments
+
+			_write_site_indicator(analysis_elem, "resonanceFrequency", 
+					   analysis.resonance_frequency)
+			_write_site_indicator(analysis_elem, "velocityS30", 
+					   analysis.velocity_s30)
+
+			_obj2tag(analysis_elem, "velocityProfileCount", analysis.velocity_profile_count)
+			_obj2tag(analysis_elem, "sptLogsCount", analysis.spt_logs_count)
+			_obj2tag(analysis_elem, "cptLogsCount", analysis.cpt_logs_count)
+			_obj2tag(analysis_elem, "boreholeLogsCount", analysis.borehole_logs_count)
+
+			_write_velocity_profile(analysis_elem, 
+								analysis.velocity_profile_survey)	
+
+def _write_velocity_profile(parent, velocity_profile_survey):
+
+	if velocity_profile_survey:
+		if velocity_profile_survey.velocity_profiles:
+			for vp in velocity_profile_survey.velocity_profiles:
+				index = velocity_profile_survey.velocity_profiles.index(vp)
+				comment = etree.Comment(f" Velocity profile # {index+1} ")
+				parent.append(comment)
+
+				attribs = {"publicID": vp.publicID} if vp.publicID else None
+				vp_elem = etree.SubElement(parent, "velocityProfile", attribs)
+				_obj2tag(vp_elem, "layerCount", vp.layer_count)
+
+				for vp_data in vp.velocity_profile_data:
+					vp_data_elem = etree.SubElement(vp_elem, "velocityProfileData")
+					_write_value_with_uncertainty(vp_data_elem, 
+									"velocityP", 
+									vp_data.velocityP)
+					_write_value_with_uncertainty(vp_data_elem, 
+									"velocityS", 
+									vp_data.velocityS)
+					_write_value_with_uncertainty(vp_data_elem, 
+									"density", 
+									vp_data.density)
+					
+					geometry_elem = etree.SubElement(vp_data_elem, "layerThickness")
+					_write_value_with_uncertainty(geometry_elem, 
+									"layerTopDepth", 
+									vp_data.top_depth)
+					_write_value_with_uncertainty(geometry_elem, 
+									"layerBottomDepth", 
+									vp_data.bottom_depth)
+		# 
+		#  
+		_write_value(parent, "velocityProfileQindex1", velocity_profile_survey.quality_index)
+		_write_reference(parent, velocity_profile_survey)
+
+		# Σε συνδυασμό  με το read_Site_xml να γίνει κατάλληλος έλεγχος 
+		# και διαχείριση της περίπτωσης που
+		# το layer_count δεν είναι ίσο με το μέγεθος της λίστας των μεγεθών.
+
 def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
 
 	if site_indicator_obj:
 
+		# Write site indicator value
 		# ec8 / geological_unit don't have a value sub-element !!
 		if isinstance(site_indicator_obj.value, ValueWithUncertainty):
 			_write_value_with_uncertainty(parent, site_indicator_name, site_indicator_obj.value)
@@ -213,67 +263,29 @@ def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
 			etree.SubElement(parent, site_indicator_name).text = \
 				str(site_indicator_obj.value)
 		
-		_write_value(parent, site_indicator_name + "Qindex1", site_indicator_obj.quality_index)
+		# Write site indicator quality index
+		_write_value_with_uncertainty(parent, 
+			site_indicator_name + "Qindex1", 
+			site_indicator_obj.quality_index)
 
+		# Write site indicator methods (valid for resonanceFrequency and velocityS30)
 		_write_methods(parent, site_indicator_name, site_indicator_obj)
 
-		# Write velocityS30MethodCombIndex / velocityS30ManualIndex
+		if site_indicator_name == "geologicalUnit":
+			_obj2tag(parent, "geologicalMapScale", 
+			site_indicator_obj.geological_map_scale)
+			_obj2tag(parent, "geologicalUnitOGE", 
+			site_indicator_obj.geological_unit_OGE)
+
+		if site_indicator_name == "velocityS30":
+			_obj2tag(parent, "velocityS30MethodCombIndex", 
+			site_indicator_obj.method_combined_quality_index)
+			_obj2tag(parent, "velocityS30ManualIndex", 
+			site_indicator_obj.manual_quality_index)
+
+		# Write site indicator reference
 		_write_reference(parent, site_indicator_obj)
-
-	return
-
-def _write_velocity_profile(parent, vp_obj):
 	
-	_write_value(parent, "velocityProfileQindex1", vp_obj.quality_index)
-	_write_reference(parent, vp_obj)
-
-	for vp_data in vp_obj.velocity_profile_data:
-		index = vp_obj.velocity_profile_data.index(vp_data)
-		comment = etree.Comment(f" Velocity profile # {index+1} ")
-		parent.append(comment)
-
-		vp_elem = etree.SubElement(parent, "VelocityProfile")
-		
-		_write_value(vp_elem, "layerCount", vp_data.layer_count)
-		vp_data_elem = etree.SubElement(vp_elem, "velocityProfileData")
-		
-		# Σε συνδυασμό  με το read_Site_xml να γίνει κατάλληλος έλεγχος 
-		# και διαχείριση της περίπτωσης που
-		# το layer_count δεν είναι ίσο με το μέγεθος της λίστας των μεγεθών.
-		# for i in range(vp_data.layer_count):
-		# Important: We need to have only one loop!!!
-		
-		for i in range(0, vp_data.layer_count):
-			if len(vp_data.density) > i:
-				_write_value_with_uncertainty(vp_data_elem, 
-								  "density", 
-								  vp_data.density[i])
-			if len(vp_data.velocityP) > i:
-				_write_value_with_uncertainty(vp_data_elem, 
-								  "velocityP", 
-								  vp_data.velocityP[i])
-			if len(vp_data.velocityS) > i:
-				_write_value_with_uncertainty(vp_data_elem, 
-								  "velocityS", 
-								  vp_data.velocityS[i])
-			if len(vp_data.top_depth) > i:
-				_write_value_with_uncertainty(vp_data_elem, 
-								  "layerTopDepth", 
-								  vp_data.top_depth[i])
-			if len(vp_data.bottom_depth) > i:
-				_write_value_with_uncertainty(vp_data_elem, 
-								  "layerBottomDepth", 
-								  vp_data.bottom_depth[i])
-		"""
-		for i in range(len(vp_data.density)):
-		for i in range(len(vp_data.velocityP)):	
-		for i in range(len(vp_data.velocityS)):	
-		for i in range(len(vp_data.top_depth)):	
-		for i in range(len(vp_data.bottom_depth)):	
-		"""
-			#_obj2tag(vp_data_elem, "density", vp_data.density[i])
-	
-
 def _write_reference(parent, site_indicator_obj):
 
 	literature_obj = site_indicator_obj.literature_source
@@ -285,21 +297,21 @@ def _write_reference(parent, site_indicator_obj):
 	if literature_obj:
 		literature_elem = etree.SubElement(reference_elem, "literatureSource")
 		_obj2tag(literature_elem, "title", literature_obj.title)
-		_obj2tag(literature_elem, "first_author", literature_obj.first_author)
-		_obj2tag(literature_elem, "secondary_authors", literature_obj.secondary_authors)
+		_obj2tag(literature_elem, "firstAuthor", literature_obj.first_author)
+		_obj2tag(literature_elem, "secondaryAuthors", literature_obj.secondary_authors)
 		_obj2tag(literature_elem, "year", literature_obj.year)
 		_obj2tag(literature_elem, "booktitle", literature_obj.booktitle)
-		_obj2tag(literature_elem, "DOI", literature_obj.doi)
+		_obj2tag(literature_elem, "doi", literature_obj.doi)
 		
 		if literature_obj.language:
 			language_elem = etree.SubElement(literature_elem, "language")
 			_obj2tag(language_elem, "code", literature_obj.language)
 	 
 	if file_obj:    
-		file_resource_elem = etree.SubElement(reference_elem, "FileResource")
-		_obj2tag(file_resource_elem, "url", file_obj.uri)
+		file_resource_elem = etree.SubElement(reference_elem, "fileResource")
 		_obj2tag(file_resource_elem, "description", file_obj.description)
-
+		_obj2tag(file_resource_elem, "url", file_obj.uri)
+		
 def _write_methods(parent, site_indicator_name, site_indicator_obj):
 
 	if site_indicator_obj.methods:
@@ -357,7 +369,7 @@ def _obj2tag(parent, tag_name, tag_value):
 	If tag_value is not None, append a SubElement to the parent. The text of
 	the tag will be tag_value.
 	"""
-	if tag_value:
+	if tag_value is not None:
 		if isinstance(tag_value, float):
 			text = str(tag_value)
 		else:

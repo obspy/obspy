@@ -56,6 +56,22 @@ Allowed values are:
 * ``"Ridge"``
 """
 
+MorphologyType = Enum([
+    "Plain",
+    "Valley - Basin",
+    "Slope",
+    "Ridge",
+])
+"""
+Qualitative description of the shape of the earth's surface.
+Allowed values are:
+
+* ``"Plain"``
+* ``"Valley - Basin"``
+* ``"Slope"``
+* ``"Ridge"``
+"""
+
 EC8Class = Enum([
     "A", 
     "B", 
@@ -95,7 +111,6 @@ Allowed values are:
 
 * ``"HVSR EARTHQUAKE RECORDS"``
 * ``"HVSR NOISE"``
-* ``"Flat"``
 * ``"SSR EARTHQUAKE RECORDS"``
 * ``"SSR NOISE"``
 * ``"INFERRED"``
@@ -122,7 +137,8 @@ VelocityS30Method = Enum([
      "DH Strong Motion Arrays"
 ])
 """
-Method by which velocityS30Value has been determined
+Method used for the extraction of S-wave velocity profiles and, thus, 
+of the average shear-wave velocity over the top 30 meters of the soil column, Vs30.
 Allowed values are:
 
 * ``"Geology"``
