@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<!-- edited with XMLSpy v2020 rel. 2 (x64) (http://www.altova.com) by cornou (ISTERRE) -->
+<!-- Edited with XMLSpy v2020 rel. 2 (x64) (http://www.altova.com) by cornou (ISTERRE) 
+     Updated to schema version 1.3 by Kiriaki Konstantinidou for ORFEUS 	
+-->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.orfeus-eu.org/xml/site/1"
 targetNamespace="http://www.orfeus-eu.org/xml/site/1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.3">
 	<xs:annotation>
@@ -9,9 +11,263 @@ targetNamespace="http://www.orfeus-eu.org/xml/site/1" elementFormDefault="qualif
 		</xs:documentation>
 	</xs:annotation>
 
-	<xs:complexType name="LanguageType">		<!-- Maybe replace this with a simple language_code element -->
+	<!-- SIMPLE TYPES --> 
+	<xs:simpleType name="ResourceIdentifier"> 
+		<xs:restriction base="xs:anyURI"/> 
+	</xs:simpleType>
+
+	<xs:simpleType name="EC8ClassType">
+		<xs:annotation>
+			<xs:documentation>
+				Ground type according to Eurocode 8 (EC8 § 3.1.2, Table 3.1), 
+				based on the velocityS30Value and geotechnical description
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:restriction base="xs:string">
+      		<xs:enumeration value="A"/>
+      		<xs:enumeration value="B"/>
+      		<xs:enumeration value="C"/>
+      		<xs:enumeration value="D"/>
+			<xs:enumeration value="E"/>
+			<xs:enumeration value="S1"/>
+			<xs:enumeration value="S2"/>
+			<xs:enumeration value="Undefined"/>
+    	</xs:restriction>
+  	</xs:simpleType>
+
+	<xs:simpleType name="TopographySchemaAType">
+		<xs:annotation>
+			<xs:documentation>
+				Topography is a precise (quantitative) description of the ground surface 
+				features of a site. Schema A is the topography description scheme of the Italian Code.
+				T1 : Flat surface, isolated slopes and cliffs with average slop angle 
+				T2 : Slopes with average slope angle i>15
+				T3 : Ridges with crest width significantly less than the base width and average slope angle 15
+				T4 : Ridges with crest width significantly less than the base width and average slope angle i>30
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:restriction base="xs:string">
+      		<xs:enumeration value="T1"/>
+      		<xs:enumeration value="T2"/>
+      		<xs:enumeration value="T3"/>
+      		<xs:enumeration value="T4"/>
+		</xs:restriction>
+  	</xs:simpleType>
+
+	<xs:simpleType name="TopographySchemaBType">
+		<xs:annotation>
+			<xs:documentation>
+				Topography is a precise (quantitative) description of the ground surface 
+				features of a site. Schema B is the one proposed by Burjanek et al. (2014).
+				For the precise definition of the allowed values refer to SERA Deliverable D7.1.
+				<!-- Add URL poinding to the SERA deliverbal or to the SiteXML documentation -->
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:restriction base="xs:string">
+      		<xs:enumeration value="Valley"/>
+      		<xs:enumeration value="Lower slope"/>
+      		<xs:enumeration value="Flat"/>
+      		<xs:enumeration value="Middle slope"/>
+			<xs:enumeration value="Upper slope"/>
+			<xs:enumeration value="Ridge"/>
+		</xs:restriction>
+  	</xs:simpleType>
+
+	<xs:simpleType name="MorphologyType">
+		<xs:annotation>
+			<xs:documentation>
+				Qualitative description of the shape of the earth's surface
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:restriction base="xs:string">
+      		<xs:enumeration value="Plain"/>
+      		<xs:enumeration value="Valley - Basin"/>
+      		<xs:enumeration value="Slope"/>
+			<xs:enumeration value="Ridge"/>
+		</xs:restriction>
+  	</xs:simpleType>
+
+	<xs:simpleType name="ResonanceFrequencyMethodType">
+		<xs:annotation>
+			<xs:documentation>
+				Method by which resonance frequency (dominant_frequency) has been determined.
+				Used to determine the Quality Index of the provided f0 of a site.
+				For more information, see SERA Deliverable 7.1, Appendix II.
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:restriction base="xs:string">
+      		<xs:enumeration value="HVSR EARTHQUAKE RECORDS"/>
+      		<xs:enumeration value="HVSR NOISE"/>
+			<xs:enumeration value="SSR EARTHQUAKE RECORDS"/>
+      		<xs:enumeration value="SSR NOISE"/>
+			<xs:enumeration value="INFERRED"/>
+		</xs:restriction>
+  	</xs:simpleType>
+
+	<xs:simpleType name="VelocityS30MethodType">
+		<xs:annotation>
+			<xs:documentation>
+				Method used for the extraction of S-wave velocity profiles and, thus, 
+				of the average shear-wave velocity over the top 30 meters of the soil column, Vs30.
+				Used to determine the Quality Index of the provided Vs30 of a site.
+				For more information, see SERA Deliverable 7.1, Appendix IV.
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:restriction base="xs:string">
+      		<xs:enumeration value="Geology"/>
+      		<xs:enumeration value="Topographic Slope"/>
+      		<xs:enumeration value="SPT"/>
+			<xs:enumeration value="CPT"/>
+			<xs:enumeration value="Laboratory"/>
+			<xs:enumeration value="S-REFR"/>
+			<xs:enumeration value="S-REFL"/>
+			<xs:enumeration value="SASW"/>
+			<xs:enumeration value="MASW"/>
+			<xs:enumeration value="SWI"/>
+			<xs:enumeration value="SPAC/F-K"/>
+			<xs:enumeration value="ReMi"/>
+			<xs:enumeration value="Crosshole"/>
+			<xs:enumeration value="Downhole"/>
+			<xs:enumeration value="Uphole"/>
+			<xs:enumeration value="P-S Log"/>
+			<xs:enumeration value="Seismic Cone"/>
+			<xs:enumeration value="DH Strong Motion Arrays"/>
+		</xs:restriction>
+  	</xs:simpleType>
+
+	<xs:simpleType name="velocityS30MethodCombIndexType">
+		<xs:annotation>
+			<xs:documentation> 
+				Carries the information on whether a combination of two methods or more has been applied 
+				to estimate the Vs30 value. It is used for the estimation of the Vs30 quality index.
+				Allowed values: 
+				1.0 : if only one method has been used to estimate the Vs30 value
+				1.2 : if a combination of two or more methods has been applied to estimate the Vs30 value
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:enumeration value="1.0"/>
+			<xs:enumeration value="1.2"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="velocityS30ManualIndexType">
+		<xs:annotation>
+			<xs:documentation> 
+				Overall qualitative factor on the knowledge of the maximum depth of Vs measurements, 
+				which is most commonly related to the depth the EC8 engineering bedrock (Vs≥800 m/s). 
+				The reasoning for introducing this index and description of its values is provided in 
+				SERA Deliverable 7.1, Appendix III.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:enumeration value="0.2"/>
+			<xs:enumeration value="0.4"/>
+			<xs:enumeration value="0.8"/>
+			<xs:enumeration value="1.0"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="CounterType">
+		<xs:annotation>
+			<xs:documentation>Integers greater than or equal to 0.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- COMPLEX TYPES --> 
+	<xs:complexType name="ExternalReferenceType">
+		<xs:annotation>
+			<xs:documentation>This type contains a URI and description for external data that users
+				may want to reference in SiteXML.</xs:documentation>
+		</xs:annotation>
 		<xs:sequence>
-		<xs:element name="code" type="xs:string"/>
+			<xs:element name="URI" type="xs:anyURI"/>
+			<xs:element name="Description" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="CommentType">
+		<xs:sequence>
+			<xs:element name="text" type="xs:string"/>
+			<xs:element name="creationInfo" type="CreationInfoType" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+    </xs:complexType>
+
+	<xs:complexType name="CreationInfoType">
+    	<xs:sequence>
+        	<xs:element name="author" type="PersonType" minOccurs="0" maxOccurs="1"/>
+        	<xs:element name="agency" type="InstitutionType" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="creationTime" type="xs:dateTime"/>
+		</xs:sequence>
+    </xs:complexType>
+
+	<xs:complexType name="SiteOwnerType">
+		<xs:sequence>
+			<xs:element name="codeName" type="xs:string"/>
+			<xs:element name="fullName" type="xs:string"/>
+			<xs:element name="contact" type="ContactType"/>
+		</xs:sequence>
+		<xs:attribute name="publicID" type="ResourceIdentifier"/>
+	</xs:complexType>
+	
+	<xs:complexType name="ContactType">
+		<xs:sequence>
+			<xs:element name="person" type="PersonType"/>
+			<xs:element name="affiliation" type="AffiliationType"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="PersonType">
+		<xs:sequence>
+			<xs:element name="firstname" type="xs:string"/>
+			<xs:element name="lastname" type="xs:string"/>
+			<xs:element name="mbox" type="xs:string"/>
+			<xs:element name="homepage" type="xs:anyURI" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="publicID" type="ResourceIdentifier"/>
+	</xs:complexType>
+
+	<xs:complexType name="AffiliationType">
+		<xs:sequence>
+			<xs:element name="institution" type="InstitutionType"/>
+			<xs:element name="department" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="function" type="xs:string" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="InstitutionType">
+		<xs:sequence>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="mbox" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="phone" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="homepage" type="xs:anyURI" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="postalAddress" type="PostalAddressType" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="publicID" type="ResourceIdentifier"/>
+	</xs:complexType>
+	
+	<xs:complexType name="PostalAddressType">
+		<xs:sequence>
+			<xs:element name="streetAddress" type="xs:string"/>
+			<xs:element name="locality" type="xs:string"/>
+			<xs:element name="postalCode" type="xs:string"/>
+			<xs:element name="country" type="CountryType"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="CountryType">
+		<xs:sequence>
+			<xs:element name="code" type="xs:string"/>
+			<xs:element name="country" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>	
+
+	<xs:complexType name="LanguageType">
+		<xs:sequence>
+			<xs:element name="code" type="xs:string"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -19,280 +275,251 @@ targetNamespace="http://www.orfeus-eu.org/xml/site/1" elementFormDefault="qualif
 		<xs:sequence>
 			<xs:element name="title" type="xs:string"/>
 			<xs:element name="firstAuthor" type="xs:string"/>
-			<xs:element name="secondaryAuthors" type="xs:string"/>
-			<xs:element name="year" type="xs:string"/>
-			<xs:element name="booktitle" type="xs:string"/>
-			<xs:element name="language" type="LanguageType"/>
-			<xs:element name="DOI" type="xs:string"/>
+			<xs:element name="secondaryAuthors" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="year" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="booktitle" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="doi" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="language" type="LanguageType" minOccurs="0" maxOccurs="1"/>
+				<!--
+				<xs:simpleType>
+					<xs:restriction base="ResourceIdentifier">
+						<xs:pattern value="doi:.*"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+				-->
 		</xs:sequence>
 	</xs:complexType>
 
 	<xs:complexType name="FileResourceType">
 		<xs:sequence>
-		<xs:element name="description" type="xs:string"/>
-		<xs:element name="url" type="xs:anyURI"/>
+			<xs:element name="description" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="url" type="xs:anyURI" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 	</xs:complexType>
 
 	<xs:complexType name="ReferenceType">
 		<xs:sequence>
-		<xs:element name="literatureSource" type="LiteratureSourceType"/>
-		<xs:element name="FileResource" type="FileResourceType"/>
+			<xs:element name="literatureSource" type="LiteratureSourceType" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="fileResource" type="FileResourceType" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:complexType name="RealValueWithUncertaintyType">
+	<xs:complexType name="RealQuantity">
 		<xs:sequence>
 			<xs:element name="value" type="xs:double"/>		<!-- This element is required if the parent element exists-->
 			<xs:element name="uncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:complexType name="RealValueType">
-  		<xs:sequence>
-    		<xs:element name="value" type="xs:double"/> 	<!-- This element is required if the parent element exists-->
-  		</xs:sequence>
+	<xs:complexType name="IntegerQuantity">
+		<xs:sequence>
+			<xs:element name="value" type="xs:int"/>
+			<xs:element name="uncertainty" type="xs:int" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
 	</xs:complexType>
 
-	<xs:complexType name="IntValueWithUncertaintyType">
-		<xs:sequence>
-			<xs:element name="value" type="xs:int"/>		<!-- This element is required if the parent element exists-->
-			<xs:element name="uncertainty" type="xs:int" minOccurs="0" maxOccurs="1"/>
+<!-- 	
+	<xs:complexType name="RealValueType">
+  		<xs:sequence>
+    		<xs:element name="value" type="xs:double"/> 	
 		</xs:sequence>
 	</xs:complexType>
 
 	<xs:complexType name="IntValueType">
   		<xs:sequence>
-    		<xs:element name="value" type="xs:int"/> 	<!-- This element is required if the parent element exists-->
+    		<xs:element name="value" type="xs:int"/> 
   		</xs:sequence>
 	</xs:complexType>
+-->
+  	<xs:complexType name="LayerGeometry">
+    	<xs:sequence>
+    		<xs:element name="layerTopDepth" type="RealQuantity"/>
+    		<xs:element name="layerBottomDepth" type="RealQuantity" minOccurs="0" maxOccurs="1"/>  <!-- Bottom depth may be missing for last layer -->
+		</xs:sequence>
+    </xs:complexType>
+	
+	<xs:complexType name="VelocityProfileData">
+    	<xs:sequence>
+    		<xs:element name="velocityP" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+    		<xs:element name="velocityS" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+    		<xs:element name="density" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+    		<xs:element name="layerThickness" type="LayerGeometry" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+    </xs:complexType>
 
+	<xs:complexType name="VelocityProfile">
+    	<xs:sequence>
+        	<xs:element name="layerCount" type="CounterType"/>
+        	<xs:element name="velocityProfileData" type="VelocityProfileData" minOccurs="1" maxOccurs="unbounded"/>
+      	</xs:sequence>
+    	<xs:attribute name="publicID" use="required" type="ResourceIdentifier"/> 
+		<!-- We need a way to tell the preferred velocity profile.
+		either add here an attribute "preferred" or add o preferredVPID in siteDescription or analysis objects.
+		The later will be consistent with the preferredAnalysisID in siteDescription. -->
+    </xs:complexType>
+<!--
 	<xs:complexType name="SiteIndicatorType">
 		<xs:sequence>
-		<xs:element name="value" type="xs:double" minOccurs="1" maxOccurs="1"/>
-		<xs:element name="uncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="value" type="xs:double" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="uncertainty" type="xs:double" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
+	</xs:complexType>
+-->
+
+	<xs:complexType name="SiteMorphologyType">
+		<xs:sequence>
+			<xs:element name="morphology" type="MorphologyType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>This in not included in the QuakeML 2.0 draft</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<!-- ***************** EC8 CLASS **************************    -->
+			<xs:element name="siteClassEC8" type="EC8ClassType" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="siteClassEC8Qindex1" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="siteClassEC8Reference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+			<!-- ***************** SEISMOLOGICAL BEDROCK DEPTH **************************    -->
+			<xs:element name="bedrockDepth" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="bedrockDepthQindex1" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="bedrockDepthReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+			<!-- ***************** ENGINEERING  BEDROCK DEPTH **************************    -->
+			<xs:element name="h800" type="RealQuantity" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>This is not included in the QuakeML 2.0 draft</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="h800Qindex1" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="h800Reference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+			<!-- ***************** GEOLOGY **************************    -->
+			<xs:element name="geologicalUnit" minOccurs="0" maxOccurs="1">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="255"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="geologicalUnitQindex1" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="geologicalMapScale" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="geologicalUnitOGE" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="geologicalUnitReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+			
+	<xs:complexType name="SiteTopographyType">
+		<xs:sequence>
+			<xs:element name="schemeA" type="TopographySchemaAType">
+				<xs:annotation>
+					<xs:documentation>This is not included in 2.0</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="schemeB" type="TopographySchemaBType"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="SiteDescriptionType">
+		<xs:sequence>
+			<xs:element name="station" type="xs:string" minOccurs="0" maxOccurs="1" /> <!-- optional -->
+			<xs:element name="latitude" type="RealQuantity"/>		<!-- mandatory -->
+			<xs:element name="longitude" type="RealQuantity"/>	 <!-- mandatory -->
+			<xs:element name="altitude" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="minDistanceFromStation" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="maxDistanceFromStation" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="siteTopography" type="SiteTopographyType" minOccurs="0" maxOccurs="1"/>		<!-- Is this optional ? -->
+			<xs:element name="siteMorphology" type="SiteMorphologyType" minOccurs="0" maxOccurs="1"/> <!-- Is this optional ? -->
+			<xs:element name="preferredSiteAnalysisID" type="ResourceIdentifier"> <!-- mandatory ?? What if analysis is missing ? -->
+				<xs:annotation>
+					<xs:documentation>It is mandatory to select one Site Analysis object as the preferred.
+					The Overall Quality index of the Site Characterization will be calculated using the preferred analysis.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="preferredVelocityProfileID" type="ResourceIdentifier"/> <!-- optional -->
+			<xs:element name="overallQindex" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="comment" type="CommentType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="publicID" type="ResourceIdentifier"/>
+	</xs:complexType>
+	
+	<xs:complexType name="AnalysisType">
+		<xs:sequence>
+			<xs:element name="siteDescriptionID" type="ResourceIdentifier"> <!-- mandatory -->
+				<xs:annotation>
+					<xs:documentation>The Site Description this Analysis object refers to.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="creationInfo" type="CreationInfoType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Date that this analysis was generated. 
+						You may not include this information if you provide referencies for the individual site indicators.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="comment" type="CommentType" minOccurs="0" maxOccurs="unbounded"/>
+			<!--   ************** RESONANCE FREQUENCY  **********     -->
+			<xs:element name="resonanceFrequency" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="resonanceFrequencyQindex1" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="resonanceFrequencyMethod" type="ResonanceFrequencyMethodType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="resonanceFrequencyReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+			<!--   ************** VS30   **********     -->
+			<xs:element name="velocityS30" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="velocityS30Qindex1" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="velocityS30Method" type="VelocityS30MethodType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="velocityS30MethodCombIndex" type="velocityS30MethodCombIndexType" minOccurs="0" maxOccurs="1"/>		
+			<xs:element name="velocityS30ManualIndex" type="velocityS30ManualIndexType" minOccurs="0" maxOccurs="1"/>	
+			<xs:element name="velocityS30Reference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+			<!--  **************** OTHER PARAMETERS REQUESTED BY EGD ******* -->
+			<xs:element name="velocityProfileCount" type="CounterType" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="sptLogsCount" type="CounterType" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="cptLogsCount" type="CounterType" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="boreholeLogsCount" type="CounterType" minOccurs="0" maxOccurs="1"/>
+			<!-- **************** VELOCITY PROFILE *********************** -->
+			<xs:element name="velocityProfile" type="VelocityProfile" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="velocityProfileQindex1" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="velocityProfileReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="publicID" type="ResourceIdentifier"/> <!-- mandatory -->
 	</xs:complexType>
 
 	<xs:element name="SERA_quakeml">
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element name="schemaVersion" type="xs:decimal">
+				<xs:element name="schemaVersion" type="xs:string"> <!-- mandatory -->
 					<xs:annotation>
 						<xs:documentation>The SiteXML schema version of this document.</xs:documentation>
-						<xs:documentation><example>1.2</example></xs:documentation>
+						<xs:documentation><example>1.3</example></xs:documentation>
 					</xs:annotation>
 				</xs:element>
-				<xs:element name="created" type="xs:dateTime">
+				<xs:element name="creationTime" type="xs:dateTime"> <!-- mandatory -->
 					<xs:annotation>
-						<xs:documentation>Date that this document was generated.
+						<xs:documentation>Date that this document was generated</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="externalReference" type="ExternalReferenceType" minOccurs="0" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>URI of any type of external resource that may include 
+							site characterization information on this site. May occur more than one time. 
 						</xs:documentation>
 					</xs:annotation>
 				</xs:element>
 				<!--   ************** SITE OWNER *************************     -->
-				<xs:element name="siteOwner">
+				<xs:element name="siteOwner" type="SiteOwnerType"> <!-- mandatory -->
 					<xs:annotation>
 						<xs:documentation>siteOwner is not defined in QuakeML 2.0 draft</xs:documentation>
 					</xs:annotation>
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element name="codeName" type="xs:string"/>
-							<xs:element name="fullName" type="xs:string"/>
-							<xs:element name="contact">
-								<xs:complexType>
-									<xs:sequence>
-										<xs:element name="person">
-											<xs:complexType>
-												<xs:sequence>
-													<xs:element name="firstname" type="xs:string"/>
-													<xs:element name="lastname" type="xs:string"/>
-													<xs:element name="mbox" type="xs:string"/>
-													<xs:element name="homepage" type="xs:anyURI"/>
-												</xs:sequence>
-												<xs:attribute name="personID" type="xs:string"/>
-											</xs:complexType>
-										</xs:element>
-										<xs:element name="affiliation">
-											<xs:complexType>
-												<xs:sequence>
-													<xs:element name="institution">
-														<xs:complexType>
-															<xs:sequence>
-																<xs:element name="identifier">
-																	<xs:complexType>
-																		<xs:sequence>
-																			<xs:element name="resourceID" type="xs:string"/>
-																		</xs:sequence>
-																	</xs:complexType>
-																</xs:element>
-																<xs:element name="name" type="xs:string"/>
-																<xs:element name="mbox" type="xs:string"/>
-																<xs:element name="phone" type="xs:string"/>
-																<xs:element name="homepage" type="xs:anyURI"/>
-																<xs:element name="postalAddress">
-																	<xs:complexType>
-																		<xs:sequence>
-																			<xs:element name="streetAddress" type="xs:string"/>
-																			<xs:element name="locality" type="xs:string"/>
-																			<xs:element name="postalCode" type="xs:string"/>
-																			<xs:element name="country">
-																				<xs:complexType>
-																					<xs:sequence>
-																						<xs:element name="code" type="xs:string"/>
-																						<xs:element name="country" type="xs:string"/>
-																					</xs:sequence>
-																				</xs:complexType>
-																			</xs:element>
-																		</xs:sequence>
-																	</xs:complexType>
-																</xs:element>
-															</xs:sequence>
-														</xs:complexType>
-													</xs:element>
-													<xs:element name="department" type="xs:string"/>
-													<xs:element name="function" type="xs:string"/>
-												</xs:sequence>
-											</xs:complexType>
-										</xs:element>
-									</xs:sequence>
-								</xs:complexType>
-							</xs:element>
-						</xs:sequence>
-						<xs:attribute name="publicID" type="xs:string"/>
-					</xs:complexType>
 				</xs:element>
+				<!--   ************** SITE DESCRIPTION *************************     -->
+				<xs:element name="siteDescription" type="SiteDescriptionType"/>  <!-- mandatory --> <!-- Only one Site Description object -->
 				<!--   ************** SITE CONDITION INDICATORS **********     -->
-				<xs:element name="siteCharacterizationParameters">
+				<xs:element name="siteCharacterizationParameters" minOccurs="0" maxOccurs="1"> <!-- optional ??? -->
 					<xs:complexType>
 						<xs:sequence>
-							<xs:element name="Analysis">
-								<xs:complexType mixed="true">
-									<xs:sequence>
-										<!--   ************** RESONANCE FREQUENCY  **********     -->
-										<xs:element name="resonanceFrequency" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="resonanceFrequencyQindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="resonanceFrequencyMethod" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
-										<xs:element name="resonanceFrequencyReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
-										<!--   ************** VS30   **********     -->
-										<xs:element name="velocityS30" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="velocityS30Qindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="velocityS30Method" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
-										<xs:element name="velocityS30MethodCombIndex" type="xs:string" minOccurs="0" maxOccurs="1"/>		<!-- This should be double? -->
-										<xs:element name="velocityS30ManualIndex" type="xs:string" minOccurs="0" maxOccurs="1"/>			<!-- This should be double? -->
-										<xs:element name="velocityS30Reference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
-										<!--  **************** OTHER PARAMETERS REQUESTED BY EGD ******* -->
-										<xs:element name="velocityProfileCount" type="IntValueType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="sptLogsCount" type="IntValueType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="cptLogsCount" type="IntValueType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="boreholeLogsCount" type="IntValueType" minOccurs="0" maxOccurs="1"/>
-									</xs:sequence>
-									<xs:attribute name="publicID" type="xs:string"/>
-								</xs:complexType>
-							</xs:element>
-							<!-- **************** VELOCITY PROFILE *********************** -->
-							<xs:element name="VelocityProfile" minOccurs="0" maxOccurs="unbounded">
-								<xs:complexType>
-									<xs:sequence>
-										<xs:choice minOccurs="0" maxOccurs="unbounded">
-											<xs:element name="layerCount" type="IntValueType" minOccurs="0" maxOccurs="1"/>
-											<xs:element name="velocityProfileData">
-												<xs:complexType>
-													<xs:sequence>
-														<xs:choice minOccurs="0" maxOccurs="unbounded">
-															<xs:element name="density" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
-															<xs:element name="velocityP" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
-															<xs:element name="velocityS" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
-															<xs:element name="layerThickness" minOccurs="0" maxOccurs="1">
-																<xs:complexType>
-																	<xs:sequence>
-																		<xs:element name="layerTopDepth" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
-																		<xs:element name="layerBottomDepth" type="RealValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
-																	</xs:sequence>
-																</xs:complexType>
-															</xs:element>
-														</xs:choice>
-													</xs:sequence>
-												</xs:complexType>
-											</xs:element>
-										</xs:choice>
-									</xs:sequence>
-								</xs:complexType>
-							</xs:element>
-							<xs:element name="velocityProfileQindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
-							<xs:element name="velocityProfileReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
-						</xs:sequence>
-						<xs:attribute name="publicID" type="xs:string"/>
-					</xs:complexType>
-				</xs:element>
-				<xs:element name="siteDescription">
-					<xs:complexType>
-						<xs:sequence>
-							<!-- Option 1: Use a RealValueType if extensibility is needed -->
-							<xs:element name="latitude" type="RealValueType"/>		<!-- Must exist exactly one time -->
-							<xs:element name="longitude" type="RealValueType"/>	
-							<xs:element name="altitude" type="RealValueType" minOccurs="0" maxOccurs="1"/>
-							<xs:element name="minDistanceFromStation" type="RealValueType" minOccurs="0" maxOccurs="1"/>
-							<xs:element name="maxDistanceFromStation" type="RealValueType" minOccurs="0" maxOccurs="1"/>
-							<!-- Option 2: Use a simple element statement if no extra metadata is needed and don't expect to extent it in the future
-							<xs:element name="minDistanceFromStation" type="xs:double" minOccurs="0" maxOccurs="1"/>
-							<xs:element name="maxDistanceFromStation" type="xs:double" minOccurs="0" maxOccurs="1"/>
-							-->
-							<xs:element name="siteMorphology"> <!-- Is this optional ? -->
-								<xs:complexType>
-									<xs:sequence>
-										<!-- ***************** EC8 CLASS **************************    -->
-										<xs:element name="siteClassEC8" type="xs:string" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="siteClassEC8Qindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="siteClassEC8Reference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
-										<!-- ***************** SEISMOLOGICAL BEDROCK DEPTH **************************    -->
-										<xs:element name="bedrockDepth" type="IntValueWithUncertaintyType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="bedrockDepthQindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="bedrockDepthReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
-										<!-- ***************** ENGINEERING  BEDROCK DEPTH **************************    -->
-										<xs:element name="h800" type="IntValueWithUncertaintyType" minOccurs="0" maxOccurs="1">
-											<xs:annotation>
-												<xs:documentation>This is not included in the QuakeML 2.0 draft</xs:documentation>
-											</xs:annotation>
-										</xs:element>
-										<xs:element name="h800Qindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="h800Reference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
-										<!-- ***************** GEOLOGY **************************    -->
-										<xs:element name="geologicalUnit" minOccurs="0" maxOccurs="1">
-											<xs:simpleType>
-												<xs:restriction base="xs:string">
-													<xs:maxLength value="255"/>
-												</xs:restriction>
-											</xs:simpleType>
-										</xs:element>
-										<xs:element name="geologicalUnitQindex1" type="RealValueType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="geologicalMapScale" type="xs:string" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="geologicalUnitOGE" type="xs:string" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="geologicalUnitReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="morphology" type="xs:string" minOccurs="0" maxOccurs="1">
-											<xs:annotation>
-												<xs:documentation>This in not included in the QuakeML 2.0 draft</xs:documentation>
-											</xs:annotation>
-										</xs:element>
-									</xs:sequence>
-								</xs:complexType>
-							</xs:element>
-							<xs:element name="siteTopology">		<!-- We mean Topography ? / Is this optional ? -->
-								<xs:annotation>
-									<xs:documentation>or respective code, eg B2</xs:documentation>
+							<xs:element name="analysis" type="AnalysisType" minOccurs="0" maxOccurs="unbounded"> <!-- optional -->
+								<xs:annotation> 
+									<xs:documentation>Each SiteXML document may include more than one Analysis objects
+									</xs:documentation>
 								</xs:annotation>
-								<xs:complexType>
-									<xs:sequence>
-										<xs:element name="schemeA" type="xs:string">
-											<xs:annotation>
-												<xs:documentation>This is not included in 2.0</xs:documentation>
-											</xs:annotation>
-										</xs:element>
-										<xs:element name="schemeB" type="xs:string"/>
-									</xs:sequence>
-								</xs:complexType>
 							</xs:element>
-							<xs:element name="OverallQindex" type="RealValueType" minOccurs="0" maxOccurs="1"/>
 						</xs:sequence>
+						<xs:attribute name="publicID" type="ResourceIdentifier"/>
 					</xs:complexType>
 				</xs:element>
 			</xs:sequence>
