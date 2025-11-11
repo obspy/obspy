@@ -18,8 +18,10 @@ from . import (util, InternalMSEEDError, ObsPyMSEEDFilesizeTooSmallError,
                ObsPyMSEEDError)
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
-                      VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS, Selections,
-                      SelectTime, Blkt100S, Blkt1001S, clibmseed)
+                      VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS,
+                      Selections, SelectTime, Blkt100S,
+                      Blkt1001S, clibmseed)
+import obspy.io.mseed.headers
 
 
 def _is_mseed(filename):
@@ -144,17 +146,17 @@ def __read_header(buf, index, record_length):
         Reads the first record of the given buffer and returns
         header information.
 
-        :param buf: numpy.array(dtype=int8) or compatible containing
+        :param buf: :class:`numpy.array(dtype=int8)` or compatible containing
                        raw miniseed data.
         :param index:  position in the buffer which should be read
         :param record_length: miniseed record length
 
-        returns obspy.core.trace.Stats object
+        returns obspy.core.trace.Trace object without data
     """
     # replace with util..
     header = _read_mseed(buf[index:index+record_length], reclen=record_length,
                          headonly=True)
-    return header[0].stats
+    return header[0]
 
 
 def __bisect_mseed(buf, timestamp, record_length, before=True):
@@ -177,13 +179,13 @@ def __bisect_mseed(buf, timestamp, record_length, before=True):
          stamps are ordered in ascending order). Otherwise the code
          may fail, in this case, None is returned.
 
-         :param buf: numpy.array(dtype=int8) or compatible containing
+         :param buf: :class:`numpy.array(dtype=int8)` or compatible containing
                         raw miniseed data.
-         :param timestamp: obspy.core.UTCDateTime() timestamp to look for
-                           in buffer
+         :param timestamp: :class:`~obspy.core.utcdatetime.UTCDateTime`
+                           timestamp to look for in buffer
          :param racordlength: miniseed record length
-         :param before: If True, return the index of the record containing
-                        the timestamp, if False, return the index of the
+         :param before: If ``True``, return the index of the record containing
+                        the timestamp, if ``False``, return the index of the
                         next record.
 
          returns index of the buffer either including the timestamp or
@@ -198,7 +200,9 @@ def __bisect_mseed(buf, timestamp, record_length, before=True):
     # boundary cases
 
     startheader = __read_header(buf, low, record_length)
-    starttime = startheader.starttime
+    starttime = startheader.stats.starttime
+    # check for id at all places
+    startid = startheader.id
 
     # don't use small step sizes, make progress
     step_size = 4096
@@ -213,19 +217,28 @@ def __bisect_mseed(buf, timestamp, record_length, before=True):
             return high
 
     try:
-        endtime = __read_header(buf, high-step_size, record_length).endtime
+        endheader = __read_header(buf, high-step_size, record_length)
+        if endheader.id != startid:
+            warnings.warn("Found two different stream ids in input data, \
+                reverting to default algorithm.")
+            return None
+        endtime = endheader.stats.endtime
     except Exception as e:
         warnings.warn(e)
         return None
 
     # timestamp not in this file
     if timestamp < starttime or timestamp > endtime:
+        warnings.warn("Timestamp not found by bisection algorithm, \
+                reverting to default algorithm.")
         return None
 
     while high-low > stopat:
 
         # Cannot find timestamp
         if timestamp < starttime or timestamp > endtime:
+            warnings.warn("Timestamp not found by bisection algorithm, \
+                reverting to default algorithm.")
             return None
 
         # classical interpolation search
@@ -239,8 +252,20 @@ def __bisect_mseed(buf, timestamp, record_length, before=True):
             informed_guess = (high - low) / 2
             informed_guess = low + int(informed_guess // step_size) * step_size
         try:
-            guess_time = __read_header(buf, informed_guess,
-                                       record_length).starttime
+            guess_header = __read_header(buf, informed_guess,
+                                         record_length)
+            if guess_header.id != startid:
+                warnings.warn("Found two different stream ids in input data, \
+                    reverting to default algorithm.")
+                return None
+            guess_time = guess_header.stats.starttime
+
+            # time stamps not in ascending order
+            if guess_time < starttime or guess_time > endtime:
+                warnings.warn("The time stamps in the input stream are not \
+                    in ascending order, reverting to default algorithm.")
+                return None
+
         except Exception as e:
             warnings.warn(e)
             return None
@@ -272,42 +297,43 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         anything, that can be read into np.nadarray with np.frombuffer.
         Any object that provides a read() method will be considered to
         be a file like object.
-    :type starttime: :class:~obspy.core.utcdatetime.UTCDateTime
+    :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param starttime: Only read data samples after or at the start time.
-    :type endtime: :class:~obspy.core.utcdatetime.UTCDateTime
+    :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param endtime: Only read data samples before or at the end time.
     :param headonly: Determines whether or not to unpack the data or just
         read the headers.
     :type sourcename: str
     :param sourcename: Only read data with matching SEED ID (can contain
         wildcards "?" and "*", e.g. "BW.UH2.*" or "*.??Z").
-        Defaults to `None .
+        Defaults to ``None`` .
     :param reclen: If it is None, it will be automatically determined for every
         record. If it is known, just set it to the record length in bytes which
         will increase the reading speed slightly.
     :type details: bool, optional
-    :param details: If `True read additional information: timing quality
+    :param details: If ``True`` read additional information: timing quality
         and availability of calibration information.
         Note, that the traces are then also split on these additional
         information. Thus the number of traces in a stream will change.
         Details are stored in the mseed stats AttribDict of each trace.
-        `False specifies for both cases, that this information is not
-        available. `blkt1001.timing_quality specifies the timing quality
-        from 0 to 100 [%]. `calibration_type specifies the type of available
+        ``False`` specifies for both cases, that this information is not
+        available. ``blkt1001.timing_quality`` specifies the timing quality
+        from 0 to 100 [%]. ``calibration_type`` specifies the type of available
         calibration information blockettes:
-
-        - `1 : Step Calibration (Blockette 300)
-        - `2 : Sine Calibration (Blockette 310)
-        - `3 : Pseudo-random Calibration (Blockette 320)
-        - `4 : Generic Calibration  (Blockette 390)
-        - `-2 : Calibration Abort (Blockette 395)
-
+        - ``1`` : Step Calibration (Blockette 300)
+        - ``2`` : Sine Calibration (Blockette 310)
+        - ``3`` : Pseudo-random Calibration (Blockette 320)
+        - ``4`` : Generic Calibration  (Blockette 390)
+        - ``-2`` : Calibration Abort (Blockette 395)
     :type header_byteorder: int or str, optional
-    :param header_byteorder: Must be either `0 or '<' for LSBF or
-        little-endian, `1 or '>' for MBF or big-endian. '=' is the
+    :param header_byteorder: Must be either ``0`` or ``'<'`` for LSBF or
+        little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
         native byte order. Used to enforce the header byte order. Useful in
         some rare cases where the automatic byte order detection fails.
-
+    :param kwargs: 'use_bisection' use bisection for start and end time if
+        set to ``True``. This only works for strictly ordered files containing
+        just one channel the code will revert to default behaviour if it
+        detects that this is not the case
     .. rubric:: Example
 
     >>> from obspy import read
@@ -377,6 +403,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     else:
         bo = None
 
+    use_bisection = 'use_bisection' in kwargs and kwargs['use_bisection']
     # If it's a file name just read it.
     if isinstance(mseed_object, str):
         # Read to NumPy array which is used as a buffer.
@@ -458,10 +485,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     bfr_np = bfr_np[offset:]
     buflen = len(bfr_np)
     bufptr_low = 0
-
-    # not buflen, otherwise unit test with mocked os.path.getsize
-    # will not work
-    bufptr_high = length - offset
+    bufptr_high = len(bfr_np)
 
     # If no selection is given pass None to the C function.
     if starttime is None and endtime is None and sourcename is None:
@@ -479,8 +503,9 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
 
             # bisect to the actual starttime
             # avoids parsing of the whole file
-            bufptr_low = __bisect_mseed(bfr_np, starttime, record_length,
-                                        before=True) or 0
+            bufptr_low = use_bisection and \
+                __bisect_mseed(bfr_np, starttime, record_length,
+                               before=True) or 0
 
         else:
             # HPTERROR results in no starttime.
@@ -491,8 +516,9 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 raise ValueError(msg)
             selections.timewindows.contents.endtime = \
                 util._convert_datetime_to_mstime(endtime)
-            bufptr_high = __bisect_mseed(bfr_np, endtime, record_length,
-                                         before=False) or buflen
+            bufptr_high = use_bisection and \
+                __bisect_mseed(bfr_np, endtime, record_length,
+                               before=False) or buflen
 
         else:
             # HPTERROR results in no starttime.
@@ -508,7 +534,10 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 encode('ascii', 'ignore')
         else:
             selections.srcname = b'*'
-
+    if bufptr_low > bufptr_high:
+        warnings.warn("File is not ordered, not using bisection.")
+        bufptr_low = 0
+        bufptr_high = buflen
     # workaround for files which are larger than 2**31
     #
     # Basic layout
@@ -517,15 +546,19 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     #    - process chunk
     #    - merge it with predecessing chunck if possible
     # - Return stream object.
-    if bufptr_high - bufptr_low > 2 ** 31 - record_length:
+    _max = obspy.io.mseed.headers.LIBMSEED_MAX
+    if bufptr_high - bufptr_low > _max - record_length:
+        warnings.warn("In large file mode")
         unmerged_traces = []
         merged_traces = []
         traces = []
         currenttrace = None
         # call _read_mseed with portions of less than 2**31
-        for ptr in np.arange(bufptr_low, bufptr_high, 2**31 - record_length):
+        for ptr in np.arange(bufptr_low, bufptr_high,
+                             _max - record_length):
             unmerged_traces = _read_mseed(
-                                    bfr_np[ptr:ptr + 2**31 - record_length],
+                                    bfr_np[ptr:ptr + _max -
+                                           record_length],
                                     starttime, endtime, headonly,
                                     sourcename, record_length, details,
                                     header_byteorder, verbose,
