@@ -3038,6 +3038,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         response = self._get_response(inventory)
         if isinstance(response.response_stages[0], PolynomialResponseStage):
             response.recalculate_overall_sensitivity()
+            coefficients = response.response_stages[0].coefficients[:]
+            self.data = np.poly1d(coefficients[::-1])(self.data)
 
         self.data = self.data / response.instrument_sensitivity.value
         return self
