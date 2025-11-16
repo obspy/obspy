@@ -1571,17 +1571,17 @@ class Response(ComparingObject):
 
                     # DC offset (c0) is lost in frequency domain analysis
                     # as it only affects the zero-frequency component.
-                    # This may be important for certain data!
+                    # This may be important for certain data! Warn?
                     if c0 != 0.0:
                         msg = ("PolynomialResponseStage "
                                f"(stage {blockette.stage_sequence_number}) "
-                               f"has a DC offset of {c0:.6f} which is ignored "
-                               "in frequency domain calculations.")
+                               f"has a DC offset of {c0:.6f} which is ignored"
+                               " in frequency domain calculations.")
                         warnings.warn(msg)
                 else:
                     msg = (f"PolynomialResponseStage for {num_poly_coeffs} "
                            "coefficients not yet implemented. "
-                           "Please contact the developers.")
+                           "ObsPy still using evalresp!")
                     raise NotImplementedError(msg)
 
             else:

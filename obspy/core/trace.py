@@ -2850,7 +2850,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             self.data = np.poly1d(coefficients[::-1])(self.data)
             return self
 
-        # handle linear (<=2 coeffs) instances of polynomial responses
+        # handle linear (1 or 2 coeffs) instances of polynomial responses
         if isinstance(response.response_stages[0], PolynomialResponseStage):
             if len(response.response_stages) == 1:
                 if response.response_stages[0].stage_gain is None:
@@ -2860,15 +2860,19 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 else:
                     gain = response.response_stages[0].stage_gain
             else:
-                # multiple stages, will need to generate overall sensitivity
+                #  multiple stages, will need to generate overall sensitivity
+                #  as likely not setup in a PolynomialReponseStage response
                 if not response.instrument_sensitivity:
                     response.recalculate_overall_sensitivity()
 
                 gain = response.instrument_sensitivity.value
+
             coefficients = response.response_stages[0].coefficients[:]
-            for i in range(len(coefficients)):
-                coefficients[i] /= math.pow(gain, i)
             self.data = np.poly1d(coefficients[::-1])(self.data)
+            self.data = self.data / gain
+            if len(coefficients) >= 1 and coefficients[0] != 0:
+                self.data = self.data - coefficients[0] / gain
+
             return self
 
         # use evalresp
