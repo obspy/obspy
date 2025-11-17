@@ -2850,7 +2850,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             self.data = np.poly1d(coefficients[::-1])(self.data)
             return self
 
-        # handle linear (1 or 2 coeffs) instances of polynomial responses
+        # cannot handle polynomial response we can still replicate
+        # linear (1 or 2 coeffs) instances
         if isinstance(response.response_stages[0], PolynomialResponseStage):
             if len(response.response_stages) == 1:
                 if response.response_stages[0].stage_gain is None:
@@ -2860,18 +2861,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 else:
                     gain = response.response_stages[0].stage_gain
             else:
-                #  multiple stages, will need to generate overall sensitivity
-                #  as likely not setup in a PolynomialReponseStage response
+                # multiple stages, will need to calculate overall sensitivity
                 if not response.instrument_sensitivity:
+                    # this will abort of more than 2 inst_poly.coeffs
                     response.recalculate_overall_sensitivity()
-
                 gain = response.instrument_sensitivity.value
 
-            coefficients = response.response_stages[0].coefficients[:]
-            self.data = np.poly1d(coefficients[::-1])(self.data)
+            coefficients = response.response_stages[0].coefficients
+            # can do a simple divide if linear
             self.data = self.data / gain
+            # attempt to account for DC offset also
             if len(coefficients) >= 1 and coefficients[0] != 0:
-                self.data = self.data - coefficients[0] / gain
+                self.data = self.data + coefficients[0]
 
             return self
 
@@ -3036,10 +3037,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         from obspy.core.inventory import PolynomialResponseStage
 
         response = self._get_response(inventory)
-        if isinstance(response.response_stages[0], PolynomialResponseStage):
+        if (isinstance(response.response_stages[0],
+                       PolynomialResponseStage) and not
+                response.instrument_sensitivity):
             response.recalculate_overall_sensitivity()
-            coefficients = response.response_stages[0].coefficients[:]
-            self.data = np.poly1d(coefficients[::-1])(self.data)
 
         self.data = self.data / response.instrument_sensitivity.value
         return self

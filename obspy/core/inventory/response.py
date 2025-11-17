@@ -1055,7 +1055,7 @@ class Response(ComparingObject):
             stage_one = self.response_stages[0]
 
             # Handle PolynomialResponseStage
-            # (which doesn't have normalization_frequency)
+            # which doesn't have normalization_frequency
             if isinstance(stage_one, PolynomialResponseStage):
                 # Use the center of the frequency bounds for polynomial stages
                 frequency = (stage_one.frequency_lower_bound +
@@ -1119,10 +1119,6 @@ class Response(ComparingObject):
                         self.instrument_polynomial.output_units_description
                     )
                 )
-                #  msg = ("Created instrument_sensitivity from polynomial "
-                #       "response. Note: Any DC offset in the polynomial "
-                #       "is not represented.")
-                #  warnings.warn(msg)
 
     def _get_overall_sensitivity_and_gain(
             self, frequency=None, output='VEL'):
@@ -1563,7 +1559,7 @@ class Response(ComparingObject):
                     blkt = ew.Blkt()
                     blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
                     gain_blkt = blkt.blkt_info.gain
-                    gain_blkt.gain = c1
+                    gain_blkt.gain = 1.0 / c1
 
                     # Use the center frequency of the valid range?
                     gain_blkt.gain_freq = (blockette.frequency_lower_bound +
