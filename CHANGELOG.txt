@@ -2,6 +2,14 @@ maintenance_1.4.x
 =================
 
 Changes:
+ - obspy.io.mseed:
+   * _read_mseed can use interpolation search optionally to find start 
+     and end time in O(log(log(N))) for linearly ordered data
+   * _read_mseed: 2GB limitation lifted
+   * _read_mseed: use of numpy.memmap to improve efficiency
+   * _read_mseed: Can now handle numpy.ndarray(dtype=numpy.int8), and
+     and anything that can be read into numpy.ndarray(dtype=numpy.int8) with
+     np.frombuffer to increase efficiency when data is already in memory.
  - obspy.io.shapefile:
    * add support for pyshp v3 (see #3599)
 
