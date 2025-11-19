@@ -47,6 +47,8 @@ SAMPLESIZES = {'a': 1, 'i': 4, 'f': 4, 'd': 8}
 VALID_RECORD_LENGTHS = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,
                         131072, 262144, 524288, 1048576]
 
+LIBMSEED_MAX = 2**31
+
 # allowed encodings:
 # id: (name, sampletype a/i/f/d, default NumPy type, write support)
 ENCODINGS = {0: ("ASCII", "a", np.dtype("|S1").type, True),

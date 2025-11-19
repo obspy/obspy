@@ -9,6 +9,8 @@ from struct import unpack
 
 import numpy as np
 import pytest
+from unittest import mock
+
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import AttribDict
@@ -363,6 +365,46 @@ class TestMSEEDReadingAndWriting():
         for _i in range(5):
             assert stream[0].data[_i] == data[_i]
 
+        # Test reading from np.ndarray.
+        np_buffer = np.fromfile(testfile, dtype=np.int8)
+        stream = _read_mseed(np_buffer)
+        stream.verify()
+        assert stream[0].stats.network == 'NL'
+        assert stream[0].stats['station'] == 'HGN'
+        assert stream[0].stats.get('location') == '00'
+        assert stream[0].stats.npts == 11947
+        assert stream[0].stats['sampling_rate'] == 40.0
+        assert stream[0].stats.get('channel') == 'BHZ'
+        for _i in range(5):
+            assert stream[0].data[_i] == data[_i]
+
+        # Test reading from anything that exposes the buffer interface
+        stream = _read_mseed(np_buffer.tobytes())
+        stream.verify()
+        assert stream[0].stats.network == 'NL'
+        assert stream[0].stats['station'] == 'HGN'
+        assert stream[0].stats.get('location') == '00'
+        assert stream[0].stats.npts == 11947
+        assert stream[0].stats['sampling_rate'] == 40.0
+        assert stream[0].stats.get('channel') == 'BHZ'
+        for _i in range(5):
+            assert stream[0].data[_i] == data[_i]
+
+        # Test code to read huge files (larger than 2GB)
+        with mock.patch("obspy.io.mseed.headers.LIBMSEED_MAX", 8192):
+            with pytest.warns(UserWarning, match="large file"):
+                stream = _read_mseed(testdata["CH.BALST..LHE.D.2025.314"])
+            stream.verify()
+            assert len(stream) == 1
+            assert stream[0].stats.network == 'CH'
+            assert stream[0].stats['station'] == 'BALST'
+            assert stream[0].stats.get('location') == ''
+            assert stream[0].stats.npts == 86343
+            assert stream[0].stats['sampling_rate'] == 1.0
+            assert stream[0].stats.get('channel') == 'LHE'
+            assert np.all(stream[0].data[0:5] ==
+                          [-1134, -962, -293, -161, -587])
+
     def test_read_partial_time_window_from_file(self, testdata):
         """
         Uses obspy.io.mseed.mseed._read_mseed to read only read a certain time
@@ -411,6 +453,84 @@ class TestMSEEDReadingAndWriting():
         stream = _read_mseed(testfile, starttime=starttime - 1E6,
                              endtime=starttime - 1E6 + 1)
         assert len(stream) == 0
+
+    def test_bisection_read(self, testdata):
+        """
+        Tests the bisection reading ability of obspy.io.mseed.mseed_read.mseed
+        (using use_bisection=True as kwargs argument).
+        """
+
+        # regular read
+        starttime = UTCDateTime('2007-12-31T23:59:59.915000Z')
+        endtime = UTCDateTime('2008-01-01T00:00:20.510000Z')
+        testfile = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
+        stream = _read_mseed(testfile, starttime=starttime + 6,
+                             endtime=endtime - 6, use_bisection=True)
+        assert starttime < stream[0].stats.starttime
+        assert endtime > stream[0].stats.endtime
+
+        # read with large time window
+        stream = _read_mseed(testfile, starttime=UTCDateTime(1980, 1, 1),
+                             endtime=UTCDateTime(2025, 1, 1),
+                             use_bisection=True)
+        assert stream[0].stats.mseed['number_of_records'] == 10
+
+        # only start time set
+        starttime = UTCDateTime('2007-12-31T23:59:59.915000Z')
+        endtime = UTCDateTime('2008-01-01T00:00:20.510000Z')
+        testfile = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
+        stream = _read_mseed(testfile, starttime=starttime + 6,
+                             use_bisection=True)
+        assert starttime < stream[0].stats.starttime
+        assert endtime == stream[0].stats.endtime
+
+        # only end time set
+        starttime = UTCDateTime('2007-12-31T23:59:59.915000Z')
+        endtime = UTCDateTime('2008-01-01T00:00:20.510000Z')
+        testfile = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
+        stream = _read_mseed(testfile, endtime=endtime - 6, use_bisection=True)
+        assert starttime == stream[0].stats.starttime
+        assert endtime > stream[0].stats.endtime
+
+        # emtpy time range
+        starttime = UTCDateTime('2003-05-29T02:13:22.043400Z')
+        testfile = testdata['test.mseed']
+        stream = _read_mseed(testfile, starttime=starttime - 1E6,
+                             endtime=starttime - 1E6 + 1, use_bisection=True)
+        assert len(stream) == 0
+
+        # stream records in reverse order, should raise a warning and
+        # revert to default behaviour
+
+        testfile = testdata['CH.BALST..LHE.D.2025.314']
+        np_buffer = np.fromfile(testfile, dtype=np.int8)
+
+        # reverse order
+        records = np_buffer.reshape(len(np_buffer) // 512, 512)
+        reversed_input = np.ravel(records[::-1])
+
+        # Should issue a warning and revert to default behaviour
+        starttime = UTCDateTime('2007-01-01')
+        endtime = UTCDateTime('2026-01-01')
+        with pytest.warns(UserWarning, match="default algorithm"):
+            stream = _read_mseed(reversed_input, starttime=starttime,
+                                 endtime=endtime, use_bisection=True)
+            stream = stream[::-1]
+            stream.merge()
+            assert UTCDateTime("2025-11-10T00:02:53.205000Z") \
+                == stream[0].stats.starttime
+            assert UTCDateTime("2025-11-11T00:01:55.205000Z") \
+                == stream[0].stats.endtime
+
+        # have two streams in one file
+        testfile = testdata['CH.BALST..LH_two_channels']
+        with pytest.warns(UserWarning, match="default algorithm"):
+            stream = _read_mseed(testfile,
+                                 starttime=UTCDateTime(1980, 1, 1),
+                                 endtime=UTCDateTime(2026, 1, 1),
+                                 use_bisection=True)
+            assert stream[0].stats.channel == 'LHE'
+            assert stream[1].stats.channel == 'LHZ'
 
     def test_read_partial_with_source_name(self, testdata):
         """

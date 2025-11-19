@@ -15,11 +15,13 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import NATIVE_BYTEORDER
 from . import (util, InternalMSEEDError, ObsPyMSEEDFilesizeTooSmallError,
-               ObsPyMSEEDFilesizeTooLargeError, ObsPyMSEEDError)
+               ObsPyMSEEDError)
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
-                      VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS, Selections,
-                      SelectTime, Blkt100S, Blkt1001S, clibmseed)
+                      VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS,
+                      Selections, SelectTime, Blkt100S,
+                      Blkt1001S, clibmseed)
+import obspy.io.mseed.headers
 
 
 def _is_mseed(filename):
@@ -139,6 +141,147 @@ def __is_mseed(fp, file_size):  # NOQA
     return False
 
 
+def __read_header(buf, index, record_length):
+    """
+        Reads the first record of the given buffer and returns
+        header information.
+
+        :param buf: :class:`numpy.array(dtype=int8)` or compatible containing
+                       raw miniseed data.
+        :param index:  position in the buffer which should be read
+        :param record_length: miniseed record length
+
+        returns obspy.core.trace.Trace object without data
+    """
+    # replace with util..
+    header = _read_mseed(buf[index:index+record_length], reclen=record_length,
+                         headonly=True)
+    return header[0]
+
+
+def __bisect_mseed(buf, timestamp, record_length, before=True):
+    """
+         Quickly finds a timestamp in a miniseed stream using interpolation
+         search.
+
+         The code is a helper for _read_mseed and is written to be efficient,
+         a record size of at least 4096 is assumed. The code stops when the
+         area searched is less than ~1MB in size. This code is intended to
+         fasten up the code when trying to cut out a time window of data
+         from a large input file. Using this, the code potentially only
+         needs to actually read a very small portion of a file. Cutting
+         off at 1MB also eliminates the need of treating boundary conditions.
+
+         The algorithm used is "interplation search" as described by W.W.
+         Peterson 1957: doi:10.1147/rd.12.0130.
+
+         This code only works when the data is ordered (i.e. the time
+         stamps are ordered in ascending order). Otherwise the code
+         may fail, in this case, None is returned.
+
+         :param buf: :class:`numpy.array(dtype=int8)` or compatible containing
+                        raw miniseed data.
+         :param timestamp: :class:`~obspy.core.utcdatetime.UTCDateTime`
+                           timestamp to look for in buffer
+         :param racordlength: miniseed record length
+         :param before: If ``True``, return the index of the record containing
+                        the timestamp, if ``False``, return the index of the
+                        next record.
+
+         returns index of the buffer either including the timestamp or
+                 the next one or None if the time stamp cannot be found or
+                 if the header cannot be read (e.g. because of non-uniform
+                 record length).
+    """
+    low = 0
+    high = len(buf)
+
+    # cut off here, linear search will be fast enough, avoid treating
+    # boundary cases
+
+    startheader = __read_header(buf, low, record_length)
+    starttime = startheader.stats.starttime
+    # check for id at all places
+    startid = startheader.id
+
+    # don't use small step sizes, make progress
+    step_size = 4096
+    if record_length > 4096:
+        step_size = record_length
+    stopat = 16 * step_size
+
+    if high - low <= stopat:
+        if before:
+            return low
+        else:
+            return high
+
+    try:
+        endheader = __read_header(buf, high-step_size, record_length)
+        if endheader.id != startid:
+            warnings.warn("Found two different stream ids in input data, \
+                reverting to default algorithm.")
+            return None
+        endtime = endheader.stats.endtime
+    except Exception as e:
+        warnings.warn(e)
+        return None
+
+    # timestamp not in this file
+    if timestamp < starttime or timestamp > endtime:
+        warnings.warn("Timestamp not found by bisection algorithm, \
+                reverting to default algorithm.")
+        return None
+
+    while high-low > stopat:
+
+        # Cannot find timestamp
+        if timestamp < starttime or timestamp > endtime:
+            warnings.warn("Timestamp not found by bisection algorithm, \
+                reverting to default algorithm.")
+            return None
+
+        # classical interpolation search
+        informed_guess_percentage = (timestamp - starttime) / \
+                                    (endtime - starttime)
+        buffer_raw_guess = informed_guess_percentage * (high-low)
+        informed_guess = low + int(buffer_raw_guess // step_size) * step_size
+
+        # algorithm stuck due to rounding to step_size boundaries
+        if informed_guess <= low or informed_guess >= high:
+            informed_guess = (high - low) / 2
+            informed_guess = low + int(informed_guess // step_size) * step_size
+        try:
+            guess_header = __read_header(buf, informed_guess,
+                                         record_length)
+            if guess_header.id != startid:
+                warnings.warn("Found two different stream ids in input data, \
+                    reverting to default algorithm.")
+                return None
+            guess_time = guess_header.stats.starttime
+
+            # time stamps not in ascending order
+            if guess_time < starttime or guess_time > endtime:
+                warnings.warn("The time stamps in the input stream are not \
+                    in ascending order, reverting to default algorithm.")
+                return None
+
+        except Exception as e:
+            warnings.warn(e)
+            return None
+
+        if guess_time > timestamp:
+            high = informed_guess
+            endtime = guess_time
+        else:
+            low = informed_guess
+            starttime = guess_time
+    if before:
+        return low
+    else:
+        return high
+
+
 def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 sourcename=None, reclen=None, details=False,
                 header_byteorder=None, verbose=None, **kwargs):
@@ -147,11 +290,13 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+        ObsPy :func:~obspy.core.stream.read function, call this instead.
 
-    :param mseed_object: Filename or open file like object that contains the
-        binary Mini-SEED data. Any object that provides a read() method will be
-        considered to be a file like object.
+    :param mseed_object: Filename, numpy.ndarray with dtype=numpy.int8 or
+        open file like object that contains the binary Mini-SEED data or
+        anything, that can be read into np.nadarray with np.frombuffer.
+        Any object that provides a read() method will be considered to
+        be a file like object.
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param starttime: Only read data samples after or at the start time.
     :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -175,19 +320,20 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         available. ``blkt1001.timing_quality`` specifies the timing quality
         from 0 to 100 [%]. ``calibration_type`` specifies the type of available
         calibration information blockettes:
-
         - ``1`` : Step Calibration (Blockette 300)
         - ``2`` : Sine Calibration (Blockette 310)
         - ``3`` : Pseudo-random Calibration (Blockette 320)
         - ``4`` : Generic Calibration  (Blockette 390)
         - ``-2`` : Calibration Abort (Blockette 395)
-
     :type header_byteorder: int or str, optional
     :param header_byteorder: Must be either ``0`` or ``'<'`` for LSBF or
         little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
         native byte order. Used to enforce the header byte order. Useful in
         some rare cases where the automatic byte order detection fails.
-
+    :param kwargs: 'use_bisection' use bisection for start and end time if
+        set to ``True``. This only works for strictly ordered files containing
+        just one channel the code will revert to default behaviour if it
+        detects that this is not the case
     .. rubric:: Example
 
     >>> from obspy import read
@@ -205,13 +351,13 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     1 Trace(s) in Stream:
     BW.UH3..EHZ | 2010-06-20T00:00:00.999999Z - ... | 200.0 Hz, 242 samples
 
-    Read with ``details=True`` to read more details of the file if present.
+    Read with `details=True to read more details of the file if present.
 
     >>> st = read("/path/to/timingquality.mseed", details=True)
     >>> print(st[0].stats.mseed.blkt1001.timing_quality)
     55
 
-    ``False`` means that the necessary information could not be found in the
+    `False means that the necessary information could not be found in the
     file.
 
     >>> print(st[0].stats.mseed.calibration_type)
@@ -219,7 +365,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
 
     Note that each change in timing quality from record to record may trigger a
     new Trace object to be created so the Stream object may contain many Trace
-    objects if ``details=True`` is used.
+    objects if `details=True is used.
 
     >>> print(len(st))
     101
@@ -257,29 +403,41 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     else:
         bo = None
 
-    # Determine total size. Either its a file-like object.
-    if hasattr(mseed_object, "tell") and hasattr(mseed_object, "seek"):
-        cur_pos = mseed_object.tell()
-        mseed_object.seek(0, 2)
-        length = mseed_object.tell() - cur_pos
-        mseed_object.seek(cur_pos, 0)
-    # Or a file name.
+    use_bisection = 'use_bisection' in kwargs and kwargs['use_bisection']
+    # If it's a file name just read it.
+    if isinstance(mseed_object, str):
+        # Read to NumPy array which is used as a buffer.
+        # use memmap, faster than fromfile, same functionality
+        bfr_np = np.memmap(mseed_object, dtype=np.int8, mode="c")
+        # bfr_np = np.fromfile(mseed_object, dtype=np.int8)
+
+    elif hasattr(mseed_object, 'read'):
+        bfr_np = from_buffer(mseed_object.read(), dtype=np.int8)
+
+    # if it is already a buffer, use it
+    elif isinstance(mseed_object, np.ndarray) \
+            and mseed_object.dtype == np.int8:
+        bfr_np = mseed_object
+
+    # anything that can be read with np.frombuffer
     else:
-        length = os.path.getsize(mseed_object)
+        try:
+            bfr_np = np.frombuffer(mseed_object, dtype=np.int8)
+        except TypeError:
+            msg = 'mseed_object is not of supported type.'
+            raise ValueError(msg)
+
+    length = len(bfr_np)
 
     if length < 128:
         msg = "The smallest possible mini-SEED record is made up of 128 " \
               "bytes. The passed buffer or file contains only %i." % length
         raise ObsPyMSEEDFilesizeTooSmallError(msg)
-    elif length > 2 ** 31:
-        msg = ("ObsPy can currently not directly read mini-SEED files that "
-               "are larger than 2^31 bytes (2048 MiB). To still read it, "
-               "please read the file in chunks as documented here: "
-               "https://github.com/obspy/obspy/pull/1419"
-               "#issuecomment-221582369")
-        raise ObsPyMSEEDFilesizeTooLargeError(msg)
 
-    info = util.get_record_information(mseed_object, endian=bo)
+    # get_record_information expects a file like object
+    first_record = io.BytesIO(bfr_np[0:1048576])
+
+    info = util.get_record_information(first_record, endian=bo)
 
     # Map the encoding to a readable string value.
     if "encoding" not in info:
@@ -302,13 +460,6 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
 
     # Only keep information relevant for the whole file.
     info = {'filesize': info['filesize']}
-
-    # If it's a file name just read it.
-    if isinstance(mseed_object, str):
-        # Read to NumPy array which is used as a buffer.
-        bfr_np = np.fromfile(mseed_object, dtype=np.int8)
-    elif hasattr(mseed_object, 'read'):
-        bfr_np = from_buffer(mseed_object.read(), dtype=np.int8)
 
     # Search for data records and pass only the data part to the underlying C
     # routine.
@@ -333,6 +484,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         break
     bfr_np = bfr_np[offset:]
     buflen = len(bfr_np)
+    bufptr_low = 0
+    bufptr_high = len(bfr_np)
 
     # If no selection is given pass None to the C function.
     if starttime is None and endtime is None and sourcename is None:
@@ -347,6 +500,13 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 raise ValueError(msg)
             selections.timewindows.contents.starttime = \
                 util._convert_datetime_to_mstime(starttime)
+
+            # bisect to the actual starttime
+            # avoids parsing of the whole file
+            bufptr_low = use_bisection and \
+                __bisect_mseed(bfr_np, starttime, record_length,
+                               before=True) or 0
+
         else:
             # HPTERROR results in no starttime.
             selections.timewindows.contents.starttime = HPTERROR
@@ -356,6 +516,10 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 raise ValueError(msg)
             selections.timewindows.contents.endtime = \
                 util._convert_datetime_to_mstime(endtime)
+            bufptr_high = use_bisection and \
+                __bisect_mseed(bfr_np, endtime, record_length,
+                               before=False) or buflen
+
         else:
             # HPTERROR results in no starttime.
             selections.timewindows.contents.endtime = HPTERROR
@@ -370,6 +534,84 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 encode('ascii', 'ignore')
         else:
             selections.srcname = b'*'
+    if bufptr_low > bufptr_high:
+        warnings.warn("File is not ordered, not using bisection.")
+        bufptr_low = 0
+        bufptr_high = buflen
+    # workaround for files which are larger than 2**31
+    #
+    # Basic layout
+    # - split the memory mapped data into chuncks of size 2**31 - record_length
+    # for each chunk:
+    #    - process chunk
+    #    - merge it with predecessing chunck if possible
+    # - Return stream object.
+    _max = obspy.io.mseed.headers.LIBMSEED_MAX
+    if bufptr_high - bufptr_low > _max - record_length:
+        warnings.warn("In large file mode")
+        unmerged_traces = []
+        merged_traces = []
+        traces = []
+        currenttrace = None
+        # call _read_mseed with portions of less than 2**31
+        for ptr in np.arange(bufptr_low, bufptr_high,
+                             _max - record_length):
+            unmerged_traces = _read_mseed(
+                                    bfr_np[ptr:ptr + _max -
+                                           record_length],
+                                    starttime, endtime, headonly,
+                                    sourcename, record_length, details,
+                                    header_byteorder, verbose,
+                                    **kwargs
+                                    )
+
+            # merge the unmerged traces where they match
+            # don't call add or cleanup, as this will trigger an
+            # np.concatenate each time two adjacent traces merge, which
+            # involves copying all of the data gather all chunks which
+            # can be merged first and call np.concatenate once the
+            # concatenable chuncks are identified. This way, each
+            # data point will only be copied once and the process
+            # is in O(N) instead of O(N**2).
+            for trace in unmerged_traces:
+                if not currenttrace:
+                    currenttrace = trace
+                    traces = [currenttrace]
+                else:
+                    # if chunks are adjacent
+                    # should check timing quality if details == True
+                    if (
+                        currenttrace.stats.endtime + currenttrace.stats.delta
+                        >= trace.stats.starttime - 0.1 * trace.stats.delta
+                    ):
+                        if (
+                            not details
+                            or (
+                                details
+                                and
+                                currenttrace.stats.mseed["blkt1001"][
+                                    "timing_quality"]
+                                == trace.stats.mseed["blkt1001"][
+                                    "timing_quality"]
+                            )
+                        ):
+                            traces.append(trace)
+                            currenttrace = trace
+                            continue
+
+                    # merge all adjacent trunks and reinitialise the algorithm
+                    traces[0].data = np.concatenate([d.data for d in traces])
+                    merged_traces.append(traces[0])
+                    traces = [trace]
+                    currenttrace = trace
+
+        # process remainder of the data after loop
+        if len(traces):
+            traces[0].data = np.concatenate([d.data for d in traces])
+            merged_traces.append(traces[0])
+
+        return Stream(merged_traces)
+
     all_data = []
 
     # Use a callback function to allocate the memory and keep track of the
@@ -396,9 +638,9 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     clibmseed.verbose = bool(verbose)
     try:
         lil = clibmseed.readMSEEDBuffer(
-            bfr_np, buflen, selections, C.c_int8(unpack_data),
-            reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
-            alloc_data)
+            bfr_np[bufptr_low:bufptr_high], bufptr_high - bufptr_low,
+            selections, C.c_int8(unpack_data), reclen, C.c_int8(verbose),
+            C.c_int8(details), header_byteorder, alloc_data)
     except InternalMSEEDError as e:
         msg = e.args[0]
         if offset and offset in str(e):
