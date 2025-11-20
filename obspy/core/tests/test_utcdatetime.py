@@ -192,7 +192,7 @@ class TestUTCDateTime:
         assert dt == UTC(2009, 1, 1)
         # Compact day 360 - see issues #2868
         dt = UTC("2012360T")
-        assert dt == UTC(2012, 12, 25)  # Note leapyear
+        assert dt == UTC(2012, 12, 25)  # Note leap year
         # w/ trailing Z
         dt = UTC("2009-365T12:23:34.5Z")
         assert dt == UTC(2009, 12, 31, 12, 23, 34, 500000)
@@ -1251,7 +1251,7 @@ class TestUTCDateTime:
         Ensure UTCs init'ed with floats that are very close together are
         equal - see 2034
 
-        Note: Due to the rounding nanosecond attribute before comparision
+        Note: Due to the rounding nanosecond attribute before comparison
         we can no longer guarantee equality based on the difference in
         nanoseconds. This trade-off was made to ensure UTCDateTime objects
         are always equal to their string representation when precision <= 6.

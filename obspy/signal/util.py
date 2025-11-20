@@ -264,7 +264,7 @@ def _npts2nfft(npts, smart=True):
     # The number of points for the FFT has to be at least 2 * ndat (in
     # order to prohibit wrap around effects during convolution) cf.
     # Numerical Recipes p. 429 calculate next power of 2.
-    # evalresp scales directly with nfft, therefor taking the next power of
+    # evalresp scales directly with nfft, therefore taking the next power of
     # two has a greater negative performance impact than the slow down of a
     # not power of two in the FFT
     if npts & 0x1:  # check if uneven

@@ -312,7 +312,7 @@ def _rgba_tuple_to_kml_color_code(rgba):
 
 def _get_event_timestamp(event):
     """
-    Get timestamp information for the event. Search is perfomed in the
+    Get timestamp information for the event. Search is performed in the
     following order:
 
      - origin time of preferred origin

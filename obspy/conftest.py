@@ -157,7 +157,7 @@ def pytest_addoption(parser):
                      help='Generate a json report of the test results and '
                           'upload it to ObsPys test server.',)
     parser.addoption('--keep-images', action='store_true',
-                     help='store images created while runing test suite '
+                     help='store images created while running test suite '
                           'in a directory called obspy_test_images.')
 
 
@@ -165,7 +165,7 @@ def pytest_collection_modifyitems(config, items):
     """ Preprocessor for collected tests. """
     network_module_names = set(NETWORK_MODULES)
     for item in items:
-        # explicitely add filter warnings to markers so that they have a higher
+        # explicitly add filter warnings to markers so that they have a higher
         # priority than command line options, e.g. -W error
         for fwarn in config.getini('filterwarnings'):
             item.add_marker(pytest.mark.filterwarnings(fwarn))

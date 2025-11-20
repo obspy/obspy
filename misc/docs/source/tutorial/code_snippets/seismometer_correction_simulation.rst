@@ -21,7 +21,7 @@ directly be attached to the waveforms and then subsequently removed using
     t1 = UTCDateTime("2010-09-3T16:30:00.000")
     t2 = UTCDateTime("2010-09-3T17:00:00.000")
     fdsn_client = Client('IRIS')
-    # Fetch waveforms and reponse from IRIS FDSN web service into ObsPy
+    # Fetch waveforms and response from IRIS FDSN web service into ObsPy
     # stream and inventory objects
     st = fdsn_client.get_waveforms(
         network='NZ', station='BFZ', location='10', channel='HHZ',

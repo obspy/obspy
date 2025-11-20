@@ -62,7 +62,7 @@ c ipkflg      : pick flag
 c itar        : first triggered sample
 c amp         : maximum value of amplitude
 c ptime       : sample number of parrival
-c pamp        : maximum amplitude within trigger periode
+c pamp        : maximum amplitude within trigger period
 c preptime    : a possible earlier p-pick
 c ifrst       : direction of first motion (1 or -1)
 c pfm         :     "          "     "    (U or D)

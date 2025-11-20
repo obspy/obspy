@@ -39,7 +39,7 @@ int unpackencodingfallback = -2;
  * msr_unpack:
  *
  * Unpack a SEED data record header/blockettes and populate a MSRecord
- * struct. All approriate fields are byteswapped, if needed, and
+ * struct. All appropriate fields are byteswapped, if needed, and
  * pointers to structured data are setup in addition to setting the
  * common header fields.
  *

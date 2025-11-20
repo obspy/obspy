@@ -139,7 +139,7 @@
 2015.062: 2.14
 	- Fix memory leak when msr_pack() returns after an error. Patch
 	contributed by Larry Baker and Eric Thomas.
-	- Change casting of values passed to isdigit() to int intead of
+	- Change casting of values passed to isdigit() to int instead of
 	unsigned character.  Apparently this was consufing on ARM archs.
 	
 2015.061:
@@ -266,18 +266,18 @@
 	synchronizes read and write capabilities.
 
 	- For sampling rates above 32,767 Hz only print a warning for high
-	verbosity settings and set the sample rate factor and multipler to zero.
+	verbosity settings and set the sample rate factor and multiplier to zero.
 	Previously an error was printed during rational approximation.
 	The expectation is that a record with such a high sample rate will
 	include a blockette 100 to specify the actual sample rate.
 	This is not an official convention for SEED, but is a kludge to
-	support extremly high sample rates without printing errors.
+	support extremely high sample rates without printing errors.
 
 	- Fix conversion to doubles in examples/msrepack.c.
 
 2011.304: 2.6.2
 	- Increase precision of sample rate in SYNC printing routines to
-	avoid trucation of rate values.
+	avoid truncation of rate values.
 
 2011.262:
 	- Add '_lm' suffix to declaration of pivotal_gmtime_r_stamp in
@@ -341,12 +341,12 @@
 	- Fix offset tracking when reading from stdin.
 
 2011.006: 2.6rc1
-	- Add convience routines to only read selected records from a file:
+	- Add convenience routines to only read selected records from a file:
 	   ms_readtracegroup_timewin()
 	   ms_readtracegroup_selection()
 	   ms_readtracelist_timewin()
 	   ms_readtracelist_selection()
-	- Add convience routines to write Mini-SEED data to specified file:
+	- Add convenience routines to write Mini-SEED data to specified file:
 	   msr_writemseed()
 	   mst_writemseed()
 	   mst_writemseedgroup().
@@ -452,7 +452,7 @@
 	- Add selection.c containing routines to manage data selection
 	lists based on network, station, location, channel, quality,
 	start and end times.  The name parameters may contain globbing
-	charaters for matching.  External routines are: ms_addselect(),
+	characters for matching.  External routines are: ms_addselect(),
 	ms_matchselect(), ms_readselectionfile() and ms_freeselections().
 
 2009.365:
@@ -551,7 +551,7 @@
  
 2008.161: 2.1.5
 	- Fix string parsing error for IRIS DMC packed files, thanks Sandy!
-	- Use a merge sort algorithm insteam of the bubble sort previsouly
+	- Use a merge sort algorithm instead of the bubble sort previously
 	used in mst_groupsort(), better performance.
 	- Do raw string manipulation in msr_srcname() and mst_srcname()
 	instead of using sprintf(), slightly better performance.
@@ -605,7 +605,7 @@
 	- mst_groupheal() now sorts the MSTraceGroup before it tries to
 	heal the traces, this increases the chances of healing all
 	possible segments.
-	- msr_pack(): add void *handlerdata argument that wil be passed
+	- msr_pack(): add void *handlerdata argument that will be passed
 	directly to the record_handler(), this is intended to allow
 	private data to be passed from the msr_repack() caller to the
 	record handling routine.
@@ -699,7 +699,7 @@
 	library and can be used by libmseed based programs.  The facility
 	allows the caller to redirect all the log, diagnostic and error
 	output from the library to specific functions.  The facility 
-	also allows user specifed prefixes for all output messages.
+	also allows user specified prefixes for all output messages.
 
 2006.321:
 	- Prefix all data encoding type defines with DE_ to avoid collision.

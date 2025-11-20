@@ -259,9 +259,9 @@ class TestParser():
         - The written SEED file will always have the version 2.4. BW uses
           version 2.3.
 
-        The different formating of numbers in the stations blockettes will not
+        The different formatting of numbers in the stations blockettes will not
         be changed but 'evened'. Both are valid ways to do it - see SEED-Manual
-        chapter 3 for more informations.
+        chapter 3 for more information.
         """
         # Loop over all files.
         for file in (self.BW_SEED_files[-1],):
@@ -285,7 +285,7 @@ class TestParser():
         """
         This test takes some SEED files, reads them to a Parser object
         and converts them back to SEED once. This is done to avoid any
-        formating issues as seen in test_readAndWriteSEED.
+        formatting issues as seen in test_readAndWriteSEED.
 
         Therefore the reading and writing of SEED files is considered to be
         correct.
@@ -717,7 +717,7 @@ class TestParser():
 
     def test_issue_157(self, testdata):
         """
-        Test case for issue #157: re-using parser object.
+        Test case for issue #157: reusing parser object.
         """
         expected = {'latitude': 48.162899, 'elevation': 565.0,
                     'longitude': 11.2752, 'local_depth': 0.0,
@@ -863,7 +863,7 @@ class TestParser():
 
     def test_parsing_resp_file_with_mutiple_blockette55(self, testdata):
         """
-        Test case for issue #3275. Allow reading mutiple blockette 55.
+        Test case for issue #3275. Allow reading multiple blockette 55.
         """
         inv_xml = obspy.read_inventory(testdata['issue3275.xml'])
         with warnings.catch_warnings(record=True):

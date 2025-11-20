@@ -442,7 +442,7 @@ class TestWaveformPlugins:
     def test_deepcopy(self):
         """
         Test for issue #689: deepcopy did not work for segy. In order to
-        avoid complicated code to find test data for each waveform pluging,
+        avoid complicated code to find test data for each waveform plugging,
         which read OK and have no errors we simply test by first writing
         the waveform and then reading it in. Thus test is limited to
         formats which we can also write.

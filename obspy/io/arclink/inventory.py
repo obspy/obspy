@@ -471,7 +471,7 @@ def _read_instrument_sensitivity(sen_element, cha_element):
     :param sen_element: sensor element to be parsed
     :param cha_element: channel element to be parsed
     """
-    # Read the gain and gain frequency from attributs
+    # Read the gain and gain frequency from attributes
     gain = _attr2obj(cha_element, "gain", float)
     frequency = _attr2obj(cha_element, "gainFrequency", float)
 

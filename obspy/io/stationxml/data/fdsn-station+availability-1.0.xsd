@@ -3,7 +3,7 @@
 	An data availability extension for FDSN StationXML (www.fdsn.org/xml/station)
 	
 	The purpose of this schema is to extend the FDSN StationXML schema with structures
-	that document optional time series data availabilty for the BaseNodeType used
+	that document optional time series data availability for the BaseNodeType used
 	by the Network, Station and Channel Types.
 	
 	This exention allows time series data availability to be described in two ways:
@@ -13,7 +13,7 @@
     b) Data spans, where a span of data is represented by a start time, end time, number
     of segments contained in the span and maximum time tear within the span.  Typically
     this would be used in combination with a time-windowed data request to report data
-    availabilty during the selected window.
+    availability during the selected window.
 	
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:fsx="http://www.fdsn.org/xml/station/1" targetNamespace="http://www.fdsn.org/xml/station/1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0">
@@ -33,7 +33,7 @@
                                     useful as a guide for generating time series data requests. The
                                     information for a DataAvailability:Span may be specific to the
                                     time range used in a request that resulted in the document or
-                                    limited to the availability of data withing the request range.
+                                    limited to the availability of data within the request range.
                                     These details may or may not be retained when synchronizing
                                     metadata between data centers. </xs:documentation>
                             </xs:annotation>

@@ -69,7 +69,7 @@ typedef struct ContinuousSegment_s {
     hptime_t endtime;             // Time of the last sample
     double samprate;              // Sample rate
     char sampletype;              // Sampletype
-    hptime_t hpdelta;             // High precission sample period
+    hptime_t hpdelta;             // High precision sample period
     int64_t recordcnt;            // Record count for segment.
     int64_t samplecnt;            // Total sample count
     int8_t encoding;              // Encoding of the first record.

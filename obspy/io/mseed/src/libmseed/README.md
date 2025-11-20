@@ -48,10 +48,10 @@ You should have received a copy of the GNU Lesser General Public
 License along with this software.
 If not, see <https://www.gnu.org/licenses/>.
 
-## Acknowlegements
+## Acknowledgements
 
 Numerous improvements have been incorporated based on feedback and
-patches submitted by others.  Individual acknowlegements are included
+patches submitted by others.  Individual acknowledgements are included
 in the ChangeLog.
 
 This library also uses code bits published in the public domain and

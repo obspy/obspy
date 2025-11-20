@@ -2296,7 +2296,7 @@ class TestStream:
         Test simulate() with giving a Parser object to use for RESP information
         in evalresp.
         Also tests usage without specifying a date for response lookup
-        explicitely.
+        explicitly.
         """
         st = read()
         p = Parser("/path/to/dataless.seed.BW_RJOB")

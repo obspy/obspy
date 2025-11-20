@@ -443,7 +443,7 @@ class TestDownloadHelpersUtil():
         dir = tempfile.mkdtemp()
         try:
             # If the file does not exist, nothing happens.
-            safe_delete(os.path.join(dir, "non-existant"))
+            safe_delete(os.path.join(dir, "non-existent"))
             # If not a file, an error will be raised.
             name = os.path.join(dir, "tmpdir")
             os.makedirs(name)

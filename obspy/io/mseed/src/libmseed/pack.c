@@ -55,7 +55,7 @@ flag packdatabyteorder   = -2;
  * length of the record and 3) a pointer supplied by the original
  * caller containing optional private data (handlerdata).  It is the
  * responsibility of record_handler to process the record, the memory
- * will be re-used or freed when record_handler returns.
+ * will be reused or freed when record_handler returns.
  *
  * If the flush flag != 0 all of the data will be packed into data
  * records even though the last one will probably not be filled.

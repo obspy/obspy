@@ -16,7 +16,7 @@
 //    2017-05-08   Removed BUG in new merging algorithm in add_GcfSeg that triggered when
 //                  blocks in gcf file are not ordered in time (they usually are), cps
 //    2017-05-23   Removed BUG in new merging algorithm in add_GcfSeg that triggered when
-//                  data vectors had not been decoded --- Note, this diables new scheme
+//                  data vectors had not been decoded --- Note, this disables new scheme
 //                  to merge segments with least data jump if more than two segments are
 //                  aligned, cps
 //    2017-07-12  Removed BUG in merging algorithm triggering when merging segments with
@@ -41,7 +41,7 @@
 //    2020-03-28  Adjusted BUG in setting error code while decoding data vector as well as BUG in
 //                  merging segments in case one of the segments had an error set
 //    2020-04-15  Moved inclusion of time.h to header file
-//    2022-03-10  Removed use of time.h by changing use of time_t to derrived arithmetic type gtime
+//    2022-03-10  Removed use of time.h by changing use of time_t to derived arithmetic type gtime
 //                 moved inclusion of unistd.h and to header file
 //    2022-03-15  Added sampling rate 800 Hz as an allowed sampling rate
 //    2022-12-20  Added check in write_gcf that number of samples in last block is compatible with
@@ -254,8 +254,8 @@ void add_GcfSeg(GcfFile *obj, GcfSeg seg, int mode, double tol) {
          realloc_GcfFile(obj,obj->n_alloc+5);
       }
       s = &obj->seg[j];
-      // allocate memory for new segment (allocate more than nedded to reduce allocations)
-      // then set segment meta data --- 2017-03-10 added seg.n_data to logical expression below, cps  
+      // allocate memory for new segment (allocate more than needed to reduce allocations)
+      // then set segment meta data --- 2017-03-10 added seg.n_data to logical expression below, cps
       if (seg.n_alloc && seg.n_data) realloc_GcfSeg(s,seg.n_data+10*1024);
       strncpy(s->systemID,seg.systemID,sizeof(seg.systemID));
       strncpy(s->streamID,seg.streamID,sizeof(seg.streamID));
@@ -277,7 +277,7 @@ void add_GcfSeg(GcfFile *obj, GcfSeg seg, int mode, double tol) {
       obj->n_seg += 1;
    } else if (j<0) {
       s = &obj->seg[-(j+1)];
-      // segment to add is to be pre-pended to existing segment, update FIC, compression, start time and first block
+      // segment to add is to be prepended to existing segment, update FIC, compression, start time and first block
       s->start = seg.start;
       s->t_numerator = seg.t_numerator;
       s->t_denominator = seg.t_denominator;
@@ -297,7 +297,7 @@ void add_GcfSeg(GcfFile *obj, GcfSeg seg, int mode, double tol) {
          // append segment
          memcpy(s->data+s->n_data,seg.data,seg.n_data*sizeof(int32));
       } else {
-         // move existing data to make room, then pre-pend segment
+         // move existing data to make room, then prepend segment
          memmove(s->data+seg.n_data,s->data,s->n_data*sizeof(int32));
          memcpy(s->data,seg.data,seg.n_data*sizeof(int32));         
       }
@@ -400,7 +400,7 @@ void merge_GcfFile(GcfFile *obj, int mode, double tol) {
                               break;
                            } else {
                               // second sanity check either passed or triggered for segment after i, merge segments
-                              // re-allocate memory, we do so in chuncks to reduce number of reallocations
+                              // re-allocate memory, we do so in chunks to reduce number of reallocations
                               if (obj->seg[Ord[ii]].n_alloc < obj->seg[Ord[ii]].n_data+obj->seg[Ord[j]].n_data) {
                                  realloc_GcfSeg(&obj->seg[Ord[ii]],obj->seg[Ord[ii]].n_data+obj->seg[Ord[j]].n_data+chunk);                        
                               }
@@ -654,7 +654,7 @@ gtime GcfTime2Unix(uint32 time, int *leap) {
  *  
  * RETURN
  *  GCF time with seconds in bits 0-16 and days in bits 17-31. NOTE: GCF time starts
- *  at 0, any ealier times will be 0
+ *  at 0, any earlier times will be 0
  */
 uint32 UnixTime2Gcf(gtime time, int leap) {
    uint32 gcf_t=0, days;
@@ -676,10 +676,10 @@ uint32 UnixTime2Gcf(gtime time, int leap) {
  * 
  *  NOTE: function does not check that ttl header value is in range
  * 
- * ARGUMETS
+ * ARGUMENTS
  *  bh      structure holding unparsed header
- *  seg     stucture to store parsed header
- *  endian  indicator if on a litle endian machine (1 else 0)
+ *  seg      structure to store parsed header
+ *  endian  indicator if on a little endian machine (1 else 0)
  * 
  * RETURN
  *  if successful function returns 0 else function returns error code set in seg->err
@@ -761,7 +761,7 @@ int ParseGcfBlockHeader(BH *bh, GcfSeg *seg, int endian) {
       seg->t_numerator = ((bh->comp & 0xf0) >> 4) + ((bh->comp & 0x08) << 1); // 2020-03-01 cps, updated to include fourth bit as MSB
    } else if (seg->sps == 0) seg->err = -1;
    bh->comp = bh->comp & 0x07;  // 2020-03-01 cps, updated to only use first 3 bits (were first 4 -> & 0x0f), also make sure to 
-                                // only use first 3 bits as it can not be guaranted that bits 3-7 are 00000 for sps <= 250
+                                // only use first 3 bits as it can not be guaranteed that bits 3-7 are 00000 for sps <= 250
                                 // according to Fish at Guralp (email conversation 2020-03-01)
    seg->compr = bh->comp;
    seg->ttl = bh->ttl;
@@ -771,7 +771,7 @@ int ParseGcfBlockHeader(BH *bh, GcfSeg *seg, int endian) {
 }
 
 
-/* funtion decode() decodes data in a gcf block
+/* function decode() decodes data in a gcf block
  *
  * ARGUMENTS
  *  buff      pointer to memory where FIC (forward integration constant) exists
@@ -779,8 +779,8 @@ int ParseGcfBlockHeader(BH *bh, GcfSeg *seg, int endian) {
  *  n         expected number of data samples to decode
  *  y         data vector to put converted samples in
  *  endian    endianess of current machine
- *  FIC       Will upon retun hold the Forward Integration Constant
- *  err       Will upon return hold an error code if an error occured else be untouched,
+ *  FIC       Will upon return hold the Forward Integration Constant
+ *  err       Will upon return hold an error code if an error occurred else be untouched,
  *             error codes are:
  *               3  Unknown compression code
  *              10  Failure to verify decoded data (last data != RIC)
@@ -788,7 +788,7 @@ int ParseGcfBlockHeader(BH *bh, GcfSeg *seg, int endian) {
  *              21  error 10 + 21
  * 
  * RETURN
- *  if sucessful function returns RIC (reverse integration constant) that should
+ *  if successful function returns RIC (reverse integration constant) that should
  *  be equal that last sample in the data vector if properly decoded
  */ 
 int32 decode(char *buff, uint8 compr, int32 n, int32 *y, int endian, int32 *FIC, int *err) {
@@ -812,7 +812,7 @@ int32 decode(char *buff, uint8 compr, int32 n, int32 *y, int endian, int32 *FIC,
       }
       memcpy(&RIC,&buff[i+off],size);
       if (endian) swab_long((char*)&RIC);
-      // check that last data point verfies against RIC
+      // check that last data point verifies against RIC
       if (y[i] != RIC) *err = *err == 11 ? 21 : 10;
       return(RIC);
    case 2:
@@ -831,7 +831,7 @@ int32 decode(char *buff, uint8 compr, int32 n, int32 *y, int endian, int32 *FIC,
       }
       memcpy(&RIC,&buff[i*csize+off],size);
       if (endian) swab_long((char*)&RIC);
-      // check that last data point verfies against RIC
+      // check that last data point verifies against RIC
       if (y[i] != RIC) *err = *err == 11 ? 21 : 10;
       return(RIC);
    case 1:
@@ -839,20 +839,20 @@ int32 decode(char *buff, uint8 compr, int32 n, int32 *y, int endian, int32 *FIC,
       // add first difference (should be 0)
       memcpy(&ival,&buff[size],csize);
       if (endian) swab_short((char*)&ival);
-      ival &= 0xffffffff;   // this really shouldn't be neccesary
+      ival &= 0xffffffff;   // this really shouldn't be necessary
       y[i] += ival;
       if (y[i] != *FIC) *err = 11; 
       off = size+csize;
       while(n--) {
          memcpy(&ival,&buff[i*csize+off],csize);
          if (endian) swab_long((char*)&ival);
-         ival &= 0xffffffff;   // this really shouldn't be neccesary
+         ival &= 0xffffffff;   // this really shouldn't be necessary
          y[i+1] = y[i] + ival;
          i++;
       }
       memcpy(&RIC,&buff[i*csize+off],size);
       if (endian) swab_long((char*)&RIC);
-      // check that last data point verfies against RIC
+      // check that last data point verifies against RIC
       if (y[i] != RIC) *err = *err == 11 ? 21 : 10;
       return(RIC);
    default:
@@ -871,8 +871,8 @@ int32 decode(char *buff, uint8 compr, int32 n, int32 *y, int endian, int32 *FIC,
  *  no_of_s   expected number of samples in block
  *  endian    endianess of machine
  *  FIC       Will upon return hold the Forward Integration Constant
- *  RIC       Will upon retun hold the Reverse Integration Constant
- *  err       Will upon return hold an error code if an error occured else be untouched,
+ *  RIC       Will upon return hold the Reverse Integration Constant
+ *  err       Will upon return hold an error code if an error occurred else be untouched,
  *             error codes are:
  *               3  Unknown compression code
  *              10  Failure to verify decoded data (last data != RIC)
@@ -912,7 +912,7 @@ void StrToID(char *Str, uint32 *ID) {
 
 
 /* function verify_GcfFile() verifies that a GcfFile
- * struct contains all information neccesary to be written 
+ * struct contains all information necessary to be written 
  * to file. It also makes sure that streamID and systemID
  * are upper case.
  * 
@@ -926,9 +926,9 @@ void StrToID(char *Str, uint32 *ID) {
  *  0 if ok to write to file
  *  1 if no data or inconsistent segment info
  *  2 if unsupported samplingrate
- *  3 erronous fractional start time
+ *  3 erroneous fractional start time
  *  4 unsupported gain
- *  5 erronous instrument type
+ *  5 erroneous instrument type
  *  6 to many characters in systemID
  */ 
 int verify_GcfFile(GcfFile *obj) {
@@ -1019,7 +1019,7 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
    init_GcfSeg(&seg,0);
    if (mode >= 0) realloc_GcfSeg(&seg, MAX_DATA_BLOCK);
    
-   // adjust mode if nedded
+   // adjust mode if needed
    if (mode > 2) {
       mode = 2;
       b1 = 1;
@@ -1045,7 +1045,7 @@ int read_gcf(const char *f, GcfFile *obj, int mode) {
          // all done add segment
          seg.blk = obj->n_blk-1;
          if (mode >= 0 && (seg.err == 3 || seg.err == 4)) {
-            // no data were actually decoded, temporarly set n_alloc to 0 to avoid adding non-existing data to GcfFile
+            // no data were actually decoded, temporarily set n_alloc to 0 to avoid adding non-existing data to GcfFile
             n_alloc = seg.n_alloc;
             seg.n_alloc = 0;
          }
@@ -1244,7 +1244,7 @@ int write_gcf(const char *f, GcfFile *obj) {
                      //  if compression code is 2 or 4 as number of samples is evaluated as number of
                      //  four-byte records.
                      c = 4;
-                     d1 = d0+249;  // 249 here to prevent compression to get swaped to 2 later
+                     d1 = d0+249;  // 249 here to prevent compression to get swapped to 2 later
                   } else {                        
                      if (d32 < 128 && d32 >= -128) c = 1; // initial difference can do with 1 byte
                      else c = 2;  // initial difference needs 2 byte
@@ -1295,10 +1295,10 @@ int write_gcf(const char *f, GcfFile *obj) {
                   if (c==1) c=4; 
                   else if (c==4) c=1;
                   
-                  // set compresion code in header
+                  // set compression code in header
                   bh->comp = c;
                   
-                  // adjust the last sample if nedded, skip if these are the last few data points or sps < 1 Hz
+                  // adjust the last sample if needed, skip if these are the last few data points or sps < 1 Hz
                   if (d1 < obj->seg[i].n_data-1 && obj->seg[i].sps_denom == 1) {
                      // sampling rate is greater than 1 Hz
                      m = 0;

@@ -75,7 +75,7 @@ struct string_array *ev_parse_line(char *line) {
   return(lcl_strings);
 }
 
-/* parse_delim_line: parses the fields on a line into seperate strings.  The definition of a field
+/* parse_delim_line: parses the fields on a line into separate strings.  The definition of a field
                There is any non-white space characters with bordering white space.  The result
                is a structure containing the number of fields on the line and an array of
                character strings (which are easier to deal with than the original line).  A second
@@ -257,10 +257,10 @@ int get_line(FILE *fptr, char *return_line, int blkt_no, int fld_no, char *sep) 
   }
 
   if((lcl_ptr = strstr(line,sep)) == (char *)NULL) {
-    error_return(UNDEF_SEPSTR, "get_line; seperator string not found"); 
+    error_return(UNDEF_SEPSTR, "get_line; separator string not found"); 
   }
   else if((lcl_ptr - line) > (int)(strlen(line)-1)) {
-    error_return(UNDEF_SEPSTR, "get_line; nothing to parse after seperator string"); 
+    error_return(UNDEF_SEPSTR, "get_line; nothing to parse after separator string"); 
   }
 
   lcl_ptr++;
@@ -269,7 +269,7 @@ int get_line(FILE *fptr, char *return_line, int blkt_no, int fld_no, char *sep) 
   }
 
   if((lcl_ptr - line) > (int)strlen(line)) {
-    error_return(UNDEF_SEPSTR, "get_line; no non-white space after seperator string"); 
+    error_return(UNDEF_SEPSTR, "get_line; no non-white space after separator string"); 
   }
 
   strncpy(return_line,lcl_ptr,MAXLINELEN);
@@ -330,10 +330,10 @@ int next_line(FILE *fptr, char *return_line, int *blkt_no, int *fld_no, char *se
   }
 
   if((lcl_ptr = strstr(line,sep)) == (char *)NULL) {
-    error_return(UNDEF_SEPSTR, "get_field; seperator string not found"); 
+    error_return(UNDEF_SEPSTR, "get_field; separator string not found");
   }
   else if((lcl_ptr - line) > (int)(strlen(line)-1)) {
-    error_return(UNDEF_SEPSTR, "get_field; nothing to parse after seperator string"); 
+    error_return(UNDEF_SEPSTR, "get_field; nothing to parse after separator string"); 
   }
 
   lcl_ptr++;

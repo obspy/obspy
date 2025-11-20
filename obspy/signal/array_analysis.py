@@ -791,7 +791,7 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     :param coordsys: valid values: 'lonlat' and 'xy', choose which coordinates
         to use
     :param slim: either a float to use symmetric limits for slowness
-        differences or the tupel (sxmin, sxmax, symin, symax)
+        differences or the tuple (sxmin, sxmax, symin, symax)
     :type fmin: float
     :param fmin: minimum frequency in signal
     :type fmax: float

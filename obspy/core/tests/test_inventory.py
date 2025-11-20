@@ -608,7 +608,7 @@ class TestInventory:
         inv2 = inv.copy()
         assert inv is not inv2
         assert inv == inv2
-        # make sure changing inv2 doesnt affect inv
+        # make sure changing inv2 doesn't affect inv
         original_latitude = inv2[0][0][0].latitude
         inv2[0][0][0].latitude = original_latitude + 1
         assert inv[0][0][0].latitude == original_latitude

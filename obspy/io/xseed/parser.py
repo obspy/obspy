@@ -1460,7 +1460,7 @@ class Parser(object):
                         34, b53.stage_signal_input_units)
                 except ValueError:
                     msg = "Stage %i: Failed to resolve the stage signal " \
-                        "input units abbreivation for blockette 53." % _i
+                        "input units abbreviation for blockette 53." % _i
                     warnings.warn(_epoch_warn_msg(msg))
                     i_u = None
                 try:
@@ -1590,7 +1590,7 @@ class Parser(object):
                     response_list = [
                         ResponseListElement(f, a, p) for f, a, p in
                         zip(b55.frequency, b55.amplitude, b55.phase_angle)]
-                # allow mutiple blockette 55
+                # allow multiple blockette 55
                 else:
                     _freq = []
                     _amp = []
@@ -1742,7 +1742,7 @@ class Parser(object):
                         34, b62.stage_signal_in_units)
                 except ValueError:
                     msg = "Stage %i: Failed to resolve the stage signal in " \
-                          "units abbreivation for blockette 62." % _i
+                          "units abbreviation for blockette 62." % _i
                     warnings.warn(_epoch_warn_msg(msg))
                     i_u = None
                 try:
@@ -1903,7 +1903,7 @@ class Parser(object):
 
     def get_inventory(self):
         """
-        Function returning a dictionary about whats actually in the Parser
+        Function returning a dictionary about what's actually in the Parser
         object.
         """
         info = {"networks": [], "stations": [], "channels": []}

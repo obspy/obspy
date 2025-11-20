@@ -592,7 +592,7 @@ class TestPsd:
 
     def test_ppsd_time_checks(self):
         """
-        Some tests that make sure checking if a new PSD slice to be addded to
+        Some tests that make sure checking if a new PSD slice to be added to
         existing PPSD has an invalid overlap or not works as expected.
         """
         ppsd = PPSD(Stats(), Response())

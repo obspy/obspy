@@ -1006,7 +1006,7 @@ class Indexer(object):
         pool = Pool(processes=self.parallel)
         # run mseedindex on each file in parallel
         try:
-            proccesses = []
+            processes = []
             for file_name in file_paths:
                 logger.debug("Indexing file '{}'.".format(file_name))
                 proc = pool.apply_async(Indexer._run_index_command,
@@ -1014,11 +1014,11 @@ class Indexer(object):
                                               self.root_path,
                                               file_name,
                                               self.bulk_params))
-                proccesses.append(proc)
+                processes.append(proc)
             pool.close()
             # Without timeout, cannot respond to KeyboardInterrupt.
             # Also need get to raise the exceptions workers may throw.
-            for proc in proccesses:
+            for proc in processes:
                 cmd, rc, out, err = proc.get(timeout=999999)
                 if rc:
                     logger.warning("FAIL [{0}] '{1}' out: '{2}' err: '{3}'"

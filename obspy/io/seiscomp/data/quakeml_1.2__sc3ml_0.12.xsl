@@ -109,7 +109,7 @@ Parent              Element lost
 ''''''''''''''''''''''''''''''''''''''''''''
 amplitude           evaluationStatus
 magnitude           evaluationMode
-arrival             commment
+arrival             comment
 arrival             horizontalSlownessWeight
 arrival             backazimuthWeight
 origin              region

@@ -133,7 +133,7 @@ Version 3.2.25
 	  configure.in
 Version 3.2.24
 	??? Ilya Dricker (i.dricker@isti.com)
-	* ADDED: two confuration options (--enable-delay Use estimated delay in phase computation) and (--enable-phase-unwrap Unwrap phase). 
+	* ADDED: two configuration options (--enable-delay Use estimated delay in phase computation) and (--enable-phase-unwrap Unwrap phase). 
 Version 3.2.23
 	??? Ilya Dricker (i.dricker@isti.com)
 	* ADDED: support for SHAPE compatible RESP files. When parsing lines that are valid

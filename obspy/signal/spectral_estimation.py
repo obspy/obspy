@@ -706,7 +706,7 @@ class PPSD(object):
 
         Replaces old
         `obspy.signal.spectral_estimation.PPSD.__insert_used_time()`
-        private method and the addition ot the histogram stack that was
+        private method and the addition to the histogram stack that was
         performed directly in
         :meth:`obspy.signal.spectral_estimation.PPSD.__process()`.
 
@@ -1796,7 +1796,7 @@ class PPSD(object):
                                marker=marker, **color_kwargs)[0]
                 # plot the next lines with the same color (we can't easily
                 # determine the color beforehand if we rely on the color cycle,
-                # i.e. when user doesn't specify colors explictly)
+                # i.e. when user doesn't specify colors explicitly)
                 cur_color = line.get_color()
 
         if legend:
@@ -2088,7 +2088,7 @@ class PPSD(object):
         if fig.ppsd.cumulative:
             data = self.current_histogram_cumulative * 100.0
         else:
-            # avoid divison with zero in case of empty stack
+            # avoid division with zero in case of empty stack
             data = (
                 self.current_histogram * 100.0 /
                 (self.current_histogram_count or 1))

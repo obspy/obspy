@@ -4,7 +4,7 @@ The NonLinLoc Phase file format is intended to give a comprehensive phase time-p
 
 For each event to be located, this file contains one set of records. In each set there is one "arrival-time" record for each phase at each seismic station. The final record of each set is a blank. As many events as desired can be included in one file.
 
-Each record has a fixed format, with a blank space between fields. A field should never be left blank - use a "?" for unused characther fields and a zero or invalid numeric value for numeric fields.
+Each record has a fixed format, with a blank space between fields. A field should never be left blank - use a "?" for unused character fields and a zero or invalid numeric value for numeric fields.
 
 The NonLinLoc Phase file record is identical to the first part of each phase record in the NLLoc Hypocenter-Phase file output by the program NLLoc. Thus the phase list output by NLLoc can be used without modification as time pick observations for other runs of NLLoc.
 
@@ -13,7 +13,7 @@ Fields:
 Station name (char*6)
     station name or code 
 Instrument (char*4)
-    instument identification for the trace for which the time pick corresponds (i.e. SP, BRB, VBB) 
+    instrument identification for the trace for which the time pick corresponds (i.e. SP, BRB, VBB) 
 Component (char*4)
     component identification for the trace for which the time pick corresponds (i.e. Z, N, E, H) 
 P phase onset (char*1)

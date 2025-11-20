@@ -267,7 +267,7 @@ class Client(object):
                 ``"decimate=2.0"``. The sample-rate of the source divided by
                 the given sample-rate must be factorable by 2,3,4,7.
 
-        **Miscelleneous options**
+        **Miscellaneous options**
 
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given

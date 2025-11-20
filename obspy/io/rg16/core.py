@@ -339,7 +339,7 @@ def _read_trace_header_5(fi, trace_block_start):
         '7': 'post processed (HiPAP only)',
         '8': 'post processed (HiPAP and INS)',
         '9': 'post processed (HiPAP and DVL)',
-        '10': 'post processed (HiPAP, DVL ans INS)',
+        '10': 'post processed (HiPAP, DVL and INS)',
         '11': 'first break analysis',
     }
     source_key = str(_read(fi, pos + 29, 1, 'binary'))

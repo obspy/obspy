@@ -696,7 +696,7 @@ class SACTrace(object):
         byteorders look like '<', '=', '='.
 
     Any valid header name is also an attribute.
-    See below, :mod:`obspy.io.sac.header`, or individial attribution docstrings
+    See below, :mod:`obspy.io.sac.header`, or individual attribution docstrings
     for more header information.
 
                                  THE SAC HEADER
@@ -1159,7 +1159,7 @@ class SACTrace(object):
         :type hs: :class:`numpy.ndarray` of str
         :param data: SAC data array, optional.
 
-        If omitted or None, the header arrays are intialized according to
+        If omitted or None, the header arrays are initialized according to
         :func:`obspy.io.sac.arrayio.init_header_arrays`.  If data is omitted,
         it is simply set to None on the corresponding :class:`SACTrace`.
 

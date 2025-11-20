@@ -32,7 +32,7 @@
    kwhd2.c           2nd part of sub-function to write header.
 
    util.c            Other sub-functions for time decode and Motorola
-                     to Intel byte swaping.
+                     to Intel byte swapping.
 */
 
 /* --------------------------------------------------*/
@@ -667,7 +667,7 @@ File Version 1.50: 1.40(K2) & 1.50(MW) 12/18-channel header (February 1997)
 
 /*   06/21/01  ADD: SENSOR_DISPLACEMENT  3, to match SSA2EVT */
 
-/*  12/17/01   CLEARIFY:  channel 1-18 = bits 0-17 of triggerbitmap */
+/*  12/17/01   CLARIFY:  channel 1-18 = bits 0-17 of triggerbitmap */
 /*  12/18/01   CHANGE:  Everest -> Makalu */
 
 /*  03/11/03   CHANGE:  misc_rw_networkflag (never used) to misc_rw_blockBuf256, unsigned char */
@@ -1092,7 +1092,7 @@ struct MISC_RO_PARMS {
 
    unsigned short crc; /* 16-bit CRC of entire file, with this word set to 0xffff */
                        /* NOTE: this parameter is not used at the moment.
-              For integrity checking, the header and each frame are preceeded
+              For integrity checking, the header and each frame are preceded
               by a structure tag which contains a checksum */
    unsigned short flags; /* bit 0 = 1 if DSP system error */
    short temperature; /* degrees C x 10 */
@@ -1528,7 +1528,7 @@ short m_nSec;
                     used bcc dcompiler -- dobcc.bat */
 /*  6/5/95   1.30   fixed frame error message, needed frameCounter+1, to
                      report correct frame # starting @ 1*/
-/*  6/15/95  1.40   fix bug when xmodem padds end of file with 0x00 */
+/*  6/15/95  1.40   fix bug when xmodem pads end of file with 0x00 */
 /*  7/12/95  1.50   fix bug - mscans counter was inside channel loop
                                          ended file short by #chans factor */
 /*  5/20/96  1.60   verify works @ 1000 sps for CDMG
@@ -2806,8 +2806,8 @@ BYTE instcode;
 /* 11/12/98        ADD: CHANNEL_RW.mapped_channel & EpiSensor= #32,
                         conditioned by appversion */
 /* 11/24/98        ADD: CHANNEL_RW for EpiSensor */
-/* 12/9/98         ADD:  Use sensor_gain in calcuation if range == sensed_range */
-/* 12/11/98        FIX: mapped_channel & invertion */
+/* 12/9/98         ADD:  Use sensor_gain in calculation if range == sensed_range */
+/* 12/11/98        FIX: mapped_channel & inversion */
 /*  1/ 4/99        FIX: mapped_channel inversion for FBAs */
 /*  3/02/99        ADD: K2,MTW,Etna,EtnaSI & EtnaJM instrument ID */
 /*  8/30/99        ADD: sensor codes #33 thru #40 */
@@ -4878,7 +4878,7 @@ unsigned long ul;
      fprintf(hfp,"   GPS locked.\n");       // added app 2.55
    if ((0x20 & hb) == 0x20)                  // bit 5
      fprintf(hfp,"   GPS power is ON.\n");
-   // imbedded \n
+   // embedded \n
 
    fprintf(hfp,"GPS state of health byte [same as Acutime SOH byte]:\n");
    if ( (headver == MTW120) || (headver == MTW150) )
@@ -4901,7 +4901,7 @@ unsigned long ul;
    fprintf(hfp,"  Only 3 usable satellites.\n");
    if (hb == 0x0C)
    fprintf(hfp,"  The chosen satellite is unusable.\n");
-   // imbedded \n
+   // embedded \n
 
    if ( (headver == MTW120) || (headver == MTW150) )
       hw = swap2(mwhead.roParms.timing.gpsUpdateRTCCount);

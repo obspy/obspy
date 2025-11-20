@@ -150,7 +150,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             buff4_max = fabsf(buff4[i]);
     }
 
-    // next cummulative envelope function
+    // next cumulative envelope function
     env_max = 0.0;
     for(i=0;i<ndat;i++){
         buff2[i] = fabsf(buff4[i])/buff4_max - buff4[i]*buff4[i]/(buff4_max*buff4_max);

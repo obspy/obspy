@@ -223,7 +223,7 @@ void print_chan(struct channel *chan, int start_stage, int stop_stage,
                 user requested it.  The response is either in the form of
                 a complex spectra (freq, real_resp, imag_resp) to the
                 file SPECTRA.NETID.STANAME.CHANAME (if rtype = "cs")
-                or in the form of seperate amplitude and phase files
+                or in the form of separate amplitude and phase files
                 (if rtype = "ap") with names like AMP.NETID.STANAME.CHANAME
                 and PHASE.NETID.STANAME.CHANAME.  In all cases, the pointer to
                 the channel is used to obtain the NETID, STANAME, and CHANAME
@@ -301,7 +301,7 @@ void print_resp_itp(double *freqs, int nfreqs, struct response *first,
             error_exit(OPEN_FILE_ERROR,"print_resp; failed to open file %s", filename);
           }
 	  if (1 == unwrap_flag) {
-          /* 04/27/2010 unwraped phases should only start causal! - Johannes Schweitzer*/
+          /* 04/27/2010 unwrapped phases should only start causal! - Johannes Schweitzer*/
 	  phas1 = 0.0;
 	  if(pha_arr[0] < 0.0 ) { phas1 = 360.0; }
 	  prev_phase = pha_arr[0] + phas1;	    
@@ -312,7 +312,7 @@ void print_resp_itp(double *freqs, int nfreqs, struct response *first,
 	      pha_arr[i] = pha;
 	      prev_phase = pha;
 	    }
-	    /* Next function attempts to put phase withing -360:360 bounds
+	    /* Next function attempts to put phase within -360:360 bounds
 	    * this is requested by AFTAC
 	    */
 	   /* Next line is removed at request of Chad */
@@ -326,7 +326,7 @@ void print_resp_itp(double *freqs, int nfreqs, struct response *first,
 	      pha_arr[i] = pha;
 	      prev_phase = pha;
 	    }
-	    /* Next function attempts to put phase withing -360:360 bounds
+	    /* Next function attempts to put phase within -360:360 bounds
 	    * this is requested by AFTAC
 	    */
 	    (void) evresp_adjust_phase(pha_arr, num_points, -360.0, 360.0);
@@ -347,7 +347,7 @@ void print_resp_itp(double *freqs, int nfreqs, struct response *first,
           if((fptr1 = fopen(filename,"w")) == (FILE *)NULL)
             error_exit(OPEN_FILE_ERROR,"print_resp; failed to open file %s", filename);
 
-          /* 04/27/2010 unwraped phases should only start causal! - Johannes Schweitzer*/
+          /* 04/27/2010 unwrapped phases should only start causal! - Johannes Schweitzer*/
 	  phas1 = 0.0;
 	  if(pha_arr[0] < 0.0 ) { phas1 = 360.0; }
 	  prev_phase = pha_arr[0] + phas1;
@@ -409,7 +409,7 @@ void print_resp_itp(double *freqs, int nfreqs, struct response *first,
                 user requested it.  The response is either in the form of
                 a complex spectra (freq, real_resp, imag_resp) to the
                 file SPECTRA.NETID.STANAME.CHANAME (if rtype = "cs")
-                or in the form of seperate amplitude and phase files
+                or in the form of separate amplitude and phase files
                 (if rtype = "ap") with names like AMP.NETID.STANAME.CHANAME
                 and PHASE.NETID.STANAME.CHANAME.  In all cases, the pointer to
                 the channel is used to obtain the NETID, STANAME, and CHANAME

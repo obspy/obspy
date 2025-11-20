@@ -33,7 +33,7 @@ class TestResourceIdentifier:
     """
     @pytest.fixture(scope='class', autouse=True)
     def debug_state(self):
-        """Return a new Resource id context for testsing."""
+        """Return a new Resource id context for testing."""
         with ResourceIdentifier._debug_class_state() as state:
             yield state
 
@@ -575,7 +575,7 @@ class TestResourceIdentifier:
         the wrong objects when the bound object has gone out of scope and
         a new object adopts the old object's python id.
         """
-        # Create a simple class for resource_ids to refere to.
+        # Create a simple class for resource_ids to refer to.
         class Simple(object):
 
             def __init__(self, value):
@@ -745,7 +745,7 @@ def make_diverse_catalog_list(*args):  # NOQA
     # make more catalogs with copy method
     cat4 = cat1.copy()
     cat5 = cat4.copy()
-    # ensure creating a copying and deleting doesnt mess up id tracking
+    # ensure creating a copying and deleting doesn't mess up id tracking
     cat_to_delete = cat2.copy()
     del cat_to_delete
     # pickle and unpickle catalog

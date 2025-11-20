@@ -205,7 +205,7 @@ class EasySeedLinkClient(object):
                       'INFO response'
                 raise EasySeedLinkClientException(msg)
             elif data == SLPacket.SLERROR:
-                msg = 'Unknown error occured while expecting INFO response'
+                msg = 'Unknown error occurred while expecting INFO response'
                 raise EasySeedLinkClientException(msg)
 
             # Wait for the terminated INFO response

@@ -35,7 +35,7 @@ opensuse_leap_42_1     ubuntu_14_04_trusty       ubuntu_16_04_xenial_32bit
 ```
 
 Each directory in `base_images` contains a `Dockerfile` with instructions to
-install all ObsPy dependencies without actually installing ObsPy itsself. This
+install all ObsPy dependencies without actually installing ObsPy itself. This
 makes it easy to add more test images.
 
 Each execution of the `run_obspy_tests.sh` script creates a new subdirectory
@@ -291,7 +291,7 @@ Since runtime is rather high, ideally these jobs should be distributed on
 separate docker testrunners (scripts might have to be adjusted, e.g. naming of
 docker temporary containers..)
 
-To run four workers embarassingly parallel (by separating the different build
+To run four workers embarrassingly parallel (by separating the different build
 types), set up four dedicated obspy github repository clones and run the jobs
 in parallel:
 

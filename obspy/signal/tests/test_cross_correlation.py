@@ -105,7 +105,7 @@ class TestCrossCorrelation:
         assert shift == 1
         assert round(abs(value-20.), 7) == 0
         np.testing.assert_allclose(cc, [0., 10., 20.], atol=1e-14)
-        # test symetry and different length of a and b
+        # test symmetry and different length of a and b
         a, b = [0, 1, 2], [20, 10]
         cc1 = correlate(a, b, 1, demean=False, normalize=False, method='fft')
         cc2 = correlate(a, b, 1, demean=False, normalize=False,

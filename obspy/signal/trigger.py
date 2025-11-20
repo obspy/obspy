@@ -336,7 +336,7 @@ def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     # determine the indices where charfct falls below off-threshold
     ind2_ = np.empty_like(ind2, dtype=bool)
     ind2_[:-1] = np.diff(ind2) > 1
-    # last occurence is missed by the diff, add it manually
+    # last occurrence is missed by the diff, add it manually
     ind2_[-1] = True
     of.extend(ind2[ind2_].tolist())
     on.extend(ind1[np.where(np.diff(ind1) > 1)[0] + 1].tolist())
@@ -399,7 +399,7 @@ def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     pfm = C.create_string_buffer(b"     ", 5)
     # be nice and adapt type if necessary
     reltrc = np.ascontiguousarray(reltrc, np.float32)
-    # Initiliaze CF array (MB)
+    # Initialize CF array (MB)
     c_float_p = C.POINTER(C.c_float)
     cf_arr = np.zeros(len(reltrc) - 1, dtype=np.float32, order="C")
     cf_p = cf_arr.ctypes.data_as(c_float_p)

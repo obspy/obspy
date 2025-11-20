@@ -9,7 +9,7 @@ class TestCompatibility:
         compatibility function py3_round which was only an alias for round on
         Py3
         """
-        # list of tuples; (input, ndigits, expected, excpected type)
+        # list of tuples; (input, ndigits, expected, expected type)
         test_list = [
             (.222, 2, .22, float),
             (1516047903968282880, -3, 1516047903968283000, int),

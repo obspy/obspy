@@ -176,7 +176,7 @@ class AttribDict(collections.abc.MutableMapping):
         pattern = "%%%ds: %%s" % (i)
         # check if keys exist
         other_keys = [k for k in keys if k not in priorized_keys]
-        # priorized keys first + all other keys
+        # prioritized keys first + all other keys
         keys = priorized_keys + sorted(other_keys)
         head = [pattern % (k, self.__dict__[k]) for k in keys]
         return "\n".join(head)

@@ -515,7 +515,7 @@ class TestResponse:
         Makes sure that when a unit in the list of response stages is not known
         to evalresp, no tampering (integration/differentiation) is done and
         response is just calculated as is specified.
-        It used to be that unkown units where reported to evalresp as
+        It used to be that unknown units where reported to evalresp as
         displacement ("DIS") which led to a differentiation being added
         internally with the default "output='VEL'".
         Example is a rotational sensor with input units RAD/S and a flat

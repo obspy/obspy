@@ -305,7 +305,7 @@ class TestBulletin():
         assert sta_mag_2.method_id is None
         assert sta_mag_2.creation_info is not None
         assert len(sta_mag_2.comments) == 0
-        # Test with a file containig Mag2 but not Mag1
+        # Test with a file containing Mag2 but not Mag1
         fields = {
             'line_1': {
                 'author': slice(105, 113),
@@ -417,7 +417,7 @@ class TestBulletin():
         filename = datapath / 'bulletin' / 'gse_2.0_2_events.txt'
         catalog = _read_gse2(filename)
         assert len(catalog) == 2
-        # Test firt event
+        # Test first event
         event_1 = catalog[0]
         assert event_1.resource_id == 'smi:local/event/280435'
         assert len(event_1.event_descriptions) == 1
@@ -691,7 +691,7 @@ class TestBulletin():
         filename = datapath / 'bulletin' / 'gse_2.0_2_begins.txt'
         catalog = _read_gse2(filename)
         assert len(catalog) == 2
-        # Test firt event
+        # Test first event
         event_1 = catalog[0]
         assert event_1.resource_id == 'smi:local/event/280435'
         assert len(event_1.event_descriptions) == 1

@@ -36,7 +36,7 @@
         elements and attributes are parsed from the content of the <documentation> tags.  These embedded
         items are as follows:
 
-        1. <example> - An XML element that contains an example of the relevent element
+        1. <example> - An XML element that contains an example of the relevant element
            in the StationXML documentation. May have a LevelChoice attribute.
 
         2. <warning> - Text appears included in an admonition wrapper.

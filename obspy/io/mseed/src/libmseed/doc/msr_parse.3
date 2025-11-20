@@ -70,7 +70,7 @@ The \fBms_parse_selection()\fP routine uses the initial setting of
 successful parsing of a miniSEED record the value of \fIoffset\fP will
 be the offset in the buffer to the record parsed.
 
-To properly parse all records matching specificed selection criteria,
+To properly parse all records matching specified selection criteria,
 a caller must check and manage the value of \fIoffset\fP.  In
 particular, when the end of the buffer is reached a value of
 MS_GENERROR will be returned and the caller should check if the offset
@@ -89,7 +89,7 @@ The following example illustrates the intended usage:
   flag dataflag = 1;
   flag verbose = 0;
 
-  // You probaby want to set Selections
+  // You probably want to set Selections
   // For example with a call to ms_readselectionsfile (&selections, selectfile)
 
   /* Loop over all selected records in recbuf */

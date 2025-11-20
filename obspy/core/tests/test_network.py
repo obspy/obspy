@@ -280,7 +280,7 @@ class TestNetwork:
 
     def test_empty_network_code(self):
         """
-        Tests that an empty sring is acceptabble.
+        Tests that an empty string is acceptabble.
         """
         # An empty string is allowed.
         n = Network(code="")

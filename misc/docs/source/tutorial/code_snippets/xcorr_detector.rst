@@ -179,7 +179,7 @@ data and templates:
 
     def similarity_component_thres(ccs, thres, num_components):
         """Return Trace with mean of ccs
-        and set values to zero if number of components above thresshold is not reached"""
+        and set values to zero if number of components above threshold is not reached"""
         ccmatrix = np.array([tr.data for tr in ccs])
         header = dict(sampling_rate=ccs[0].stats.sampling_rate,
                       starttime=ccs[0].stats.starttime)

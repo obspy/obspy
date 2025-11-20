@@ -152,7 +152,7 @@ basename="s,^.*/,,"
 #             to NONDIR_REPLACEMENT.
 #             value returned in "$func_dirname_result"
 #   basename: Compute filename of FILE.
-#             value retuned in "$func_basename_result"
+#             value returned in "$func_basename_result"
 # Implementation must be kept synchronized with func_dirname
 # and func_basename. For efficiency, we do not delegate to
 # those functions but instead duplicate the functionality here.
@@ -319,7 +319,7 @@ func_mkdir_p ()
       # While some portion of DIR does not yet exist...
       while test ! -d "$my_directory_path"; do
         # ...make a list in topmost first order.  Use a colon delimited
-	# list incase some portion of path contains whitespace.
+	# list in case some portion of path contains whitespace.
         my_dir_list="$my_directory_path:$my_dir_list"
 
         # If the last portion added has no slash in it, the list is done
@@ -3058,7 +3058,7 @@ func_to_host_pathlist ()
         # into '.;' and ';.', and winepath ignores them completely.
         func_to_host_pathlist_tmp2="$1"
         # Once set for this call, this variable should not be
-        # reassigned. It is used in tha fallback case.
+        # reassigned. It is used in the fallback case.
         func_to_host_pathlist_tmp1=`echo "$func_to_host_pathlist_tmp2" |\
           $SED -e 's|^:*||' -e 's|:*$||'`
         case $build in
@@ -3533,7 +3533,7 @@ EOF
         {
           /* however, if there is an option in the LTWRAPPER_OPTION_PREFIX
              namespace, but it is not one of the ones we know about and
-             have already dealt with, above (inluding dump-script), then
+             have already dealt with, above (including dump-script), then
              report an error. Otherwise, targets might begin to believe
              they are allowed to use options in the LTWRAPPER_OPTION_PREFIX
              namespace. The first time any user complains about this, we'll

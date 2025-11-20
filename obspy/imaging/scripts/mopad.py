@@ -1034,7 +1034,7 @@ class MomentTensor:
         """
         Returns the moment tensor in matrix representation.
 
-        Call with arguments to set ouput in other basis system or in fancy
+        Call with arguments to set output in other basis system or in fancy
         style (to be viewed with 'print')
         """
         if style == 'f':
@@ -1158,7 +1158,7 @@ class MomentTensor:
         Returns the isotropic part of the moment tensor in matrix
         representation.
 
-        Call with arguments to set ouput in other basis system or in fancy
+        Call with arguments to set output in other basis system or in fancy
         style (to be viewed with 'print')
         """
         if style == 'f':
@@ -1170,7 +1170,7 @@ class MomentTensor:
         Returns the deviatoric part of the moment tensor in matrix
         representation.
 
-        Call with arguments to set ouput in other basis system or in fancy
+        Call with arguments to set output in other basis system or in fancy
         style (to be viewed with 'print')
         """
         if style == 'f':
@@ -1182,7 +1182,7 @@ class MomentTensor:
         Returns the Double Couple part of the moment tensor in matrix
         representation.
 
-        Call with arguments to set ouput in other basis system or in fancy
+        Call with arguments to set output in other basis system or in fancy
         style (to be viewed with 'print')
         """
         if style == 'f':
@@ -1194,7 +1194,7 @@ class MomentTensor:
         Returns the second Double Couple part of the moment tensor in matrix
         representation.
 
-        Call with arguments to set ouput in other basis system or in fancy
+        Call with arguments to set output in other basis system or in fancy
         style (to be viewed with 'print')
         """
         if style == 'f':
@@ -1211,7 +1211,7 @@ class MomentTensor:
         Returns the third Double Couple part of the moment tensor in matrix
         representation.
 
-        Call with arguments to set ouput in other basis system or in fancy
+        Call with arguments to set output in other basis system or in fancy
         style (to be viewed with 'print')
         """
         if style == 'f':
@@ -1227,7 +1227,7 @@ class MomentTensor:
         """
         Returns the CLVD part of the moment tensor in matrix representation.
 
-        Call with arguments to set ouput in other basis system or in fancy
+        Call with arguments to set output in other basis system or in fancy
         style (to be viewed with 'print')
         """
         if style == 'f':
@@ -1345,7 +1345,7 @@ class MomentTensor:
         """
         Returns the eigenvectors  of the moment tensor.
 
-        Call with arguments to set ouput in other basis system or in fancy
+        Call with arguments to set output in other basis system or in fancy
         style (to be viewed with 'print')
         """
         if style == 'f':
@@ -1364,7 +1364,7 @@ class MomentTensor:
         """
         Returns the neutral axis of the moment tensor.
 
-        Call with arguments to set ouput in other basis system or in fancy
+        Call with arguments to set output in other basis system or in fancy
         style (to be viewed with 'print')
         """
         if style == 'f':
@@ -1375,7 +1375,7 @@ class MomentTensor:
         """
         Returns the tension axis of the moment tensor.
 
-        Call with arguments to set ouput in other basis system or in fancy
+        Call with arguments to set output in other basis system or in fancy
         style (to be viewed with 'print')
         """
         if style == 'f':
@@ -1386,7 +1386,7 @@ class MomentTensor:
         """
         Returns the pressure axis of the moment tensor.
 
-        Call with arguments to set ouput in other basis system or in fancy
+        Call with arguments to set output in other basis system or in fancy
         style (to be viewed with 'print')
         """
         if style == 'f':
@@ -1398,7 +1398,7 @@ class MomentTensor:
         Returns the transformation matrix (input system to principal axis
         system.
 
-        Call with arguments to set ouput in other basis system or in fancy
+        Call with arguments to set output in other basis system or in fancy
         style (to be viewed with 'print')
         """
         if style == 'f':
@@ -2544,7 +2544,7 @@ class BeachBall:
           points for drawing lines
         - Smoothing of all curves, avoiding nasty sectioning connection lines
         - Checking, if the two nodalline curves are laying completely within
-          each other ( cahnges plotting order of overlay plot construction)
+          each other ( changes plotting order of overlay plot construction)
         - Projection of final smooth solution onto the standard unit sphere
         """
         self._find_basis_change_2_new_viewpoint()
@@ -2572,7 +2572,7 @@ class BeachBall:
         Correcting potentially wrong curves.
 
         Checks, if the order of the given coordinates of the lines must be
-        re-arranged, allowing for an automatical line plotting.
+        re-arranged, allowing for an automatic line plotting.
         """
         list_of_curves_2_correct = ['nodalline_negative', 'nodalline_positive',
                                     'FP1', 'FP2']
@@ -3460,7 +3460,7 @@ class BeachBall:
         intersection lines on nodals of round and irreagularly shaped
         areas.
 
-        At least one coordinte point on each degree on the circle is assured.
+        At least one coordinate point on each degree on the circle is assured.
         """
         list_of_curves_2_smooth = ['nodalline_negative', 'nodalline_positive',
                                    'FP1', 'FP2']

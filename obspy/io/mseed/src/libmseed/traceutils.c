@@ -627,7 +627,7 @@ mst_addspan (MSTrace *mst, hptime_t starttime, hptime_t endtime,
  * mst_addmsrtogroup:
  *
  * Add data samples from a MSRecord to a MSTrace in a MSTraceGroup by
- * searching the group for the approriate MSTrace and either adding data
+ * searching the group for the appropriate MSTrace and either adding data
  * to it or creating a new MSTrace if no match found.
  *
  * Matching traces are found using the mst_findadjacent() routine.  If
@@ -1633,7 +1633,7 @@ mst_printgaplist (MSTraceGroup *mstg, flag timeformat,
  * length of the record and 3) a pointer supplied by the original
  * caller containing optional private data (handlerdata).  It is the
  * responsibility of record_handler to process the record, the memory
- * will be re-used or freed when record_handler returns.
+ * will be reused or freed when record_handler returns.
  *
  * If the flush flag is > 0 all of the data will be packed into data
  * records even though the last one will probably not be filled.

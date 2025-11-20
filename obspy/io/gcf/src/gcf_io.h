@@ -10,7 +10,7 @@
 //    2020-03-20  Added declaration on merge_GcfFile(), cps
 //    2020-03-21  Minor changes in comments/docs
 //    2020-04-15  Added inclusion of time.h
-//    2022-03-10  Removed use of time.h by changing use of time_t to derrived arithmetic type gtime,
+//    2022-03-10  Removed use of time.h by changing use of time_t to derived arithmetic type gtime,
 //                 Added platform specific dependenscies
 //    2022-03-17  Added mode=3 to read_gcf
 //
@@ -107,7 +107,7 @@ typedef struct BH {
 } BH;
 
 
-/* Container of continous data segment */
+/* Container of continuous data segment */
 typedef struct {
    char streamID[7];    // streamID
    char systemID[7];    // systemID (max 4 chars if sysType == 2, max 5 chars if sysType == 1, else max 6 chars)
@@ -154,7 +154,7 @@ typedef struct {
 /* Container of content in a file */
 typedef struct {
    int n_blk;       // Number of blocks read from file 
-   int n_seg;       // Number of continous segments formed from blocks in file 
+   int n_seg;       // Number of continuous segments formed from blocks in file 
    int n_alloc;     // Number of segments for which space have been allocated
    int n_errHead;   // Number of headers with errors
    int n_errData;   // Number of blocks where data could not be properly parsed
@@ -229,7 +229,7 @@ int cmpSegHead(GcfSeg *s1, GcfSeg *s2);
  *   tol      misalignment tolerance as fraction of a sample (<0.5)
  * 
  * RETURN
- *  if successfull function returns -1, 0, 1 if s1.end < s2.start (gap), s1.end == s2.start (aligned),
+ *  if successful function returns -1, 0, 1 if s1.end < s2.start (gap), s1.end == s2.start (aligned),
  *  se.end > s2.start (potential overlap) respectively, else function returns -2 (e.g. sampling rate is not same
  *  or one but not both segments are not data blocks)
  */
@@ -293,7 +293,7 @@ int parse_gcf_block(unsigned char buffer[1024], GcfSeg *seg, int mode, int endia
  *   f      path to file to parse
  *   obj    GcfFile struct, should be properly initiated on input
  *           and will hold content of file, NOTE: if obj.n_seg > 1 
- *           data contains gaps or inconsitencies in streamID and/or
+ *           data contains gaps or inconsistencies in streamID and/or
  *           sampling rate.
  *   mode   -2   read headers only but do not merge blocks
  *          -1   read headers only and merge blocks if possible 
@@ -315,7 +315,7 @@ int read_gcf(const char *f, GcfFile *obj, int mode);
 
 /* function write_gcf() writes a gcf data file
  * 
- * ARGUMETS
+ * ARGUMENTS
  *  f       file to write
  *  obj     data to write
  * 
@@ -325,9 +325,9 @@ int read_gcf(const char *f, GcfFile *obj, int mode);
  *  0 if successful 
  *  1 if no data or inconsistent segment info
  *  2 if unsupported samplingrate
- *  3 erronous fractional start time
+ *  3 erroneous fractional start time
  *  4 unsupported gain
- *  5 erronous instrument type
+ *  5 erroneous instrument type
  *  6 to many characters in systemID
  */
 int write_gcf(const char *f, GcfFile *obj);

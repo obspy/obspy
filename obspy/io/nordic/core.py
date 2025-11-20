@@ -600,7 +600,7 @@ def _read_highaccuracy(tagged_lines, event, origin_line_numbers):
     :param tagged_lines: Lines keyed by line type
     :type tagged_lines: dict
     :param origin_line_numbers:
-        List of the line numbers of the proper origins (i.e., exluding ex-
+        List of the line numbers of the proper origins (i.e., excluding ex-
         tended origin lines)
     :type origin_line_numbers: list of int
     :returns: updated event
@@ -1718,7 +1718,7 @@ def _write_header_line(event, origin, evtype, is_preferred_origin=True):
             ksta = str(len(set(stations)))
         except AttributeError:
             pass
-    # If not successfull, count the number of pick-stations
+    # If not successful, count the number of pick-stations
     if not stations:
         if len(event.picks) > 0:
             stations = [pick.waveform_id.station_code for pick in event.picks]

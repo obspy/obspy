@@ -205,7 +205,7 @@ void check_channel(struct channel *chan) {
      information about units into and out of the stage in a gain blockette, but
      evalresp will allow this type of stage to be used by assuming that the
      units into and out of this stage are identical (i.e. that the units are
-     continous between the stage preceeding the 'GAIN_TYPE' stage and the stage
+     continuous between the stage preceding the 'GAIN_TYPE' stage and the stage
      following it (essentially, this means that 'Units Checking' is skipped
      when this type of stage is encountered).
 
@@ -277,7 +277,7 @@ void check_channel(struct channel *chan) {
 		{
 			if (chan->first_stage->next_stage->first_blkt != NULL)
 			{
-				/* If the next stage is overall sesitivity, it's OK */
+				/* If the next stage is overall sensitivity, it's OK */
 				if (chan->first_stage->next_stage->first_blkt->type != GAIN)
 				        error_return(UNSUPPORT_FILTYPE,
 				       "blockette 55 cannot be mixed with other filter blockettes\n");
@@ -514,7 +514,7 @@ void check_sym(struct blkt *f, struct channel *chan) {
 
   if (f->type != FIR_ASYM) return;
 
-  /* CHECK IF FILTER IS SYMETRICAL WITH EVEN NUM OF WEIGHTS */
+  /* CHECK IF FILTER IS SYMMETRICAL WITH EVEN NUM OF WEIGHTS */
 
   if ((nc%2) == 0) {
     n0 = nc / 2;
@@ -525,7 +525,7 @@ void check_sym(struct blkt *f, struct channel *chan) {
     f->blkt_info.fir.ncoeffs = n0;
   }
 
-  /* CHECK IF FILTER IS SYMETRICAL WITH ODD NUM OF WEIGHTS */
+  /* CHECK IF FILTER IS SYMMETRICAL WITH ODD NUM OF WEIGHTS */
 
   else {
     n0 = (nc - 1) / 2;
@@ -611,7 +611,7 @@ void interpolate_list_blockette(double **frequency_ptr,
     if(i >= req_num_freqs)
     {    /* all requested frequency values were clipped */
       error_exit(IMPROP_DATA_TYPE,"Error interpolating amp/phase values:  %s",
-                                  "All requested freqencies out of range\n");
+                                  "All requested frequencies out of range\n");
       return;
     }
     fprintf(stderr,
@@ -677,12 +677,12 @@ void interpolate_list_blockette(double **frequency_ptr,
   for(i=1; i<*p_number_points; ++i)
   {      /* for each remaining "source" amplitude value */
     if((val=(*amplitude_ptr)[i]) < min_ampval)
-      min_ampval = val;           /* if new mininum then save value */
+      min_ampval = val;           /* if new minimum then save value */
   }
   if(min_ampval > 0.0)
   {      /* all "source" amplitude values are positive */
     min_ampval /= 10.0;           /* bring minimum a bit closer to zero */
-              /* substitude minimum for any non-positive values */
+              /* substitute minimum for any non-positive values */
     for(i=0; i<num_retvals; ++i)
     {    /* for each interpolated amplitude value */
       if(retamps_arr[i] <= 0.0)        /* if value not positive then */

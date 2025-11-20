@@ -96,7 +96,7 @@ ms_loginit_l (MSLogParam *logp,
  * ms_log_r() functions format each message and then pass the result
  * on to the log/error printing functions.
  *
- * If the log/error prefixes have been set they will be pre-pended to the
+ * If the log/error prefixes have been set they will be prepended to the
  * message.
  *
  * Use NULL for the function pointers or the prefixes if they should not
@@ -221,7 +221,7 @@ ms_log_l (MSLogParam *logp, int level, ...)
  * stdout and error messages to stderr.
  *
  * If the log/error prefix's have been set with ms_loginit() or
- * ms_loginit_l() they will be pre-pended to the message.
+ * ms_loginit_l() they will be prepended to the message.
  *
  * All messages will be truncated to the MAX_LOG_MSG_LENGTH, this includes
  * any set prefix.

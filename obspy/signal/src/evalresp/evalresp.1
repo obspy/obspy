@@ -96,7 +96,7 @@ Generic response blockette is a list of phases and amplitudes computed for the
 preselected set of frequencies. This filter type is supported only if the response input file
 contains blockette(s) 55 as a stage 1 and possibly channel sensitivity blockette as a stage 0.
 If a generic response blockette is recognized in the input, \fIevalresp\fR ignores the user\-defined
-frequency sampling from the command line. The ouput, therefore, contains
+frequency sampling from the command line. The output, therefore, contains
 responses for only those frequencies which have been defined in the generic response blockette.
 .sp
 .SH "FILTER SEQUENCE"
@@ -226,7 +226,7 @@ governs whether the frequencies chosen are spaced evenly between the minimum fre
 the maximum frequency in a linear or logarithmic sense. This argument defaults to a value of
 "log".
 .HP 4
-(9) The \fB\-v\fR argument indicates that the user would like to receive the verbose ouput from the
+(9) The \fB\-v\fR argument indicates that the user would like to receive the verbose output from the
 \fIevalresp\fR program. When this flag is included on the command line, diagnostic information will be
 sent to standard output showing summary information of the calculated response for each
 station\-channel\-network tuple that matches the user's request. If this option is not specified,
@@ -273,7 +273,7 @@ response.
 enabled at as ./configure \-enable\-phase\-unwrap before making stage of evalresp. This option not
 only unwraps the phase but also shifts it to keep the values of phase in the range \-180:180 degree. 
 .HP 4
-(15) The \fB\-ts\fR argument is forcing useage of the stage 0 total sensitivity instead of product of the stage gains.  
+(15) The \fB\-ts\fR argument is forcing usage of the stage 0 total sensitivity instead of product of the stage gains.  
 The idea is that this can be utilized in combination with the \-stage option to provide a full scale response, 
 i.e. just stage 1 (the sensor) with a correct system gain (which is exactly what SAC Poles and Zeros do)
 .HP 4
@@ -286,7 +286,7 @@ end of the input stream of response information.
 
 
 .SH "LIST BLOCKETTE INTERPOLATION"
-The following command\-line parameters are used to enable List\-blockette interploation:
+The following command\-line parameters are used to enable List\-blockette interpolation:
 
 \fB\-il\fR : Specifies that the amplitude/phase values generated from responses containing List
 blockettes (55) are to be interpolated to correspond to the set of frequencies requested

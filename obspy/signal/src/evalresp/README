@@ -21,7 +21,7 @@ using Borland C++ 5.02 or Microsoft Visual C++ 6.0.
 Any ANSI standard C compiler should work with the code.
 
 This distribution is fairly self contained.  Because of the variety
-of machines that the code is distrubuted on now, an executable is
+of machines that the code is distributed on now, an executable is
 no longer included with the distribution.
 
 To build the executable on a Unix-based machine, type the following
@@ -47,14 +47,13 @@ to calculate responses from RESP files, or the "evresp_" function
 can be called from a FORTRAN program.  A simple example of calling
 "evresp_" from a FORTRAN program is available in the "evtest.f" file.
 
-
-tjm@iris.washington.edu
+<tjm@iris.washington.edu>
 14 March, 1997
 Modified
-i.dricker@isti.com
+<i.dricker@isti.com>
 17 July, 2001
 Modified (MS Windows port)
-e.thomas@isti.com
+<e.thomas@isti.com>
 28 August, 2001
 
 ------------------ Release Notes (old) ------------------------
@@ -94,24 +93,25 @@ Code ported to work with Microsoft Windows-based compilers.  Functionality
 should be unchanged.
 
 version 3.2.19 (30-July-2001)
+
 1) A bug which forced evalresp to compute incorrect group delays has been fixed.
 2) A computation of decimation is removed from evalresp.
 To compute decimation evalresp relies upon the fields 7 and 8 of SEED blockette 57.
-However, the use of these fields are inconsistant among digitizers and
+However, the use of these fields are inconsistent among digitizers and
 SEED builders.
-3) A mechinism of selecting files for processing from the working directory for some
-Solaris computers was shown to be unrelible in at least a single case in all versions
+3) A mechanism of selecting files for processing from the working directory for some
+Solaris computers was shown to be unreliable in at least a single case in all versions
 below 3.2.19. This mechanism was modified. As a trade-off the orcessing of a single RESP
 file in versions 3.2.19 and above is slower by about one second than in the previous
 versions.
 
 Version 3.2.18
-Presure data support is included
+Pressure data support is included
 
 version 3.2.17 Notes:
 
 Modifications from version 3.2.16 to version 3.2.17 are conduced
-by  Instrumental Software Technologies, Inc. (www.isti.com)
+by  Instrumental Software Technologies, Inc. (<www.isti.com>)
 Modifications have been requested by IRIS DMC.
 
 These modifications include:
@@ -120,7 +120,7 @@ These modifications include:
        cients format with a non-zero phase  shift.   IIR  coeffi-
        cients  for a single stage must fit in a single blockette.
        The algorithm was adopted from the FORTRAN code provided by
-       B. Hutt (hutt@asl.cr.usgs.gov).
+       B. Hutt (<hutt@asl.cr.usgs.gov>).
 
 (2)     Version 3.2.17 and above supports generic response block-
        ette  (SEED blockettes 55).  Generic response blockette is
@@ -130,7 +130,7 @@ These modifications include:
        as a stage 1 and possibly channel sensitivity blockette as
        a stage 0.  If generic response blockette is recognized in
        the  input,  evalresp  ignores  the user-defined frequency
-       sampling from the command line. The ouput, therefore, con-
+       sampling from the command line. The output, therefore, con-
        tains responses for only those frequencies which have been
        defined in the generic response blockette.
 
@@ -291,5 +291,5 @@ version 3.0 to version 3.2:
     effect of individual response stages on the overall response (and for checking
     for problems with a stage that is under construction).
 
-tjm@iris.washington.edu
+<tjm@iris.washington.edu>
 14 March, 1997

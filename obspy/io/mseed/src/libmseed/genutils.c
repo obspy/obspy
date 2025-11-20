@@ -935,7 +935,7 @@ ms_time2hptime (int year, int day, int hour, int min, int sec, int usec)
  * epoch time.  The time format expected is
  * "YYYY[,DDD,HH,MM,SS.FFFFFF]", the delimiter can be a dash [-],
  * comma [,], colon [:] or period [.].  Additionally a [T] or space
- * may be used to seprate the day and hour fields.  The fractional
+ * may be used to separate the day and hour fields.  The fractional
  * seconds ("FFFFFF") must begin with a period [.] if present.
  *
  * The time string can be "short" in which case the omitted values are
@@ -1393,7 +1393,7 @@ ms_reduce_rate (double samprate, int16_t *factor1, int16_t *factor2)
  * If the samplerate < 0.0 it is expected to be a period in SECONDS/SAMPLE.
  *
  * Results use SAMPLES/SECOND notation when sample rate >= 1.0
- * Results use SECONDS/SAMPLE notation when samles rates < 1.0
+ * Results use SECONDS/SAMPLE notation when sample rate < 1.0
  *
  * Returns 0 on success and -1 on error or calculation not possible.
  ***************************************************************************/
@@ -1446,7 +1446,7 @@ ms_genfactmult (double samprate, int16_t *factor, int16_t *multiplier)
  * ms_ratapprox:
  *
  * Find an approximate rational number for a real through continued
- * fraction expansion.  Given a double precsion 'real' find a
+ * fraction expansion.  Given a double precision 'real' find a
  * numerator (num) and denominator (den) whose absolute values are not
  * larger than 'maxval' while trying to reach a specified 'precision'.
  *

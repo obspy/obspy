@@ -37,6 +37,6 @@ def get_property(filename, key):
     for line in lines:
         line = line.strip()
         if line.startswith(key):
-            ans = line[len(key) + 1:]
-            return ans
+            prop = line[len(key) + 1:]
+            return prop
     return ""

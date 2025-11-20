@@ -18,7 +18,7 @@ msr_init - Initializing and freeing MSRecord and related structures
 parameter is NULL a new structure will be allocated.  If the \fImsr\fP
 parameter is not NULL the blockette chain (MSRecord.blkts) will be
 freed but any memory allocated for MSRecord.fsdh and
-MSRecord.datasamples will be preserved as it will cleanly be re-used
+MSRecord.datasamples will be preserved as it will cleanly be reused
 by routines such as \fBmsr_unpack(3)\fP.
 
 \fBmsr_free\fP will free all memory associated with a MSRecord

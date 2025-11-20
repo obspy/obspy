@@ -212,7 +212,7 @@ class SLClient(object):
         Start this SLClient.
 
         :type packet_handler: callable
-        :param packet_handler: Custom packet handler funtion to override
+        :param packet_handler: Custom packet handler function to override
             `self.packet_handler` for this seedlink request. The function will
             be repeatedly called with two arguments: the current packet counter
             (`int`) and the currently served seedlink packet

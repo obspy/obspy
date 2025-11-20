@@ -104,7 +104,7 @@ class TestPolarization():
 
     def test_polarization_1d(self):
         """
-        1 dimenstional input --- regression test case for bug #919
+        1 dimensional input --- regression test case for bug #919
         """
         pol = polarization.eigval(self.data_win_e[100, :],
                                   self.data_win_n[100, :],

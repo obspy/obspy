@@ -52,7 +52,7 @@ class TestSC3ML():
     @pytest.mark.filterwarnings('ignore:.*rate of 0')
     def test_channel_level(self, testdata):
         """
-        Test inventory without repsonse information up to
+        Test inventory without response information up to
         channel level
         """
         inv = read_inventory(testdata["channel_level.sc3ml"])
@@ -89,7 +89,7 @@ class TestSC3ML():
         excluded_tags = ["Source", "Sender", "Created", "Name",
                          "Coefficients"]
 
-        # also ignore StorageFormat which doesnt exist anymore in
+        # also ignore StorageFormat which doesn't exist anymore in
         # StationXML 1.1 and is saved into extra / a foreign tag
         pattern_format_line = (
             r'<([^:]*):format xmlns:\1='

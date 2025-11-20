@@ -3272,7 +3272,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         The metadata of each trace (including starttime) corresponds to the
         metadata of the original traces if those are the same.
-        Additionaly, the entry ``stack`` is written to the stats object(s).
+        Additionally, the entry ``stack`` is written to the stats object(s).
         It contains the fields ``group``
         (result of the format operation on the ``group_by`` parameter),
         ``count`` (number of stacked traces) and ``type``

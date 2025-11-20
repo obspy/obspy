@@ -660,7 +660,7 @@ ms_readmsr_main (MSFileParam **ppmsfp, MSRecord **ppmsr, const char *msfile,
             /* Set the record length implied by the end of the file */
             reclen = impreclen;
           }
-          /* Otherwise a trucated record */
+          /* Otherwise a truncated record */
           else
           {
             if (verbose)

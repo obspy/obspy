@@ -278,7 +278,7 @@ def _read_focmec_lst_one_block(lines, polarity_count=None):
 
 def _get_polarity_error_count_lst_block(lines):
     # counting polarity errors is a bit tedious, as sometimes it's multiple
-    # lines with station codes intersparsed with error weights and the error
+    # lines with station codes interspersed with error weights and the error
     # summary lines sometimes only have the weighted sum and sometimes also
     # have the integer polarity error count, but we can't rely on it and thus
     # have to count station codes..
@@ -333,7 +333,7 @@ def _read_focmec_out(lines):
         dip, strike, rake = [float(x) for x in items[:3]]
         plane = NodalPlane(strike=strike, dip=dip, rake=rake)
         planes = NodalPlanes(nodal_plane_1=plane, preferred_plane=1)
-        # XXX ideally should compute the auxilliary plane..
+        # XXX ideally should compute the auxiliary plane..
         focmec = FocalMechanism(nodal_planes=planes)
         focmec.station_polarity_count = polarity_count
         focmec.creation_info = CreationInfo(

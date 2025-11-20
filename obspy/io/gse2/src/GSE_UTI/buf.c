@@ -211,10 +211,10 @@ void buf_err(int mode, char *func_name, char *message)
 	switch (mode)
 	{
 	case FATAL:
-		printf ("Fatal Error in Funktion %s:\n%s\n",func_name,message);
+		printf ("Fatal Error in Function %s:\n%s\n",func_name,message);
 		exit(0);
 	case WARNING:
-		printf ("Warning in Funktion %s:\n%s\n",func_name,message);
+		printf ("Warning in Function %s:\n%s\n",func_name,message);
 		break;
 	default:
 		printf ("whoooops\n");

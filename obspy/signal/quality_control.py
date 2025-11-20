@@ -59,7 +59,7 @@ class MSEEDMetadata(object):
     Reads the MiniSEED files and extracts the data quality metrics. All
     MiniSEED files must have a matching stream ID and quality.
 
-    :param files: One ore more MiniSEED files.
+    :param files: One or more MiniSEED files.
     :type files: str or list[str]
     :type id: str, optional
     :param id: A unique identifier of the to be created QC object. It is

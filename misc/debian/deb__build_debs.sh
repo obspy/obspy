@@ -93,7 +93,7 @@ print(version)"`
 VERSION_COMPLETE=${VERSION}-${DEBVERSION}~${CODENAME}
 # the commented code shows how to update the changelog
 # information, however we do not do it as it hard to
-# automatize it for all packages in common
+# automate it for all packages in common
 # dch --newversion ${VERSION}-$DEBVERSION "New release" 
 # just write a changelog template with only updated version info
 cat > debian/changelog << EOF

@@ -11,7 +11,7 @@
   Function: check_sum
     This function computes the GSE2.0 checksum used in the CHK2 line
     and is based on the original algorithm (compute_checksum). 
-    The funktionality is changed, so that now the function itself
+    The functionality is changed, so that now the function itself
     returns the checksum value and the input contains a previously
     computed checksum (or zero). Hence, a discontineous data stream
     can be check-summed, e.g. the block data structure of the 
@@ -231,7 +231,7 @@ int decomp_6b_buffer (int n_of_samples, int32_t *dta, char * (* reader)(char *, 
   	if (ibuf > 79 || isspace(cbuf[ibuf])) { 
   	if ((*reader)(cbuf, vptr) == NULL) /* get next line */
   		{fprintf (stderr, "decomp_6b: missing input line?\n"); return -1; }
-      /* We need a space to be sure that CHK2 is not occuring in the middle
+      /* We need a space to be sure that CHK2 is not occurring in the middle
        * of the encoded string/buffer */
   	  if (!(strncmp(cbuf,"CHK2 ",5)) || !(strncmp(cbuf,"CHK1 ", 5)))
   		{fprintf (stderr, "decomp_6b: CHK2 or CHK1 reached prematurely!\n"); return i; }

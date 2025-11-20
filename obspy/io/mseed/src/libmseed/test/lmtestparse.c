@@ -254,7 +254,7 @@ parameter_proc (int argcount, char **argvec)
 
 /***************************************************************************
  * print_stderr():
- * Print messsage to stderr.
+ * Print message to stderr.
  ***************************************************************************/
 static void
 print_stderr (char *message)

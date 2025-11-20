@@ -1011,7 +1011,7 @@ def _unified_content_strings_expanded(contents):
 
 
 # make TextWrapper only split on colons, so that we avoid splitting in between
-# e.g. network code and network code occurence count (can be controlled with
+# e.g. network code and network code occurrence count (can be controlled with
 # class attributes).
 # Also avoid lines starting with ", " (need to patch the class for this)
 class InventoryTextWrapper(TextWrapper):

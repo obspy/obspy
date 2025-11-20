@@ -60,7 +60,7 @@ class Blockette(object):
 
     def __str__(self):
         """
-        Pretty prints the informations stored in the blockette.
+        Pretty prints the information stored in the blockette.
         """
         temp = 'Blockette %s: %s Blockette' % (
             self.blockette_id, utils.to_string(self.blockette_name)) + \
