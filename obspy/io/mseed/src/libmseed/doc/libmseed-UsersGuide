@@ -312,7 +312,7 @@ a custom logging facility.  See the man page for more details.
 
 The default destination for log messages is standard output (stdout),
 while all diagnostic (including error) messages go to standard error
-GEODEV(stderr).  Most of the internal messages emitted by the library are
+(stderr).  Most of the internal messages emitted by the library are
 considered diagnostic and will, by default, go to standard error.
 
 The default prefix for log and diagnostic messages is nothing. The
