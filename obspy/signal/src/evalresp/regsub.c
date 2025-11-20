@@ -48,7 +48,7 @@ char *dest;
 	register int len;
 
 	if (prog == NULL || source == NULL || dest == NULL) {
-		evr_regerror("NULL param to evr_regsub");
+		evr_regerror("NULL parm to evr_regsub");
 		return;
 	}
 	if (UCHARAT(prog->program) != MAGIC) {
