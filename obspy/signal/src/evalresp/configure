@@ -4578,7 +4578,7 @@ else
   cygwin* | mingw* | cegcc*)
     # On Win9x/ME, this test blows up -- it succeeds, but takes
     # about 5 minutes as the teststring grows exponentially.
-    # Worse, since 9x/ME are not pre-emptively multitasking,
+    # Worse, since 9x/ME are not preemptively multitasking,
     # you end up with a "frozen" computer, even though with patience
     # the test eventually succeeds (with a max line length of 256k).
     # Instead, let's just punt: use the minimum linelength reported by
@@ -13268,7 +13268,8 @@ $debug ||
 if test -n "$CONFIG_FILES"; then
 
 
-ac_cr=''
+ac_cr='
+'
 ac_cs_awk_cr=`$AWK 'BEGIN { print "a\rb" }' </dev/null 2>/dev/null`
 if test "$ac_cs_awk_cr" = "a${ac_cr}b"; then
   ac_cs_awk_cr='\\r'
@@ -14461,7 +14462,7 @@ func_basename ()
 #             to NONDIR_REPLACEMENT.
 #             value returned in "$func_dirname_result"
 #   basename: Compute filename of FILE.
-#             value retuned in "$func_basename_result"
+#             value returned in "$func_basename_result"
 # Implementation must be kept synchronized with func_dirname
 # and func_basename. For efficiency, we do not delegate to
 # those functions but instead duplicate the functionality here.
