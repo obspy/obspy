@@ -159,8 +159,8 @@ def _write_site_description(parent, site_description):
 	
 	if site_description.topographyA or site_description.topographyB:
 		site_topography_elem = etree.SubElement(site_description_elem, "siteTopography")
-		_obj2tag(site_topography_elem, "schemeA", site_description.topographyA)
-		_obj2tag(site_topography_elem, "schemeB", site_description.topographyB)
+		_obj2tag(site_topography_elem, "schemaA", site_description.topographyA)
+		_obj2tag(site_topography_elem, "schemaB", site_description.topographyB)
 
 	site_morphology_elem = etree.SubElement(site_description_elem, "siteMorphology")
 	_obj2tag(site_morphology_elem, "morphology", site_description.morphology)
