@@ -96,6 +96,10 @@ def _read_sitexml(path_or_file_object):
     Function reading a SiteXML file.
 
     :param file_or_file_object: The file name or file-like object to read from.
+
+    Returns a SERASite object with metadata read from the provided SiteXML file.
+    At least site owener and site description metadata should be present in XMl file 
+    in order to create the SERASite object.
     """
     print(path_or_file_object)
     validates, errors = validate_sitexml(path_or_file_object)
@@ -132,11 +136,15 @@ def _read_sitexml(path_or_file_object):
         site_characterization = _read_site_characterization(
             site_characterization_element)
     
-    sera_site = SERASite(site_owner=site_owner, 
+    if site_owner and site_description:
+        sera_site = SERASite(site_owner=site_owner, 
                          site_description=site_description, 
                          site_characterization=site_characterization,
                          created=created)
-    
+    else:
+        print("Error: Missing site owner and/or site description in provided siteXML file")
+        return None
+        
     return sera_site
 
 def _read_site_owner(owner_element):
@@ -240,7 +248,7 @@ def _read_site_description(site_description_element):
     - station_code, latitude, longitude, altitude, minDistanceFromStation, maxDistanceFromStation
     - OverallQindex
     - siteTopography
-        - schemeA, schemeB
+        - schemaA, schemaB
     - siteMorphology
         - morphology
         - siteClassEC8, siteClassEC8Qindex1, siteClassEC8Reference
@@ -278,8 +286,8 @@ def _read_site_description(site_description_element):
     # Topography
     topography_element = site_description_element.find(_ns("siteTopography"))
     if topography_element is not None:
-        site_description.topographyA = _tag2obj(topography_element, _ns("schemeA"), str)
-        site_description.topographyB = _tag2obj(topography_element, _ns("schemeB"), str)
+        site_description.topographyA = _tag2obj(topography_element, _ns("schemaA"), str)
+        site_description.topographyB = _tag2obj(topography_element, _ns("schemaB"), str)
 
     # Morphology
     #
@@ -581,57 +589,6 @@ def _read_velocity_profile_data(vp_data_element):
                                   top_depth = top_depth,
                                   bottom_depth = bottom_depth)
     return vp_data
-    layer_count = vp_data.layer_count
-    velocityP_list = vp_data_element.findall(_ns("velocityP"))
-    velocityS_list = vp_data_element.findall(_ns("velocityS"))
-    density_list = vp_data_element.findall(_ns("density"))
-    layerThickness_list = vp_data_element.findall(_ns("layerThickness"))
-    
-    """
-    if not all([x == layer_count for x in (len(density_list), len(velocityP_list), 
-                                           len(velocityS_list), len(layerThickness_list))]):
-         warnings.warn("layerCount value '%s' of Velocity Profile '%s' doesn't much " 
-                    "the number of child elements: " 
-                    "density: '%s', velocityP: '%s', velocityS: '%s', layerThickness: '%s'" 
-                    % (layer_count, vp_no, len(density_list), len(velocityP_list), 
-                    len(velocityS_list), len(layerThickness_list)), UserWarning)
-         # Set layer_count to match the max among all length values
-         return
-    """
-
-    for layer in range(0, layer_count):
-        
-        density_value = _tag2obj(density_list[layer], _ns("value"), float)
-        density_uncertainty = _tag2obj(density_list[layer], _ns("uncertainty"), float)
-        if density_value:
-            vp_data.density.append(ValueWithUncertainty(density_value, density_uncertainty, float))
-
-        velocityP_value = _tag2obj(velocityP_list[layer], _ns("value"), float)
-        velocityP_uncertainty = _tag2obj(velocityP_list[layer], _ns("uncertainty"), float)
-        if velocityP_value:
-            vp_data.velocityP.append(ValueWithUncertainty(velocityP_value, velocityP_uncertainty, float))
-
-        velocityS_value = _tag2obj(velocityS_list[layer], _ns("value"), float)
-        velocityS_uncertainty = _tag2obj(velocityS_list[layer], _ns("uncertainty"), float)
-        if velocityS_value:
-            vp_data.velocityS.append(ValueWithUncertainty(velocityS_value, velocityS_uncertainty, float))
-
-        [top_depth_value, top_depth_uncer] = \
-            _read_value_with_uncertainty(layerThickness_list[layer], 
-                                         "layerTopDepth", float)
-        if top_depth_value != None:
-            vp_data.top_depth.append(ValueWithUncertainty(top_depth_value, top_depth_uncer, float))
-
-        [bottom_depth_value, bottom_depth_uncer] = \
-            _read_value_with_uncertainty(layerThickness_list[layer],
-                                         "layerBottomDepth", float)
-        #print(top_depth_value, bottom_depth_value)
-        if bottom_depth_value:
-            vp_data.bottom_depth.append(ValueWithUncertainty(bottom_depth_value, bottom_depth_uncer, float))
-
-    #print(vp_data)
-        #print(top_depth_value, bottom_depth_value)
-        #print(vp_data.top_depth[layer].value, vp_data.bottom_depth[layer].value)
 
 def _read_reference(parent, tag):
     reference_element = parent.find(_ns(tag))
@@ -670,6 +627,9 @@ def _read_literature_source(literature_source_element):
     if language_element is not None:
         language = _tag2obj(language_element, _ns("code"), str)
 
+    # TODOs
+    # title and first_author are the required arguments according to the schema
+    #
     if title or doi:
         return LiteratureSource(title=title, 
                                 first_author=first_author, 
