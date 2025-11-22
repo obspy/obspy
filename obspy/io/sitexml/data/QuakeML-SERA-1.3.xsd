@@ -39,7 +39,7 @@ targetNamespace="http://www.orfeus-eu.org/xml/site/1" elementFormDefault="qualif
 		<xs:annotation>
 			<xs:documentation>
 				Topography is a precise (quantitative) description of the ground surface 
-				features of a site. Schema A is the topography description scheme of the Italian Code.
+				features of a site. Schema A is the topography description schema of the Italian Code.
 				T1 : Flat surface, isolated slopes and cliffs with average slop angle 
 				T2 : Slopes with average slope angle i>15
 				T3 : Ridges with crest width significantly less than the base width and average slope angle 15
@@ -407,12 +407,12 @@ targetNamespace="http://www.orfeus-eu.org/xml/site/1" elementFormDefault="qualif
 			
 	<xs:complexType name="SiteTopographyType">
 		<xs:sequence>
-			<xs:element name="schemeA" type="TopographySchemaAType">
+			<xs:element name="schemaA" type="TopographySchemaAType">
 				<xs:annotation>
 					<xs:documentation>This is not included in 2.0</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="schemeB" type="TopographySchemaBType"/>
+			<xs:element name="schemaB" type="TopographySchemaBType"/>
 		</xs:sequence>
 	</xs:complexType>
 
