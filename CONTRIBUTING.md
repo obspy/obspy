@@ -42,7 +42,14 @@ If any specific networking modules should be tested for the PR, e.g. when propos
 
 **All the submitted pieces including potential data must be compatible with the LGPLv3 license and will be LGPLv3 licensed as soon as they are part of ObsPy. Sending a pull request implies that you agree with this.**
 
-Additionally take care to not add big files. Even for tests we generally only accept files that are very small and at max on the order of a few kilobytes. When in doubt.. ask us in the PR.
+Additionally take care to not add big files. Even for tests we generally only accept files that are very small and at max on the order of a few kilobytes. When in doubt... ask us in the PR.
+
+Various files and directories are vendored from third party projects and sources. This means they should not be modified without a compelling reason. Some examples are:
+
+ * `obspy/io/gse2/src/GSE_UTI` -  [Read/Write utilities](https://docs.obspy.org/archive/stable/packages/obspy.io.gse2.html) for GSE2 and GSE1 format waveform data.
+ * `obspy/io/mseed/src/libmseed` - the [libmseed](https://github.com/EarthScope/libmseed) miniSEED data format library (v2.19.6).
+ * `obspy/signal/src/evalresp` - the [evalresp](https://github.com/EarthScope/evalresp) library to process seismological instrument response files. (v3.3.3).
+ * `obspy/io/**/docs` and `obspy/io/**/data` directories - these directories for I/O modules generally contain reference material which should be left as-is.
 
 ## Submitting an Issue
 
