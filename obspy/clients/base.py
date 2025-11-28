@@ -212,7 +212,7 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
             # Construct the same URL requests would construct.
             from requests import PreparedRequest  # noqa
             p = PreparedRequest()
-            # request doesnt use timeout parameter, it's used when actually
+            # request doesn't use timeout parameter, it's used when actually
             # sending the request, but the request is never sent in this debug
             # block anyway, it's just for printing info on what would be sent
             p.prepare(

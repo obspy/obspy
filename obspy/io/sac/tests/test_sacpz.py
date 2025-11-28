@@ -217,7 +217,7 @@ class TestSACPZ:
     def test_writing_sacpz_hertz_to_radians(self, root):
         """
         Tests writing out a response with poles and zeros described in Hertz as
-        a SACPZ file, which implicitely expects the given data to be RADIANS/S,
+        a SACPZ file, which implicitly expects the given data to be RADIANS/S,
         so that a conversion is needed.
 
         See #3334

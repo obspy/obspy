@@ -91,7 +91,7 @@ def failmsg(got, expected, ignore_lines=[]):
 
 def normalize_version_number(string):
     """
-    Returns imput string with version numbers normalized for testing purposes.
+    Returns input string with version numbers normalized for testing purposes.
     """
     match = r'v[0-9]+\.[0-9]+\.[0-9]+'
     repl = re.sub(match, "vX.X.X", string).replace(",", "")
@@ -1336,7 +1336,7 @@ class TestClient():
             "event": "http://ds.iris.edu/files/redirect/307/event/1"}
         with warnings.catch_warnings():
             # ignore warnings about unclosed sockets
-            # These occur when rasing the FDSNRedirectException, but
+            # These occur when raising the FDSNRedirectException, but
             # I was not able to fix in the code
             warnings.filterwarnings('ignore', 'unclosed')
             with pytest.raises(FDSNRedirectException):

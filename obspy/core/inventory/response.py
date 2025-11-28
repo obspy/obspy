@@ -1523,7 +1523,7 @@ class Response(ComparingObject):
                         self.get_sampling_rates()[
                             blockette.stage_sequence_number][
                             "input_sampling_rate"]
-                # This branch get's large called for responses that only have a
+                # This branch gets large called for responses that only have a
                 # a single stage.
                 else:
                     blockette.decimation_input_sample_rate = 1.0

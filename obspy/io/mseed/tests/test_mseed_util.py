@@ -220,7 +220,7 @@ class TestMSEEDUtil():
     def test_issue2069(self, testdata):
         """
         Tests the util._get_ms_file_info method with sample rate of 0.
-        Reads a datafile and sets sr factor and multipier to 0 and and mseed
+        Reads a datafile and sets sr factor and multiplier to 0 and and mseed
         ASCII LOG file with a sample rate of 0.
         """
 

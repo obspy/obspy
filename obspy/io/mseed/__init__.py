@@ -113,10 +113,10 @@ standard MiniSEED library and used internally by ObsPy.
 In regards to the different encodings for the data part of MiniSEED files
 this means the following:
 
-* Read support for: ACSII, 16 and 32 bit integers, 32 and 64 bit floats,
+* Read support for: ASCII, 16 and 32 bit integers, 32 and 64 bit floats,
   STEIM 1 + 2, all GEOSCOPE encodings, the CDSN encoding, the SRO encoding,
   and the DWWSSN encoding
-* Write support for: ACSII, 16 and 32 bit integers, 32 and 64 bit floats,
+* Write support for: ASCII, 16 and 32 bit integers, 32 and 64 bit floats,
   and STEIM 1 + 2
 * Unsupported: 24 bit integers, US National Network compression,
   Graefenberg 16 bit gain ranged encoding, IPG - Strasbourg 16 bit gain ranged

@@ -148,7 +148,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
             else:
                 dataloggers[public_id] = datalogger_element
 
-    # Register reponses
+    # Register responses
     responses = {}
     for response_type in ["responseFAP", "responseFIR", "responsePAZ",
                           "responseIIR", "responsePolynomial"]:
@@ -163,7 +163,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
                     responses[public_id] = response_element
 
     # Organize all the collection instrument information into a unified
-    # intrumentation register
+    # instrumentation register
     instrumentation_register = {
         "sensors": sensors,
         "dataloggers": dataloggers,

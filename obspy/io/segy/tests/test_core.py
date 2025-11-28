@@ -590,7 +590,7 @@ class TestSEGYCore():
         Regression test to guard against an issue that caused an exception
         to be raised when attempting to compare two still packed trace headers.
 
-        The exception only occured when reading the `obspy.read()`.
+        The exception only occurred when reading the `obspy.read()`.
         """
         file = testdata['1.sgy_first_trace']
         # The exception was

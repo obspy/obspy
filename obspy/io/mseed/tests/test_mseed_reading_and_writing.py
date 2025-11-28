@@ -1330,7 +1330,7 @@ class TestMSEEDReadingAndWriting():
                     data = []
                     with io.open(reference, "rt") as fh:
                         header = fh.readline().strip()
-                        # np.loadtxt cannot deal with varying column lenghts.
+                        # np.loadtxt cannot deal with varying column lengths.
                         for line in fh:
                             data.extend([
                                 float(_i) for _i in line.strip().split()])

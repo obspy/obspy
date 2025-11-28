@@ -1128,7 +1128,7 @@ def set_flags_in_fixed_headers(filename, flags):
                     # Time correction is in units of 0.0001 seconds.
                     recstart += time_correction * 0.0001
 
-                # Manage blockette's datation informations
+                # Manage blockette's datation information
                 # Search for blockette 100's "Actual sample rate" field
                 samp_rate = _search_flag_in_blockette(mseed_file, 4, 100, 4, 1)
                 if samp_rate is not None:
@@ -1225,7 +1225,7 @@ def _check_flag_value(flag_value):
     * ``datetime`` or ``UTCDateTime`` value to add a single 'INSTANT' datation
     (see below)
     * ``dict`` to allow complex flag datation
-    ** The dict keys may be the keyword INSTANT to mark arbitrarly short
+    ** The dict keys may be the keyword INSTANT to mark arbitrarily short
     duration flags, or the keyword DURATION to mark events that span across
     time.
     ** The dict values are:
@@ -1408,7 +1408,7 @@ def _search_flag_in_blockette(mseed_file_desc, first_blockette_offset,
     exploitable data (int, float, string, ...)
     :type mseed_file_desc: File object
     :param mseed_file_desc: a File descriptor to the current miniseed file.
-    The value of mseed_file_desc.tell() is set back by this funcion before
+    The value of mseed_file_desc.tell() is set back by this function before
     returning, use in multithread applications at your own risk.
     :type first_blockette_offset: int
     :param first_blockette_offset: tells the function where the first blockette
@@ -1447,7 +1447,7 @@ def _search_flag_in_blockette(mseed_file_desc, first_blockette_offset,
 
         if cur_blkt_number == blockette_number:
             # Blockette found: we want to skip ``field_offset`` bytes but we
-            # have already read 4 of the offset to get informations about the
+            # have already read 4 of the offset to get information about the
             # current blockette, so we remove them from skipped data
             mseed_file_desc.seek(field_offset - 4, os.SEEK_CUR)
             returned_bytes = mseed_file_desc.read(field_length)
@@ -1503,7 +1503,7 @@ def _convert_flags_to_raw_byte(expected_flags, user_flags, recstart, recend):
                 # List of tuples (start, end)
                 use_in_this_record = False
                 for tuple_value in user_flags[key]:
-                    # Check wether this record is concerned
+                    # Check whether this record is concerned
                     event_start = tuple_value[0]
                     event_end = tuple_value[1]
 

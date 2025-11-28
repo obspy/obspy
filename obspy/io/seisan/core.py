@@ -58,7 +58,7 @@ def _get_version(data):
         be taken into account if the file is read from a C-program or if read
         binary from a Fortran program. Unfortunately, the number of and meaning
         of these additional characters are compiler dependent. On Sun, Linux,
-        MaxOSX and PC from version 7.0 (using Digital Fortran), every write is
+        MacOSX and PC from version 7.0 (using Digital Fortran), every write is
         preceded and terminated with 4 additional bytes giving the number of
         bytes in the write. On the PC, Seisan version 6.0 and earlier using
         Microsoft Fortran, the first 2 bytes in the file are the ASCII
@@ -140,7 +140,7 @@ def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
 
     def _readline(fh, version=version, dtype=dtype):
         if version >= 7:
-            # On Sun, Linux, MaxOSX and PC from version 7.0 (using Digital
+            # On Sun, Linux, MacOSX and PC from version 7.0 (using Digital
             # Fortran), every write is preceded and terminated with 4
             # additional bytes giving the number of bytes in the write.
             # With 64 bit systems, 8 bytes is used to define number of bytes

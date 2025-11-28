@@ -909,7 +909,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
 
             # It is also necessary if the libmseed calculated sampling rate
             # would result in a loss of accuracy - the floating point
-            # comparision is on purpose here as it will always try to
+            # comparison is on purpose here as it will always try to
             # preserve all accuracy.
             # Cast to float32 to not add blockette 100 for values
             # that cannot be represented with 32bits.

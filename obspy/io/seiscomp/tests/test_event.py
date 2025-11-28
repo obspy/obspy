@@ -378,7 +378,7 @@ class TestEvent():
 
     def test_write_xslt_usgs_events(self):
         # Can't validate due to wrong event types (QuakeML was already
-        # unvalid)
+        # invalid)
         self.cmp_write_xslt_file('usgs_event.xml',
                                  'usgs_event.sc3ml',
                                  '0.11',

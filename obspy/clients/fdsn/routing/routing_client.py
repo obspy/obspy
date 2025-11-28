@@ -105,7 +105,7 @@ def _try_download_bulk(r):
 def _download_bulk(r):
     # Figure out the passed credentials, if any. Two possibilities:
     # (1) User and password, given explicitly for the base URLs (or an
-    #     explicity given `eida_token` key per URL).
+    #     explicitly given `eida_token` key per URL).
     # (2) A global EIDA_TOKEN key. It will be used for all services that
     #     don't have explicit credentials and also support the `/auth` route.
     credentials = r["credentials"].get(urlparse(r["endpoint"]).netloc, {})
@@ -284,7 +284,7 @@ class BaseRoutingClient(HTTPClient):
                 continue
             collection += _i
 
-        # Explitly close the thread pool as somehow this does not work
+        # Explicitly close the thread pool as somehow this does not work
         # automatically under linux. See #2342.
         pool.close()
 

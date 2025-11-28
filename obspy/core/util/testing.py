@@ -207,7 +207,7 @@ def create_diverse_catalog():
             horizontal_slowness_weight=12,
             backazimuth_weight=12,
             earth_model_id=ev.ResourceIdentifier(),
-            commens=[ev.Comment(x) for x in 'Nothing'],
+            comments=[ev.Comment(x) for x in 'Nothing'],
         )
 
     def _get_composite_times():
@@ -293,7 +293,7 @@ def create_diverse_catalog():
             time_window=_get_timewindow(),
             pick_id=state['pick_id'],
             scalling_time=state['time'],
-            mangitude_hint='ML',
+            magnitude_hint='ML',
             scaling_time_errors=ev.QuantityError(uncertainty=42.0),
         )
 
@@ -479,7 +479,7 @@ def traces_almost_equal(tr1, tr2, default_stats=True, rtol=1e-05, atol=1e-08,
     :return: bool
     """
     from obspy.core.trace import Trace
-    # If other isnt  a trace, or data is not the same len return False.
+    # If other isn't a trace, or data is not the same len return False.
     if not isinstance(tr2, Trace) or len(tr1.data) != len(tr2.data):
         return False
     # First compare the array values

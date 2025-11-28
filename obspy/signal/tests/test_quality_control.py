@@ -384,7 +384,7 @@ class TestQualityControl():
         """
         Test extraction of timing quality with a file that actually has it.
         """
-        # Test file is constructed and orignally from the obspy.io.mseed
+        # Test file is constructed and originally from the obspy.io.mseed
         # test suite.
         md = MSEEDMetadata(files=[testdata["timingquality.mseed"]],
                            add_flags=True)
@@ -673,7 +673,7 @@ class TestQualityControl():
         record_lengths_flagged = [5.7, 5.9, 5.55, 5.475, 5.725, 5.7,
                                   5.775001]
 
-        # Check if the record lenghts matches the total length
+        # Check if the record lengths matches the total length
         total_time = md.meta["end_time"] - md.meta["start_time"]
         assert abs(sum(record_lengths) - (total_time)) < 1.001e-6
 

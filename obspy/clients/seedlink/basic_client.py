@@ -245,7 +245,7 @@ class Client(object):
             msg = ("location and channel options are ignored in get_info() if "
                    "level='station'.")
             warnings.warn(msg)
-        # deteremine if we have a usable cache and check if it is at least the
+        # determine if we have a usable cache and check if it is at least the
         # requested level of detail
         if cache and self._station_cache is not None \
                 and level in ('station', self._station_cache_level):

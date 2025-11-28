@@ -485,7 +485,7 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
         values.  While data with values out of range may be properly stored in
         the GCF format (if first and last data sample can be represented as a
         32-bit signed integer as well as all first difference values of the
-        data vector) the current implementaion only permitts input data to be
+        data vector) the current implementation only permitts input data to be
         representable as a 32-bit signed integer. If input waveforms cannot be
         representable as 32-bit signed integers they will be clipped at
         -2,147,483,648 and 2,147,483,647

@@ -307,7 +307,7 @@ def _unpack_C0_C2_data_fast(packets, encoding):  # noqa
     thus padded which would results in padded pieces directly in a large
     array and libmseed (understandably) does not support that.
 
-    Thus we resort to *tada* pointer arithmetics in Python ;-) This is
+    Thus we resort to *tada* pointer arithmetic in Python ;-) This is
     quite a bit faster then correctly casting to an integer pointer so
     it's worth it.
 

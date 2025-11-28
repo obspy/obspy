@@ -1,5 +1,5 @@
 #
-# Salt state for dependecies available in package repos
+# Salt state for dependencies available in package repos
 #
 {% from "obspy/map.jinja" import pkg_deps with context %}
 

@@ -570,7 +570,7 @@ def sanitize_filename(filename):
 
     value = unicodedata.normalize('NFKD', filename).encode(
         'ascii', 'ignore').decode('ascii')
-    # In constrast to django we allow dots and don't lowercase.
+    # In contrast to django we allow dots and don't lowercase.
     value = re.sub(r'[^\w\.\s-]', '', value).strip()
     return re.sub(r'[-\s]+', '-', value)
 

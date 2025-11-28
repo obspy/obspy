@@ -37,7 +37,7 @@ STATUS = Enum(["none", "needs_downloading", "downloaded", "ignore", "exists",
 
 class _SlotsEqualityComparisionObject(object):
     """
-    Helper object with an equality comparision method simply comparing all
+    Helper object with an equality comparison method simply comparing all
     slotted attributes.
     """
     __slots__ = []

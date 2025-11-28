@@ -233,7 +233,7 @@ man_pages = [
 ]
 
 
-# -- Options for autodoc / autosummary exensions -----------------------------
+# -- Options for autodoc / autosummary extensions -----------------------------
 
 # Don't merge __init__ method in auoclass content
 autoclass_content = 'class'
@@ -247,7 +247,7 @@ autosummary_generate_overwrite = False
 # Not sure this will remove warnings from collections's Mapping (Attribdict)
 autodoc_inherit_docstrings = False
 
-# -- Options for linkcheck exension ------------------------------------------
+# -- Options for linkcheck extension ------------------------------------------
 linkcheck_timeout = 5
 linkcheck_workers = 10
 

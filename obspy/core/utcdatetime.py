@@ -995,7 +995,7 @@ class UTCDateTime(object):
             msg = ("unsupported operand type(s) for +: 'UTCDateTime' and "
                    "'UTCDateTime'")
             raise TypeError(msg)
-        # need to make sure we don't get e.g. np.float32 singl precision input
+        # need to make sure we don't get e.g. np.float32 single precision input
         # or worse, because then numpy is in charge of the calculations and
         # numpy 2.0 is not automatically upcasting to avoid precision loss
         # which means we can't keep full precision when converting input

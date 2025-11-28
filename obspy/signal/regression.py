@@ -45,7 +45,7 @@ def linear_regression(xdata, ydata, weights=None, p0=None,
     :param intercept_origin: If ``True``: solves ``y=a*x`` (default);
         if ``False``: solves ``y=a*x+b``.
 
-    Extra keword arguments will be passed to
+    Extra keyword arguments will be passed to
     :func:`scipy.optimize.curve_fit`.
 
     :rtype: tuple

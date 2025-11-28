@@ -217,7 +217,7 @@ class Ellipse:
 
         Call as x_err, y_err, c_xy, center =myellipse.to_uncerts()
 
-        :parm self: ellipse
+        :param self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :returns: x_error (m), y_error (m),
                   x-y covariance (dist^2), center (x,y)
@@ -233,7 +233,7 @@ class Ellipse:
     def is_inside(self, pt):
         """ Is the given point inside the ellipse?
 
-        :parm self: ellipse
+        :param self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
         :type pt: tuple(float, float)
@@ -250,7 +250,7 @@ class Ellipse:
     def is_on(self, pt):
         """ Is the given point on the ellipse?
 
-        :parm self: ellipse
+        :param self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
         :type pt: tuple(float, float)
@@ -270,7 +270,7 @@ class Ellipse:
         A centered ellipse has its center at 0,0 and its semi-major axis
         along the y-axis
 
-        :parm self: ellipse
+        :param self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: original coordinates of the point (x,y)
         :type pt: tuple(float, float)
@@ -291,7 +291,7 @@ class Ellipse:
         Assume that the ellipse was "centered" for calculations, now
         put the point back in its true position
 
-        :parm self: ellipse
+        :param self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: original coordinates of the point (x,y)
         :type pt: tuple(float, float)
@@ -311,7 +311,7 @@ class Ellipse:
         Equation is from http://www.nabla.hr/Z_MemoHU-029.htm
         P = (-a**2 * m/c, b**2 / c)
 
-        :parm self: ellipse
+        :param self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
         :type pt: tuple(float, float)
@@ -355,7 +355,7 @@ class Ellipse:
             => (a^2 - x^2)*m^2 + 2*y*x*m + (b^2 - y^2) = 0  [Solve for m]
             and then c  = y - mx
 
-        :parm self: ellipse
+        :param self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the point (x,y)
         :type pt: tuple(float, float)
@@ -384,7 +384,7 @@ class Ellipse:
              outfile=None, format=None, fig=None, show=False):
         """ Plot the ellipse
 
-        :parm self: ellipse
+        :param self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param color: Color of the edges. Defaults to ``'k'`` (black).
         :param npts: Controls the number of interpolation points for the
@@ -447,11 +447,11 @@ class Ellipse:
                       outfile=None, format=None, fig=None, show=False):
         """ Plot tangents to an ellipse when viewed from x,y
 
-        :parm self: ellipse
+        :param self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param pt: coordinates of the viewpoint (x,y)
         :type pt: tuple(float, float)
-        :parm self: ellipse
+        :param self: ellipse
         :type self: :class: `~obspy.io.nordic.ellipse.Ellipse`
         :param color: Color of the edges. Defaults to ``'k'`` (black).
         :param print_angle: print the subtended angle on the plot (False)

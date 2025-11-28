@@ -95,7 +95,7 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto'):
          ``'fft'`` The Fast Fourier Transform is used to perform the
          correlation more quickly.
          ``'auto'`` Automatically chooses direct or Fourier method based on an
-         estimate of which is faster. (Only availlable for SciPy versions >=
+         estimate of which is faster. (Only available for SciPy versions >=
          0.19. For older Scipy version method defaults to ``'fft'``.)
 
     :return: cross-correlation function.
@@ -109,7 +109,7 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto'):
         For most input parameters cross-correlation using the FFT is much
         faster.
         Only for small values of ``shift`` (approximately less than 100)
-        direct time domain cross-correlation migth save some time.
+        direct time domain cross-correlation might save some time.
 
     .. note::
 
@@ -191,7 +191,7 @@ def correlate_template(data, template, mode='valid', normalize='full',
     If you are interested only in a part of the cross-correlation function
     around zero shift consider using function
     :func:`~obspy.signal.cross_correlation.correlate` which allows to
-    explicetly specify the maximum shift.
+    explicitly specify the maximum shift.
 
     :type data: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
     :param data: first signal
@@ -215,7 +215,7 @@ def correlate_template(data, template, mode='valid', normalize='full',
          ``'fft'`` The Fast Fourier Transform is used to perform the
          correlation more quickly.
          ``'auto'`` Automatically chooses direct or Fourier method based on an
-         estimate of which is faster. (Only availlable for SciPy versions >=
+         estimate of which is faster. (Only available for SciPy versions >=
          0.19. For older Scipy version method defaults to ``'fft'``.)
 
     :return: cross-correlation function.
@@ -947,6 +947,7 @@ def _plot_detections(detections, similarities, stream=None, heights=None,
     Plot detections together with similarity traces and data stream.
     """
     import matplotlib.pyplot as plt
+
     from obspy.imaging.util import _set_xaxis_obspy_dates
     if stream in (True, None):
         stream = []

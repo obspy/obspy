@@ -1,5 +1,5 @@
 #
-# Example for obspy dev, MUST have all dependecies installed already
+# Example for obspy dev, MUST have all dependencies installed already
 #
 
 # This forces an upgrade, which must be done with no dep installs, b/c

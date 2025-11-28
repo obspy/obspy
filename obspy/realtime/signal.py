@@ -582,7 +582,7 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
 
     # initialize the real-time memory needed to store
     # the recursive kurtosis coefficients until the
-    # next bloc of data is added
+    # next block of data is added
     rtmemory_mu1 = rtmemory_list[0]
     rtmemory_mu2 = rtmemory_list[1]
     rtmemory_k4_bar = rtmemory_list[2]

@@ -102,7 +102,7 @@ Changes:
    * Minimum supported Python version is now 3.8 (see #3081, #3087)
    * Minimum supported dependency versions are now numpy 1.20, scipy 1.7 and
      matplotlib 3.3 (see #3081, #3087)
-   * response: avoid reporting all unkown units (e.g. "RAD/S") to evalresp as
+   * response: avoid reporting all unknown units (e.g. "RAD/S") to evalresp as
      displacement ("DIS") which with default value for "output" ("VEL") leads
      to evalresp adding a differentiation during response calculation. Instead
      report undefined unit, which makes evalresp use response as is and
@@ -443,7 +443,7 @@ Changes:
    * Fix wrong values in Stats object after deepcopy or pickle of Stats object
      for edge cases (see #2601)
  - obspy.clients.fdsn:
-   * EIDA routing client: fix an issue that leaded to a request of *all* EIDA
+   * EIDA routing client: fix an issue that led to a request of *all* EIDA
      data when requesting an invalid, out-of-epochs time window for a valid
      station (see #2611)
    * update RASPISHAKE URL mapping to use https
@@ -477,7 +477,7 @@ Changes:
 
 Work on this release was in parts and among others supported by the following
 institutions/companies and grants (in alphabetical order):
- - Earthquake Commision of New Zealand (EQC), grant 18/753
+ - Earthquake Commission of New Zealand (EQC), grant 18/753
  - École et Observatoire des Sciences de la Terre - Université de Strasbourg
  - ETH Zürich
  - Friedrich-Schiller-Universität Jena
@@ -955,7 +955,7 @@ Changes:
  - obspy.io.ascii:
     * Custom formatting of sample values when writing SLIST and TSPAIR.
  - obspy.io.datamark:
-    * Renamed without deprectation to obspy.io.win to match its original name.
+    * Renamed without deprecation to obspy.io.win to match its original name.
       Datamark is a datalogger, saving the WIN format.
  - obspy.io.gse2:
     * Read support for GSE2.0 bulletin (see #1528)
@@ -1806,7 +1806,7 @@ Changes:
      definition (https://www.fdsn.org/webservices/)
  - obspy.gse2:
    * read/write STA2 header line which is officially mandatory but in
-     pratice often not used
+     practice often not used
  - obspy.imaging:
    * more options to customize day plots
    * dayplot now plots matching picks (station, network, location) if a list

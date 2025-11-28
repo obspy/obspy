@@ -1,5 +1,5 @@
 # Include all files in top-level and obspy-top-level directories (e.g. CHANGELOG, RELEASE-VERSION, ...)
-include *  # seem to catch only files, so ./misc and ./debian are not catched.. good!
+include *  # seem to catch only files, so ./misc and ./debian are not caught.. good!
 recursive-include obspy *  # includes all files in any subdirs, so it also catches *all* subdirs
 
 # exclude rules

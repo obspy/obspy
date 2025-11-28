@@ -21,7 +21,7 @@ class TestWADLParser():
     """
     def _parse_wadl_file(self, path):
         """
-        Parses wadl, returns WADLParser and any catched warnings.
+        Parses wadl, returns WADLParser and any caught warnings.
         """
         with open(path, "rb") as fh:
             wadl_string = fh.read()

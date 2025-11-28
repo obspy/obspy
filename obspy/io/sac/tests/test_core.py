@@ -349,7 +349,7 @@ class TestCore():
 
     def test_write_sac_xy_with_minimum_stats(self):
         """
-        Write SACXY with minimal stats header, no inhereted from SAC file
+        Write SACXY with minimal stats header, no inherited from SAC file
         """
         tr = Trace()
         tr.stats.delta = 0.01

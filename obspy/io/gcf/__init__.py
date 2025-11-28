@@ -4,7 +4,7 @@ obspy.io.gcf - Guralp Compressed Format, GCF, read and write support for ObsPy
 ==============================================================================
 This module provides read and write support for `GCF
 <https://www.guralp.com/apps/ok?doc=GCF_Intro>`_ waveform data and header info
-acording to GCF Reference `SWA-RFC-GCFR Issue F, December 2021
+according to GCF Reference `SWA-RFC-GCFR Issue F, December 2021
 <https://www.guralp.com/apps/ok?doc=GCF_format>`_
 
 :copyright:
@@ -91,7 +91,7 @@ is provided.
 The GCF format only supports fractional start of first data sample for sampling
 rates > 250 Hz. For lower sampling rates data must first be sampled at whole
 second. For greater sampling rates fractional start time is permitted but
-restricted and smapling rate specific. For info on permitted fractional start
+restricted and sampling rate specific. For info on permitted fractional start
 time for a given sampling rate, function
 :func:`~obspy.io.gcf.core.get_time_denominator` is provided.
 

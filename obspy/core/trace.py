@@ -2412,7 +2412,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             A positive shift means the data is shifted towards the future,
             e.g. a positive time delta.
             Note that this parameter solely affects the metadata.
-            The actual interpolation of the underlaying data is governed
+            The actual interpolation of the underlying data is governed
             by the parameters sampling_rate, starttime and npts.
 
             .. note::

@@ -122,7 +122,7 @@ def _is_gse2(filename):
 
 class LinesIterator(object):
     """
-    Iterator to iterate file lines and count lines. Usefull for warning
+    Iterator to iterate file lines and count lines. Useful for warning
     messages.
     """
     def __init__(self, lines):

@@ -28,7 +28,7 @@ class EvtBadDataError(EvtBaseError):
 
 class EvtBadHeaderError(EvtBaseError):
     """
-    Raised if an error occured while parsing an Evt header.
+    Raised if an error occurred while parsing an Evt header.
     """
     pass
 
