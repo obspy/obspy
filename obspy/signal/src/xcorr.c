@@ -40,7 +40,7 @@ int X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat2
         return 2;
     }
 
-    /* Determining the maximum 'usable' window */
+    /* Determing the maximum 'usable' window */
     if (ndat1 > ndat2)
     {
         len = ndat2 - 2*param;
