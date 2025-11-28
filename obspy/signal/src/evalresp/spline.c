@@ -935,7 +935,7 @@ double basis_matrix_tmp ( int left, int n, double mbasis[], int ndata,
 
   Parameters:
 
-    Input, int LEFT, indicates that TVAL is in the interval
+    Input, int LEFT, indicats that TVAL is in the interval
     [ TDATA(LEFT), TDATA(LEFT+1) ], or that this is the "nearest"
     interval to TVAL.
     For TVAL < TDATA(1), use LEFT = 1.
@@ -2698,7 +2698,7 @@ void least_set_old ( int ntab, double xtab[], double ytab[], int ndeg,
 
     The least squares polynomial is not returned directly as a simple
     polynomial.  Instead, it is represented in terms of a set of
-    orthogonal polynomials appropriate for the given data.  This makes
+    orthogonal polynomials appopriate for the given data.  This makes
     the computation more accurate, but means that the user can not
     easily evaluate the computed polynomial.  Instead, the routine 
     LEAST_EVAL should be used to evaluate the least squares polynomial
@@ -4023,7 +4023,7 @@ int r8vec_order_type ( int n, double x[] )
     Input, double X[N], the array to be checked.
 
     Output, int R8VEC_ORDER_TYPE, order indicator:
-    -1, no discernible order;
+    -1, no discernable order;
     0, all entries are equal;
     1, ascending order;
     2, strictly ascending order;
@@ -4777,7 +4777,7 @@ double *spline_cubic_set ( int n, double t[], double y[], int ibcbeg,
 
     The cubic spline is a piecewise cubic polynomial.  The intervals
     are determined by the "knots" or abscissas of the data to be
-    interpolated.  The cubic spline has continuous first and second
+    interpolated.  The cubic spline has continous first and second
     derivatives over the entire interval of interpolation.
 
     For any point T in the interval T(IVAL), T(IVAL+1), the form of
@@ -5175,7 +5175,7 @@ double spline_cubic_val ( int n, double t[], double y[], double ypp[],
     the knots.
 
     Input, double TVAL, a point, typically between T[0] and T[N-1], at
-    which the spline is to be evaluated.  If TVAL lies outside
+    which the spline is to be evalulated.  If TVAL lies outside
     this range, extrapolation is used.
 
     Output, double *YPVAL, the derivative of the spline at TVAL.
@@ -5280,7 +5280,7 @@ void spline_cubic_val2 ( int n, double t[], double tval, int *left, double y[],
     Input, double T[N], the knot values.
 
     Input, double TVAL, a point, typically between T[0] and T[N-1], at
-    which the spline is to be evaluated.  If TVAL lies outside
+    which the spline is to be evalulated.  If TVAL lies outside
     this range, extrapolation is used.
 
     Input/output, int *LEFT, the suggested T interval to search.

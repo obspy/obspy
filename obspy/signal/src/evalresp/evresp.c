@@ -218,7 +218,7 @@ Notes:
         to this function and the functions that it calls.  All the user
         has to do us supply the appropriate control parameters to this function
       - the parsing has been entirely reworked so that each blockette style is
-        parsed in a separate.  This should make the code easier to maintain and
+        parsed in a seperate.  This should make the code easier to maintain and
         allow for changes in the output from RDSEED (either in number of fields
         on a line or in which fields are output from a given blockette)
       - the code has been converted to ANSI standard C, rather than K&R style C

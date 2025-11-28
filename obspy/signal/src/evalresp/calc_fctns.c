@@ -241,7 +241,7 @@ void convert_to_units(int inp, char *out_units, struct complex *data, double w) 
 
 /*==================================================================
  *                Response of a digital IIR filter
- * This code is modified from the FORTRAN subroutine written and tested by
+ * This code is modified fom the FORTRAN subroutine written and tested by
  * Bob Hutt (ASL USGS). Evaluates phase directly from imaginary and real
  *    parts of IIR filter coefficients.
  * C translation from FORTRAN function: Ilya Dricker (ISTI), i.dricker@isti.com
@@ -388,7 +388,7 @@ void analog_trans(struct blkt *blkt_ptr, double freq, struct complex *out) {
 }
 
 /*==================================================================
- *                Response of symmetrical FIR filters
+ *                Response of symetrical FIR filters
  *=================================================================*/
 void fir_sym_trans(struct blkt *blkt_ptr, double w, struct complex *out) {
   double *a, h0, wsint;
@@ -423,7 +423,7 @@ void fir_sym_trans(struct blkt *blkt_ptr, double w, struct complex *out) {
 }
 
 /*==================================================================
- *                Response of asymmetrical FIR filters
+ *                Response of asymetrical FIR filters
  *=================================================================*/
 void fir_asym_trans(struct blkt *blkt_ptr, double w, struct complex *out) {
   double *a, h0, sint;
@@ -509,7 +509,7 @@ void iir_pz_trans(struct blkt *blkt_ptr, double w, struct complex *out) {
 
 /*==================================================================
  *      calculate the phase shift equivalent to the time shift
- *      delta at the frequency w (rads/sec)
+ *      delta at the frequence w (rads/sec)
  *=================================================================*/
 void calc_time_shift(double delta, double w, struct complex *out) {
   out->real = cos(w*delta);

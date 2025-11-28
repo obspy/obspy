@@ -237,7 +237,7 @@ struct referType {           /* a Response Reference blockette */
   int num_responses;
 };
 
-/* define a blkt as a  structure containing the blockette type, a union
+/* define a blkt as a stucture containing the blockette type, a union
    (blkt_info) containing the blockette info, and a pointer to the next
    blockette in the filter sequence.  The structures will be assembled to
    form a linked list of blockettes that make up a filter, with the last
@@ -273,7 +273,7 @@ struct stage {
   struct stage *next_stage;
 };
 
-/* and define a channel as a structure containing a pointer to the head of a
+/* and define a channel as a stucture containing a pointer to the head of a
    linked list of stages.  Will access the pieces one stages at a time in the
    same order that they were read from the input file, so a linked list is the
    easiest way to do this (since we don't have to worry about the time penalty
