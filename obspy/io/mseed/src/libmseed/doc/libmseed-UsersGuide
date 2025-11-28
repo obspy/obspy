@@ -187,7 +187,7 @@ ststate:
 In order to manage continuous trace segments the library provides a
 couple of different mechanisms: Trace Groups and Trace Lists.
 
-Initially only Trace Groups were implemented and later Trace Lists
+Initially only Trace Groups were implimented and later Trace Lists
 were added, from a general standpoint they do the same thing.  The
 Trace Lists are more efficient and slightly more complicated in their
 structure.  Either can be used for most tasks, but there are more
@@ -312,7 +312,7 @@ a custom logging facility.  See the man page for more details.
 
 The default destination for log messages is standard output (stdout),
 while all diagnostic (including error) messages go to standard error
-(stderr).  Most of the internal messages emitted by the library are
+(stderr).  Most of the internal messages emmited by the library are
 considered diagnostic and will, by default, go to standard error.
 
 The default prefix for log and diagnostic messages is nothing. The

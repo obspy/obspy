@@ -22,7 +22,7 @@ structure in the FSDH at MSRecord.fsdh.  The base values at the
 MSRecord level (e.g. MSRecord.starttime) are always the primary
 values.  But before the data record can be packed these values must be
 translated back into the SEED structures.  For these duplicated values
-the \fBmsr_normalize_header\fP routine performs this translation.
+the \fBmsr_normalize_header\fP routine peforms this translation.
 Normally this routine will be called via internal functions when
 \fBmsr_pack\fP is called, it could also be used to synchronize the
 header values when they are directly modified.

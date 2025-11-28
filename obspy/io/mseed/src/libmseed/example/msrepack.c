@@ -4,7 +4,7 @@
  * A simple example of using the Mini-SEED record library to pack data.
  *
  * Opens a user specified file, parses the Mini-SEED records and
- * optionally re-packs the data records and saves them to a specified
+ * opionally re-packs the data records and saves them to a specified
  * output file.
  *
  * Written by Chad Trabant, IRIS Data Management Center

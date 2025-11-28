@@ -64,7 +64,7 @@ Each time a complete record is packed it will be passed to the
 char * to the record buffer, 2) the length of the record in bytes and
 3) a void pointer supplied by the caller.  It is the responsibility of
 \fIrecord_handler()\fP to process the record, the memory will be
-reused or freed when \fIrecord_handler()\fP returns.  This function
+re-used or freed when \fIrecord_handler()\fP returns.  This function
 pointer is required, there is no other way to access the packed
 records.
 

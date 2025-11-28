@@ -287,7 +287,7 @@ msr_normalize_header (MSRecord *msr, flag verbose)
     ms_strncpopen (msr->fsdh->channel, msr->channel, 3);
     ms_hptime2btime (hptimems, &(msr->fsdh->start_time));
 
-    /* Determine the factor and multiplier for sample rate */
+    /* Determine the factor and multipler for sample rate */
     if (ms_genfactmult (msr->samprate,
                         &(msr->fsdh->samprate_fact),
                         &(msr->fsdh->samprate_mult)))
