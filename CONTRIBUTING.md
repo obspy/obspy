@@ -46,6 +46,7 @@ Additionally take care to not add big files. Even for tests we generally only ac
 
 Various files and directories are vendored from third party projects and sources. This means they should not be modified without a compelling reason. Some examples are:
 
+ * `obspy/io/gcf/src` - [Read support](https://docs.obspy.org/archive/stable/packages/obspy.io.gcf.html) for Guralp Compressed Format (GCF) waveform data.
  * `obspy/io/gse2/src/GSE_UTI` -  [Read/Write utilities](https://docs.obspy.org/archive/stable/packages/obspy.io.gse2.html) for GSE2 and GSE1 format waveform data.
  * `obspy/io/mseed/src/libmseed` - the [libmseed](https://github.com/EarthScope/libmseed) miniSEED data format library (v2.19.6).
  * `obspy/signal/src/evalresp` - the [evalresp](https://github.com/EarthScope/evalresp) library to process seismological instrument response files. (v3.3.3).
