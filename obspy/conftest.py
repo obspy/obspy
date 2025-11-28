@@ -157,7 +157,7 @@ def pytest_addoption(parser):
                      help='Generate a json report of the test results and '
                           'upload it to ObsPys test server.',)
     parser.addoption('--keep-images', action='store_true',
-                     help='store images created while running test suite '
+                     help='store images created while runing test suite '
                           'in a directory called obspy_test_images.')
 
 

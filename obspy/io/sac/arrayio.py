@@ -563,7 +563,7 @@ def validate_sac_content(hf, hi, hs, data, *tests):
     if not tests:
         raise ValueError("No validation tests specified.")
     elif any([(itest not in _all) for itest in tests]):
-        msg = "Unrecognized validation test specified"
+        msg = "Unrecognized validataion test specified"
         raise ValueError(msg)
 
     if 'delta' in tests:

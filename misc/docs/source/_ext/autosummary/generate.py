@@ -175,8 +175,8 @@ def generate_autosummary_docs(sources, output_dir=None, suffix='.rst',
                 ns['functions'], ns['all_functions'] = funcs
                 classes = get_members(obj, 'class')
                 ns['classes'], ns['all_classes'] = classes
-                exceptions = get_members(obj, 'exception')
-                ns['exceptions'], ns['all_exceptions'] = exceptions
+                excptions = get_members(obj, 'exception')
+                ns['exceptions'], ns['all_exceptions'] = excptions
             elif doc.objtype == 'class':
                 ns['members'] = dir(obj)
                 methods = get_members(obj, 'method', ['__init__'])
