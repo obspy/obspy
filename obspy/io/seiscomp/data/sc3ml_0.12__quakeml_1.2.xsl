@@ -133,7 +133,7 @@
  *
  *  * 25.08.2014: Applied part of the patch proposed by Philipp Kaestli on
  *                seiscomp-l@gfz-potsdam.de
- *    - use public id of parent origin if origin id property of magnitude
+ *    - use public id of parent origin if origin id propertery of magnitude
  *      and station magnitude elements is unset
  *    - fixed takeOffAngle conversion vom real (SC3ML) to RealQuantity
  *      (QuakeML)
@@ -170,7 +170,7 @@
  *    - Fix arrival weight mapping
  *
  *  * 27.07.2018: Version bump. No modification here, SC3 datamodel was
- *                extended by data availability top level element
+ *                extented by data availability top level element
  *
  *  * 02.11.2018: Don't export stationMagnitude passedQC attribute
  *
@@ -588,7 +588,7 @@
     </xsl:template>
 
     <!-- Generic transformation of all attributes of an element. If the
-         attribute name is 'eventID' it is transferred to a QML id -->
+         attribute name is 'eventID' it is transfered to a QML id -->
     <xsl:template match="@*">
         <xsl:variable name="attName" select="local-name()"/>
         <xsl:attribute name="{$attName}">
@@ -723,7 +723,7 @@
     <xsl:template name="convertID">
         <xsl:param name="id"/>
         <!-- If the id starts with 'smi:' or 'quakeml:', consider that the id
-             is already well formatted -->
+             is already well formated -->
         <xsl:choose>
             <xsl:when test="starts-with($id, 'smi:')
                             or starts-with($id, 'quakeml:')">

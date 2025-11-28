@@ -103,7 +103,7 @@ Parent              Element lost
 amplitude           evaluationStatus
 magnitude           evaluationMode
 originUncertainty   confidenceLevel
-arrival             comment
+arrival             commment
 arrival             horizontalSlownessWeight
 arrival             backazimuthWeight
 origin              region

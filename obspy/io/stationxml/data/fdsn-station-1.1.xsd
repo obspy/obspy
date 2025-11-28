@@ -11,7 +11,7 @@
 	where lacking in the SEED standard.
 
 	When definitions and usage are underdefined the SEED manual should be referred to for
-	clarification.  SEED specification: http://www.fdsn.org/publications.htm
+	clarification.  SEED specifiation: http://www.fdsn.org/publications.htm
 
 	Another goal is to create a base schema that can be extended to represent similar data types.
 
@@ -106,7 +106,7 @@
 					<xs:element name="Operator" type="fsx:OperatorType" minOccurs="0"
 						maxOccurs="unbounded">
 						<xs:annotation>
-							<xs:documentation>An operator and associated contact persons</xs:documentation>
+							<xs:documentation>An operator and associated contanct persons</xs:documentation>
 						</xs:annotation>
 					</xs:element>
 					<xs:element name="TotalNumberStations" type="fsx:CounterType" minOccurs="0">
@@ -178,7 +178,7 @@
 					<xs:element name="Operator" type="fsx:OperatorType" minOccurs="0"
 						maxOccurs="unbounded">
 						<xs:annotation>
-							<xs:documentation>An operator and associated contact persons</xs:documentation>
+							<xs:documentation>An operator and associated contanct persons</xs:documentation>
 						</xs:annotation>
 					</xs:element>
 					<xs:element name="CreationDate" type="xs:dateTime" minOccurs="0">
@@ -449,7 +449,7 @@
 					<xs:element name="StageGain" type="fsx:GainType">
 						<xs:annotation>
 							<xs:documentation>The gain at the stage of the encapsulating
-								response element at a specific frequency and corresponds to SEED blockette 58.
+								response element at a specific frequencey and corresponds to SEED blockette 58.
 								In the SEED convention, stage 0 gain represents the overall sensitivity of the channel.
 								In this schema, stage 0 gains are allowed but are considered deprecated.
 								Overall sensitivity should be specified in the InstrumentSensitivity
@@ -993,7 +993,7 @@
 		<xs:annotation>
 			<xs:documentation>A type to document persistent identifiers.
 				Identifier values should be specified without a URI scheme (prefix),
-				instead the identifier type is documented as an attribute.
+				instead the identifer type is documented as an attribute.
 			</xs:documentation>
 		</xs:annotation>
 		<xs:simpleContent>
@@ -1087,7 +1087,7 @@
 						information should be considered transient and is primarily useful as a
 						guide for generating time series data requests. The information for a
 						DataAvailability:Span may be specific to the time range used in a request
-						that resulted in the document or limited to the availability of data within
+						that resulted in the document or limited to the availability of data withing
 						the request range. These details may or may not be retained when
 						synchronizing metadata between data centers. </xs:documentation>
 				</xs:annotation>

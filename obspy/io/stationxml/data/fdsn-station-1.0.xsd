@@ -11,7 +11,7 @@
 	where lacking in the SEED standard.
 	
 	When definitions and usage are underdefined the SEED manual should be referred to for
-	clarification.  SEED specification: http://www.fdsn.org/publications.htm
+	clarification.  SEED specifiation: http://www.fdsn.org/publications.htm
 	
 	Another goal is to create a base schema that can be extended to represent similar data types.
 
