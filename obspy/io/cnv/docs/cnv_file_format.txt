@@ -21,7 +21,7 @@ BCGMP0 1.11     BLRMP0 1.58     BHRMP0 2.23    BSCMP0 1.85    BJOMP0 2.37    BSL
 
 
 Switch IFX: Default value=0
-For each event the switch IFX (i2, after magn.) may be set. If IFX=1, then adjustment
+For each event the switch IFX (i2, after magn.) may be set. If IFX=1, then adjustement
 of this hypocenter in y-direction (to rotate y-axis see parameter ROTATE in control
 file *.CMN) is inhibited.
 

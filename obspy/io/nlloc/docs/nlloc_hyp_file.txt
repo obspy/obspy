@@ -129,7 +129,7 @@ nPhases (integer)
 maxGap (integer)
     maximum azimuth gap in degrees between stations used for location 
 minStaDist (float)
-    distance of closest station to maximum likelihood hypocenter (Non-GLOBAL: kilometers, GLOBAL: degrees) 
+    distance of closest station to maxium likelihood hypocnter (Non-GLOBAL: kilometers, GLOBAL: degrees) 
 magAmp (float)
     amplitude (i.e. ML) magnitude for maximum likelihood hypocenter 
 nMagAmp (integer)
@@ -212,7 +212,7 @@ FOCALMECH Line: (optional) Focal mechanism description line. Specifies the hypoc
 FOCALMECH dlat dlong depth Mech dipDir dipAng rake mf misfit nObs nObs
 Fields:
 dlat dlong (floats)
-    latitude and longitude in decimal degrees of the hypocenter 
+    latitude and logitude in decimal degrees of the hypocenter 
 depth (float)
     depth in kilometers of the hypocenter 
 dipDir dipAng rake (floats)
@@ -412,7 +412,7 @@ END_NLLOC
 Fields:
 None
 
-SCATTER Line: (optional) Specifies the beginning of a NLLoc Scatter block containing samples of the location PDF.
+SCATTER Line: (optional) Specifies the begining of a NLLoc Scatter block containing samples of the location PDF.
 
 SCATTER Nsamples nSamples
 Fields:
