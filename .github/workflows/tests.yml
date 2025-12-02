@@ -182,7 +182,7 @@ jobs:
         id: tests
         shell: bash -l {0}
         run: |
-          obspy-runtests --cov obspy --cov-report=xml:$PWD/coverage.xml --cov-append --report ${{ env.runtest_options }}
+          obspy-runtests --cov obspy --cov-report=xml:coverage.xml --cov-append --report ${{ env.runtest_options }}
 
       - name: upload coverage
         uses: codecov/codecov-action@v5.5.1
@@ -191,7 +191,7 @@ jobs:
           flags: unittests
           token: ${{ secrets.CODECOV_TOKEN }}
           name: codecov-umbrella
-          files: $PWD/coverage.xml
+          files: coverage.xml
           disable_search: true
           fail_ci_if_error: true
 
