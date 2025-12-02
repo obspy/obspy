@@ -85,7 +85,7 @@ class Client(object):
         >>> st = client.get_waveforms("G", "FDFM", "1?", "B??", t, t + 5)
         >>> st = st.sort(reverse=True)
         >>> print(st)  # doctest: +ELLIPSIS
-        6 Trace(s) in Stream:
+        3 Trace(s) in Stream:
         G.FDFM.10.BHZ | 20... | 20.0 Hz, ... samples
         G.FDFM.10.BHN | 20... | 20.0 Hz, ... samples
         G.FDFM.10.BHE | 20... | 20.0 Hz, ... samples
@@ -96,7 +96,7 @@ class Client(object):
         >>> st = client.get_waveforms("*", "FDFM", "1*", "B*", t, t + 5)
         >>> st = st.sort(reverse=True)
         >>> print(st)  # doctest: +ELLIPSIS
-        6 Trace(s) in Stream:
+        3 Trace(s) in Stream:
         G.FDFM.10.BHZ | 20... | 20.0 Hz, ... samples
         G.FDFM.10.BHN | 20... | 20.0 Hz, ... samples
         G.FDFM.10.BHE | 20... | 20.0 Hz, ... samples
@@ -200,7 +200,7 @@ class Client(object):
         [('G', 'FDFM')]
         >>> info = client.get_info(
         ...     station="FD?M", channel='[LBH]HZ', location='10',
-                level='channel')
+        ...     level='channel')
         >>> print(info)  # doctest: +NORMALIZE_WHITESPACE
         [('G', 'FDFM', '10', 'BHZ'), ('G', 'FDFM', '10', 'HHZ'),
          ('G', 'FDFM', '10', 'LHZ')]
