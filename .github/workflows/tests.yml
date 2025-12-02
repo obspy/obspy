@@ -191,6 +191,7 @@ jobs:
           flags: unittests
           token: ${{ secrets.CODECOV_TOKEN }}
           name: codecov-umbrella
+          files: $PWD/coverage.xml
           fail_ci_if_error: true
 
       - name: optionally upload image directory
