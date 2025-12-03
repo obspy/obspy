@@ -1,0 +1,572 @@
+<?xml version='1.0' encoding='utf-8'?>
+<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
+  <eventParameters publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2">
+    <description>Selected from Preliminary Event Bulletin of the IPEC, Czech Republic, for the time period 01.09.-30.09.2024</description>
+    <event publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/event/2032247">
+      <preferredOriginID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032247</preferredOriginID>
+      <type>induced or triggered event</type>
+      <typeCertainty>known</typeCertainty>
+      <description>
+        <text>CZECH REPUBLIC, OSTRAVA</text>
+        <type>region name</type>
+      </description>
+      <origin publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032247">
+        <time>
+          <value>2024-09-01T11:18:16.350000Z</value>
+        </time>
+        <latitude/>
+        <longitude/>
+        <depthType>from location</depthType>
+        <timeFixed>false</timeFixed>
+        <epicenterFixed>false</epicenterFixed>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text>location method: other</text>
+        </comment>
+        <creationInfo>
+          <author>IPEC</author>
+        </creationInfo>
+      </origin>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692935">
+        <time>
+          <value>2024-09-01T11:18:16.350000Z</value>
+        </time>
+        <waveformID stationCode="MORC"></waveformID>
+        <onset>emergent</onset>
+        <phaseHint>Pg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692936">
+        <time>
+          <value>2024-09-01T11:18:24.166000Z</value>
+        </time>
+        <waveformID stationCode="MORC"></waveformID>
+        <onset>emergent</onset>
+        <phaseHint>Sg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692938">
+        <time>
+          <value>2024-09-01T11:18:29.164000Z</value>
+        </time>
+        <waveformID stationCode="VRAC"></waveformID>
+        <onset>emergent</onset>
+        <phaseHint>Pg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692939">
+        <time>
+          <value>2024-09-01T11:18:32.577000Z</value>
+        </time>
+        <waveformID stationCode="KRUC"></waveformID>
+        <onset>emergent</onset>
+        <phaseHint>Pg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692937">
+        <time>
+          <value>2024-09-01T11:18:46.554000Z</value>
+        </time>
+        <waveformID stationCode="VRAC"></waveformID>
+        <onset>emergent</onset>
+        <phaseHint>Sg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692940">
+        <time>
+          <value>2024-09-01T11:18:53.542000Z</value>
+        </time>
+        <waveformID stationCode="KRUC"></waveformID>
+        <onset>emergent</onset>
+        <phaseHint>Sg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+      </pick>
+    </event>
+    <event publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/event/2032257">
+      <preferredOriginID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032257</preferredOriginID>
+      <type>mining explosion</type>
+      <typeCertainty>known</typeCertainty>
+      <description>
+        <text>CZECH REPUBLIC, OSTRAVA</text>
+        <type>region name</type>
+      </description>
+      <origin publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032257">
+        <time>
+          <value>2024-09-01T12:33:19.910000Z</value>
+          <uncertainty>0.34</uncertainty>
+        </time>
+        <latitude>
+          <value>49.8219</value>
+        </latitude>
+        <longitude>
+          <value>18.5593</value>
+        </longitude>
+        <depth>
+          <value>1000.0</value>
+        </depth>
+        <depthType>operator assigned</depthType>
+        <timeFixed>false</timeFixed>
+        <epicenterFixed>false</epicenterFixed>
+        <quality>
+          <usedPhaseCount>9</usedPhaseCount>
+          <usedStationCount>5</usedStationCount>
+          <standardError>0.17</standardError>
+          <azimuthalGap>280.0</azimuthalGap>
+          <minimumDistance>0.66</minimumDistance>
+          <maximumDistance>1.6</maximumDistance>
+        </quality>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text>location method: inversion</text>
+        </comment>
+        <creationInfo>
+          <author>IPEC</author>
+        </creationInfo>
+        <originUncertainty>
+          <preferredDescription>uncertainty ellipse</preferredDescription>
+          <minHorizontalUncertainty>1700.0</minHorizontalUncertainty>
+          <maxHorizontalUncertainty>2200.0</maxHorizontalUncertainty>
+          <azimuthMaxHorizontalUncertainty>61.0</azimuthMaxHorizontalUncertainty>
+          <confidenceLevel>90.0</confidenceLevel>
+        </originUncertainty>
+        <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692970">
+          <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692970</pickID>
+          <phase>Pg</phase>
+          <azimuth>266.5</azimuth>
+          <distance>0.66</distance>
+          <timeResidual>0.2</timeResidual>
+          <timeWeight>1.0</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692975">
+          <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692975</pickID>
+          <phase>Sg</phase>
+          <azimuth>266.5</azimuth>
+          <distance>0.66</distance>
+          <timeResidual>-0.1</timeResidual>
+          <timeWeight>1.0</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692976">
+          <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692976</pickID>
+          <phase>Pg</phase>
+          <azimuth>211.4</azimuth>
+          <distance>1.13</distance>
+          <timeResidual>0.2</timeResidual>
+          <timeWeight>1.0</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692977">
+          <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692977</pickID>
+          <phase>Pg</phase>
+          <azimuth>248.9</azimuth>
+          <distance>1.38</distance>
+          <timeResidual>-0.2</timeResidual>
+          <timeWeight>1.0</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692978">
+          <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692978</pickID>
+          <phase>Sg</phase>
+          <azimuth>248.9</azimuth>
+          <distance>1.38</distance>
+          <timeResidual>-0.1</timeResidual>
+          <timeWeight>1.0</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692983">
+          <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692983</pickID>
+          <phase>Pg</phase>
+          <azimuth>242.5</azimuth>
+          <distance>1.6</distance>
+          <timeResidual>0.1</timeResidual>
+          <timeWeight>1.0</timeWeight>
+        </arrival>
+        <arrival publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/arrival/19692980">
+          <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692980</pickID>
+          <phase>Sg</phase>
+          <azimuth>242.5</azimuth>
+          <distance>1.6</distance>
+          <timeResidual>-0.1</timeResidual>
+          <timeWeight>1.0</timeWeight>
+        </arrival>
+      </origin>
+      <magnitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/magnitude">
+        <mag>
+          <value>1.2</value>
+        </mag>
+        <type>ML</type>
+        <originID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032257</originID>
+        <stationCount>5</stationCount>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text> (Scherbaum-Stoll ML formula)</text>
+        </comment>
+        <creationInfo>
+          <author>IPEC</author>
+        </creationInfo>
+      </magnitude>
+      <stationMagnitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/station_magnitude/19692975">
+        <originID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032257</originID>
+        <mag>
+          <value>1.0</value>
+        </mag>
+        <amplitudeID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19692975</amplitudeID>
+        <waveformID stationCode="MORC"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/station_magnitude/19692978">
+        <originID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032257</originID>
+        <mag>
+          <value>1.3</value>
+        </mag>
+        <amplitudeID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19692978</amplitudeID>
+        <waveformID stationCode="VRAC"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/station_magnitude/19692980">
+        <originID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032257</originID>
+        <mag>
+          <value>1.3</value>
+        </mag>
+        <amplitudeID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19692980</amplitudeID>
+        <waveformID stationCode="KRUC"></waveformID>
+      </stationMagnitude>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692970">
+        <time>
+          <value>2024-09-01T12:33:32.774000Z</value>
+        </time>
+        <waveformID stationCode="MORC"></waveformID>
+        <backazimuth>
+          <value>85.7</value>
+        </backazimuth>
+        <onset>emergent</onset>
+        <phaseHint>Pg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692975">
+        <time>
+          <value>2024-09-01T12:33:40.556000Z</value>
+        </time>
+        <waveformID stationCode="MORC"></waveformID>
+        <backazimuth>
+          <value>85.7</value>
+        </backazimuth>
+        <onset>questionable</onset>
+        <phaseHint>Sg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692976">
+        <time>
+          <value>2024-09-01T12:33:41.838000Z</value>
+        </time>
+        <waveformID stationCode="JAVC"></waveformID>
+        <backazimuth>
+          <value>30.8</value>
+        </backazimuth>
+        <onset>impulsive</onset>
+        <phaseHint>Pg</phaseHint>
+        <evaluationMode>automatic</evaluationMode>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text> (Qual flag and SNR modified for test)</text>
+        </comment>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692977">
+        <time>
+          <value>2024-09-01T12:33:45.474000Z</value>
+        </time>
+        <waveformID stationCode="VRAC"></waveformID>
+        <backazimuth>
+          <value>67.4</value>
+        </backazimuth>
+        <onset>emergent</onset>
+        <phaseHint>Pg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692978">
+        <time>
+          <value>2024-09-01T12:34:03.009000Z</value>
+        </time>
+        <waveformID stationCode="VRAC"></waveformID>
+        <backazimuth>
+          <value>67.4</value>
+        </backazimuth>
+        <onset>emergent</onset>
+        <phaseHint>Sg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692983">
+        <time>
+          <value>2024-09-01T12:33:49.149000Z</value>
+        </time>
+        <waveformID stationCode="KRUC"></waveformID>
+        <backazimuth>
+          <value>60.9</value>
+        </backazimuth>
+        <onset>emergent</onset>
+        <phaseHint>Pg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692980">
+        <time>
+          <value>2024-09-01T12:34:10.074000Z</value>
+        </time>
+        <waveformID stationCode="KRUC"></waveformID>
+        <backazimuth>
+          <value>60.9</value>
+        </backazimuth>
+        <onset>emergent</onset>
+        <phaseHint>Sg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+      </pick>
+      <amplitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19692975">
+        <genericAmplitude>
+          <value>4.7e-09</value>
+        </genericAmplitude>
+        <unit>m</unit>
+        <period>
+          <value>0.2</value>
+        </period>
+        <snr>1.0</snr>
+        <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692975</pickID>
+        <waveformID stationCode="MORC"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19692978">
+        <genericAmplitude>
+          <value>3e-09</value>
+        </genericAmplitude>
+        <unit>m</unit>
+        <period>
+          <value>0.23</value>
+        </period>
+        <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692978</pickID>
+        <waveformID stationCode="VRAC"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19692980">
+        <genericAmplitude>
+          <value>2.3e-09</value>
+        </genericAmplitude>
+        <unit>m</unit>
+        <period>
+          <value>0.21</value>
+        </period>
+        <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19692980</pickID>
+        <waveformID stationCode="KRUC"></waveformID>
+      </amplitude>
+    </event>
+    <event publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/event/2032696">
+      <preferredOriginID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032696</preferredOriginID>
+      <type>induced or triggered event</type>
+      <typeCertainty>suspected</typeCertainty>
+      <description>
+        <text>CZECH REPUBLIC, OSTRAVA</text>
+        <type>region name</type>
+      </description>
+      <origin publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032696">
+        <time>
+          <value>2024-09-10T00:25:55.180000Z</value>
+          <uncertainty>0.31</uncertainty>
+        </time>
+        <latitude>
+          <value>49.8293</value>
+        </latitude>
+        <longitude>
+          <value>18.5549</value>
+        </longitude>
+        <depth>
+          <value>1000.0</value>
+        </depth>
+        <depthType>operator assigned</depthType>
+        <timeFixed>false</timeFixed>
+        <epicenterFixed>false</epicenterFixed>
+        <quality>
+          <usedPhaseCount>13</usedPhaseCount>
+          <usedStationCount>9</usedStationCount>
+          <standardError>0.12</standardError>
+          <azimuthalGap>280.0</azimuthalGap>
+          <minimumDistance>0.27</minimumDistance>
+          <maximumDistance>1.61</maximumDistance>
+        </quality>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text>location method: inversion</text>
+        </comment>
+        <creationInfo>
+          <author>IPEC</author>
+        </creationInfo>
+        <originUncertainty>
+          <preferredDescription>uncertainty ellipse</preferredDescription>
+          <minHorizontalUncertainty>1600.0</minHorizontalUncertainty>
+          <maxHorizontalUncertainty>2100.0</maxHorizontalUncertainty>
+          <azimuthMaxHorizontalUncertainty>62.0</azimuthMaxHorizontalUncertainty>
+          <confidenceLevel>90.0</confidenceLevel>
+        </originUncertainty>
+      </origin>
+      <magnitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/magnitude">
+        <mag>
+          <value>1.0</value>
+        </mag>
+        <type>ML</type>
+        <originID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/origin/2032696</originID>
+        <stationCount>5</stationCount>
+        <creationInfo>
+          <author>IPEC</author>
+        </creationInfo>
+      </magnitude>
+      <stationMagnitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/station_magnitude/19696328">
+        <originID>None</originID>
+        <mag>
+          <value>1.0</value>
+        </mag>
+        <amplitudeID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19696328</amplitudeID>
+        <waveformID stationCode="MORC"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/station_magnitude/19696332">
+        <originID>None</originID>
+        <mag>
+          <value>0.4</value>
+        </mag>
+        <amplitudeID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19696332</amplitudeID>
+        <waveformID stationCode="VRAC"></waveformID>
+      </stationMagnitude>
+      <stationMagnitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/station_magnitude/19696333">
+        <originID>None</originID>
+        <mag>
+          <value>1.1</value>
+        </mag>
+        <amplitudeID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19696333</amplitudeID>
+        <waveformID stationCode="KRUC"></waveformID>
+      </stationMagnitude>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696327">
+        <time>
+          <value>2024-09-10T00:26:07.944000Z</value>
+        </time>
+        <waveformID stationCode="MORC"></waveformID>
+        <backazimuth>
+          <value>85.0</value>
+        </backazimuth>
+        <onset>emergent</onset>
+        <phaseHint>Pg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text>station-to-event distance (degrees): "  0.66", event-to-station azimuth (degrees): "265.8", time residual (seconds): "  0.1", azimuth residual (degrees): "     ", slowness residual (seconds/degree): "     ", TAS flag: "T__"</text>
+        </comment>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696328">
+        <time>
+          <value>2024-09-10T00:26:15.590000Z</value>
+        </time>
+        <waveformID stationCode="MORC"></waveformID>
+        <backazimuth>
+          <value>85.0</value>
+        </backazimuth>
+        <onset>emergent</onset>
+        <phaseHint>Sg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text>station-to-event distance (degrees): "  0.66", event-to-station azimuth (degrees): "265.8", time residual (seconds): " -0.3", azimuth residual (degrees): "     ", slowness residual (seconds/degree): "     ", TAS flag: "T__"</text>
+        </comment>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696329">
+        <time>
+          <value>2024-09-10T00:26:16.977000Z</value>
+        </time>
+        <waveformID stationCode="JAVC"></waveformID>
+        <backazimuth>
+          <value>30.4</value>
+        </backazimuth>
+        <onset>emergent</onset>
+        <phaseHint>Pg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text>station-to-event distance (degrees): "  1.13", event-to-station azimuth (degrees): "211.1", time residual (seconds): " -0.0", azimuth residual (degrees): "     ", slowness residual (seconds/degree): "     ", TAS flag: "T__"</text>
+        </comment>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696330">
+        <time>
+          <value>2024-09-10T00:26:20.821000Z</value>
+        </time>
+        <waveformID stationCode="VRAC"></waveformID>
+        <backazimuth>
+          <value>67.0</value>
+        </backazimuth>
+        <onset>emergent</onset>
+        <phaseHint>Pg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text>station-to-event distance (degrees): "  1.38", event-to-station azimuth (degrees): "248.5", time residual (seconds): " -0.1", azimuth residual (degrees): "     ", slowness residual (seconds/degree): "     ", TAS flag: "T__"</text>
+        </comment>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696332">
+        <time>
+          <value>2024-09-10T00:26:38.476000Z</value>
+        </time>
+        <waveformID stationCode="VRAC"></waveformID>
+        <backazimuth>
+          <value>67.0</value>
+        </backazimuth>
+        <onset>emergent</onset>
+        <phaseHint>Sg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text>station-to-event distance (degrees): "  1.38", event-to-station azimuth (degrees): "248.5", time residual (seconds): "  0.1", azimuth residual (degrees): "     ", slowness residual (seconds/degree): "     ", TAS flag: "T__"</text>
+        </comment>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696331">
+        <time>
+          <value>2024-09-10T00:26:24.327000Z</value>
+        </time>
+        <waveformID stationCode="KRUC"></waveformID>
+        <backazimuth>
+          <value>60.6</value>
+        </backazimuth>
+        <onset>emergent</onset>
+        <phaseHint>Pg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text>station-to-event distance (degrees): "  1.61", event-to-station azimuth (degrees): "242.2", time residual (seconds): "  0.0", azimuth residual (degrees): "     ", slowness residual (seconds/degree): "     ", TAS flag: "T__"</text>
+        </comment>
+      </pick>
+      <pick publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696333">
+        <time>
+          <value>2024-09-10T00:26:45.547000Z</value>
+        </time>
+        <waveformID stationCode="KRUC"></waveformID>
+        <backazimuth>
+          <value>60.6</value>
+        </backazimuth>
+        <onset>emergent</onset>
+        <phaseHint>Sg</phaseHint>
+        <evaluationMode>manual</evaluationMode>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text>station-to-event distance (degrees): "  1.61", event-to-station azimuth (degrees): "242.2", time residual (seconds): "  0.1", azimuth residual (degrees): "     ", slowness residual (seconds/degree): "     ", TAS flag: "T__"</text>
+        </comment>
+        <comment id="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/comment">
+          <text> (incorrect time for test)</text>
+        </comment>
+      </pick>
+      <amplitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19696328">
+        <genericAmplitude>
+          <value>4.9e-09</value>
+        </genericAmplitude>
+        <unit>m</unit>
+        <period>
+          <value>0.29</value>
+        </period>
+        <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696328</pickID>
+        <waveformID stationCode="MORC"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19696332">
+        <genericAmplitude>
+          <value>4e-10</value>
+        </genericAmplitude>
+        <unit>m</unit>
+        <period>
+          <value>0.02</value>
+        </period>
+        <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696332</pickID>
+        <waveformID stationCode="VRAC"></waveformID>
+      </amplitude>
+      <amplitude publicID="smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/amplitude/19696333">
+        <genericAmplitude>
+          <value>1.5e-09</value>
+        </genericAmplitude>
+        <unit>m</unit>
+        <period>
+          <value>0.24</value>
+        </period>
+        <pickID>smi:local/3118602f-2ced-4e95-ba1d-53964ecd9da2/pick/19696333</pickID>
+        <waveformID stationCode="KRUC"></waveformID>
+      </amplitude>
+    </event>
+  </eventParameters>
+</q:quakeml>
