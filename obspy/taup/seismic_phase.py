@@ -1721,7 +1721,7 @@ tokenizer = re.Scanner([
     # Composite legs.
     (r"Pn|Sn|Pg|Sg|Pb|Sb|Pdiff|Sdiff|Kdiff|Ped|Sed", self_tokenizer),
     # Reflections.
-    (r"([\^v])([mci]|\.?\d+\.?\d*)", self_tokenizer),
+    (r"[\^v](?:[mci]|\.?\d+\.?\d*)", self_tokenizer),
     # Invalid phases.
     (r"[PS][ps]", wrong_phase),
     # Single legs.
