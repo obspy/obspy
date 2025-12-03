@@ -9,6 +9,7 @@
 name: tests
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
   push:
     branches:
       - master
@@ -24,7 +25,7 @@ env:
 
 # Cancel previous runs
 concurrency:
-  group: tests-${{ github.event.pull_request.number || github.run_id }}
+  group: tests-${{ github.event.pull_request.number || github.run_id }}-${{ github.event.action }}-${{ github.event.label.name || 'no-label' }}
   cancel-in-progress: true
 
 jobs:
@@ -33,7 +34,7 @@ jobs:
   # Only run for PRs.
   lint_code:
     name: setup code linter
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request'  && (github.event.action != 'labeled' || github.event.label.name == 'test_network')
     runs-on: ubuntu-latest
     steps:
       - name: set status with url of test report website
@@ -82,7 +83,7 @@ jobs:
 
   # Runs the tests on combinations of the supported python/os matrix.
   run_tests:
-    if: github.event_name == 'push' || !contains(github.event.pull_request.labels.*.name, 'no_ci')
+    if: (github.event_name == 'push' || !contains(github.event.pull_request.labels.*.name, 'no_ci')) && (github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'test_network')
     strategy:
       fail-fast: false
       matrix:
