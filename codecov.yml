@@ -29,3 +29,9 @@ coverage:
 
 # no comments in PRs
 comment: false
+
+flags:
+  unittests:
+    carryforward: true
+  unittests_network:
+    carryforward: true

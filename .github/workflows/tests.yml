@@ -186,7 +186,7 @@ jobs:
 
       - name: upload coverage
         uses: codecov/codecov-action@v5.5.1
-        if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure')
+        if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') && !contains(matrix.options, 'network')
         with:
           flags: unittests
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -194,6 +194,20 @@ jobs:
           files: ${{ github.workspace }}/coverage.xml
           disable_search: true
           fail_ci_if_error: true
+
+      - name: upload coverage (network tests)
+        uses: codecov/codecov-action@v5.5.1
+        if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') && contains(matrix.options, 'network')
+        with:
+          flags: unittests_network
+          token: ${{ secrets.CODECOV_TOKEN }}
+          name: codecov-umbrella
+          files: ${{ github.workspace }}/coverage.xml
+          disable_search: true
+          fail_ci_if_error: true
+
+
+
 
       - name: optionally upload image directory
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'upload_images')
