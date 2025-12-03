@@ -22,21 +22,25 @@ class TestSeedLinkConnection():
         conn = SeedLinkConnection()
 
         # Check adding multiple streams (#3)
-        conn.add_stream('BW', 'RJOB', 'EHZ', seqnum=-1, timestamp=None)
-        conn.add_stream('BW', 'RJOB', 'EHN', seqnum=-1, timestamp=None)
+        conn.add_stream('BW', 'RJOB', 'EHZ', seqnum=-1,
+                        timestamp=None)
+        conn.add_stream('BW', 'RJOB', 'EHN', seqnum=-1,
+                        timestamp=None)
         assert not isinstance(conn.streams[0].get_selectors()[1], list)
 
         # Check if the correct Exception is raised (#4)
         try:
-            conn.negotiate_station(SLNetStation('BW', 'RJOB', None,
-                                                None, None))
+            conn.negotiate_station(SLNetStation('BW', 'RJOB',
+                                                None, None,
+                                                None))
         except Exception as e:
             assert isinstance(e, SeedLinkException)
 
         # Test if calling add_stream() with selectors_str=None still raises
         # (#5)
         try:
-            conn.add_stream('BW', 'RJOB', None, seqnum=-1, timestamp=None)
+            conn.add_stream('BW', 'RJOB', None,
+                            seqnum=-1, timestamp=None)
         except AttributeError:
             msg = 'Calling add_stream with selectors_str=None raised ' + \
                   'AttributeError'
@@ -98,14 +102,16 @@ class TestSeedLinkConnection():
         # 1. Setup initial connection with some streams and state
         conn1 = SeedLinkConnection()
         # Add stream 1: GE ISP (SEQ 100, specific time)
-        conn1.add_stream("GE", "ISP", "BHZ", 100, None)
+        conn1.add_stream("GE", "ISP", "BHZ", 100,
+                         None)
         # Manually set btime (normally set by update_stream/packets)
         from obspy import UTCDateTime
         time1 = UTCDateTime("2023-01-01T12:00:00.0Z")
         conn1.streams[0].btime = time1
 
         # Add stream 2: NL HGN (SEQ 200, different time)
-        conn1.add_stream("NL", "HGN", None, 200, None)
+        conn1.add_stream("NL", "HGN", None, 200,
+                         None)
         time2 = UTCDateTime("2023-01-02T13:30:00.0Z")
         conn1.streams[1].btime = time2
 
@@ -113,7 +119,8 @@ class TestSeedLinkConnection():
 
         # 2. Save state
         saved_count = conn1.save_state(str(state_file))
-        assert saved_count == 0  # save_state returns 0, not count of streams (based on code)
+        # save_state returns 0, not count of streams (based on code)
+        assert saved_count == 0
         # Check if file exists and has content
         assert state_file.check()
         content = state_file.read()
@@ -123,10 +130,13 @@ class TestSeedLinkConnection():
         # 3. Recover state with a new connection
         conn2 = SeedLinkConnection()
         # Add streams with default/empty state first
-        conn2.add_stream("GE", "ISP", "BHZ", -1, None)
-        conn2.add_stream("NL", "HGN", None, -1, None)
+        conn2.add_stream("GE", "ISP", "BHZ", -1,
+                         None)
+        conn2.add_stream("NL", "HGN", None, -1,
+                         None)
         # Add a stream that is NOT in the state file (should remain unchanged)
-        conn2.add_stream("MN", "AQU", None, -1, None)
+        conn2.add_stream("MN", "AQU", None, -1,
+                         None)
 
         conn2.statefile = str(state_file)
         recovered_count = conn2.recover_state(str(state_file))
