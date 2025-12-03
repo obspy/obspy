@@ -83,7 +83,7 @@ jobs:
 
   # Runs the tests on combinations of the supported python/os matrix.
   run_tests:
-    if: github.event_name == 'push' || !contains(github.event.pull_request.labels.*.name, 'no_ci')
+    if: (github.event_name == 'push' || !contains(github.event.pull_request.labels.*.name, 'no_ci')) && (github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'test_network')
     strategy:
       fail-fast: false
       matrix:
