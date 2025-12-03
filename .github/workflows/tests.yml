@@ -25,7 +25,7 @@ env:
 
 # Cancel previous runs
 concurrency:
-  group: tests-${{ github.event.pull_request.number || github.run_id }}
+  group: tests-${{ github.event.pull_request.number || github.run_id }}-${{ github.event.action }}-${{ github.event.label.name || 'no-label' }}
   cancel-in-progress: true
 
 jobs:

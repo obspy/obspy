@@ -11,7 +11,7 @@ on:
     types: [published]
 
 concurrency:
-  group: wheels-${{ github.event_name }}-${{ github.ref_name }}-${{ github.event.pull_request.number }}
+  group: wheels-${{ github.event_name }}-${{ github.ref_name }}-${{ github.event.pull_request.number }}-${{ github.event.action }}-${{ github.event.label.name || 'no-label' }}
   cancel-in-progress: true
 
 jobs:
