@@ -85,6 +85,11 @@ Changes:
    * fix potential out of bounds array access in AR picker (see #1801)
    * fix a small issue in evalresp linked to picky new gcc (see #3578)
    * array analysis: minor docstring fix in "get_geometry()" (see #3516, #3606)
+ - obspy.signal.spectral_estimation.PPSD:
+   * Changed the moment instrument responses are calculated by evalresp: they
+     are now preloaded at PPSD instantiation time, and no longer calculated
+     for each time window! (see #3589)
+
 
 maintenance_1.4.x
 =================

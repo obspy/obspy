@@ -19,6 +19,7 @@ Various Routines Related to Spectral Estimation
 """
 import bisect
 import glob
+from io import BytesIO
 import math
 from pathlib import Path
 import warnings
@@ -30,9 +31,10 @@ from matplotlib.ticker import FormatStrFormatter
 from matplotlib.patheffects import withStroke
 
 from obspy import Stream, Trace, UTCDateTime, __version__
+from obspy import read_inventory
 from obspy.core import Stats
 from obspy.imaging.scripts.scan import compress_start_end
-from obspy.core.inventory import Inventory
+from obspy.core.inventory import Inventory, Response
 from obspy.core.util import AttribDict
 from obspy.core.util.base import MATPLOTLIB_VERSION
 from obspy.core.util.obspy_types import ObsPyException
@@ -41,7 +43,7 @@ from obspy.imaging.util import _set_xaxis_obspy_dates
 from obspy.io.xseed import Parser
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.util import prev_pow_2
-from obspy.signal.invsim import paz_to_freq_resp, evalresp
+from obspy.signal.invsim import paz_to_freq_resp
 
 
 dtiny = np.finfo(0.0).tiny
@@ -468,6 +470,12 @@ class PPSD(object):
         self._db_bin_edges = np.linspace(db_bins[0], db_bins[1],
                                          num_bins + 1, endpoint=True)
 
+        # Preload evalresp responses for the current seed_id
+        if self.metadata is not None:
+            self.responses = self._preload_responses()
+        else:
+            self.responses = None
+
         # lists related to persistent processed data
         self._times_processed = []
         self._times_data = []
@@ -629,6 +637,78 @@ class PPSD(object):
     def current_times_used(self):
         self.__check_histogram()
         return [UTCDateTime(ns=ns) for ns in self._current_times_used]
+
+    def _preload_responses(self):
+        result = []
+        if isinstance(self.metadata, (Inventory, str, Parser)):
+            if isinstance(self.metadata, str):
+                inv = read_inventory(self.metadata)
+            elif isinstance(self.metadata, Parser):
+                inv = read_inventory(BytesIO(self.metadata.get_seed()))
+            else:
+                inv = self.metadata
+            for network in inv.networks:
+                for station in network.stations:
+                    for channel in station.channels:
+                        seed_id = (f"{network.code}.{station.code}."
+                                   f"{channel.location_code}.{channel.code}")
+                        if seed_id != self.id:
+                            continue
+                        try:
+                            resp = inv.get_response(seed_id,
+                                                    channel.start_date + 10)
+                            result.append({
+                                "seed_id": seed_id,
+                                "start_time": channel.start_date or
+                                UTCDateTime("1900-01-01"),
+                                "end_time": channel.end_date or
+                                UTCDateTime("2099-01-01"),
+                                "response": resp.get_evalresp_response(
+                                    t_samp=self.delta, nfft=self.nfft,
+                                    output="VEL")[0]
+                            })
+                        except Exception as e:
+                            msg = (f"Could not get response for {seed_id}"
+                                   f"- {channel.start_date},"
+                                   f"errror {e}")
+                            warnings.warn(msg)
+                            continue
+
+        elif isinstance(self.metadata, dict):
+            paz = self.metadata
+            result = []
+            result.append({"seed_id": self.id,
+                           "start_time": UTCDateTime("1900-01-01"),
+                           "end_time": UTCDateTime("2099-01-01"),
+                           "response": paz_to_freq_resp(paz['poles'],
+                                                        paz['zeros'],
+                                                        paz['gain'] *
+                                                        paz['sensitivity'],
+                                                        self.delta,
+                                                        nfft=self.nfft)})
+
+        elif isinstance(self.metadata, Response):
+            resp = self.metadata
+            result = []
+            try:
+                response = resp.get_evalresp_response(t_samp=self.delta,
+                                                      nfft=self.nfft,
+                                                      output="VEL")[0]
+            except Exception as e:
+                msg = (f"Could not get response: "
+                       f"error {e}")
+                warnings.warn(msg)
+                response = None
+            result.append({"seed_id": self.id,
+                           "start_time": UTCDateTime("1900-01-01"),
+                           "end_time": UTCDateTime("2099-01-01"),
+                           "response": response})
+
+        else:
+            msg = f"Unexpected type for `metadata`: {type(self.metadata)}"
+            raise TypeError(msg)
+
+        return result
 
     def _setup_period_binning(self, period_smoothing_width_octaves,
                               period_step_octaves, period_limits):
@@ -1269,56 +1349,13 @@ class PPSD(object):
         # first, to save some time, tried to do this in __init__ like:
         #   self._get_response = self._get_response_from_inventory
         # but that makes the object non-picklable
-        if isinstance(self.metadata, Inventory):
-            return self._get_response_from_inventory(tr)
-        elif isinstance(self.metadata, Parser):
-            return self._get_response_from_parser(tr)
-        elif isinstance(self.metadata, dict):
-            return self._get_response_from_paz_dict(tr)
-        elif isinstance(self.metadata, str):
-            return self._get_response_from_resp(tr)
+        match = next((d for d in self.responses if d["start_time"]
+                      <= tr.stats.starttime <= d["end_time"]), None)
+        if match:
+            return match["response"]
         else:
-            msg = "Unexpected type for `metadata`: %s" % type(self.metadata)
-            raise TypeError(msg)
-
-    def _get_response_from_inventory(self, tr):
-        inventory = self.metadata
-        response = inventory.get_response(self.id, tr.stats.starttime)
-        resp, _ = response.get_evalresp_response(
-            t_samp=self.delta, nfft=self.nfft, output="VEL")
-        return resp
-
-    def _get_response_from_parser(self, tr):
-        parser = self.metadata
-        resp_key = "RESP." + self.id
-        for key, resp_file in parser.get_resp():
-            if key == resp_key:
-                break
-        else:
-            msg = "Response for %s not found in Parser" % self.id
+            msg = "No matching response found for %s" % tr
             raise ValueError(msg)
-        resp_file.seek(0, 0)
-        resp = evalresp(t_samp=self.delta, nfft=self.nfft,
-                        filename=resp_file, date=tr.stats.starttime,
-                        station=self.station, channel=self.channel,
-                        network=self.network, locid=self.location,
-                        units="VEL", freq=False, debug=False)
-        return resp
-
-    def _get_response_from_paz_dict(self, tr):  # @UnusedVariable
-        paz = self.metadata
-        resp = paz_to_freq_resp(paz['poles'], paz['zeros'],
-                                paz['gain'] * paz['sensitivity'],
-                                self.delta, nfft=self.nfft)
-        return resp
-
-    def _get_response_from_resp(self, tr):
-        resp = evalresp(t_samp=self.delta, nfft=self.nfft,
-                        filename=self.metadata, date=tr.stats.starttime,
-                        station=self.station, channel=self.channel,
-                        network=self.network, locid=self.location,
-                        units="VEL", freq=False, debug=False)
-        return resp
 
     def get_percentile(self, percentile=50):
         """
