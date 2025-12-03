@@ -29,12 +29,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Check if workflow should run - always runs quickly to provide immediate feedback
+  check_run_conditions:
+    name: check run conditions
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Check if workflow should run
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.action }}" != "labeled" ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.label.name }}" == "test_network" ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
   # Simply applies flake8 to the codebase.
   # Additionally adds link to tests.obspy.org to Githubs checks tab.
   # Only run for PRs.
   lint_code:
     name: setup code linter
-    if: github.event_name == 'pull_request'  && (github.event.action != 'labeled' || github.event.label.name == 'test_network')
+    needs: check_run_conditions
+    if: needs.check_run_conditions.outputs.should_run == 'true' && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: set status with url of test report website
@@ -83,7 +104,8 @@ jobs:
 
   # Runs the tests on combinations of the supported python/os matrix.
   run_tests:
-    if: (github.event_name == 'push' || !contains(github.event.pull_request.labels.*.name, 'no_ci')) && (github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'test_network')
+    needs: check_run_conditions
+    if: needs.check_run_conditions.outputs.should_run == 'true' && (github.event_name == 'push' || !contains(github.event.pull_request.labels.*.name, 'no_ci'))
     strategy:
       fail-fast: false
       matrix:
