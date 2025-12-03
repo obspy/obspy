@@ -1004,17 +1004,29 @@ class Response(ComparingObject):
         :param frequency: Choose frequency at which to calculate the
             sensitivity. If not given it will be chosen automatically.
         """
-        if not hasattr(self, "instrument_sensitivity"):
-            msg = "Could not find an instrument sensitivity - will not " \
-                  "recalculate the overall sensitivity."
+        has_sensitivity = hasattr(self, "instrument_sensitivity") and \
+            self.instrument_sensitivity is not None
+        has_polynomial = hasattr(self, "instrument_polynomial") and \
+            self.instrument_polynomial is not None
+
+        if not has_sensitivity and not has_polynomial:
+            msg = "Could not find an instrument sensitivity or polynomial" \
+                  " will not recalculate the overall sensitivity."
             raise ValueError(msg)
 
-        if not self.instrument_sensitivity.input_units:
+        if has_sensitivity:
+            input_units = self.instrument_sensitivity.input_units
+        elif has_polynomial:
+            input_units = self.instrument_polynomial.input_units
+        else:
+            input_units = None
+
+        if not input_units:
             msg = "Could not determine input units - will not " \
                   "recalculate the overall sensitivity."
             raise ValueError(msg)
 
-        i_u = self.instrument_sensitivity.input_units
+        i_u = input_units
 
         unit_map = {
             "DISP": ["M"],
@@ -1041,10 +1053,19 @@ class Response(ComparingObject):
             # lookup normalization frequency of sensor's first stage it should
             # be in the flat part of the response
             stage_one = self.response_stages[0]
-            try:
-                frequency = stage_one.normalization_frequency
-            except AttributeError:
-                pass
+
+            # Handle PolynomialResponseStage
+            # which doesn't have normalization_frequency
+            if isinstance(stage_one, PolynomialResponseStage):
+                # Use the center of the frequency bounds for polynomial stages
+                frequency = (stage_one.frequency_lower_bound +
+                             stage_one.frequency_upper_bound) / 2
+            else:
+                try:
+                    frequency = stage_one.normalization_frequency
+                except AttributeError:
+                    pass
+
             for stage in self.response_stages[::-1]:
                 # determine sampling rate
                 try:
@@ -1055,6 +1076,7 @@ class Response(ComparingObject):
                     continue
             else:
                 sampling_rate = None
+
             if sampling_rate:
                 # if sensor's normalization frequency is above 0.5 * nyquist,
                 # use that instead (e.g. to avoid computing an overall
@@ -1074,8 +1096,29 @@ class Response(ComparingObject):
         freq, gain = self._get_overall_sensitivity_and_gain(
             output=unit, frequency=float(frequency))
 
-        self.instrument_sensitivity.value = gain
-        self.instrument_sensitivity.frequency = freq
+        if has_sensitivity:
+            self.instrument_sensitivity.value = gain
+            self.instrument_sensitivity.frequency = freq
+        elif has_polynomial:
+            if len(self.instrument_polynomial.coefficients) > 2:
+                msg = ("Cannot recalculate sensitivity for polynomial with"
+                       f" more than 2 coefficients "
+                       "(has {len(self.instrument_polynomial.coefficients)})")
+                raise ValueError(msg)
+
+            if not has_sensitivity:
+                self.instrument_sensitivity = InstrumentSensitivity(
+                    value=gain,
+                    frequency=freq,
+                    input_units=self.instrument_polynomial.input_units,
+                    output_units=self.instrument_polynomial.output_units,
+                    input_units_description=(
+                        self.instrument_polynomial.input_units_description
+                    ),
+                    output_units_description=(
+                        self.instrument_polynomial.output_units_description
+                    )
+                )
 
     def _get_overall_sensitivity_and_gain(
             self, frequency=None, output='VEL'):
@@ -1110,8 +1153,18 @@ class Response(ComparingObject):
         if frequency is None:
             # XXX is this safe enough, or should we lookup the stage sequence
             # XXX number explicitly?
-            frequency = self.response_stages[0].normalization_frequency
-        self.instrument_sensitivity.frequency = float(frequency)
+            if isinstance(self.response_stages[0], PolynomialResponseStage):
+                # Polynomial stages dont have normalization_frequency
+                frequency = (self.response_stages[0].frequency_lower_bound +
+                             self.response_stages[0].frequency_upper_bound) / 2
+                if frequency <= 0:
+                    frequency = 1.0
+            else:
+                frequency = self.response_stages[0].normalization_frequency
+
+        if self.instrument_sensitivity is not None:
+            self.instrument_sensitivity.frequency = float(frequency)
+
         response_at_frequency = self._call_eval_resp_for_frequencies(
             frequencies=[frequency], output=output,
             hide_sensitivity_mismatch_warning=True)[0][0]
@@ -1356,6 +1409,7 @@ class Response(ComparingObject):
                                   C.POINTER(ew.ComplexNumber))
                 pz.zeros = C.cast(C.pointer(zeros),
                                   C.POINTER(ew.ComplexNumber))
+
             elif isinstance(blockette, CoefficientsTypeResponseStage):
                 blkt = ew.Blkt()
                 # This type can have either an FIR or an IIR response. If
@@ -1400,6 +1454,7 @@ class Response(ComparingObject):
                         coeffs[i] = float(value)
                     coeff.denom = C.cast(C.pointer(coeffs),
                                          C.POINTER(C.c_double))
+
             elif isinstance(blockette, ResponseListResponseStage):
                 blkt = ew.Blkt()
                 blkt.type = ew.ENUM_FILT_TYPES["LIST"]
@@ -1484,10 +1539,47 @@ class Response(ComparingObject):
                     coeffs[i] = float(value)
                 fir.coeffs = C.cast(C.pointer(coeffs),
                                     C.POINTER(C.c_double))
+
             elif isinstance(blockette, PolynomialResponseStage):
-                msg = ("PolynomialResponseStage not yet implemented. "
-                       "Please contact the developers.")
-                raise NotImplementedError(msg)
+                num_poly_coeffs = len(blockette.coefficients)
+                if num_poly_coeffs == 1:
+                    # This is effectively a unity gain stage
+                    blkt = ew.Blkt()
+                    blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
+                    gain_blkt = blkt.blkt_info.gain
+                    gain_blkt.gain = 1.0
+                    gain_blkt.gain_freq = (blockette.frequency_lower_bound +
+                                           blockette.frequency_upper_bound) / 2
+                elif num_poly_coeffs == 2:
+                    # c0 is dc offset & c1 is gain
+                    c0 = float(blockette.coefficients[0])
+                    c1 = float(blockette.coefficients[1])
+
+                    # Create a gain blockette for the linear term
+                    blkt = ew.Blkt()
+                    blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
+                    gain_blkt = blkt.blkt_info.gain
+                    gain_blkt.gain = 1.0 / c1
+
+                    # Use the center frequency of the valid range?
+                    gain_blkt.gain_freq = (blockette.frequency_lower_bound +
+                                           blockette.frequency_upper_bound) / 2
+
+                    # DC offset (c0) is lost in frequency domain analysis
+                    # as it only affects the zero-frequency component.
+                    # This may be important for certain data! Warn?
+                    if c0 != 0.0:
+                        msg = ("PolynomialResponseStage "
+                               f"(stage {blockette.stage_sequence_number}) "
+                               f"has a DC offset of {c0:.6f} which is ignored"
+                               " in frequency domain calculations.")
+                        warnings.warn(msg)
+                else:
+                    msg = (f"PolynomialResponseStage for {num_poly_coeffs} "
+                           "coefficients not yet implemented. "
+                           "ObsPy still using evalresp!")
+                    raise NotImplementedError(msg)
+
             else:
                 # Otherwise it could be a gain only stage.
                 if blockette.stage_gain is not None and \
@@ -1584,21 +1676,20 @@ class Response(ComparingObject):
 
             stage_objects.append(st)
 
-        # Attach the instrument sensitivity as stage 0 at the end.
-        st = ew.Stage()
-        st.sequence_no = 0
-        st.input_units = 0
-        st.output_units = 0
-        blkt = ew.Blkt()
-        blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
-        gain_blkt = blkt.blkt_info.gain
-        gain_blkt.gain = self.instrument_sensitivity.value
-        # Set the sensitivity frequency - use 1.0 if not given. This is also
-        # what evalresp does.
-        gain_blkt.gain_freq = self.instrument_sensitivity.frequency \
-            if self.instrument_sensitivity.frequency else 0.0
-        st.first_blkt = C.pointer(blkt)
-        stage_objects.append(st)
+        # Attach the instrument sensitivity as stage 0 at the end, if available
+        if self.instrument_sensitivity is not None:
+            st = ew.Stage()
+            st.sequence_no = 0
+            st.input_units = 0
+            st.output_units = 0
+            blkt = ew.Blkt()
+            blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
+            gain_blkt = blkt.blkt_info.gain
+            gain_blkt.gain = self.instrument_sensitivity.value
+            gain_blkt.gain_freq = self.instrument_sensitivity.frequency \
+                if self.instrument_sensitivity.frequency else 0.0
+            st.first_blkt = C.pointer(blkt)
+            stage_objects.append(st)
 
         chan = ew.Channel()
         if not stage_objects:
@@ -1636,14 +1727,12 @@ class Response(ComparingObject):
             if rc:
                 e, m = ew.ENUM_ERROR_CODES[rc]
                 raise e('norm_resp: ' + m)
-
             rc = clibevresp._obspy_calc_resp(C.byref(chan), frequencies,
                                              len(frequencies),
                                              output, out_units, -1, 0, 0)
             if rc:
                 e, m = ew.ENUM_ERROR_CODES[rc]
                 raise e('calc_resp: ' + m)
-
             # XXX: We currently need to do this outside of evalresp since the
             # functions evaluating and setting the global scale factor variable
             # currently never get called
