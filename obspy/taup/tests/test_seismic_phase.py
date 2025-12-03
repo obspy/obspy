@@ -3,6 +3,7 @@
 """
 Tests the SeismicPhase class.
 """
+import re
 from pathlib import Path
 
 import pytest
@@ -109,3 +110,15 @@ class TestTauPySeismicPhase:
         for name in illegal_phase_names:
             with pytest.raises(TauModelError):
                 SeismicPhase(name, tau_model)
+
+    def test_tokenizer_patterns_use_no_capturing_groups(self):
+        """
+        Regression test for Python 3.13+ re.Scanner group handling.
+        """
+        from obspy.taup.seismic_phase import tokenizer
+
+        for pattern, _ in tokenizer.lexicon:
+            compiled = re.compile(pattern)
+            assert compiled.groups == 0, (
+                f"tokenizer pattern {pattern!r} should be non-capturing"
+            )
