@@ -41,12 +41,21 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.action }}" != "labeled" ]]; then
-            echo "should_run=true" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.label.name }}" == "test_network" ]]; then
-            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "Push event - should run"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            if [[ "${{ github.event.action }}" != "labeled" ]]; then
+              echo "should_run=true" >> $GITHUB_OUTPUT
+              echo "PR event (not labeled) - should run"
+            elif [[ "${{ github.event.label.name }}" == "test_network" ]] || [[ "${{ github.event.label.name }}" == "test_wheels" ]]; then
+              echo "should_run=true" >> $GITHUB_OUTPUT
+              echo "PR labeled with test_network or test_wheels - should run"
+            else
+              echo "should_run=false" >> $GITHUB_OUTPUT
+              echo "PR labeled with irrelevant label - should skip"
+            fi
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "Unknown event - should skip"
           fi
 
   # Simply applies flake8 to the codebase.
