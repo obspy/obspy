@@ -34,7 +34,7 @@ jobs:
   # Only run for PRs.
   lint_code:
     name: setup code linter
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request'  && (github.event.action != 'labeled' || github.event.label.name == 'test_network')
     runs-on: ubuntu-latest
     steps:
       - name: set status with url of test report website

@@ -70,7 +70,7 @@ jobs:
           name: wheel-${{ matrix.os }}-${{ matrix.build }}
 
   build_sdist:
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test_wheels')
+    if: (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test_wheels')) && (github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'test_wheels')
     name: build sdist
     runs-on: ubuntu-latest
     steps:
