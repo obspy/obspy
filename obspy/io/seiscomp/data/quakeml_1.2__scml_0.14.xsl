@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-QuakeML 1.2 to SCML (SeisComPML) 0.12 stylesheet converter
+QuakeML 1.2 to SCML (SeisComPML) 0.14 stylesheet converter
 
 Author:
     EOST (École et Observatoire des Sciences de la Terre)
@@ -17,8 +17,8 @@ Usage
 This stylesheet converts a QuakeML to a SCML document. It may be invoked using
 xalan or xsltproc:
 
-    xalan -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.12.xsl -out sc3ml.xml
-    xsltproc quakeml_1.2__sc3ml_0.12.xsl quakeml.xml > sc3ml.xml
+    xalan -in quakeml.xml -xsl quakeml_1.2__scml_0.14.xsl -out scml.xml
+    xsltproc quakeml_1.2__scml_0.14.xsl quakeml.xml > scml.xml
 
 Due to the QuakeML ID schema the public IDs used by QuakeML are rather long
 and may cause problems in SeisComP applications when displaying or processing
@@ -26,8 +26,8 @@ them. Especially the slash causes problems, e.g., when an event ID is used on
 the command line or in a directory structure. To remove the ID prefix during
 the conversion you may use the ID_PREFIX parameter:
 
-    xalan -param ID_PREFIX "smi:org.gfz-potsdam.de/geofon/" -in quakeml.xml -xsl quakeml_1.2__sc3ml_0.12.xsl -out scml.xml
-    xsltproc -stringparam ID_PREFIX smi:org.gfz-potsdam.de/geofon/ quakeml_1.2__sc3ml_0.12.xsl quakeml.xml > scml.xml
+    xalan -param ID_PREFIX "smi:org.gfz.de/geofon/" -in quakeml.xml -xsl quakeml_1.2__scml_0.14.xsl -out scml.xml
+    xsltproc -stringparam ID_PREFIX smi:org.gfz.de/geofon/ quakeml_1.2__scml_0.14.xsl quakeml.xml > scml.xml
 
 Other variable exist which control
   - the eventID format (BUILD_EVENT_ID),
@@ -205,12 +205,17 @@ Change log
     'semiIntermediateAxisLength' is already meter and does not need a
     conversion.
 
+* 18.11.2025:
+  - Version bump to SCML 0.14
+  - Change GFZ URL from gfz-potsdam.de to gfz.de
+  - Catalog element supported with SCML 0.14 is not available in QuakeML.
+
 -->
 <xsl:stylesheet version="1.0"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
         xmlns:ext="http://exslt.org/common"
-        xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.12"
+        xmlns="http://geofon.gfz.de/ns/seiscomp-schema/0.14"
         xmlns:qml="http://quakeml.org/xmlns/bed/1.2"
         xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"
         xmlns:catalog="http://anss.org/xmlns/catalog/0.1"
@@ -223,7 +228,7 @@ Change log
     -->
 
     <!-- Prefix to be removed from any publicID -->
-    <xsl:param name="ID_PREFIX" select="'smi:org.gfz-potsdam.de/geofon/'"/>
+    <xsl:param name="ID_PREFIX" select="'smi:org.gfz.de/geofon/'"/>
 
     <!-- PublicID representing an empty value -->
     <xsl:param name="ID_PREFIX_NA" select="concat($ID_PREFIX, 'NA')"/>
@@ -252,8 +257,8 @@ Change log
     <xsl:param name="EVENT_INFO_ID" select="0"/>
 
     <!-- Define some global variables -->
-    <xsl:variable name="version" select="'0.12'"/>
-    <xsl:variable name="schema" select="document('sc3ml_0.12.xsd')"/>
+    <xsl:variable name="version" select="'0.14'"/>
+    <xsl:variable name="schema" select="document('scml_0.14.xsd')"/>
     <xsl:variable name="PID" select="'publicID'"/>
 
     <!-- Define key to remove duplicates-->

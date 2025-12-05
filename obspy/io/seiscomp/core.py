@@ -18,13 +18,16 @@ from lxml import etree
 from obspy.io.quakeml.core import _xml_doc_from_anything
 
 
-# SCXML version for which an XSD file is available
-SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12', '0.13']
+# SCML version for which an XSD file is available
+SCHEMA_VERSION = ['0.7', '0.8', '0.9', '0.10',
+                  '0.11', '0.12', '0.13', '0.14']
+# from version 0.14 onwards "sc3ml" is officially dropped
+NEW_SCHEMA_VERSION = ['0.14']
 
 
-def _is_sc3ml(path_or_file_object):
+def _is_scml(path_or_file_object):
     """
-    Simple function checking if the passed object contains a valid scxml file
+    Simple function checking if the passed object contains a valid scml file
     according to the list of versions given in parameters. Returns True of
     False.
 
@@ -36,7 +39,7 @@ def _is_sc3ml(path_or_file_object):
     :type path_or_file_object: str
     :param path_or_file_object: File name or file like object.
     :rtype: bool
-    :return: `True` if file is a SCXML file.
+    :return: `True` if file is a SCML file.
     """
     if hasattr(path_or_file_object, "tell") and hasattr(path_or_file_object,
                                                         "seek"):
@@ -62,7 +65,7 @@ def _is_sc3ml(path_or_file_object):
         root = xmldoc
 
     match = re.match(
-        r'{http://geofon\.gfz-potsdam\.de/ns/seiscomp3-schema/([-+]?'
+        r'{http://geofon\.gfz(?:-potsdam)?\.de/ns/seiscomp3?-schema/([-+]?'
         r'[0-9]*\.?[0-9]+)}', root.tag)
 
     return match is not None
@@ -70,17 +73,17 @@ def _is_sc3ml(path_or_file_object):
 
 def validate(path_or_object, version=None, verbose=False):
     """
-    Check if the given file is a valid SCXML file.
+    Check if the given file is a valid SCML file.
 
     :type path_or_object: str
     :param path_or_object: File name or file like object. Can also be an etree
         element.
     :type version: str
-    :param version: Version of the SCXML schema to validate against.
+    :param version: Version of the SCML schema to validate against.
     :type verbose: bool
     :param verbose: Print error log if True.
     :rtype: bool
-    :return: `True` if SCXML file is valid.
+    :return: `True` if SCML file is valid.
     """
     if hasattr(path_or_object, "tell") and hasattr(path_or_object, "seek"):
         current_position = path_or_object.tell()
@@ -102,12 +105,12 @@ def validate(path_or_object, version=None, verbose=False):
     # Read version number from file
     if version is None:
         match = re.match(
-            r'{http://geofon\.gfz-potsdam\.de/ns/seiscomp3-schema/([-+]?'
+            r'{http://geofon\.gfz(?:-potsdam)?\.de/ns/seiscomp3?-schema/([-+]?'
             r'[0-9]*\.?[0-9]+)}', xmldoc.tag)
         try:
             version = match.group(1)
         except AttributeError:
-            raise ValueError("Not a SCXML compatible file or string.")
+            raise ValueError("Not a SCML compatible file or string.")
 
     if version not in SCHEMA_VERSION:
         raise ValueError('%s is not a supported version. Use one of these '
@@ -115,7 +118,10 @@ def validate(path_or_object, version=None, verbose=False):
                          % (version, ', '.join(SCHEMA_VERSION)))
 
     # Get the schema location.
-    xsd_filename = 'sc3ml_%s.xsd' % version
+    if version in NEW_SCHEMA_VERSION:
+        xsd_filename = 'scml_%s.xsd' % version
+    else:
+        xsd_filename = 'sc3ml_%s.xsd' % version
     schema_location = os.path.join(os.path.dirname(__file__), 'data',
                                    xsd_filename)
     xmlschema = etree.XMLSchema(etree.parse(schema_location))
@@ -124,7 +130,7 @@ def validate(path_or_object, version=None, verbose=False):
 
     # Pretty error printing if the validation fails.
     if verbose and valid is not True:
-        print("Error validating SCXML file:")
+        print("Error validating SCML file:")
         for entry in xmlschema.error_log:
             print("\t%s" % entry)
 

@@ -66,6 +66,15 @@ Changes:
  - obspy.io.seg2:
    * Less strict date/time parsing (#3283).
  - obspy.io.seiscomp:
+   * overhaul codebase towards "SCML" label instead of SC3ML
+     but SC3ML still works as a FORMAT kwarg (for now)
+   * add option to write different SCML catalog versions
+   * update/refresh XSL files to latest (2025)
+     Fixes origin/confidenceEllipsoid conversion. The unit for
+     'semiMajorAxisLength', 'semiMinorAxisLength' and
+     'semiIntermediateAxisLength' is already meter and does not need a
+     conversion.
+   * add seiscomp  scml 0.14 support, drop 0.6
    * add seiscomp scxml 0.13 support (see #3345)
  - obspy.io.stationxml:
    * Fix a bug writing the informational "description" field of instrument

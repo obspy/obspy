@@ -127,12 +127,12 @@ KEYWORDS = [
     'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS', 'PDAS',
     'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
     'REFTEK130', 'RG-1.6', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
-    'SAGE', 'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
-    'SEISAN', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
-    'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
-    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
-    'WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston', 'XML-SEED',
-    'XSEED']
+    'SAGE', 'scardec', 'scml', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2',
+    'SEG Y','SEISAN', 'Seismic Handler', 'seismology', 'seismogram',
+    'seismograms','shapefile', 'signal', 'slink', 'spectrogram', 'StationXML',
+    'taper','taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
+    'WaveServer','WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston',
+    'XML-SEED','XSEED']
 
 ENTRY_POINTS = {
     'console_scripts': [
@@ -323,6 +323,7 @@ ENTRY_POINTS = {
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
+        'SCML = obspy.io.seiscomp.event',        
         'SC3ML = obspy.io.seiscomp.event',
         'ZMAP = obspy.io.zmap.core',
         'MCHEDR = obspy.io.pde.mchedr',
@@ -351,10 +352,15 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.quakeml.core:_read_quakeml',
         'writeFormat = obspy.io.quakeml.core:_write_quakeml',
         ],
+    'obspy.plugin.event.SCML': [
+        'isFormat = obspy.io.seiscomp.core:_is_scml',
+        'readFormat = obspy.io.seiscomp.event:_read_scml',
+        'writeFormat = obspy.io.seiscomp.event:_write_scml',
+        ],
     'obspy.plugin.event.SC3ML': [
-        'isFormat = obspy.io.seiscomp.core:_is_sc3ml',
-        'readFormat = obspy.io.seiscomp.event:_read_sc3ml',
-        'writeFormat = obspy.io.seiscomp.event:_write_sc3ml',
+        'isFormat = obspy.io.seiscomp.core:_is_scml',
+        'readFormat = obspy.io.seiscomp.event:_read_scml',
+        'writeFormat = obspy.io.seiscomp.event:_write_scml',
         ],
     'obspy.plugin.event.MCHEDR': [
         'isFormat = obspy.io.pde.mchedr:_is_mchedr',
@@ -446,6 +452,7 @@ ENTRY_POINTS = {
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
         'INVENTORYXML = obspy.io.arclink.inventory',
+        'SCML = obspy.io.seiscomp.inventory',
         'SC3ML = obspy.io.seiscomp.inventory',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
@@ -465,9 +472,13 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.arclink.inventory:_is_inventory_xml',
         'readFormat = obspy.io.arclink.inventory:_read_inventory_xml',
         ],
+    'obspy.plugin.inventory.SCML': [
+        'isFormat = obspy.io.seiscomp.core:_is_scml',
+        'readFormat = obspy.io.seiscomp.inventory:_read_scml',
+        ],
     'obspy.plugin.inventory.SC3ML': [
-        'isFormat = obspy.io.seiscomp.core:_is_sc3ml',
-        'readFormat = obspy.io.seiscomp.inventory:_read_sc3ml',
+        'isFormat = obspy.io.seiscomp.core:_is_scml',
+        'readFormat = obspy.io.seiscomp.inventory:_read_scml',
         ],
     'obspy.plugin.inventory.SACPZ': [
         'writeFormat = obspy.io.sac.sacpz:_write_sacpz',

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.12" version="0.12">
+<seiscomp xmlns="http://geofon.gfz.de/ns/seiscomp-schema/0.14" version="0.14">
   <EventParameters>
     <event publicID="smi:local/event/200828VEqeMv">
       <preferredOriginID>smi:local/origin/200828zgnPN</preferredOriginID>
