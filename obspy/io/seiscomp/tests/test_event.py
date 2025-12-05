@@ -454,7 +454,8 @@ class TestEvent():
         catalog = _read_quakeml(filename)
 
         with NamedTemporaryFile() as tf:
-            catalog.write(tf, format='SCML', validate=True)
+            catalog.write(tf, format='SCML', validate=True,
+                          version='0.13')
             filepath_cmp = \
                 testdata['qml-example-1.2-RC3_write.sc3ml']
             assert filecmp.cmp(filepath_cmp, tf.name)
@@ -465,7 +466,7 @@ class TestEvent():
 
         with NamedTemporaryFile() as tf:
             catalog.write(tf, format='SC3ML', validate=True,
-                          event_removal=True)
+                          event_removal=True, version='0.13')
             filepath_cmp = \
                 testdata['qml-example-1.2-RC3_no_events.sc3ml']
             assert filecmp.cmp(filepath_cmp, tf.name)
@@ -475,16 +476,18 @@ class TestEvent():
         catalog = read_events(filename)
 
         with NamedTemporaryFile() as tf:
-            catalog.write(tf, format='SCML', validate=True)
+            catalog.write(tf, format='SCML', validate=True,
+                          version='0.13')
             assert filecmp.cmp(filename, tf.name)
 
     def test_read_and_write_scml_fields(self, testdata):
         """
         Test that the non-QuakeML nodes are correctly rewritten.
         """
-        filename = testdata['sc3ml_fields.sc3ml']
+        filename = testdata['scml_fields.scml']
         catalog = read_events(filename)
 
         with NamedTemporaryFile() as tf:
-            catalog.write(tf, format='SCML', validate=True)
+            catalog.write(tf, format='SCML', validate=True,
+                          version='0.14')
             assert filecmp.cmp(filename, tf.name)
