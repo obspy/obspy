@@ -19,7 +19,7 @@ from lxml import etree
 
 from obspy import read_events
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.io.quakeml.core import _read_quakeml,  _xml_doc_from_anything
+from obspy.io.quakeml.core import _read_quakeml
 from obspy.io.quakeml.core import _validate as _validate_quakeml
 from obspy.io.seiscomp.core import validate as validate_scml
 from obspy.io.seiscomp.event import (

@@ -23,8 +23,7 @@ from obspy.core.inventory import read_inventory
 from obspy.core.inventory.response import (CoefficientsTypeResponseStage,
                                            FIRResponseStage)
 from obspy.io.seiscomp.inventory import (
-    _count_complex, _parse_list_of_complex_string,
-    SCHEMA_NAMESPACE_BASE, OLD_NAMESPACE_BASE)
+    _count_complex, _parse_list_of_complex_string)
 
 
 class TestSCML():
