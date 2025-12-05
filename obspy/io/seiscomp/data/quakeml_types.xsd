@@ -12,4 +12,7 @@
             <xs:pattern value="(\s*\(\s*[+\-]?[0-9]+(\.[0-9]+)?([Ee][+\-][0-9]+)?\s*,\s*[+\-]?[0-9]+(\.[0-9]+)?([Ee][+\-][0-9]+)?\s*\)\s*)*"/>
         </xs:restriction>
     </xs:simpleType>
+    <xs:simpleType name="TimeArray">
+        <xs:list itemType="xs:dateTime"/>
+    </xs:simpleType>
 </xs:schema>

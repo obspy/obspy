@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-scxml/sc3ml events read and write support.
+scml (formerly sc3ml) events read and write support.
 
 :author:
     EOST (École et Observatoire des Sciences de la Terre)
@@ -17,17 +17,28 @@ import re
 from lxml import etree
 
 from obspy.io.quakeml.core import Pickler, Unpickler, _xml_doc_from_anything
-from obspy.io.seiscomp.core import validate as validate_scxml
+from obspy.io.seiscomp.core import validate as validate_scml
+
+# note that for schema 0.9 and below the following is NOT FIXED
+# but for legacy reason remains as-is.
+#
+#  * 26.07.2024:
+#    - Fix origin/confidenceEllipsoid conversion. The unit for
+#      'semiMajorAxisLength', 'semiMinorAxisLength' and
+#      'semiIntermediateAxisLength' is already meter and does not need a
+#      conversion.
+
+SCHEMA_VERSION = ['0.7', '0.8', '0.9', '0.10',
+                  '0.11', '0.12', '0.13', '0.14']
+# from version 0.14 onwards "sc3ml" is officially dropped
+NEW_SCHEMA_VERSION = ['0.14']
 
 
-SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12', '0.13']
-
-
-def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
+def _read_scml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     """
     Read a SeisComp XML file and returns a :class:`~obspy.core.event.Catalog`.
 
-    An XSLT file is used to convert the SCXML file to a QuakeML file. The
+    An XSLT file is used to convert the SCML file to a QuakeML file. The
     catalog is then generated using the QuakeML module.
 
     .. warning::
@@ -38,9 +49,9 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
         instead.
 
     :type filename: str
-    :param filename: SCXML file to be read.
+    :param filename: SCML file to be read.
     :type id_prefix: str
-    :param id_prefix: ID prefix. SCXML does not enforce any particular ID
+    :param id_prefix: ID prefix. SCML does not enforce any particular ID
         restriction, this ID prefix allows to convert the IDs to a well
         formatted QuakeML ID. You can modify the default ID prefix with the
         reverse DNS name of your institute.
@@ -56,38 +67,45 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     2011-03-11T05:46:24.120000Z | +38.297, +142.373
     2006-09-10T04:26:33.610000Z |  +9.614, +121.961
     """
-    scxml_doc = _xml_doc_from_anything(filename)
+    scml_doc = _xml_doc_from_anything(filename)
 
     match = re.match(
-        r'{http://geofon\.gfz-potsdam\.de/ns/seiscomp3-schema/([-+]?'
-        r'[0-9]*\.?[0-9]+)}', scxml_doc.tag)
+        r'{http://geofon\.gfz(?:-potsdam)?\.de/ns/seiscomp3?-schema/([-+]?'
+        r'[0-9]*\.?[0-9]+)}', scml_doc.tag)
 
     try:
         version = match.group(1)
     except AttributeError:
-        raise ValueError("Not a SCXML compatible file or string.")
+        raise ValueError("Not a SCML compatible file or string.")
     else:
         if version not in SCHEMA_VERSION:
-            message = ("Can't read SCXML version %s, ObsPy can deal with "
+            message = ("Can't read SCML version %s, ObsPy can handle "
                        "versions [%s].") % (
                 version, ', '.join(SCHEMA_VERSION))
             raise ValueError(message)
 
     xslt_filename = Path(__file__).parent / 'data'
-    xslt_filename = xslt_filename / ('sc3ml_%s__quakeml_1.2.xsl' % version)
+    if version in NEW_SCHEMA_VERSION:
+        xslt_filename = xslt_filename / f'scml_{version}__quakeml_1.2.xsl'
+        # this doesn't need to be set necessarily, but may as well stay in tune
+        id_prefix = 'smi:org.gfz.de/geofon/'
+    else:
+        xslt_filename = xslt_filename / f'sc3ml_{version}__quakeml_1.2.xsl'
 
     transform = etree.XSLT(etree.parse(str(xslt_filename)))
-    quakeml_doc = transform(scxml_doc,
+    quakeml_doc = transform(scml_doc,
                             ID_PREFIX=etree.XSLT.strparam(id_prefix))
 
     return Unpickler().load(io.BytesIO(quakeml_doc))
 
 
-def _write_sc3ml(catalog, filename, validate=False, verbose=False,
-                 event_removal=False, **kwargs):  # @UnusedVariable
+def _write_scml(catalog, filename, validate=False, verbose=False,
+                event_removal=False, version='0.12',
+                **kwargs):  # @UnusedVariable
     """
-    Write a SCXML 0.13 event file. Since a XSLT file is used to write the
-    SCXML file from a QuakeML file, the catalog is first converted in QuakeML.
+    Write a SCML event file at desired version. Since a XSLT file is used to
+    write the SCML file from a QuakeML file, the catalog is first
+    converted in QuakeML.
 
     .. warning::
         This function should NOT be called directly, it registers via the
@@ -100,34 +118,43 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
     :type filename: str or file
     :param filename: Filename to write or open file-like object
     :type validate: bool
-    :param validate: If True, the final SCXML file will be validated against
-        the SCXML schema file. Raises an AssertionError if the validation
+    :param validate: If True, the final SCML file will be validated against
+        the SCML schema file. Raises an AssertionError if the validation
         fails.
     :type verbose: bool
     :param verbose: Print validation error log if True.
     :type event_deletion: bool
     :param event_removal: If True, the event elements will be removed. This can
-        be useful to associate origins with scevent when injecting SCXML file
+        be useful to associate origins with scevent when injecting SCML file
         into seiscomp.
+    :type version: str
+    :param version: SCML version to output (default is 0.12 ~ SC 5.0)
     """
+    if version not in SCHEMA_VERSION:
+        raise ValueError('%s is not a supported version. Use one of these '
+                         'versions: [%s].'
+                         % (version, ', '.join(SCHEMA_VERSION)))
     nsmap_ = getattr(catalog, "nsmap", {})
     quakeml_doc = Pickler(nsmap=nsmap_).dumps(catalog)
     xslt_filename = Path(__file__).parent / 'data'
-    xslt_filename = xslt_filename / 'quakeml_1.2__sc3ml_0.13.xsl'
+    if version in NEW_SCHEMA_VERSION:
+        xslt_filename = xslt_filename / f'quakeml_1.2__scml_{version}.xsl'
+    else:
+        xslt_filename = xslt_filename / f'quakeml_1.2__sc3ml_{version}.xsl'
     transform = etree.XSLT(etree.parse(str(xslt_filename)))
-    scxml_doc = transform(etree.parse(io.BytesIO(quakeml_doc)))
+    scml_doc = transform(etree.parse(io.BytesIO(quakeml_doc)))
 
     # Remove events
     if event_removal:
-        for event in scxml_doc.xpath("//*[local-name()='event']"):
+        for event in scml_doc.xpath("//*[local-name()='event']"):
             event.getparent().remove(event)
 
-    if validate and not validate_scxml(io.BytesIO(scxml_doc), verbose=verbose):
-        raise AssertionError("The final SCXML file did not pass validation.")
+    if validate and not validate_scml(io.BytesIO(scml_doc), verbose=verbose):
+        raise AssertionError("The final SCML file did not pass validation.")
 
     # Open filehandler or use an existing file like object
     try:
         with open(filename, 'wb') as fh:
-            fh.write(scxml_doc)
+            fh.write(scml_doc)
     except TypeError:
-        filename.write(scxml_doc)
+        filename.write(scml_doc)

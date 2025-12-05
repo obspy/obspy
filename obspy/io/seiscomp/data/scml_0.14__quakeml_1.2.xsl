@@ -15,38 +15,38 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  *
- * SC3ML 0.6 to QuakeML 1.2 stylesheet converter
+ * SCML 0.14 to QuakeML 1.2 stylesheet converter
  * Author  : Stephan Herrnkind
  * Email   : stephan.herrnkind@gempa.de
- * Version : 2017.342.01
+ * Version : 2025.322.01
  *
  * ================
  * Usage
  * ================
  *
- * This stylesheet converts a SC3ML to a QuakeML document. It may be invoked
- * e.g. using xalan or xsltproc:
+ * This stylesheet converts a SCML to a QuakeML document. It may be invoked,
+ * e.g., using xalan or xsltproc:
  *
- *   xalan -in sc3ml.xml -xsl sc3ml_0.6__quakeml_1.2.xsl -out quakeml.xml
- *   xsltproc -o quakeml.xml sc3ml_0.6__quakeml_1.2.xsl sc3ml.xml
+ *   xalan -in scml.xml -xsl scml_0.14__quakeml_1.2.xsl -out quakeml.xml
+ *   xsltproc -o quakeml.xml scml_0.14__quakeml_1.2.xsl scml.xml
  *
  * You can also modify the default ID prefix with the reverse DNS name of your
  * institute by setting the ID_PREFIX param:
  *
- *   xalan -param ID_PREFIX "'smi:org.gfz-potsdam.de/geofon/'" -in sc3ml.xml -xsl sc3ml_0.6__quakeml_1.2.xsl -out quakeml.xml
- *   xsltproc -stringparam ID_PREFIX smi:org.gfz-potsdam.de/geofon/ -o quakeml.xml sc3ml_0.6__quakeml_1.2.xsl sc3ml.xml
+ *   xalan -param ID_PREFIX "'smi:org.gfz.de/geofon/'" -in scml.xml -xsl scml_0.14__quakeml_1.2.xsl -out quakeml.xml
+ *   xsltproc -stringparam ID_PREFIX smi:org.gfz.de/geofon/ -o quakeml.xml scml_0.14__quakeml_1.2.xsl scml.xml
  *
  * ================
  * Transformation
  * ================
  *
- * QuakeML and SC3ML are quite similar schemas. Nevertheless some differences
+ * QuakeML and SCML are quite similar schemas. Nevertheless some differences
  * exist:
  *
- *  - IDs : SC3ML does not enforce any particular ID restriction. An ID in
- *    SC3ML has no semantic, it simply must be unique. Hence QuakeML uses ID
- *    restrictions, a conversion of a SC3ML to a QuakeML ID must be performed:
- *    'sc3id' -> 'smi:org.gfz-potsdam.de/geofon/'. If no SC3ML ID is available
+ *  - IDs : SCML does not enforce any particular ID restriction. An ID in
+ *    SCML has no semantic, it simply must be unique. Hence QuakeML uses ID
+ *    restrictions, a conversion of a SCML to a QuakeML ID must be performed:
+ *    'scid' -> 'smi:org.gfz.de/geofon/'. If no SCML ID is available
  *    but QuakeML enforces one, a static ID value of 'NA' is used.
  *    If the ID starts with `smi:` or `quakeml:`, the ID is considered valid
  *    and let untouched. This can lead to an invalid generated file but avoid
@@ -71,7 +71,7 @@
  *  - Renaming of nodes: The following table lists the mapping of names between
  *    both schema:
  *
- *    Parent (SC3)     SC3 name                 QuakeML name
+ *    SeisComP Parent  SeisComP Element         QuakeML Element
  *    """""""""""""""""""""""""""""""""""""""""""""""""""""""
  *    seiscomp         EventParameters          eventParameters
  *    arrival          weight [copied to following fields if true]
@@ -89,29 +89,39 @@
  *
  *  - Enumerations: Both schema use enumerations. Numerous mappings are applied.
  *
- *  - Unit conversion: SC3ML uses kilometer for origin depth, origin
- *    uncertainty and confidence ellipsoid, QuakeML uses meter
+ *  - Unit conversion: SCML uses kilometer for origin depth and origin
+ *    uncertainty, QuakeML uses meter
  *
  *  - Unmapped nodes: The following nodes can not be mapped to the QuakeML
  *    schema, thus their data is lost:
  *
- *    Parent          Element lost
- *    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
- *    creationInfo    modificationTime
- *    momentTensor    method
- *                    stationMomentTensorContribution
- *                    status
- *                    cmtName
- *                    cmtVersion
- *                    phaseSetting
- *    eventParameters reading
- *    comment         start
- *    comment         end
- *    RealQuantity    pdf
- *    TimeQuality     pdf
+ *    Parent           Element lost
+ *    """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ *    creationInfo     modificationTime
+ *    momentTensor     method
+ *                     stationMomentTensorContribution
+ *                     status
+ *                     cmtName
+ *                     cmtVersion
+ *                     phaseSetting
+ *    stationMagnitude passedQC
+ *    EventParameters  catalog
+ *                     reading
+ *    comment          start
+ *    comment          end
+ *    RealQuantity     pdf
+ *    TimeQuality      pdf
+ *
+ *    The following nodes are appended as schema additions to the end of the
+ *    QuakeML document:
+ *
+ *    Parent           Element appended
+ *    """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ *    EventParameters  catalog
+ *                     reading
  *
  *  - Mandatory nodes: The following nodes is mandatory in QuakeML but not in
- *    SC3ML:
+ *    SCML:
  *
  *    Parent           Mandatory element
  *    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -126,22 +136,22 @@
  *
  * ================
  * Change log
- * ===============
+ * ================
  *
  *  * 08.09.2014: Fixed typo in event type conversion (meteo[r] impact)
  *
  *  * 25.08.2014: Applied part of the patch proposed by Philipp Kaestli on
- *                seiscomp-l@gfz-potsdam.de
+ *                seiscomp-l@gfz.de
  *    - use public id of parent origin if origin id propertery of magnitude
  *      and station magnitude elements is unset
- *    - fixed takeOffAngle conversion vom real (SC3ML) to RealQuantity
+ *    - fixed takeOffAngle conversion vom real (SCML) to RealQuantity
  *      (QuakeML)
  *
- *  * 04.07.2016: Version bump. No modification here, SC3 datamodel was updated
- *                on the inventory side.
+ *  * 04.07.2016: Version bump. No modification here, SeisComP datamodel was
+ *                updated on the inventory side.
  *
- *  * 28.11.2016: Version bump. No modification here, SC3 datamodel was updated
- *                on the inventory side.
+ *  * 28.11.2016: Version bump. No modification here, SeisComP datamodel was
+ *                updated on the inventory side.
  *
  *  * 28.06.2017: Changed license from GPL to LGPL
  *
@@ -154,34 +164,73 @@
  *      `other event`
  *    - Fix origin uncertainty and confidence ellispoid units
  *    - Rename momentTensor/method to momentTensor/category
- *    - Fix amplitude/unit (enumeration in QuakeML, not in SC3ML)
+ *    - Fix amplitude/unit (enumeration in QuakeML, not in SCML)
  *    - Don't modify id if it starts with 'smi:' or 'quakeml:'
  *    - Fix Arrival publicID generation
  *
  *  * 27.09.2017:
  *    - Use '_' instead of '#' in arrival publicID generation
- *    - Map SC3 arrival weight to timeWeight, horizontalSlownessWeight and
- *      backazimuthWeight depending on timeUsed, horizontalUsed and
+ *    - Map SeisComP arrival weight to timeWeight, horizontalSlownessWeight
+ *      and backazimuthWeight depending on timeUsed, horizontalUsed and
  *      backzimuthUsed values
  *
  *  * 08.12.2017:
  *    - Remove unmapped nodes
  *    - Fix arrival weight mapping
  *
+ *  * 27.07.2018: Version bump. No modification here, SeisComP datamodel was
+ *                extented by data availability top level element
+ *
+ *  * 02.11.2018: Don't export stationMagnitude passedQC attribute
+ *
  *  * 07.12.2018: Copy picks referenced by amplitudes
  *
  *  * 10.12.2018: Put the non-QuakeML nodes in a custom namespace
  *
+ *  * 17.06.2021: Version bump. The SeisComP datamodel was updated an now
+ *                includes the confidenceLevel parameter in the
+ *                OriginUncertainty element.
+ *
  *  * 04.04.2022:
+ *    - Map additional SC event types 'calving', 'frost quake', 'tremor pulse'
+ *      and 'submarine landslide' to QuakeML 'other event'.
+ *    - Skip eventTypeCertainty if value is set to 'damaging' or 'felt'
+ *      both unsupported by QuakeML.
  *    - Skip originUncertaintyDescription if value is set to
  *      'probability density function' not supported by QuakeML.
  *
+ *  * 08.06.2022:
+ *    - Map new SeisComP event types 'rocket impact', 'artillery strike',
+ *      'bomb detonation', 'moving aircraft' and 'atmospheric meteor explosion'
+ *      to QuakeML 'other event'.
+ *
  *  * 31.10.2022: Improve performance when processing origins with many arrivals.
+ *
+ *  * 24.03.2023:
+ *    - Do not export duplicated picks referenced by different amplitudes.
+ *
+ *  * 01.11.2023:
+ *    - Map new SeisComP event types 'volcano-tectonic', 'volcanic long-period',
+ *      'volcanic very-long-period', 'volcanic hybrid', 'volcanic rockfall',
+ *      'volcanic tremor', 'pyroclastic flow' and 'lahar' to QuakeML
+ *      'other event'.
+ *
+ *  * 26.07.2024:
+ *    - Fix origin/confidenceEllipsoid conversion. The unit for
+ *      'semiMajorAxisLength', 'semiMinorAxisLength' and
+ *      'semiIntermediateAxisLength' is already meter and does not need a
+ *      conversion.
+ *
+ *  * 18.11.2025:
+ *    - Version bump to SCML 0.14
+ *    - Change GFZ URL from gfz-potsdam.de to gfz.de
+ *    - Append catalog elements as schema extensions to the end of the
+ *      document similiar to Reading elements.
  *
  ********************************************************************** -->
 <xsl:stylesheet version="1.0"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-        xmlns:scs="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.6"
+        xmlns:scs="http://geofon.gfz.de/ns/seiscomp-schema/0.14"
         xmlns:qml="http://quakeml.org/xmlns/quakeml/1.0"
         xmlns="http://quakeml.org/xmlns/bed/1.2"
         xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"
@@ -190,7 +239,7 @@
     <xsl:strip-space elements="*"/>
 
     <!-- Define parameters-->
-    <xsl:param name="ID_PREFIX" select="'smi:org.gfz-potsdam.de/geofon/'"/>
+    <xsl:param name="ID_PREFIX" select="'smi:org.gfz.de/geofon/'"/>
 
     <!-- Define global variables -->
     <xsl:variable name="PID" select="'publicID'"/>
@@ -210,9 +259,10 @@
                     </xsl:attribute>
 
                     <!-- Put the QuakeML nodes at the beginning -->
-                    <xsl:apply-templates select="*[not(self::scs:reading)]" />
+                    <xsl:apply-templates select="*[not(self::scs:reading or self::scs:catalog)]" />
                     <!-- Put the non-QuakeML nodes at the end -->
                     <xsl:apply-templates select="scs:reading" mode="scs-only" />
+                    <xsl:apply-templates select="scs:catalog" mode="scs-only" />
                 </eventParameters>
             </xsl:for-each>
         </q:quakeml>
@@ -223,47 +273,40 @@
         <xsl:element name="{local-name()}">
             <xsl:apply-templates select="@*"/>
 
-            <!-- search origins referenced by this event -->
-            <xsl:for-each select="scs:originReference">
-                <xsl:for-each select="../../scs:origin[@publicID=current()]">
-                    <xsl:variable name="origin" select="current()" />
+            <!-- collect origins referenced by event/originReference -->
+            <xsl:variable name="origins" select="../scs:origin[@publicID=current()/scs:originReference]" />
 
-                    <!-- stationMagnitudes and referenced amplitudes -->
-                    <xsl:for-each select="scs:stationMagnitude">
-                        <xsl:for-each select="../../scs:amplitude[@publicID=current()/scs:amplitudeID]">
-                            <!-- amplitude/genericAmplitude is mandatory in QuakeML -->
-                            <xsl:if test="scs:amplitude">
-                                <!-- copy picks referenced in amplitudes -->
-                                <xsl:for-each select="../scs:pick[@publicID=current()/scs:pickID]">
-                                    <xsl:call-template name="genericNode" />
-                                </xsl:for-each>
-                                <xsl:call-template name="genericNode"/>
-                            </xsl:if>
-                        </xsl:for-each>
-                        <xsl:apply-templates select="." mode="originMagnitude">
-                            <xsl:with-param name="oID" select="../@publicID"/>
-                        </xsl:apply-templates>
-                    </xsl:for-each>
+            <!-- picks referenced via origin/stationMagnitude/amplitudeID or origin/arrival -->
+            <xsl:variable name="amplitudes" select="../scs:amplitude[@publicID=$origins/scs:stationMagnitude/scs:amplitudeID]" />
+            <xsl:variable name="picks" select="$origins/scs:arrival/scs:pickID | $amplitudes/scs:pickID" />
+            <xsl:for-each select="../scs:pick[@publicID = $picks]">
+                <xsl:call-template name="genericNode" />
+            </xsl:for-each>
 
-                    <!-- magnitudes -->
-                    <xsl:for-each select="scs:magnitude">
-                        <xsl:apply-templates select="." mode="originMagnitude">
-                            <xsl:with-param name="oID" select="../@publicID"/>
-                        </xsl:apply-templates>
-                    </xsl:for-each>
+            <xsl:for-each select="$origins">
 
-                    <!-- picks, referenced by arrivals -->
-                    <!-- we exclude picks already referenced in amplitudes: -->
-                    <xsl:variable name="amplitudes" select="../scs:amplitude[@publicID=$origin/scs:stationMagnitude/scs:amplitudeID]" />
-                    <xsl:for-each select="scs:arrival[not(./scs:pickID=$amplitudes/scs:pickID)]">
-                        <xsl:for-each select="../../scs:pick[@publicID=current()/scs:pickID]">
+                <!-- stationMagnitudes and referenced amplitudes -->
+                <xsl:for-each select="scs:stationMagnitude">
+                    <xsl:for-each select="../../scs:amplitude[@publicID=current()/scs:amplitudeID]">
+                        <!-- amplitude/genericAmplitude is mandatory in QuakeML -->
+                        <xsl:if test="scs:amplitude">
                             <xsl:call-template name="genericNode"/>
-                        </xsl:for-each>
+                        </xsl:if>
                     </xsl:for-each>
-
-                    <!-- origin -->
-                    <xsl:call-template name="genericNode"/>
+                    <xsl:apply-templates select="." mode="originMagnitude">
+                        <xsl:with-param name="oID" select="../@publicID"/>
+                    </xsl:apply-templates>
                 </xsl:for-each>
+
+                <!-- magnitudes -->
+                <xsl:for-each select="scs:magnitude">
+                    <xsl:apply-templates select="." mode="originMagnitude">
+                        <xsl:with-param name="oID" select="../@publicID"/>
+                    </xsl:apply-templates>
+                </xsl:for-each>
+
+                <!-- origin -->
+                <xsl:call-template name="genericNode"/>
             </xsl:for-each>
 
             <!-- search focalMechanisms referenced by this event -->
@@ -332,22 +375,48 @@
                 <xsl:when test="$v='outside of network interest'">other event</xsl:when>
                 <xsl:when test="$v='duplicate'">other event</xsl:when>
                 <xsl:when test="$v='other'">other event</xsl:when>
+                <xsl:when test="$v='calving'">other event</xsl:when>
+                <xsl:when test="$v='frost quake'">other event</xsl:when>
+                <xsl:when test="$v='tremor pulse'">other event</xsl:when>
+                <xsl:when test="$v='submarine landslide'">other event</xsl:when>
+                <xsl:when test="$v='rocket'">other event</xsl:when>
+                <xsl:when test="$v='rocket impact'">other event</xsl:when>
+                <xsl:when test="$v='artillery strike'">other event</xsl:when>
+                <xsl:when test="$v='bomb detonation'">other event</xsl:when>
+                <xsl:when test="$v='moving aircraft'">other event</xsl:when>
+                <xsl:when test="$v='atmospheric meteor explosion'">other event</xsl:when>
+                <xsl:when test="$v='volcano-tectonic'">other event</xsl:when>
+                <xsl:when test="$v='volcanic long-period'">other event</xsl:when>
+                <xsl:when test="$v='volcanic very-long-period'">other event</xsl:when>
+                <xsl:when test="$v='volcanic hybrid'">other event</xsl:when>
+                <xsl:when test="$v='volcanic rockfall'">other event</xsl:when>
+                <xsl:when test="$v='volcanic tremor'">other event</xsl:when>
+                <xsl:when test="$v='pyroclastic flow'">other event</xsl:when>
+                <xsl:when test="$v='lahar'">other event</xsl:when>
                 <xsl:otherwise><xsl:value-of select="$v"/></xsl:otherwise>
             </xsl:choose>
         </xsl:element>
     </xsl:template>
 
-    <!-- origin depth, SC3ML uses kilometer, QML meter -->
+    <!-- event type certainty, enumeration of QML only includes
+         'known' and 'suspected' but not 'damaging' nor 'felt' -->
+    <xsl:template match="scs:eventTypeCertainty">
+        <xsl:variable name="v" select="current()"/>
+        <xsl:if test="$v='known' or $v='suspected'">
+            <xsl:element name="{local-name()}">
+                <xsl:value-of select="$v"/>
+            </xsl:element>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- origin depth, SCML uses kilometer, QML meter -->
     <xsl:template match="scs:origin/scs:depth/scs:value
                          | scs:origin/scs:depth/scs:uncertainty
                          | scs:origin/scs:depth/scs:lowerUncertainty
                          | scs:origin/scs:depth/scs:upperUncertainty
                          | scs:origin/scs:uncertainty/scs:horizontalUncertainty
                          | scs:origin/scs:uncertainty/scs:minHorizontalUncertainty
-                         | scs:origin/scs:uncertainty/scs:maxHorizontalUncertainty
-                         | scs:confidenceEllipsoid/scs:semiMajorAxisLength
-                         | scs:confidenceEllipsoid/scs:semiMinorAxisLength
-                         | scs:confidenceEllipsoid/scs:semiIntermediateAxisLength">
+                         | scs:origin/scs:uncertainty/scs:maxHorizontalUncertainty">
         <xsl:element name="{local-name()}">
             <xsl:value-of select="current() * 1000"/>
         </xsl:element>
@@ -387,16 +456,6 @@
         </xsl:if>
     </xsl:template>
 
-    <!-- origin uncertainty description, enumeration of QML does not include 'probability density function' -->
-    <xsl:template match="scs:origin/scs:uncertainty/scs:preferredDescription">
-        <xsl:variable name="v" select="current()"/>
-        <xsl:if test="$v!='probability density function'">
-            <xsl:element name="{local-name()}">
-                <xsl:value-of select="$v"/>
-            </xsl:element>
-        </xsl:if>
-    </xsl:template>
-
     <!-- momentTensor/method -> momentTensor/category -->
     <xsl:template match="scs:momentTensor/scs:method">
         <xsl:variable name="v" select="current()"/>
@@ -407,7 +466,7 @@
         </xsl:if>
     </xsl:template>
 
-    <!-- amplitude/unit is an enumeration in QuakeML, not in SC3ML -->
+    <!-- amplitude/unit is an enumeration in QuakeML, not in SCML -->
     <xsl:template match="scs:amplitude/scs:unit">
         <xsl:variable name="v" select="current()"/>
         <xsl:element name="{local-name()}">
@@ -428,7 +487,7 @@
     <!-- origin arrival -->
     <xsl:template match="scs:arrival">
         <xsl:element name="{local-name()}">
-            <!-- since SC3ML does not include a publicID it is generated from pick and origin id -->
+            <!-- since SCML does not include a publicID it is generated from pick and origin id -->
             <xsl:attribute name="{$PID}">
                 <xsl:call-template name="convertID">
                     <xsl:with-param name="id" select="concat(scs:pickID, '_', translate(../@publicID, ' :', '__'))"/>
@@ -513,6 +572,17 @@
         <xsl:call-template name="genericNode">
             <xsl:with-param name="name" select="'originUncertainty'"/>
         </xsl:call-template>
+    </xsl:template>
+
+    <!-- originUncertaintyDescription, enumeration of QML does not
+         include 'probability density function' -->
+    <xsl:template match="scs:originUncertaintyDescription">
+        <xsl:variable name="v" select="current()"/>
+        <xsl:if test="$v!='probability density function'">
+            <xsl:element name="{local-name()}">
+                <xsl:value-of select="$v"/>
+            </xsl:element>
+        </xsl:if>
     </xsl:template>
 
     <!-- waveformID: SCS uses a child element 'resourceURI', QML
