@@ -326,7 +326,7 @@ def _get_function_from_entry_point(group, type):
                   "SciPy is installed properly."
             raise ImportError(msg % (group.capitalize()))
         # ok we have entry points, but specified function is not supported
-        msg = "%s type \"%s\" is not supported FUK. Supported types: %s"
+        msg = "%s type \"%s\" is not supported. Supported types: %s"
         raise ValueError(msg % (group.capitalize(), type, ', '.join(ep_dict)))
     # import function point
     # any issue during import of entry point should be raised, so the user has
