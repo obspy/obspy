@@ -11,6 +11,7 @@ Module for handling ObsPy :class:`~obspy.core.trace.Trace` and
 """
 import inspect
 import math
+import re
 import warnings
 from copy import copy, deepcopy
 
@@ -24,6 +25,24 @@ from obspy.core.util.base import _get_function_from_entry_point
 from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
 from obspy.core.util.misc import (flat_not_masked_contiguous, get_window_times,
                                   limit_numpy_fft_cache)
+
+
+# list of keys we handle that are common to NSLC and FDSN Source Identifier
+BASE_STATS_KEYS = (
+    'starttime', 'endtime', 'sampling_rate', 'delta', 'npts', 'calib')
+# complete list of all parts of a NSLC
+NSLC_KEYS = ('network', 'station', 'location', 'channel')
+NSLC_SPECIFIC_KEY = 'channel'
+# name for the FDSN Source Identifier composed of all of its parts
+SOURCE_ID_KEY = 'source_identifier'
+# complete list of all parts of a FDSN Source Identifier
+SOURCE_ID_KEYS = ('namespace', 'network', 'station', 'location', 'band',
+                  'source', 'subsource')
+# these are specific to FDSN Source Identifier, so if these appear it can not
+# be a plain NSLC description
+SOURCE_ID_SPECIFIC_KEYS = ('namespace', 'band', 'source', 'subsource')
+SOURCE_ID_REGEX = re.compile(
+    r'(.*):([^_]*)_([^_]*)_([^_]*)_([^_]*)_([^_]*)_(.*)')
 
 
 class Stats(AttribDict):
@@ -43,6 +62,14 @@ class Stats(AttribDict):
         :class:`~obspy.core.trace.Trace` object. Possible keywords are
         summarized in the following `Default Attributes`_ section.
 
+    .. note::
+
+        Initializing a ``Stats`` object will actually return an appropriate
+        subclass depending on the metadata style (``NSLC`` or
+        ``(FDSN) Source ID``) of the provided metadata.
+        By default, the well known classic ``NSLC`` style is used. For full
+        control subclasses can also be initialized directly.
+
     .. rubric:: Basic Usage
 
     >>> stats = Stats()
@@ -55,6 +82,10 @@ class Stats(AttribDict):
 
     .. rubric:: _`Default Attributes`
 
+    The following are default attributes shared with all subclasses of
+    :class:`~obspy.core.trace.Stats`. Subclasses define additional default
+    attributes specific to them.
+
     ``sampling_rate`` : float, optional
         Sampling rate in hertz (default value is 1.0).
     ``delta`` : float, optional
@@ -64,14 +95,6 @@ class Stats(AttribDict):
     ``npts`` : int, optional
         Number of sample points (default value is 0, which implies that no data
         is present).
-    ``network`` : string, optional
-        Network code (default is an empty string).
-    ``location`` : string, optional
-        Location code (default is an empty string).
-    ``station`` : string, optional
-        Station code (default is an empty string).
-    ``channel`` : string, optional
-        Channel code (default is an empty string).
     ``starttime`` : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         Date and time of the first data sample given in UTC (default value is
         "1970-01-01T00:00:00.0Z").
@@ -111,11 +134,11 @@ class Stats(AttribDict):
         >>> stats.endtime = UTCDateTime(2009, 1, 1, 12, 0, 0)
         Traceback (most recent call last):
         ...
-        AttributeError: Attribute "endtime" in Stats object is read only!
+        AttributeError: Attribute "endtime" in NSLCStats object is read only!
         >>> stats['endtime'] = UTCDateTime(2009, 1, 1, 12, 0, 0)
         Traceback (most recent call last):
         ...
-        AttributeError: Attribute "endtime" in Stats object is read only!
+        AttributeError: Attribute "endtime" in NSLCStats object is read only!
 
     (4)
         The attribute ``npts`` will be automatically updated from the
@@ -128,48 +151,39 @@ class Stats(AttribDict):
         >>> trace.stats.npts
         4
 
-    (5)
-        The attribute ``component`` can be used to get or set the component,
-        i.e. the last character of the ``channel`` attribute.
-
-        >>> stats = Stats()
-        >>> stats.channel = 'HHZ'
-        >>> stats.component  # doctest: +SKIP
-        'Z'
-        >>> stats.component = 'L'
-        >>> stats.channel  # doctest: +SKIP
-        'HHL'
-
     """
     # set of read only attrs
     readonly = ['endtime']
-    # default values
-    defaults = {
-        'sampling_rate': 1.0,
-        'delta': 1.0,
-        'starttime': UTCDateTime(0),
-        'endtime': UTCDateTime(0),
-        'npts': 0,
-        'calib': 1.0,
-        'network': '',
-        'station': '',
-        'location': '',
-        'channel': '',
-    }
     # keys which need to refresh derived values
     _refresh_keys = {'delta', 'sampling_rate', 'starttime', 'npts'}
-    # dict of required types for certain attrs
-    _types = {
-        'network': str,
-        'station': str,
-        'location': str,
-        'channel': str,
-    }
 
-    def __init__(self, header={}):
+    def __new__(cls, header={}):
         """
+        Slightly abusive, to be able to have ``Stats`` both as a base class but
+        also as an instance factory for the subclasses.
         """
-        super(Stats, self).__init__(header)
+        # check for a mix of FDSN Source ID and NSLC codes or Source ID parts
+        # and gracefully decline to work with a mix of both
+        if SOURCE_ID_KEY in header and \
+                any(key in header for key in NSLC_KEYS + SOURCE_ID_KEYS):
+            msg = ('Initializing Stats with a mix of a full (FDSN) Source '
+                   'Identifier and NSLC codes or parts of a Source Identifier '
+                   'is not allowed.')
+            raise ValueError(msg)
+        if NSLC_SPECIFIC_KEY in header and \
+                any(key in header for key in SOURCE_ID_SPECIFIC_KEYS):
+            msg = ('Initializing Stats with a mix of NSLC type channel code '
+                   'and (FDSN) Source Identifier type band/source/subsource '
+                   'codes is not allowed.')
+            raise ValueError(msg)
+        # if (FDSN) Source ID is provided, then use that, otherwise default to
+        # good old plain NSLC style, which most users know best and probably
+        # expect
+        if SOURCE_ID_KEY in header or \
+                any(key in header for key in SOURCE_ID_SPECIFIC_KEYS):
+            return SourceIdentifierStats(header=header)
+        else:
+            return NSLCStats(header=header)
 
     def __setitem__(self, key, value):
         """
@@ -190,7 +204,7 @@ class Stats(AttribDict):
                 if not isinstance(value, int):
                     value = int(value)
             # set current key
-            super(Stats, self).__setitem__(key, value)
+            super().__setitem__(key, value)
             # set derived value: delta
             try:
                 delta = 1.0 / float(self.sampling_rate)
@@ -204,41 +218,22 @@ class Stats(AttribDict):
                 timediff = float(self.npts - 1) * delta
             self.__dict__['endtime'] = self.starttime + timediff
             return
-        if key == 'component':
-            key = 'channel'
-            value = str(value)
-            if len(value) != 1:
-                msg = 'Component must be set with single character'
-                raise ValueError(msg)
-            value = self.channel[:-1] + value
         # prevent a calibration factor of 0
         if key == 'calib' and value == 0:
             msg = 'Calibration factor set to 0.0!'
             warnings.warn(msg, UserWarning)
         # all other keys
         if isinstance(value, dict):
-            super(Stats, self).__setitem__(key, AttribDict(value))
+            super().__setitem__(key, AttribDict(value))
         else:
-            super(Stats, self).__setitem__(key, value)
+            super().__setitem__(key, value)
 
     __setattr__ = __setitem__
 
     def __getitem__(self, key, default=None):
         """
         """
-        if key == 'component':
-            return super(Stats, self).__getitem__('channel', default)[-1:]
-        else:
-            return super(Stats, self).__getitem__(key, default)
-
-    def __str__(self):
-        """
-        Return better readable string representation of Stats object.
-        """
-        priorized_keys = ['network', 'station', 'location', 'channel',
-                          'starttime', 'endtime', 'sampling_rate', 'delta',
-                          'npts', 'calib']
-        return self._pretty_str(priorized_keys)
+        return super().__getitem__(key, default)
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
@@ -254,6 +249,313 @@ class Stats(AttribDict):
         self.__dict__.update(state)
         # trigger refreshing
         self.__setitem__('sampling_rate', state['sampling_rate'])
+
+
+class NSLCStats(Stats):
+    """
+    A :class:`~obspy.core.trace.Stats` subclass for the widely used,
+    conventional style of identifying a measurement system by a combination of
+    network, station, location and channel code ("NSLC" sometimes also referred
+    to "SCNL" etc.), often (but not necessarily) following the conventions laid
+    out in the SEED 2.4 standard.
+
+    For other basic information see :class:`~obspy.core.trace.Stats`.
+
+    .. rubric:: Basic Usage
+
+    >>> header = {'network': 'BW', 'station': 'MANZ', 'location': '',
+    ...           'channel': 'BHZ'}
+    >>> stats = Stats(header=header)
+    >>> print(stats['network'])
+    BW
+    >>> print(stats.network)
+    BW
+    >>> print(stats.station)
+    MANZ
+    >>> print(stats.channel)
+    BHZ
+
+    Or explicitly using this :class:`~obspy.core.trace.Stats` subclass:
+
+    >>> header = {'network': 'BW', 'station': 'MANZ', 'location': '',
+    ...           'channel': 'BHZ'}
+    >>> stats = NSLCStats(header=header)
+    >>> print(stats.network)
+    BW
+    >>> print(stats.station)
+    MANZ
+    >>> print(stats.channel)
+    BHZ
+
+    .. rubric:: _`Default Attributes`
+
+    The following are default attributes specific to the
+    :class:`~obspy.core.trace.NSLCStats` subclass of
+    :class:`~obspy.core.trace.Stats`. For default attributes shared by all
+    subclasses (like ``starttime`` etc.), see :class:`~obspy.core.trace.Stats`.
+
+    ``network`` : string, optional
+        Network code (default is an empty string).
+    ``location`` : string, optional
+        Location code (default is an empty string).
+    ``station`` : string, optional
+        Station code (default is an empty string).
+    ``channel`` : string, optional
+        Channel code (default is an empty string).
+
+    .. rubric:: Notes
+
+    (1)
+        The attribute ``component`` can be used to get or set the component,
+        i.e. the last character of the ``channel`` attribute, which by
+        ``SEED 2.4`` standard defines the component code as part of an assumed
+        three character length channel code. This convenience functionality
+        should only be used with channel codes conforming to ``SEED 2.4``
+        conventions.
+
+        >>> stats = NSLCStats()
+        >>> stats.channel = 'BHZ'
+        >>> print(stats.component)
+        Z
+        >>> stats.component = 'L'
+        >>> print(stats.channel)
+        BHL
+
+    """
+    # default values
+    defaults = {
+        'sampling_rate': 1.0,
+        'delta': 1.0,
+        'starttime': UTCDateTime(0),
+        'endtime': UTCDateTime(0),
+        'npts': 0,
+        'calib': 1.0,
+        'network': '',
+        'station': '',
+        'location': '',
+        'channel': '',
+    }
+    # dict of required types for certain attrs
+    _types = {
+        'network': str,
+        'station': str,
+        'location': str,
+        'channel': str,
+    }
+
+    def __new__(cls, *args, **kwargs):
+        """
+        """
+        # we want to call the method of Stats' parent here, since that one
+        # would just end up calling this one here, so two levels up
+        return super(Stats, cls).__new__(cls)
+
+    def __init__(self, header={}):
+        """
+        """
+        # no custom things to do for this subclass
+        # delegate to AttribDict
+        super().__init__(header)
+
+    def __setitem__(self, key, value):
+        """
+        """
+        # things specific to NSLC
+        if key == 'component':
+            key = 'channel'
+            value = str(value)
+            if len(value) != 1:
+                msg = 'Component must be set with single character'
+                raise ValueError(msg)
+            value = self.channel[:-1] + value
+        # delegate to Stats
+        super().__setitem__(key, value)
+
+    def __getitem__(self, key, default=None):
+        """
+        """
+        if key == 'component':
+            return super().__getitem__('channel', default)[-1:]
+        return super().__getitem__(key, default)
+
+    def __str__(self):
+        """
+        Return better readable string representation of Stats object.
+        """
+        priorized_keys = list(NSLC_KEYS) + list(BASE_STATS_KEYS)
+        return self._pretty_str(priorized_keys)
+
+
+class SourceIdentifierStats(Stats):
+    """
+    A :class:`~obspy.core.trace.Stats` subclass for the new
+    ``FDSN Source Identifier`` convention of identifying a measurement system
+    by a Source Identifier string. This standard is aming to supersede the old
+    SEED 2.4 conventions which have limitations in the length of the individual
+    fields.
+
+    For other basic information see :class:`~obspy.core.trace.Stats`.
+
+    .. rubric:: Basic Usage
+
+    >>> header = {'namespace': 'FDSN', 'network': 'BW', 'station': 'MANZ',
+    ...           'location': '', 'band': 'B', 'source': 'H', 'subsource': 'Z'}
+    >>> stats = Stats(header=header)
+    >>> print(stats.source_identifier)
+    FDSN:BW_MANZ__B_H_Z
+    >>> print(stats.network)
+    BW
+    >>> print(stats.station)
+    MANZ
+    >>> print(stats.band)
+    B
+    >>> print(stats.source)
+    H
+    >>> print(stats.subsource)
+    Z
+    # convenience alias for a concatenation of band, source and subsource code
+    >>> print(stats.channel)
+    BHZ
+    >>> print(stats.component)  # convenience alias for subsource code
+    Z
+
+    Or explicitly using this :class:`~obspy.core.trace.Stats` subclass and also
+    alternatively providing the full source identifier string as a whole
+    instead of its parts:
+
+    >>> header = {'source_identifier': 'FDSN:BW_MANZ__B_H_Z'}
+    >>> stats = SourceIdentifierStats(header=header)
+    >>> print(stats.network)
+    BW
+    >>> print(stats.station)
+    MANZ
+    >>> print(stats.band)
+    B
+
+    .. rubric:: _`Default Attributes`
+
+    The following are default attributes specific to the
+    :class:`~obspy.core.trace.SourceIdentifierStats` subclass of
+    :class:`~obspy.core.trace.Stats`. For default attributes shared by all
+    subclasses (like ``starttime`` etc.), see :class:`~obspy.core.trace.Stats`.
+
+    ``source_identifier`` : str, optional
+        Date and time of the last data sample given in UTC
+        (default value is "1970-01-01T00:00:00.0Z").
+
+    .. rubric:: Notes
+
+    (1)
+        The attribute ``component`` can be used to get or set the component,
+        i.e. the last character of the ``channel`` attribute, which by ``SEED
+        2.4`` standard defines the component code as part of an assumed three
+        character length channel code. This convenience functionality should
+        only be used with channel codes conforming to ``SEED 2.4`` conventions.
+
+        >>> stats = Stats()
+        >>> stats.channel = 'HHZ'
+        >>> stats.component  # doctest: +SKIP
+        'Z'
+        >>> stats.component = 'L'
+        >>> stats.channel  # doctest: +SKIP
+        'HHL'
+
+    """
+    # default values
+    defaults = {
+        'sampling_rate': 1.0,
+        'delta': 1.0,
+        'starttime': UTCDateTime(0),
+        'endtime': UTCDateTime(0),
+        'npts': 0,
+        'calib': 1.0,
+        'namespace': '',
+        'network': '',
+        'station': '',
+        'location': '',
+        'band': '',
+        'source': '',
+        'subsource': '',
+    }
+    # dict of required types for certain attrs
+    _types = {
+        'namespace': str,
+        'network': str,
+        'station': str,
+        'location': str,
+        'band': str,
+        'source': str,
+        'subsource': str,
+    }
+
+    def __new__(cls, *args, **kwargs):
+        """
+        """
+        # we want to call the method of Stats' parent here, since that one
+        # would just end up calling this one here, so two levels up
+        return super(Stats, cls).__new__(cls)
+
+    def __init__(self, header={}):
+        """
+        """
+        # custom things to do for this subclass
+        # if initialized with a full source identifier in one piece, split it
+        # apart
+        if SOURCE_ID_KEY in header:
+            if any(key in header for key in SOURCE_ID_KEYS):
+                msg = ('Initializing SourceIdentifierStats with a mix of a '
+                       'full (FDSN) Source Identifier and parts of a Source '
+                       'Identifier is not allowed.')
+                raise ValueError(msg)
+            source_identifier = header.pop(SOURCE_ID_KEY)
+            parts = self._split_source_identifier_to_parts(source_identifier)
+            for key, value in zip(SOURCE_ID_KEYS, parts):
+                header[key] = value
+        # delegate to AttribDict
+        super().__init__(header)
+
+    def __setitem__(self, key, value):
+        """
+        """
+        # things specific to Source Identifier
+        if key == SOURCE_ID_KEY:
+            parts = self._split_source_identifier_to_parts(value)
+            for key, value in zip(SOURCE_ID_KEYS, parts):
+                super().__setitem__(key, value)
+            return
+        # otherwise delegate to Stats
+        super().__setitem__(key, value)
+
+    def __getitem__(self, key, default=None):
+        """
+        """
+        # things specific to Source Identifier
+        if key == 'component':
+            return super().__getitem__('channel', default)[-1:]
+        return super().__getitem__(key, default)
+
+    def __str__(self):
+        """
+        Return better readable string representation of Stats object.
+        """
+        priorized_keys = list(SOURCE_ID_KEYS) + list(BASE_STATS_KEYS)
+        return self._pretty_str(priorized_keys)
+
+    @staticmethod
+    def _split_source_identifier_to_parts(source_identifier):
+        """
+        Split a FDSN Source Identifier into parts.
+
+        Raise ValueError if not matching the regex.
+        It is a bit unclear if colon inside the namespace is allowed, but
+        libmseed source code does it like this, split once on the rightmost
+        colon.
+        """
+        match = re.match(SOURCE_ID_REGEX, source_identifier)
+        if not match:
+            msg = (f'Invalid FDSN Source Identifier: {source_identifier}')
+            raise ValueError(msg)
+        return match.groups()
 
 
 @decorator
