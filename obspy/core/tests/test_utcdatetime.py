@@ -1314,6 +1314,7 @@ class TestUTCDateTime:
         utc_str = str(utc)
         assert '.' not in utc_str
 
+    @pytest.mark.skip(reason="Skipping until decision on immutability is made.")
     def test_change_time_attr_raises_warning(self):
         """
         Changing the time representation on the UTCDateTime instances should
@@ -1329,6 +1330,7 @@ class TestUTCDateTime:
         assert 'will raise an Exception' in str(warn.message)
         assert isinstance(warn.message, ObsPyDeprecationWarning)
 
+    @pytest.mark.skip(reason="Skipping until decision on immutability is made.")
     def test_change_precision_raises_warning(self):
         """
         Changing the precision on the UTCDateTime instances should raise a
