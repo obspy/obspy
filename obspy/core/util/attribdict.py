@@ -149,9 +149,8 @@ class AttribDict(collections.abc.MutableMapping):
 
     def update(self, adict={}):
         for (key, value) in adict.items():
-            if key in self.readonly:
-                continue
-            self.__setitem__(key, value)
+            if key not in self.readonly:
+                self[key] = value
 
     def _pretty_str(self, priorized_keys=[], min_label_length=16):
         """
