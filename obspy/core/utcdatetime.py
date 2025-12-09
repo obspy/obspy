@@ -281,10 +281,10 @@ class UTCDateTime(object):
         self.precision = kwargs.pop('precision', self.DEFAULT_PRECISION)
         # set directly to nanoseconds if given
         ns = kwargs.pop('ns', None)
-        strict = kwargs.pop('strict', True)
         if ns is not None:
             self._ns = ns
             return
+        strict = kwargs.pop('strict', True)
         # iso8601 flag
         iso8601 = kwargs.pop('iso8601', None)
         # check parameter
@@ -1073,14 +1073,14 @@ class UTCDateTime(object):
 
     def _operate(self, other, op_func):
         if isinstance(other, UTCDateTime):
-            ndigits = min(self.precision, other.precision) - 9
-            if self.precision != other.precision:
+            ndigits = min(self.__precision, other.__precision) - 9
+            if self.__precision != other.__precision:
                 msg = ('Comparing UTCDateTime objects of different precision'
                        ' is not defined will raise an Exception in a future'
                        ' version of obspy')
                 warnings.warn(msg, ObsPyDeprecationWarning)
-            a = round(self._ns, ndigits)
-            b = round(other._ns, ndigits)
+            a = round(self.__ns, ndigits)
+            b = round(other.__ns, ndigits)
             return op_func(a, b)
         else:
             try:

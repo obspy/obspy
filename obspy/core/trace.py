@@ -177,32 +177,29 @@ class Stats(AttribDict):
         if key in self._refresh_keys:
             # ensure correct data type
             if key == 'delta':
-                key = 'sampling_rate'
                 try:
-                    value = 1.0 / float(value)
+                    sampling_rate = 1.0 / float(value)
                 except ZeroDivisionError:
-                    value = 0.0
+                    sampling_rate = 0.0
+                self.__dict__['sampling_rate'] = sampling_rate
             elif key == 'sampling_rate':
-                value = float(value)
+                self.__dict__['sampling_rate'] = float(value)
             elif key == 'starttime':
-                value = UTCDateTime(value)
+                if not isinstance(value, UTCDateTime):
+                    value = UTCDateTime(value)
+                self.__dict__['starttime'] = value
             elif key == 'npts':
-                if not isinstance(value, int):
-                    value = int(value)
-            # set current key
-            super(Stats, self).__setitem__(key, value)
+                self.__dict__['npts'] = int(value)
             # set derived value: delta
             try:
                 delta = 1.0 / float(self.sampling_rate)
             except ZeroDivisionError:
-                delta = 0
+                delta = 0.0
             self.__dict__['delta'] = delta
             # set derived value: endtime
-            if self.npts == 0:
-                timediff = 0
-            else:
-                timediff = float(self.npts - 1) * delta
-            self.__dict__['endtime'] = self.starttime + timediff
+            timediff = 0 if self.npts == 0 else float(self.npts - 1) * delta
+            endtime_ns = int(self.starttime.ns + timediff * 1e9)
+            self.__dict__['endtime'] = UTCDateTime(ns=endtime_ns)
             return
         if key == 'component':
             key = 'channel'
@@ -212,7 +209,7 @@ class Stats(AttribDict):
                 raise ValueError(msg)
             value = self.channel[:-1] + value
         # prevent a calibration factor of 0
-        if key == 'calib' and value == 0:
+        elif key == 'calib' and value == 0:
             msg = 'Calibration factor set to 0.0!'
             warnings.warn(msg, UserWarning)
         # all other keys
@@ -228,8 +225,7 @@ class Stats(AttribDict):
         """
         if key == 'component':
             return super(Stats, self).__getitem__('channel', default)[-1:]
-        else:
-            return super(Stats, self).__getitem__(key, default)
+        return super(Stats, self).__getitem__(key, default)
 
     def __str__(self):
         """
@@ -335,7 +331,8 @@ class Trace(object):
         # set some defaults if not set yet
         if header is None:
             header = {}
-        header = deepcopy(header)
+        else:
+            header = deepcopy(header)
         header.setdefault('npts', len(data))
         self.stats = Stats(header)
         # set data without changing npts in stats object (for headonly option)
