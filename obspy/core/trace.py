@@ -200,7 +200,7 @@ class Stats(AttribDict):
             self.__dict__['delta'] = delta
             # set derived value: endtime
             timediff = 0 if self.npts == 0 else float(self.npts - 1) * delta
-            endtime_ns = int(self.starttime.ns + timediff * 1e9)
+            endtime_ns = self.starttime.ns + int(round(timediff * 1e9))
             self.__dict__['endtime'] = UTCDateTime(ns=endtime_ns)
             return
         if key == 'component':
