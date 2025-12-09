@@ -270,13 +270,15 @@ class UTCDateTime(object):
     .. _ISO8601:2004: https://en.wikipedia.org/wiki/ISO_8601
     """
     DEFAULT_PRECISION = 6
-    _initialized = False
-    _has_warned = False  # this is a temporary, it will be removed soon
+    __slots__ = ('__ns', '__precision', '_initialized', '_has_warned', '__weakref__')
 
     def __init__(self, *args, **kwargs):
         """
         Creates a new UTCDateTime object.
         """
+        # this is a temporary, it will be removed soon
+        self._initialized = False
+        self._has_warned = False
         # set default precision
         self.precision = kwargs.pop('precision', self.DEFAULT_PRECISION)
         # set directly to nanoseconds if given
@@ -1256,15 +1258,29 @@ class UTCDateTime(object):
         # explicitly flag it as unhashable
         return None
 
-    def __setattr__(self, key, value):
-        # raise a warning if overwriting previous ns (see #2072)
-        if self._initialized and not self._has_warned:
-            msg = ('Setting attributes on UTCDateTime instances will raise an'
-                   ' Exception in a future version of Obspy.')
-            warnings.warn(msg, ObsPyDeprecationWarning)
-            # only issue the warning once per object
-            self.__dict__['_has_warned'] = True
-        super(UTCDateTime, self).__setattr__(key, value)
+    # def __setattr__(self, key, value):
+    #     # raise a warning if overwriting previous ns (see #2072)
+    #     if self._initialized and not self._has_warned:
+    #         msg = ('Setting attributes on UTCDateTime instances will raise an'
+    #                ' Exception in a future version of Obspy.')
+    #         warnings.warn(msg, ObsPyDeprecationWarning)
+    #         # only issue the warning once per object
+    #         self.__dict__['_has_warned'] = True
+    #     super(UTCDateTime, self).__setattr__(key, value)
+
+    def __getstate__(self):
+        """
+        Support for pickling UTCDateTime objects.
+        """
+        return (self._ns, self.__precision)
+
+    def __setstate__(self, state):
+        """
+        Support for unpickling UTCDateTime objects.
+        """
+        self._ns, self.__precision = state
+        # flag that this instance has been initialized; any changes will warn
+        self._initialized = True
 
     def strftime(self, format):
         """

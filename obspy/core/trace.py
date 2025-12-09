@@ -185,9 +185,11 @@ class Stats(AttribDict):
             elif key == 'sampling_rate':
                 self.__dict__['sampling_rate'] = float(value)
             elif key == 'starttime':
-                if not isinstance(value, UTCDateTime):
-                    value = UTCDateTime(value)
-                self.__dict__['starttime'] = value
+                if isinstance(value, UTCDateTime):
+                    starttime = UTCDateTime(ns=value.ns)
+                else:
+                    starttime = UTCDateTime(value)
+                self.__dict__['starttime'] = starttime
             elif key == 'npts':
                 self.__dict__['npts'] = int(value)
             # set derived value: delta
@@ -332,8 +334,8 @@ class Trace(object):
         if header is None:
             header = {}
         else:
-            header = deepcopy(header)
-        header.setdefault('npts', len(data))
+            header = copy(header)
+        header.setdefault('npts', data.size)
         self.stats = Stats(header)
         # set data without changing npts in stats object (for headonly option)
         super(Trace, self).__setattr__('data', data)
