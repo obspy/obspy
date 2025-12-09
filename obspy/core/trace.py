@@ -26,6 +26,10 @@ from obspy.core.util.misc import (flat_not_masked_contiguous, get_window_times,
                                   limit_numpy_fft_cache)
 
 
+class StatsTypeException(Exception):
+    pass
+
+
 class Stats(AttribDict):
     """
     A container for additional header information of a ObsPy
@@ -155,25 +159,61 @@ class Stats(AttribDict):
         'station': '',
         'location': '',
         'channel': '',
+        'namespace': None,
+        'band': None,
+        'source': None,
+        'subsource': None,
     }
     # keys which need to refresh derived values
     _refresh_keys = {'delta', 'sampling_rate', 'starttime', 'npts'}
     # dict of required types for certain attrs
     _types = {
+        'type': str,
         'network': str,
         'station': str,
         'location': str,
         'channel': str,
+        'namespace': str,
+        'band': str,
+        'source': str,
+        'subsource': str,
     }
 
     def __init__(self, header={}):
         """
         """
+        if 'channel' in header and any(key in header for key in (
+                'namespace', 'band', 'source', 'subsource')):
+            msg = ('Initializing Stats with a mix of NSLC type channel code '
+                   'and (FDSN) Source Identifier type band/source/subsource '
+                   'codes is not allowed.')
+            raise ValueError(msg)
+        if 'channel' in header:
+            self.__dict__['type'] = 'NSLC'
+        else:
+            self.__dict__['type'] = 'SID'
         super(Stats, self).__init__(header)
+        # finally need to see if we have to get rid of 'channel' set with the
+        # default '' in case we ended up with a SID type Stats
+        if self.type == 'SID':
+            self.__dict__['channel'] = None
 
     def __setitem__(self, key, value):
         """
         """
+        if key == 'type' and value not in ('NSLC', 'SID'):
+            msg = "Stats.type must be one of 'NSLC' or 'SID'"
+            raise ValueError(msg)
+        if self.type == 'NSLC':
+            if key in ('namespace', 'band', 'source', 'subsource'):
+                msg = f"Can not set '{key}' with a Stats instance of NSLC type"
+                raise StatsTypeException(msg)
+        elif self.type == 'SID':
+            if key == 'channel':
+                msg = f"Can not set '{key}' with a Stats instance of SID type"
+                raise StatsTypeException(msg)
+        else:
+            raise NotImplementedError()
         if key in self._refresh_keys:
             # ensure correct data type
             if key == 'delta':
@@ -235,10 +275,19 @@ class Stats(AttribDict):
         """
         Return better readable string representation of Stats object.
         """
-        priorized_keys = ['network', 'station', 'location', 'channel',
-                          'starttime', 'endtime', 'sampling_rate', 'delta',
-                          'npts', 'calib']
-        return self._pretty_str(priorized_keys)
+        if self.type == 'NSLC':
+            priorized_keys = ['network', 'station', 'location', 'channel',
+                              'type', 'starttime', 'endtime', 'sampling_rate',
+                              'delta', 'npts', 'calib']
+            suppress_if_none = ['namespace', 'band', 'source', 'subsource']
+        elif self.type == 'SID':
+            priorized_keys = ['namespace', 'network', 'station', 'location',
+                              'band', 'source', 'subsource', 'type',
+                              'starttime', 'endtime', 'sampling_rate', 'delta',
+                              'npts', 'calib']
+            suppress_if_none = ['channel']
+        return self._pretty_str(priorized_keys,
+                                suppress_if_none=suppress_if_none)
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
@@ -254,6 +303,17 @@ class Stats(AttribDict):
         self.__dict__.update(state)
         # trigger refreshing
         self.__setitem__('sampling_rate', state['sampling_rate'])
+
+    def to_NSLC(self, namespace='FDSN'):
+        """
+        Convert Stats object to type 'NSLC'
+        """
+        self.namespace = namespace
+        self.__dict__['channel'] = ''.join(
+            (self.band, self.source, self.subsource))
+        for key in ('namespace', 'band', 'source', 'subsource'):
+            self.__dict__[key] = None
+        self.type = 'NSLC'
 
 
 @decorator
