@@ -21,13 +21,13 @@ from obspy.io.quakeml.core import _xml_doc_from_anything
 # SCML version for which an XSD file is available
 SCHEMA_VERSION = ['0.7', '0.8', '0.9', '0.10',
                   '0.11', '0.12', '0.13', '0.14']
-# from version 0.14 onwards "sc3ml" is officially dropped
+# from version 0.14 onwards "sc3ml" is dropped
 NEW_SCHEMA_VERSION = ['0.14']
 
 
 def _is_scml(path_or_file_object):
     """
-    Simple function checking if the passed object contains a valid scml file
+    Simple function checking if the passed object contains a valid SCML file
     according to the list of versions given in parameters. Returns True of
     False.
 

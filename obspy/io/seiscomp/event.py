@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-scml (formerly sc3ml) events read and write support.
+SCML (formerly SC3ML) events read and write support.
 
 :author:
     EOST (École et Observatoire des Sciences de la Terre)
@@ -30,7 +30,7 @@ from obspy.io.seiscomp.core import validate as validate_scml
 
 SCHEMA_VERSION = ['0.7', '0.8', '0.9', '0.10',
                   '0.11', '0.12', '0.13', '0.14']
-# from version 0.14 onwards "sc3ml" is officially dropped
+# from version 0.14 onwards "sc3ml" is dropped
 NEW_SCHEMA_VERSION = ['0.14']
 
 
