@@ -64,7 +64,7 @@ class AttribDict(collections.abc.MutableMapping):
     network station
     """
     defaults = {}
-    readonly = []
+    readonly = {}
     warn_on_non_default_key = False
     do_not_warn_on = []
     _types = {}
@@ -121,9 +121,8 @@ class AttribDict(collections.abc.MutableMapping):
         if key in self._types and not isinstance(value, self._types[key]):
             value = self._cast_type(key, value)
 
-        mapping_instance = isinstance(value, collections.abc.Mapping)
-        attr_dict_instance = isinstance(value, AttribDict)
-        if mapping_instance and not attr_dict_instance:
+        if isinstance(value, collections.abc.Mapping) and \
+                not isinstance(value, AttribDict):
             self.__dict__[key] = AttribDict(value)
         else:
             self.__dict__[key] = value
@@ -148,10 +147,9 @@ class AttribDict(collections.abc.MutableMapping):
         return copy.deepcopy(self)
 
     def update(self, adict={}):
-        for (key, value) in adict.items():
-            if key in self.readonly:
-                continue
-            self.__setitem__(key, value)
+        for (key, value) in {k: v for (k, v) in adict.items()
+                             if k not in self.readonly}.items():
+            self[key] = value
 
     def _pretty_str(self, priorized_keys=[], min_label_length=16):
         """
