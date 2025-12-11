@@ -284,7 +284,7 @@ def _read_station(instrumentation_register, sta_element, _ns):
 
     # There is no relevant info in the base node
     # Read the start and end date (creation, termination) from tags
-    # "Vault" and "Geology" are not defined in SCML ?
+    # "Vault" and "Geology" are not defined in SCML
     station.start_date = _tag2obj(sta_element, _ns("start"), obspy.UTCDateTime)
     station.end_date = _tag2obj(sta_element, _ns("end"), obspy.UTCDateTime)
     station.creation_date = _tag2obj(sta_element, _ns("start"),
@@ -973,7 +973,7 @@ def _tag2pole_or_zero(paz_element, count):
 
     """
     Parses SCML paz format
-    Uncertainties on poles removed, not present in XSD?
+    Uncertainties on poles removed, not present in XSD
     Always put to None so no internal conflict
     The sanitization removes the first/last parenthesis
     and split by comma, real part is 1st, imaginary 2nd
@@ -999,8 +999,8 @@ def _read_float_var(elem, cls, unit=False, datum=False, additional_mapping={}):
     function to read floattype to cls object (based on _read_floattype)
     normally ObsPy would read this directly from a tag, but with different
     tag names this is no longer possible; instead we just pass the value
-    and not the tag name. We always set the unit/datum/uncertainties to None
-    because they are not provided by SCML ?
+    and not the tag name. We set the unit/datum/uncertainties to None
+    because they are not present in SCML XSD.
 
     :param elem: float value to be converted
     :param cls: obspy.core.inventory class
