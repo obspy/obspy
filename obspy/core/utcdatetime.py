@@ -524,7 +524,7 @@ class UTCDateTime(object):
                        'Python builtin integer ({!s}).').format(value, value_)
                 raise ValueError(msg)
             value = value_
-        if not isinstance(value, int):
+        elif not isinstance(value, int):
             raise TypeError('nanoseconds must be set as int/long type')
 
         self.__ns = value
