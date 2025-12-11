@@ -142,7 +142,7 @@ class Stats(AttribDict):
 
     """
     # set of read only attrs
-    readonly = ['endtime']
+    readonly = {'endtime'}
     # default values
     defaults = {
         'sampling_rate': 1.0,
@@ -174,6 +174,7 @@ class Stats(AttribDict):
     def __setitem__(self, key, value):
         """
         """
+        self_dict = self.__dict__
         if key in self._refresh_keys:
             # ensure correct data type
             if key == 'delta':
@@ -181,27 +182,29 @@ class Stats(AttribDict):
                     sampling_rate = 1.0 / float(value)
                 except ZeroDivisionError:
                     sampling_rate = 0.0
-                self.__dict__['sampling_rate'] = sampling_rate
+                self_dict['sampling_rate'] = sampling_rate
             elif key == 'sampling_rate':
-                self.__dict__['sampling_rate'] = float(value)
+                self_dict['sampling_rate'] = float(value)
             elif key == 'starttime':
                 if isinstance(value, UTCDateTime):
                     starttime = UTCDateTime(ns=value.ns)
                 else:
                     starttime = UTCDateTime(value)
-                self.__dict__['starttime'] = starttime
+                self_dict['starttime'] = starttime
             elif key == 'npts':
-                self.__dict__['npts'] = int(value)
+                self_dict['npts'] = int(value)
             # set derived value: delta
             try:
-                delta = 1.0 / float(self.sampling_rate)
+                delta = 1.0 / float(self_dict['sampling_rate'])
             except ZeroDivisionError:
                 delta = 0.0
-            self.__dict__['delta'] = delta
+            self_dict['delta'] = delta
+
             # set derived value: endtime
-            timediff = 0 if self.npts == 0 else float(self.npts - 1) * delta
-            endtime_ns = self.starttime.ns + int(round(timediff * 1e9))
-            self.__dict__['endtime'] = UTCDateTime(ns=endtime_ns)
+            npts = self_dict['npts']
+            timediff = 0 if npts == 0 else float(npts - 1) * delta
+            endtime_ns = self_dict['starttime'].ns + int(round(timediff * 1e9))
+            self_dict['endtime'] = UTCDateTime(ns=endtime_ns)
             return
         if key == 'component':
             key = 'channel'
