@@ -273,29 +273,34 @@ class UTCDateTime(object):
     __slots__ = ('__ns', '__precision', '_initialized', '_has_warned',
                  '__weakref__')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, ns=None, strict=True, iso8601=None,
+                 precision=None, **kwargs):
         """
         Creates a new UTCDateTime object.
         """
         # this is a temporary, it will be removed soon
         self._initialized = False
         self._has_warned = False
+
         # set default precision
-        self._set_precision(kwargs.pop('precision', self.DEFAULT_PRECISION))
+        if precision is None:
+            self.__precision = self.DEFAULT_PRECISION
+        else:
+            self._set_precision(precision)
+
         # set directly to nanoseconds if given
-        ns = kwargs.pop('ns', None)
         if ns is not None:
             self._set_ns(ns)
             return
-        strict = kwargs.pop('strict', True)
-        # iso8601 flag
-        iso8601 = kwargs.pop('iso8601', None)
+
         # check parameter
-        if len(args) == 0 and len(kwargs) == 0:
+        n_args = len(args)
+        n_kwargs = len(kwargs)
+        if n_args == 0 and n_kwargs == 0:
             # use current date/time if no argument is given
             self._from_timestamp(time.time())
             return
-        elif len(args) == 1 and len(kwargs) == 0:
+        elif n_args == 1 and n_kwargs == 0:
             value = args[0]
             if isinstance(value, UTCDateTime):
                 # ugly workaround to be able to unpickle UTCDateTime objects
@@ -425,7 +430,7 @@ class UTCDateTime(object):
             if 'year' in kwargs:
                 # year given as kwargs
                 year = kwargs['year']
-            elif len(args) == 1:
+            elif n_args == 1:
                 # year is first (and only) argument
                 year = args[0]
             days_in_year = calendar.isleap(year) and 366 or 365
@@ -445,7 +450,7 @@ class UTCDateTime(object):
                 kwargs.pop('julday')
 
         # check if seconds are given as float value
-        if len(args) == 6 and isinstance(args[5], float):
+        if n_args == 6 and isinstance(args[5], float):
             _frac, _sec = math.modf(round(args[5], 6))
             kwargs['second'] = int(_sec)
             kwargs['microsecond'] = int(round(_frac * 1e6))
@@ -1077,17 +1082,17 @@ class UTCDateTime(object):
         return str(self.__str__())
 
     def _operate(self, other, op_func):
-        if isinstance(other, UTCDateTime):
-            ndigits = min(self.__precision, other.__precision) - 9
+        try:
             if self.__precision != other.__precision:
                 msg = ('Comparing UTCDateTime objects of different precision'
                        ' is not defined will raise an Exception in a future'
                        ' version of obspy')
                 warnings.warn(msg, ObsPyDeprecationWarning)
+            ndigits = min(self.__precision, other.__precision) - 9
             lhs = round(self.__ns, ndigits)
             rhs = round(other.__ns, ndigits)
             return op_func(lhs, rhs)
-        else:
+        except AttributeError:
             try:
                 return self._operate(UTCDateTime(other), op_func)
             except TypeError:
