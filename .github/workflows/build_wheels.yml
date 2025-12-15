@@ -102,7 +102,7 @@ jobs:
     needs: merge_artifacts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: artifact
           path: dist
@@ -120,7 +120,7 @@ jobs:
     needs: merge_artifacts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: artifact
           path: dist
