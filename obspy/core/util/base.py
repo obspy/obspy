@@ -50,12 +50,12 @@ NETWORK_MODULES = ['clients.earthworm', 'clients.fdsn',
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
-WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
-                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
-                            'SEGY', 'SU', 'SEG2', 'WAV', 'WIN', 'CSS',
-                            'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
-                            'GCF', 'DMX', 'ALSEP_PSE', 'ALSEP_WTN',
-                            'ALSEP_WTH', 'CYBERSHAKE']
+WAVEFORM_PREFERRED_ORDER = ['MSEED', 'MSEED3', 'SAC', 'GSE2', 'SEISAN',
+                            'SACXY', 'GSE1', 'Q', 'SH_ASC', 'SLIST', 'TSPAIR',
+                            'Y', 'PICKLE', 'SEGY', 'SU', 'SEG2', 'WAV', 'WIN',
+                            'CSS', 'NNSA_KB_CORE', 'AH', 'PDAS',
+                            'KINEMETRICS_EVT', 'GCF', 'DMX', 'ALSEP_PSE',
+                            'ALSEP_WTN', 'ALSEP_WTH', 'CYBERSHAKE']
 EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
 INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP']
 # waveform plugins accepting a byteorder keyword
