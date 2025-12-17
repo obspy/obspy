@@ -2,6 +2,9 @@ master
 ======
 
 Changes:
+ - General
+   * Fix documentation for the command line scripts (see #1208 #3569)
+   * Fix code coverage reporting (see #3646)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
@@ -25,6 +28,8 @@ Changes:
      current msindex (see #3403)
  - obspy.clients.fdsn
    * Natural Resources Canada (NRCAN) added to list of known clients
+   * Spanish National Geographic Institute (IGN) added to known clients
+   * Various FDSNWS URL mappings updated to https
    * A FDSNNoServiceException is now raised instead of a ValueError when
      querying a webservice not present in Client.services  (see #3483)
    * make it possible to opt out of server side gzip compression (see #3469)
@@ -32,7 +37,7 @@ Changes:
      getting raised as an FDSNException but some low-level exceptions like
      AttributeError, which in turn caused problems in Mass Downloader (see
      #3513)
-  - obspy.clients.neic
+ - obspy.clients.neic
    * Update the default CWB QueryServer IP address from the old IP to the
      new USGS server address (see #3592)
  - obspy.clients.seedlink:
@@ -63,9 +68,13 @@ Changes:
    * Less strict date/time parsing (#3283).
  - obspy.io.seiscomp:
    * add seiscomp scxml 0.13 support (see #3345)
+ - obspy.io.shapefile:
+   * add support for pyshp v3 (see #3599)
  - obspy.io.stationxml:
    * Fix a bug writing the informational "description" field of instrument
      sensitivity input/output units (see #3572).
+ - obspy.io.win:
+   * Fix reading sampling rate larger than 1 bytes (see #3641)
  - obspy.io.xseed:
    * Improve error message when trying to read a local path to a file that does
      not exist with XSEED Parser (see #2686)
@@ -76,6 +85,12 @@ Changes:
    * add support for Chebyshev I/II, elliptic and Bessel filters alongside
      the default Butterworth filters (see #3294)
    * fix potential out of bounds array access in AR picker (see #1801)
+   * fix a small issue in evalresp linked to picky new gcc (see #3578)
+   * array analysis: minor docstring fix in "get_geometry()" (see #3516, #3606)
+   * MSEEDMetadata: Computation of sample metrics replaced with vectorised
+     numpy code. Speedup of roughly factor 10 for integer data and 1.5 for
+     floating point data. (see #3621)
+
 
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================
