@@ -13,7 +13,7 @@ dependencies:
   # see pypa/setuptools#4480
   - setuptools !=71.0.1
   # see #3258
-  - sqlalchemy < 2.0
+  - sqlalchemy
   # soft dependencies
   - cartopy
   - geographiclib
