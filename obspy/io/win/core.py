@@ -158,9 +158,9 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
                         output[chanum].append(idata2)
                 elif datawide == 3:
                     for i in range((xlen // datawide)):
-                        idata2 = output[chanum][-1] +\
-                            from_buffer(sdata[3 * i:3 * (i + 1)] + b' ',
-                                        '>i')[0] >> 8
+                        idata2 = output[chanum][-1] + \
+                                 (from_buffer(sdata[3 * i:3 * (i + 1)] + b' ',
+                                              '>i')[0] >> 8)
                         output[chanum].append(idata2)
                 elif datawide == 4:
                     for i in range((xlen // datawide)):

@@ -73,6 +73,7 @@ Changes:
      sensitivity input/output units (see #3572).
  - obspy.io.win:
    * Fix reading sampling rate larger than 1 bytes (see #3641)
+   * Fix reading of 24 bit data (see #TODO)
  - obspy.io.xseed:
    * Improve error message when trying to read a local path to a file that does
      not exist with XSEED Parser (see #2686)
