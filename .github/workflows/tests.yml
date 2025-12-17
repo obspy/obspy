@@ -50,7 +50,7 @@ jobs:
             "target_url": "https://tests.obspy.org/?pr=${{ github.event.pull_request.number }}"
             }'
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -140,7 +140,7 @@ jobs:
       # set additional runtest options (--keep-images, --network, -W error)
       runtest_options: ${{ github.event_name == 'pull_request' && '--keep-images' || '' }} ${{ contains(matrix.options, 'network') && '--network' || '' }} ${{ contains(matrix.options, 'warnings') && '-W error' || '' }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -154,7 +154,7 @@ jobs:
           activate-environment: test
           python-version: ${{ matrix.python-version }}
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ${{ env.prefix }}
           key: ${{ env.cache_key }}-hash${{ hashFiles(env.env_file) }}-${{ steps.date.outputs.date }}-${{ env.CACHE_NUMBER }}
@@ -197,7 +197,7 @@ jobs:
 
       - name: optionally upload image directory
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'upload_images')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: "images_${{ github.event.pull_request.number }}_${{ matrix.python-version }}_${{ matrix.os }}"
           path: obspy/obspy_test_images
