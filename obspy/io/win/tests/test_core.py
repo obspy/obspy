@@ -98,4 +98,4 @@ class TestCore():
             "...0005": 44582.1592993}
 
         for tr in st:
-            assert round(expected_stds[tr.id],4) == round(tr.data.std(), 4)
+            assert round(expected_stds[tr.id], 4) == round(tr.data.std(), 4)
