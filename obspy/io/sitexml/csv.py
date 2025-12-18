@@ -13,16 +13,17 @@ from pathlib import Path
 import os
 import warnings
 import sys
+import re
 
 import pandas as pd
 from collections import defaultdict
 
 import obspy
 from obspy.core.inventory.util import ExternalReference
-from obspy.io.sitexml.core import (SERASite, SiteDescription, SiteCharacterizationParameters, SERASiteOwner, 
+from obspy.io.sitexml.core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
                                    EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency, VelocityS30, 
-                                   VelocityProfile, VelocityProfileData, ValueWithUncertainty, Analysis,
-                                   LiteratureSource, VelocityProfileSurvey)
+                                   VelocityProfile, VelocityProfileData, VelocityProfileSurvey, 
+                                   LiteratureSource, ValueWithUncertainty)
 from obspy.io.sitexml.write import _write_sitexml
 from obspy.io.sitexml.excel import _read_sheet, _empty_value
 
@@ -30,15 +31,19 @@ from obspy.io.sitexml.excel import _read_sheet, _empty_value
 def csv_to_sitexml(sera_site_dict, output_folder):
 
     for sera_site in sera_site_dict.values():
-        print("Creating SiteXMl for station: ", sera_site.site_description.station_code)
-        
-        output_file = output_folder + "/" + sera_site.site_description.station_code + ".xml"
-        _write_sitexml(sera_site, output_file)
+        if sera_site.site_description.station_code:
+            print("Creating SiteXMl for station: ", sera_site.site_description.station_code)
+            output_file = output_folder + "/" + sera_site.site_description.station_code + ".xml"
+        else:
+            print("Creating SiteXMl for site: ", sera_site.resource_id.id)
+            filename = re.sub(r"[^A-Za-z0-9]+", "_", sera_site.resource_id.id).strip("_")
+            output_file = output_folder + "/" + filename + ".xml"
+        _write_sitexml(sera_site, output_file, validate=True)
 
 def csv_to_sera_site(site_owner_csv,
                      site_description_csv, 
-                     site_char_csv=None, 
-                     velocity_profile_dir=None, 
+                     analysis_csv=None, 
+                     velocity_profiles_csv=None, 
                      delim='\t'):
     """
     Function import metadata for SiteXML from csv files.
@@ -48,16 +53,16 @@ def csv_to_sera_site(site_owner_csv,
     :type site_description_csv: File name or file like object
     :param site_description_csv: CSV file with site description metadata. 
             One line per station/location. Mandatory.
-    :type site_char_csv: File name or file like object
-    :param site_char_csv: CSV file with site characterization metadata. 
+    :type analysis_csv: File name or file like object
+    :param analysis_csv: CSV file with analysis metadata. 
             One line per analysisID. Optional.
-    :type velocity_profile_dir: 
-    :param velocity_profile_dir: Path to a folder with velocity profile metadata.
-            The folder should contain one CSV file per station. Optional.
+    :type velocity_profiles_csv: 
+    :param velocity_profiles_csv: CSV file or path to a folder with velocity profile metadata.
+            The folder can contain any number of CSV files. Optional.
     :type delim: str
     :param delim: CSV file delimiter. Default tab delimeted.
 
-    Returns a dictionary of SERASite objects. Dictionary keys are the station names.
+    Returns a dictionary of SERASite objects. Dictionary keys are the unique SiteIDs.
     """
     # This is probably not needed as these two arguments are mandatory.
     #
@@ -72,51 +77,36 @@ def csv_to_sera_site(site_owner_csv,
         print(f"Error: {e}")
         sys.exit(1)
     
-    # Try to read the site characterization metadata if a csv is provided.
+    # Try to read the analysis metadata if a csv is provided.
     #
     try:
-        df_site_char = pd.read_csv(site_char_csv, sep=delim)
-        exists_site_char = True
+        df_analysis = pd.read_csv(analysis_csv, sep=delim)
+        exists_analysis = True
     except Exception as e:
-        print(f"Warning: Missing Site Characterization metadata. {e}")
-        exists_site_char = False
+        print(f"Warning: Missing analysis metadata. {e}")
+        exists_analysis = False
 
-    # Read the velocity profiles and 
-    # Store them in a dictionary of dataframes with key the station name 
+    # Read the velocity profiles and store them
+    # in a dictionary of dataframes with key the siteID 
     #
-    df_vp_dict, errors = _load_csv_directory(velocity_profile_dir, delim=delim)
-    #print("Velocity profiles keys: ", df_vp_dict.keys())
-    
-    #df_site_owner.info()
-    #df_site_description.info()
+    df_vp_dict = _import_velocity_profiles(velocity_profiles_csv, delim=delim)
     
     site_owner_dict = _read_sheet(df_site_owner, SERASiteOwner)
     site_description_dict = _read_site_description(df_site_description)
-    #print("site_description_dict keys: ")
-    #for key in site_description_dict:
-    #    print(key)
 
-    if exists_site_char:
-        #df_site_char.info()
-        site_char_dict = _read_site_characterization(df_site_char, df_vp_dict)
-        #print("site_char_dict keys: ", site_char_dict.keys())
+    if exists_analysis:
+        analysis_dict = _read_analysis(df_analysis, df_vp_dict)
         
-    # All dictionaries use the station name for key.
-    # What if the sitexml is for a site other than a station?
+    # All dictionaries use the unique SiteID for key.
     #
     sera_site_dict = {}
-    for key in site_description_dict:
-        sera_site_dict[key] = SERASite(site_owner = site_owner_dict['site_owner'],
-                                           site_description = site_description_dict[key],
-                                           created = obspy.UTCDateTime())
-        if exists_site_char and key in site_char_dict:
-            sera_site_dict[key].site_characterization = site_char_dict[key]
-        """
-        site_descriptionID = site_description_dict[key].publicID
-        print(site_descriptionID)
-        if exists_site_char and site_descriptionID in site_char_dict:
-            sera_site_dict[key].site_characterization = site_char_dict[site_descriptionID]
-        """
+    for siteID in site_description_dict:
+        sera_site_dict[siteID] = SERASite(site_owner = site_owner_dict['site_owner'],
+                                           site_description = site_description_dict[siteID],
+                                           created = obspy.UTCDateTime(),
+                                           resource_id = siteID)
+        if exists_analysis and siteID in analysis_dict:
+            sera_site_dict[siteID].analysis = analysis_dict[siteID]
 
     return sera_site_dict
 
@@ -124,81 +114,74 @@ def _read_site_description(df_site_description):
     
     site_description_dict = {}
 
-    #for row in df_site_description.i
-    for i in range(df_site_description.ndim):
-        #print(df_site_description[i]['station'])
+    for row in df_site_description.iterrows():
 
-        latitude = df_site_description.loc[i].at['latitude']
-        longitude = df_site_description.loc[i].at['longitude']
-        if latitude is None or longitude is None:
-            warnings.warn("Missing latitude or longitude value. " \
+        siteID = _read_cell(row[1], "siteID")
+        latitude = _read_cell(row[1], "latitude")
+        longitude = _read_cell(row[1], "longitude")
+        if siteID is None or latitude is None or longitude is None:
+            warnings.warn("Missing siteID, latitude or longitude value. " \
                         "Processing of site description element " \
                         "will be skipped.", UserWarning)
             return None
         
         # TODOs What if they don't provide the IDs in the csv file??
         #
-        publicID =  _read_cell(df_site_description.loc[i],"siteDescriptionID")
-        station_code = _read_cell(df_site_description.loc[i],"station")
+        resource_id =  _read_cell(row[1], "siteDescriptionID")
+        station_code = _read_cell(row[1], "station")
         
         # TODOS
         # If station is empty print a warning
         #
-        site_description_obj = SiteDescription(publicID=publicID,
+        site_description_obj = SiteDescription(resource_id=resource_id,
                                        station_code=station_code, 
                                        latitude=latitude, 
                                        longitude=longitude)
         
-        site_description_obj.altitude = \
-            _read_cell(df_site_description.loc[i], 
+        site_description_obj.altitude = _read_cell(row[1], 
                                             "altitude")
-        site_description_obj.min_distance_from_station = _read_cell(df_site_description.loc[i], 
+        site_description_obj.min_distance_from_station = _read_cell(row[1], 
                                             "minDistanceFromStation")
-        site_description_obj.max_distance_from_station = _read_cell(df_site_description.loc[i], 
+        site_description_obj.max_distance_from_station = _read_cell(row[1], 
                                             "maxDistanceFromStation")
-        site_description_obj.morphology = _read_cell(df_site_description.loc[i], 
+        site_description_obj.morphology = _read_cell(row[1], 
                                             "siteMorphology")
-        site_description_obj.topographyA = _read_cell(df_site_description.loc[i], 
+        site_description_obj.topographyA = _read_cell(row[1], 
                                             "siteTopography_schemaA")
-        site_description_obj.topographyB = _read_cell(df_site_description.loc[i], 
+        site_description_obj.topographyB = _read_cell(row[1], 
                                             "siteTopography_schemaB")
-        site_description_obj.preferred_site_analysisID = _read_cell(df_site_description.loc[i], 
+        site_description_obj.preferred_site_analysisID = _read_cell(row[1], 
                                             "preferredSiteAnalysisID")
-        site_description_obj.preferred_velocity_profileID = _read_cell(df_site_description.loc[i], 
+        site_description_obj.preferred_velocity_profileID = _read_cell(row[1], 
                                             "preferredVelocityProfileID")
         
         site_description_obj.ec8 = \
-            _read_site_indicator(df_site_description.loc[i], EC8, 'siteClassEC8')
+            _read_site_indicator(row[1], EC8, 'siteClassEC8')
         site_description_obj.bedrock_depth = \
-            _read_site_indicator(df_site_description.loc[i], BedrockDepth, 'bedrockDepth')
+            _read_site_indicator(row[1], BedrockDepth, 'bedrockDepth')
         site_description_obj.h800 = \
-            _read_site_indicator(df_site_description.loc[i], H800, 'h800')
+            _read_site_indicator(row[1], H800, 'h800')
         site_description_obj.geological_unit = \
-            _read_site_indicator(df_site_description.loc[i], GeologicalUnit, 'geologicalUnit')
+            _read_site_indicator(row[1], GeologicalUnit, 'geologicalUnit')
         
-        # TODOs 
-        # if station code is missing we need another index for dictionary
-        site_description_dict[station_code] = site_description_obj
+        site_description_dict[siteID] = site_description_obj
 
     return site_description_dict
 
-def _read_site_characterization(df_site_char, df_vp_dict=None):
+def _read_analysis(df_analysis, df_vp_dict=None):
     
-    site_char_dict = {}
     analysis_dict = defaultdict(list)
 
-    for row in df_site_char.iterrows():
+    for row in df_analysis.iterrows():
 
-        # At least one analysis should exist in order to create the SiteChar object
-        #
         # TODOs What if they don't provide the IDs in the csv file??
         #
-        siteCharacterizationID = row[1]['siteCharacterizationID']
+        siteID = row[1]['siteID']
         analysisID = row[1]['analysisID']
         site_descriptionID = row[1]['siteDescriptionID']
-        station = row[1]['station']
-        if siteCharacterizationID and analysisID and site_descriptionID:
-            analysis_obj = Analysis(publicID = analysisID,
+        #station = row[1]['station']
+        if siteID and analysisID and site_descriptionID:
+            analysis_obj = Analysis(resource_id = analysisID,
                          site_descriptionID = site_descriptionID)
                 
             # Go on reading the site characterization indicators
@@ -218,34 +201,21 @@ def _read_site_characterization(df_site_char, df_vp_dict=None):
             analysis_obj.borehole_logs_count = \
                 _read_cell(row[1], "boreholeLogsCount")
            
-           # Read Velocity Profiles of Analysis
-           #
-            if analysis_obj.velocity_profile_survey and station in df_vp_dict:
+            # Read Velocity Profiles of Analysis
+            #
+            if df_vp_dict and siteID in df_vp_dict and analysis_obj.velocity_profile_survey:
                 analysis_obj.velocity_profile_survey.velocity_profiles = \
                     _read_velocity_profiles_for_analysis(
-                        df_vp_dict[station],
+                        df_vp_dict[siteID],
                         analysis_id=analysisID)
             
-            # Add analysis object in analysis_dict using as key the station name
-            analysis_dict[station].append(analysis_obj)
-            
-            # Create a new SiteCharacterizationParameters obj and append to the dictionary 
-            # only if this the row we encounter first occurence of the siteCharacterization object
-            # Use as key the site description ID so we can associate with the site description metadata
-            if site_descriptionID not in site_char_dict:
-                site_char_dict[station] = \
-                    SiteCharacterizationParameters(publicID = siteCharacterizationID)                                
+            # Add analysis object in analysis_dict using as key the siteID
+            analysis_dict[siteID].append(analysis_obj)
+                                       
         else:
             return None
     
-    # Cycle throught the analyis dict and 
-    # assign the analysis objects in the appropriate site_characterization objects
-    #
-    for st in analysis_dict:
-        for analysis in analysis_dict[st]:
-            site_char_dict[st].analysis.append(analysis)
-
-    return site_char_dict
+    return analysis_dict
 
 def _read_velocity_profiles_for_analysis(df_vp, analysis_id):
     """
@@ -275,6 +245,8 @@ def _read_velocity_profiles_for_analysis(df_vp, analysis_id):
 def _read_velocity_profile(rows):
     """
     Build a VelocityProfile object from a subset of rows belonging to a single profile.
+
+    :param rows: A group of dataframe rows
     """
     rows = rows.sort_values("layerCount")
     layer_objects = []
@@ -300,7 +272,7 @@ def _read_velocity_profile(rows):
 
     return VelocityProfile(
         layer_count=len(layer_objects),
-        publicID=rows.iloc[0]["velocityProfileID"],
+        resource_id=rows.iloc[0]["velocityProfileID"],
         velocity_profile_data=layer_objects
     )
 
@@ -335,37 +307,44 @@ def _read_site_indicator(df_row, cls, indicator):
 
     return obj
 
-def _load_csv_directory(path, delim='\t'):
-    # Check whether the path exists
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Path does not exist: {path}")
+def _import_velocity_profiles(path, delim='\t'):
+    
+    df = pd.DataFrame()
 
-    # Check whether the path is a directory
-    if not os.path.isdir(path):
-        raise NotADirectoryError(f"Path is not a directory: {path}")
+    # Case 1: path is a directory → loop through CSV files
+    if os.path.isdir(path):
+        for filename in os.listdir(path):
+            if filename.lower().endswith(".csv"):
+                file_path = os.path.join(path, filename)
+                try:
+                    df = pd.concat([df, pd.read_csv(file_path, sep=delim)], ignore_index=True)
+                except Exception as e:
+                    print(f"Error reading file {file_path}: {e}")
 
-    dataframes = {}
-    errors = {}
-
-    for filename in os.listdir(path):
-        if filename.lower().endswith('.csv'):
-            file_path = os.path.join(path, filename)
-            key = os.path.splitext(filename)[0]
-
+    # Case 2: path is a file → read only that file
+    elif os.path.isfile(path):
+        if path.lower().endswith(".csv"):
             try:
-                df = pd.read_csv(file_path, sep=delim)
-                dataframes[key] = df
+                df = pd.read_csv(path, sep=delim)
             except Exception as e:
-                # Store the error so user knows which files failed
-                errors[key] = str(e)
+                print(f"Error reading file {path}: {e}")
+        else:
+            print(f"File is not a CSV: {path}")
 
-    return dataframes, errors    
+    # Case 3: path is invalid
+    else:
+        print(f"Invalid path: {path}")
+
+    if not df.empty:
+        df_dict = {site_id: group for site_id, group in df.groupby("siteID")}
+        return df_dict 
+    else:
+        return None
 
 def _read_reference(df_row, indicator):
 
     title = _read_cell(df_row, 'title', indicator)
-    # TODOs
-    # first_author is also required according to the schema
+    # Title is the only required property according to schema
     #
     if title: 
         literature_source = LiteratureSource(title = title)
@@ -380,7 +359,7 @@ def _read_reference(df_row, indicator):
     
     uri = _read_cell(df_row, 'url', indicator)
     description = _read_cell(df_row, 'description', indicator)
-    if uri or description:
+    if uri:
         file_resource = ExternalReference(uri = uri,
                                           description = description)
     else:
