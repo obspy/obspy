@@ -13,6 +13,7 @@ from pathlib import Path
 import re
 import warnings
 import io
+import obspy
 
 from lxml import etree
 
@@ -21,7 +22,7 @@ from obspy.io.sitexml.core import ValueWithUncertainty
 from obspy.io.sitexml.sitexml import validate_sitexml
 
 # Define some constants for writing SiteXML files.
-SCHEMA_VERSION = "1.3"
+SCHEMA_VERSION = "1.3.4"
 NAMESPACE = "http://www.orfeus-eu.org/xml/site/1"
 #READABLE_VERSIONS = ("1.0", "1.1", "1.2")
 
@@ -50,19 +51,30 @@ def _write_sitexml(sera_site, file_or_file_object, validate=False,
 		raise ValueError(msg)
 
 	nsmap[None] = NAMESPACE
-	#attrib = {"schemaVersion": SCHEMA_VERSION}
+	attribs = {"schemaVersion": SCHEMA_VERSION}
+	if sera_site.resource_id:
+		attribs["publicID"] = sera_site.resource_id.id
 
-	root = etree.Element("SERA_quakeml", nsmap=nsmap)
+	#site_owner_elem = etree.SubElement(parent, "siteOwner", attribs)
+	root = etree.Element("SERA_quakeml", attribs, nsmap=nsmap)
 	
-	etree.SubElement(root, "schemaVersion").text = SCHEMA_VERSION
-	etree.SubElement(root, "creationTime").text = str(sera_site.created)
+	#etree.SubElement(root, "schemaVersion").text = SCHEMA_VERSION
+	if sera_site.created:
+		etree.SubElement(root, "creationTime").text = str(sera_site.created)
+	else:
+		etree.SubElement(root, "creationTime").text = str(obspy.UTCDateTime())
+
+	# Write External References
+	if sera_site.external_references:
+		for ref in sera_site.external_references:
+			_write_external_reference(root, ref)
 
 	if sera_site.site_owner:
 		_write_site_owner(root, sera_site.site_owner)
 	if sera_site.site_description:
 		_write_site_description(root, sera_site.site_description)
-	if sera_site.site_characterization:
-		_write_site_characterization(root, sera_site.site_characterization)
+	if sera_site.analysis:
+		_write_analysis(root, sera_site.analysis)
 
 	#_write_site_characterization(root, sera_site.site_characterization)
 
@@ -138,7 +150,7 @@ def _write_site_owner(parent, site_owner):
 	
 def _write_site_description(parent, site_description):
 
-	attribs = {"publicID": site_description.publicID} if site_description.publicID else None
+	attribs = {"publicID": site_description.resource_id} if site_description.resource_id else None
 	site_description_elem = etree.SubElement(parent, "siteDescription", attribs)
 
 	_obj2tag(site_description_elem, "station", site_description.station_code)
@@ -179,36 +191,35 @@ def _write_site_description(parent, site_description):
 	_obj2tag(site_description_elem, "preferredVelocityProfileID", 
 		  site_description.preferred_velocity_profileID)
 
-def _write_site_characterization(parent, site_characterization):
+def _write_analysis(parent, analysis_list):
 
-	attribs = {"publicID": site_characterization.publicID} if site_characterization.publicID else None
-	site_characterization_elem = etree.SubElement(parent, 
-						"siteCharacterizationParameters", attribs)
+	#attribs = {"publicID": site_characterization.publicID} if site_characterization.publicID else None
+	#site_characterization_elem = etree.SubElement(parent, 
+	#					"siteCharacterizationParameters", attribs)
 	
-	if site_characterization.analysis:
-		for analysis in site_characterization.analysis:
-			
-			attribs = {"publicID": analysis.publicID} if analysis.publicID else None
-			analysis_elem = etree.SubElement(site_characterization_elem, "analysis", attribs)
+	for analysis in analysis_list:
+		
+		attribs = {"publicID": analysis.resource_id} if analysis.resource_id else None
+		analysis_elem = etree.SubElement(parent, "analysis", attribs)
 
-			_obj2tag(analysis_elem, "siteDescriptionID", analysis.site_descriptionID)
+		_obj2tag(analysis_elem, "siteDescriptionID", analysis.site_descriptionID)
 
-			# TODOs
-			# Write CreationInfo
-			# Write Comments
+		# TODOs
+		# Write CreationInfo
+		# Write Comments
 
-			_write_site_indicator(analysis_elem, "resonanceFrequency", 
-					   analysis.resonance_frequency)
-			_write_site_indicator(analysis_elem, "velocityS30", 
-					   analysis.velocity_s30)
+		_write_site_indicator(analysis_elem, "resonanceFrequency", 
+					analysis.resonance_frequency)
+		_write_site_indicator(analysis_elem, "velocityS30", 
+					analysis.velocity_s30)
 
-			_obj2tag(analysis_elem, "velocityProfileCount", analysis.velocity_profile_count)
-			_obj2tag(analysis_elem, "sptLogsCount", analysis.spt_logs_count)
-			_obj2tag(analysis_elem, "cptLogsCount", analysis.cpt_logs_count)
-			_obj2tag(analysis_elem, "boreholeLogsCount", analysis.borehole_logs_count)
+		_obj2tag(analysis_elem, "velocityProfileCount", analysis.velocity_profile_count)
+		_obj2tag(analysis_elem, "sptLogsCount", analysis.spt_logs_count)
+		_obj2tag(analysis_elem, "cptLogsCount", analysis.cpt_logs_count)
+		_obj2tag(analysis_elem, "boreholeLogsCount", analysis.borehole_logs_count)
 
-			_write_velocity_profile(analysis_elem, 
-								analysis.velocity_profile_survey)	
+		_write_velocity_profile(analysis_elem, 
+							analysis.velocity_profile_survey)	
 
 def _write_velocity_profile(parent, velocity_profile_survey):
 
@@ -219,7 +230,7 @@ def _write_velocity_profile(parent, velocity_profile_survey):
 				comment = etree.Comment(f" Velocity profile # {index+1} ")
 				parent.append(comment)
 
-				attribs = {"publicID": vp.publicID} if vp.publicID else None
+				attribs = {"publicID": vp.resource_id} if vp.resource_id else None
 				vp_elem = etree.SubElement(parent, "velocityProfile", attribs)
 				_obj2tag(vp_elem, "layerCount", vp.layer_count)
 
@@ -302,10 +313,7 @@ def _write_reference(parent, site_indicator_obj):
 		_obj2tag(literature_elem, "year", literature_obj.year)
 		_obj2tag(literature_elem, "booktitle", literature_obj.booktitle)
 		_obj2tag(literature_elem, "doi", literature_obj.doi)
-		
-		if literature_obj.language:
-			language_elem = etree.SubElement(literature_elem, "language")
-			_obj2tag(language_elem, "code", literature_obj.language)
+		_obj2tag(literature_elem, "languageCode", literature_obj.language)
 	 
 	if file_obj:    
 		file_resource_elem = etree.SubElement(reference_elem, "fileResource")
@@ -363,7 +371,12 @@ def _write_value_with_uncertainty(parent, tag, value):
 		etree.SubElement(element, "value").text = str(value.value)
 		if value.uncertainty:
 			etree.SubElement(element, "uncertainty").text = str(value.uncertainty)
-			
+
+def _write_external_reference(parent, ref):
+    ref_elem = etree.SubElement(parent, "externalReference")
+    etree.SubElement(ref_elem, "uri").text = ref.uri
+    etree.SubElement(ref_elem, "description").text = ref.description
+
 def _obj2tag(parent, tag_name, tag_value):
 	"""
 	If tag_value is not None, append a SubElement to the parent. The text of
