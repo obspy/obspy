@@ -11,7 +11,7 @@ SiteXML schema.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 from obspy.core.util import Enum
-
+from collections.abc import Iterable
 
 TopographySchemaA = Enum([
     "T1",
@@ -161,47 +161,6 @@ Allowed values are:
 * ``"DH Strong Motion Arrays"``
 """
 
-def _sitexml_check_type(value, expected_type, param_name="value", allow_none=False):
-    """
-    Checks if a given value matches the expected type.
-
-    :param value: The variable to check.
-    :param expected_type: The expected type (or tuple of types).
-    :param param_name: Optional name of the parameter for better error messages.
-    :param allow_none: If True, allows None as a valid value.
-    :raises TypeError: If the value is not of the expected type.
-    """
-    if allow_none and value is None:
-        return value  # Allow None if specified
-
-    if not isinstance(value, expected_type):
-        raise TypeError(f"Expected '{param_name}' to be \
-                        of type {expected_type.__name__}, \
-                        but got {type(value).__name__} instead.")
-
-    return value  # Return the value if the type is correct
-
-
-def _sitexml_check_enum(value, enum_type, param_name="value", allow_none=False):
-    """
-    Checks if a given value is a valid member of an Enum.
-
-    :param value: The value to check.
-    :param enum_type: The Enum class to check against.
-    :param param_name: Optional name of the parameter for error messages.
-    :param allow_none: If True, allows None as a valid value.
-    :raises ValueError: If the value is not a valid Enum member.
-    :return: The validated value.
-    """
-    if allow_none and value is None:
-        return value  # Allow None if specified
-    
-    if value not in enum_type:
-        valid_values = [e for e in enum_type]  # Get all valid Enum names
-        raise ValueError(f"\nInvalid value for '{param_name}'. \
-                         Expected one of {valid_values}, but got '{value}'.")
-    return value  # Return the value if it's valid
-
 def _pretty_str(obj):
     return ", ".join(
         f"{key}='{value}'" for key, value in vars(obj).items() 
@@ -229,7 +188,7 @@ def _enum_property(attr_name, enum_type):
             )
     return property(getter, setter)
 
-def _wrapped_property(attr_name, wrapper_type):
+def _add_property(attr_name, wrapper_type):
     """
     Method to produce getter/setter functions 
     and wrap argument values into the appropriate type.
@@ -248,6 +207,51 @@ def _wrapped_property(attr_name, wrapper_type):
             except Exception as e:
                 raise TypeError(f"Could not convert {value} \
                                 to {wrapper_type.__name__}: {e}")
+
+    return property(getter, setter)
+
+def _add_iterable_property(
+    attr_name,
+    wrapper_type,
+    iterable_type=list,
+    allow_none=True
+):
+    """
+    Creates a property that wraps iterable elements into wrapper_type.
+
+    :param attr_name: name of the attribute
+    :param wrapper_type: class used to wrap each element
+    :param iterable_type: list, tuple, etc.
+    :param allow_none: whether None is allowed
+    """
+    private_name = f"_{attr_name}"
+
+    def getter(self):
+        return getattr(self, private_name)
+
+    def setter(self, values):
+        if values is None:
+            if allow_none:
+                setattr(self, private_name, None)
+                return
+            raise TypeError(f"{attr_name} cannot be None")
+
+        if not isinstance(values, Iterable) or isinstance(values, (str, bytes)):
+            raise TypeError(f"{attr_name} must be an iterable")
+
+        wrapped_items = []
+        for v in values:
+            if isinstance(v, wrapper_type):
+                wrapped_items.append(v)
+            else:
+                try:
+                    wrapped_items.append(wrapper_type(v))
+                except Exception as e:
+                    raise TypeError(
+                        f"Could not convert element {v} to {wrapper_type.__name__}: {e}"
+                    )
+
+        setattr(self, private_name, iterable_type(wrapped_items))
 
     return property(getter, setter)
 
