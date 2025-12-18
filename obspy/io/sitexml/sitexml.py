@@ -20,13 +20,13 @@ from lxml import etree
 import obspy
 from obspy.io.stationxml.core import _tag2obj, _attr2obj, _tags2obj
 from obspy.core.inventory.util import ExternalReference
-from obspy.io.sitexml.core import (SERASite, SiteDescription, SiteCharacterizationParameters, SERASiteOwner, 
+from obspy.io.sitexml.core import (SERASite, SERASiteOwner, SiteDescription, Analysis,
                                    EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency, VelocityS30, 
                                    VelocityProfileSurvey, VelocityProfile, VelocityProfileData, 
-                                   ValueWithUncertainty, LiteratureSource, Analysis)
+                                   ValueWithUncertainty, LiteratureSource)
 
 # Define some constants for writing SiteXML files.
-SCHEMA_VERSION = "1.3"
+SCHEMA_VERSION = "1.3.4"
 NAMESPACE = "http://www.orfeus-eu.org/xml/site/1"
 #READABLE_VERSIONS = ("1.0", "1.1", "1.2")
 
@@ -46,8 +46,7 @@ def _get_version_from_xmldoc(xmldoc):
     except Exception:
         return None
     try:
-        version = xmldoc.find(_ns("schemaVersion")).text
-        #root.attrib["schemaVersion"]
+        version = root.attrib["schemaVersion"]
     except KeyError:
         return None
     return version
@@ -109,42 +108,49 @@ def _read_sitexml(path_or_file_object):
             msg += "\t%s\n" % err
         raise Exception(msg)
         
-    #root = etree.parse(path_or_file_object).getroot()
-    xmldoc = etree.parse(path_or_file_object)
+    root = etree.parse(path_or_file_object).getroot()
+    #xmldoc = etree.parse(path_or_file_object)
 
     #namespace = "http://www.orfeus-eu.org/xml/site/1"
 
-    created = obspy.UTCDateTime(xmldoc.find(_ns("creationTime")).text)
+    siteID = _attr2obj(root, "publicID", str)
+    created = obspy.UTCDateTime(root.find(_ns("creationTime")).text)
 
-    # 
-    # TODOS: Read External References ... They should be added as an array in sera_site.
-    #
-
-    site_owner_element = xmldoc.find(_ns("siteOwner"))
+    site_owner_element = root.find(_ns("siteOwner"))
     if site_owner_element is not None:
         site_owner = _read_site_owner(site_owner_element)
 
-    site_description_element = xmldoc.find(_ns(
+    site_description_element = root.find(_ns(
         "siteDescription"))
     if site_description_element is not None:
         site_description = _read_site_description(
             site_description_element)
     
-    site_characterization_element = xmldoc.find(
-        _ns("siteCharacterizationParameters"))
-    if site_characterization_element is not None:
-        site_characterization = _read_site_characterization(
-            site_characterization_element)
+    analysis_element_list = root.findall(_ns("analysis"))
+    if len(analysis_element_list) != 0:
+        analysis = []
+        for analysis_element in analysis_element_list:
+            analysis.append(_read_analysis(analysis_element))
     
     if site_owner and site_description:
-        sera_site = SERASite(site_owner=site_owner, 
-                         site_description=site_description, 
-                         site_characterization=site_characterization,
-                         created=created)
+        sera_site = SERASite(site_owner = site_owner, 
+                         site_description = site_description, 
+                         resource_id = siteID,
+                         analysis = analysis,
+                         created = created)
     else:
         print("Error: Missing site owner and/or site description in provided siteXML file")
         return None
         
+    # Read External References
+    #
+    ref_element_list = root.findall(_ns("externalReference"))
+    if len(ref_element_list) != 0:
+        references = []
+        for reference_element in ref_element_list:
+            references.append(_read_external_reference(reference_element))
+        sera_site.external_references = references
+
     return sera_site
 
 def _read_site_owner(owner_element):
@@ -260,8 +266,11 @@ def _read_site_description(site_description_element):
     - preferredVelocityProfileID
     - comment (0-unbounded)
     """
+    #
+    # Add checks for all resource IDs that are mandatory
+    #
 
-    publicID = _attr2obj(site_description_element, "publicID", str) 
+    resource_id = _attr2obj(site_description_element, "publicID", str) 
     station_code = _tag2obj(site_description_element, _ns("station"), str)
     
     latitude = _read_value(site_description_element, "latitude", float)
@@ -272,7 +281,7 @@ def _read_site_description(site_description_element):
                     "will be skipped.", UserWarning)
         return None
     
-    site_description = SiteDescription(publicID=publicID,
+    site_description = SiteDescription(resource_id=resource_id,
                                        station_code=station_code, 
                                        latitude=latitude, 
                                        longitude=longitude)
@@ -324,7 +333,8 @@ def _read_morphology(morphology_element, site_description_obj):
     # EC8 Class
     ec8_value = _tag2obj(morphology_element, _ns("siteClassEC8"), str)
     if ec8_value is not None: 
-        ec8_qindex = _read_value(morphology_element, "siteClassEC8Qindex1", float)
+        value = _read_value(morphology_element, "siteClassEC8Qindex1", float)
+        ec8_qindex = value if value is not None else 0
         [ec8_literature_source, ec8_file_resource] = _read_reference(
             morphology_element, "siteClassEC8Reference")
         site_description_obj.ec8 = EC8(
@@ -334,33 +344,29 @@ def _read_morphology(morphology_element, site_description_obj):
                 file_resource = ec8_file_resource)
 
     # Bedrock Depth
-    #[bdepth_value, bdepth_uncertainty] = _read_value_with_uncertainty(
-    #    morphology_element, "bedrockDepth", int)
-    bdepth_value = _read_value_with_uncertainty2(
+    bdepth_value = _read_value_with_uncertainty(
         morphology_element, "bedrockDepth", float)
     if bdepth_value is not None: 
-        bdepth_qindex = _read_value_with_uncertainty2(
-            morphology_element, "bedrockDepthQindex1", float)
+        value = _read_value(morphology_element, "bedrockDepthQindex1", float)
+        bdepth_qindex = value if value is not None else 0
         [bdepth_literature_source, bdepth_file_resource] = _read_reference(
             morphology_element, "bedrockDepthReference")
         site_description_obj.bedrock_depth = BedrockDepth(
-                value = bdepth_value, #ValueWithUncertainty(bdepth_value, bdepth_uncertainty, int),
+                value = bdepth_value,
                 quality_index = bdepth_qindex,
                 literature_source = bdepth_literature_source,
                 file_resource = bdepth_file_resource)
     
     # H800
-    #[h800_value, h800_uncertainty] = _read_value_with_uncertainty(
-    #    morphology_element, "h800", int)
-    h800_value = _read_value_with_uncertainty2(
+    h800_value = _read_value_with_uncertainty(
         morphology_element, "h800", float)
     if h800_value is not None: 
-        h800_qindex = _read_value_with_uncertainty2(
-            morphology_element, "h800Qindex1", float)
+        value = _read_value(morphology_element, "h800Qindex1", float)
+        h800_qindex = value if value is not None else 0
         [h800_literature_source, h800_file_resource] = _read_reference(
             morphology_element, "h800Reference")
         site_description_obj.h800 = H800(
-                value = h800_value, #ValueWithUncertainty(h800_value, h800_uncertainty, int), 
+                value = h800_value,
                 quality_index = h800_qindex,
                 literature_source = h800_literature_source, 
                 file_resource = h800_file_resource)
@@ -368,8 +374,8 @@ def _read_morphology(morphology_element, site_description_obj):
     # Geological Unit
     gunit_value = _tag2obj(morphology_element, _ns("geologicalUnit"), str)
     if gunit_value is not None:
-        gunit_qindex = _read_value_with_uncertainty2(
-            morphology_element, "geologicalUnitQindex1", float)
+        value = _read_value(morphology_element, "geologicalUnitQindex1", float)
+        gunit_qindex = value if value is not None else 0
         gunit_map_scale = _tag2obj(morphology_element, _ns("geologicalMapScale"), str)
         gunit_oge = _tag2obj(morphology_element, _ns("geologicalUnitOGE"), str)
         [gunit_literature_source, gunit_file_resource] = _read_reference(
@@ -382,11 +388,20 @@ def _read_morphology(morphology_element, site_description_obj):
                 literature_source = gunit_literature_source,
                 file_resource = gunit_file_resource)
     
-def _read_site_characterization(site_char_element):
+def _read_analysis(analysis_element):
     """
-    <siteCharacterizationParameters> element structure:
+    Read the <Analysis> element
 
-    - PublicID (attr)
+    :type analysis_element: :class:`~lxml.etree._Element`
+    :param analysis_element: 
+
+    Returns:
+    :type analysis_obj: :class:`~obspy.core.io.sitexml.core.Analysis`
+    :param analysis_obj: The Analysis object to store the values 
+        read from the <Analysis> element.
+
+    <Analysis> element structure:
+
     - Analysis [List]
         - PublicID (attr)
         - resonanceFrequency, resonanceFrequencyQIndex1, 
@@ -411,78 +426,34 @@ def _read_site_characterization(site_char_element):
         - velocityProfileReference
     """
     
-    # Create an empty site_characterization object
-    #
-    publicID = _attr2obj(site_char_element, "publicID", str)
-    site_char_obj = SiteCharacterizationParameters(publicID = publicID)
-    
-    ### Read Analysis element. Store values in site_char_obj.
-    #
-    analysis_element_list = site_char_element.findall(_ns("analysis"))
-    if len(analysis_element_list) != 0:
-        site_char_obj.analysis = []
-        for analysis_element in analysis_element_list:
-            site_char_obj.analysis.append(_read_analysis(analysis_element))
-    
-    
-    """
-    # If both analysis and velocityProfile elements are missing 
-    # return with an empty site_characterization object
-    if analysis_element is None and velocity_profile_element is None:
-        return None
-    
-    ### Read Velocity Profile. Store values in site_char_obj.
-    #
-    if velocity_profile_element is not None:
-        _read_velocity_profile(site_char_element, site_char_obj)
-    """
-    # This could be empty if no Analysis or VP data is present in SiteXML
-    # Maybe return None in this case
-    return site_char_obj
-
-def _read_analysis(analysis_element):
-    """
-    Read the <Analysis> element
-
-    :type analysis_element: :class:`~lxml.etree._Element`
-    :param analysis_element: 
-
-    :type analysis_obj: :class:`~obspy.core.io.sitexml.core.Analysis`
-    :param analysis_obj: The Analysis object to store the values 
-        read from the <Analysis> element.
-    """
     analysis_obj = Analysis()
 
-    analysis_obj.publicID = _attr2obj(analysis_element, "publicID", str)
+    analysis_obj.resource_id = _attr2obj(analysis_element, "publicID", str)
     analysis_obj.site_descriptionID = _tag2obj(analysis_element, _ns("siteDescriptionID"), str)
 
     # Resonance Frequency 
-    #[rfreq_value, rfreq_uncertainty] = \
-    #    _read_value_with_uncertainty(analysis_element, "resonanceFrequency", float)
-    rfreq_value = _read_value_with_uncertainty2(
+    rfreq_value = _read_value_with_uncertainty(
         analysis_element, "resonanceFrequency", float)
     if rfreq_value is not None: 
-        rfreq_qindex = _read_value_with_uncertainty2(
-            analysis_element, "resonanceFrequencyQindex1", float)
+        value = _read_value(analysis_element, "resonanceFrequencyQindex1", float)
+        rfreq_qindex = value if value is not None else 0
         rfreq_methods = _tags2obj(analysis_element, _ns("resonanceFrequencyMethod"), str)
         [rfreq_literature_source, rfreq_file_resource] = \
             _read_reference(analysis_element, "resonanceFrequencyReference")
 
         analysis_obj.resonance_frequency = ResonanceFrequency(
-                value = rfreq_value, #ValueWithUncertainty(rfreq_value, rfreq_uncertainty, float),
+                value = rfreq_value,
                 quality_index = rfreq_qindex,
                 methods = rfreq_methods,
                 literature_source = rfreq_literature_source,
                 file_resource = rfreq_file_resource)
 
     # Velocity S30
-    #[vs30_value, vs30_uncertainty] = \
-    #    _read_value_with_uncertainty(analysis_element, "velocityS30", float)
-    vs30_value = _read_value_with_uncertainty2(
+    vs30_value = _read_value_with_uncertainty(
         analysis_element, "velocityS30", float)
     if vs30_value is not None: 
-        vs30_qindex = _read_value_with_uncertainty2(
-            analysis_element, "velocityS30Qindex1", float)
+        value = _read_value(analysis_element, "velocityS30Qindex1", float)
+        vs30_qindex = value if value is not None else 0
         vs30_methods = _tags2obj(analysis_element, _ns("velocityS30Method"), str)
         vs30_methods_index = _tag2obj(analysis_element, _ns("velocityS30MethodCombIndex"), str)
         vs30_manual_index = _tag2obj(analysis_element, _ns("velocityS30ManualIndex"), str)
@@ -490,7 +461,7 @@ def _read_analysis(analysis_element):
             _read_reference(analysis_element, "velocityS30Reference")
 
         analysis_obj.velocity_s30 = VelocityS30(
-                value = vs30_value, #ValueWithUncertainty(vs30_value, vs30_uncertainty, float),
+                value = vs30_value,
                 quality_index = vs30_qindex,
                 methods = vs30_methods,
                 method_combined_quality_index = vs30_methods_index,
@@ -523,7 +494,8 @@ def _read_velocity_profile(analysis_element, analysis_obj):
     """
 
     vp_element_list=analysis_element.findall(_ns("velocityProfile"))
-    vp_qindex = _read_value_with_uncertainty2(analysis_element, "velocityProfileQindex1", float)
+    value = _read_value(analysis_element, "velocityProfileQindex1", float)
+    vp_qindex = value if value is not None else 0
     [vp_literature_source, vp_file_resource] = \
             _read_reference(analysis_element, "velocityProfileReference")
 
@@ -549,7 +521,7 @@ def _read_velocity_profile(analysis_element, analysis_obj):
     # For each velocityProfile tree element create a VelocityProfile object.
     #
     for vp_element in vp_element_list:
-        publicID = _attr2obj(vp_element, "publicID", str)
+        resource_id = _attr2obj(vp_element, "publicID", str)
         layer_count = _tag2obj(vp_element, _ns("layerCount"), int)
         vp_data_element_list = vp_element.findall(_ns("velocityProfileData"))
 
@@ -559,7 +531,7 @@ def _read_velocity_profile(analysis_element, analysis_obj):
                         "doesn't much the <layerCount> value", UserWarning)
 
         vp = VelocityProfile(layer_count = layer_count,
-                            publicID = publicID,
+                            resource_id = resource_id,
                             velocity_profile_data = [])
         
         # Go through the velocityProfileData elements. 
@@ -575,13 +547,13 @@ def _read_velocity_profile(analysis_element, analysis_obj):
 
 def _read_velocity_profile_data(vp_data_element):
 
-    density = _read_value_with_uncertainty2(vp_data_element, "density", float)
-    velocityS = _read_value_with_uncertainty2(vp_data_element, "velocityS", float)
-    velocityP = _read_value_with_uncertainty2(vp_data_element, "velocityP", float)
+    density = _read_value_with_uncertainty(vp_data_element, "density", float)
+    velocityS = _read_value_with_uncertainty(vp_data_element, "velocityS", float)
+    velocityP = _read_value_with_uncertainty(vp_data_element, "velocityP", float)
     
     geometry_element = vp_data_element.find(_ns("layerThickness"))
-    top_depth = _read_value_with_uncertainty2(geometry_element, "layerTopDepth", float)
-    bottom_depth = _read_value_with_uncertainty2(geometry_element, "layerBottomDepth", float)
+    top_depth = _read_value_with_uncertainty(geometry_element, "layerTopDepth", float)
+    bottom_depth = _read_value_with_uncertainty(geometry_element, "layerBottomDepth", float)
     
     vp_data = VelocityProfileData(density = density,
                                   velocityS = velocityS,
@@ -622,10 +594,7 @@ def _read_literature_source(literature_source_element):
     year = _tag2obj(literature_source_element, _ns("year"), str)
     booktitle = _tag2obj(literature_source_element, _ns("booktitle"), str)
     doi = _tag2obj(literature_source_element, _ns("doi"), str)
-    
-    language_element = literature_source_element.find(_ns("language"))
-    if language_element is not None:
-        language = _tag2obj(language_element, _ns("code"), str)
+    language = _tag2obj(literature_source_element, _ns("languageCode"), str)
 
     # TODOs
     # title and first_author are the required arguments according to the schema
@@ -643,7 +612,7 @@ def _read_literature_source(literature_source_element):
 
 def _read_file_resource(file_resource_element):
     """
-    Read a fileResource element.
+    Read a fileResource object.
     Return an object only if uri is provided
     """
     uri = _tag2obj(file_resource_element, _ns("url"), str)
@@ -684,30 +653,227 @@ def _read_value_with_uncertainty(parent, tag, type):
     """
     element = parent.find(_ns(tag))
     if element is None:
-        return None, None
-
-    value = _tag2obj(element, _ns("value"), type)
-    uncertainty = _tag2obj(element, _ns("uncertainty"), type)
-
-    return value, uncertainty
-
-def _read_value_with_uncertainty2(parent, tag, type):
-    """
-    Method used to read a value / uncertainty pair 
-    from an element of the following structure
-    
-    <xs:element name="parent">
-        <xs:element name="tag">
-            <xs:element name="value" type="type"/>
-            <xs:element name="uncertainty" type="type"/>
-        </xs:element>
-    </xs:element>
-    """
-    element = parent.find(_ns(tag))
-    if element is None:
         return None
 
     value = _tag2obj(element, _ns("value"), type)
     uncertainty = _tag2obj(element, _ns("uncertainty"), type)
 
     return ValueWithUncertainty(value, uncertainty)
+
+def _read_external_reference(ref_element):
+    """
+    Read an ExternalReference object.
+    Return an object only if uri is provided
+    """
+    uri = _tag2obj(ref_element, _ns("uri"), str)
+    description = _tag2obj(ref_element, _ns("description"), str)
+    if uri:
+        return ExternalReference(uri=uri, description=description)
+    else:
+        return None
+
+def quality_index1(method=None, evaluation=None, reliability=None, completeness=None):
+    """
+    This function calculates the Quality Index #1 according to SERA Deliverable 7.2. 
+    It varies from 0 to 1 and refers to a single mandatory indicator. 
+    
+    Four criteria are used for the calculation:
+        A. Method of acquisition and analysis
+        B. Estimation of indicator
+        C. Reliability of the value
+        D. Completeness of the report
+    Each criterion is assinged a value between 0 and 1.
+    
+    The Quality Index #1 is then calculated using the following formula
+        Q_Index1 = [ (A + B + C) * D ] / (Amax + Bmax + Cmax)
+
+    :type method: float       
+    :param method: It defines the reliability of the method of acquisition and 
+        analysis to infer the value of the target indicator, on the basis of 
+        peer-reviewed papers
+    :param evaluation: It defines the way of evaluating the target indicator: direct or
+        proxy. The evaluation is direct if derived from in-situ field experiments; 
+        whereas it is inferred if derived from proxies or empirical relationships.
+    :param reliability: It indicates the confidence on the single indicator (the 
+        reliability of its value) and it is based on the available information 
+        summarized within the intermediate report.
+    :param completeness: it defines whether there exists a report describing step by step 
+        the field survey and the data processing to evaluate the target indicator. 
+        Please note that the presence of a detailed report is very important; 
+        in case of the absence of any report documenting the value of a given indicator, 
+        the corresponding quality_index1 is assigned a zero value.
+    """
+
+    # A. Method of acquisition and analysis quality index. Takes two values:
+    #       1 - Documented method through several papers: The method of acquisition and analysis 
+    #           to estimate the target indicator is well documented through several peer-reviewed 
+    #           papers.
+    #       0 - Undocumented method: The method of acquisition and analysis is not published
+
+    if method == "documented" or method == 1:
+        A = 1
+    else:
+        A = 0
+
+    # B. Estimation of indicator. Takes two values:
+    #       2 - Direct evaluation: The evaluation is based on specific field experiments
+    #       0 - Inferred evaluation: The evaluation is based on inferred values from proxies, 
+    #           empirical relationships or modeling
+
+    if evaluation == "direct" or evaluation == 2:
+        B = 2
+    else:
+        B = 0
+
+    # C. Reliability of the value. Takes three values:
+    #       1   - Yes: The indicator (its value or description) is very reliable
+    #       0.5 - Partial: In case of partial/moderate confidence
+    #       0   - No: The indicator, although described in the report, is not reliable
+    
+    if reliability == "yes" or reliability == 1:
+        C = 1
+    elif reliability == "partial" or reliability == 0.5:
+        C = 0.5
+    else:
+        C = 0
+
+    # D. Completeness of the report. Takes three values:
+    #       1   - Yes: A well-documented report for the specific 1 indicator is present
+    #       0.5 - Partial: A report associated to a site is present, but the information 
+    #               is partial and not very detailed
+    #       0   - No: The value is provided without any documentation
+    
+    if completeness == "yes" or completeness == 1:
+        D = 1
+    elif completeness == "partial" or completeness == 0.5:
+        D = 0.5
+    else:
+        D = 0
+
+    # Sum of maximum values for criteria A, B and C: max(A) + max(B) + max(C)
+    max = 4 
+    quality_index1 = (A + B + C) * D / max
+
+    return quality_index1
+
+def quality_index2(sera_site):
+    """
+    This function calculates the Quality Index #2 for a site, according to SERA Deliverable 7.2. 
+
+    Quality Index #2 is a weighted sum computed on the quality index #1 of all site 
+    indicators evaluated at the target site and varies from 0 to 1.
+
+    The formula used for the calculation is :
+    Q_Index2 = (w1*Q_Index1_si1 + w2*Q_Index1_si2 + ... + w7*Q_Index1_si7) / (w1 + w2 + ... + w7)
+
+    The weights used for this calculation for each site indicator, as proposed by SERA, are:
+    - Resonance Frequency   : 1
+    - Velocity Profile      : 1
+    - Velocity S30          : 0.5
+    - Bedrock Depth         : 0.5
+    - H800                  : 0.5
+    - Geological Unit       : 0.5
+    - Soil Class EC8        : 0.25
+    
+    :type sera_site: :class:`~obspy.io.sitexml.core.SERASite
+    :param sera_site: The site for which to calculate quality index #2
+    """
+
+    if not sera_site:
+        return None
+    
+    weights = {}
+    weights["resonanceFrequency"] = 1
+    weights["velocityProfile"] = 1
+    weights["velocityS30"] = 0.5
+    weights["bedrockDepth"] = 0.5
+    weights["h800"] = 0.5
+    weights["geologicalUnit"] = 0.5
+    weights["siteClassEC8"] = 0.25
+    
+    weights_sum = 0
+    for value in weights.values():
+        weights_sum = weights_sum + value
+    #print("Qindex2 weights sum : ", weights_sum)
+
+    Qindex1 = {}
+    if sera_site.site_description:
+        if sera_site.site_description.ec8:
+            Qindex1["siteClassEC8"] = sera_site.site_description.ec8.quality_index.value
+        if sera_site.site_description.h800:
+            Qindex1["h800"] = sera_site.site_description.h800.quality_index.value
+        if sera_site.site_description.bedrock_depth:
+            Qindex1["bedrockDepth"] = sera_site.site_description.bedrock_depth.quality_index.value
+        if sera_site.site_description.geological_unit:
+            Qindex1["geologicalUnit"] = sera_site.site_description.geological_unit.quality_index.value
+    
+    # TODOs: We must select the prefered analysis and prefered VP for the calculation of QI2
+    #
+    if sera_site.analysis:
+        if sera_site.analysis[0].resonance_frequency:
+            Qindex1["resonanceFrequency"] = sera_site.analysis[0].resonance_frequency.quality_index.value
+        if sera_site.analysis[0].velocity_profile_survey:
+            Qindex1["velocityProfile"] = sera_site.analysis[0].velocity_profile_survey.quality_index.value
+        if sera_site.analysis[0].velocity_s30:
+            Qindex1["velocityS30"] = sera_site.analysis[0].velocity_s30.quality_index.value
+    
+    quality_index2_sum = 0
+    for key in Qindex1:
+        quality_index2_sum = quality_index2_sum + (weights[key] * Qindex1[key])
+    #print(quality_index2_sum)
+    quality_index2 = quality_index2_sum / weights_sum
+
+    return quality_index2
+
+def quality_index3(f0_vs30 = 0, f0_bedrock_depth = 0, f0_h800 = 0, vs30_h800 = 0, vs30_geology = 0):
+    """
+    This function calculates the Quality Index #3 for a site, according to SERA Deliverable 7.2. 
+
+    Quality Index #3 refers to the overall consistency between the various 
+    indicators and varies from 0 to 1.
+    
+    Specifically, Q_Index3 evaluates consistency of various couples of indicators according to the 
+    current state of knowledge of the community. If estimates for a given couple of indicators 
+    (e.g f0 and Vs30, geology and Vs30, etc.) are not within the range of reported values, then 
+    these two estimates are considered as not consistent with one another.
+
+    The consistency among various couple of indicators should be performed between the following 
+    mandatory indicators: f0, Vs(z), Vs30, H800 (engineering bedrock), seismic bedrock depth and 
+    surface geology.
+
+    The computation of Q_Index3 is given by the sum of consistency values among the following 
+    five couples of indicators, for which published references are available. 
+        1. f0 and Vs30
+        2. f0 and seismic_bedrock_depth
+        3. f0 and engineering_bedrock_depth
+        4. Vs30 and H800 
+        5. Vs30 and geology
+
+    The consistency at a specific site is computed only for the available indicators 
+    (e.g. if only Vs30 and geological information are reported for a site, then the consistency 
+    (cons) should be checked only for the couple Vs30-surface geology).
+
+    Q_Index3 = [cons(f0, Vs30) + cons(f0, seismic_bedrock_depth) + 
+                cons(f0, engineering_bedrock_depth) + cons(H800, Vs30) + 
+                cons(Vs30, geology)] / n
+    """
+    n = 5       # Number of couples used for the calculation of quality_index3
+    quality_index3 = (f0_vs30 + f0_bedrock_depth + f0_h800 + vs30_h800 + vs30_geology) / n
+
+    return quality_index3
+
+def overall_quality_index(quality_index2 = 0, quality_index3 = 0):
+    """
+    This function calculates the Quality Index #3 for a site, according to SERA Deliverable 7.2. 
+
+    The overall quality index is computed as the arithmetic mean between Q_Index2 and Q_Index3. 
+    
+    Overall_Quality_Index = (Q_Index2 + Q_Index3) / 2 
+
+    The range of values of Overall_Quality_Index is spanning from 0 to 1. 
+    A value of 1 is for a site with a very thorough and reliable seismic characterization, 
+    0 is assigned to a site badly or not characterized.
+    """
+    overall_quality_index = (quality_index2 + quality_index3) / 2
+
+    return overall_quality_index
