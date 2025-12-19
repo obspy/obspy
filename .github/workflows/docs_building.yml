@@ -5,10 +5,11 @@ on:
   push:
     branches:
       - master
-    tags-ignore:
-      - '**'
+      - 'maintenance_**' # Will build for maintenance branches like maintenance_1.2.x
+    tags:
+      - '**' # Will build for tags like 1.2.3
   release:
-    types: [published]
+    types: [published] # Will build for tags like 1.2.3
 
 # cancel previous runs, but only in PRs, do not cancel previous runs if this run will be skipped
 concurrency:
@@ -17,7 +18,7 @@ concurrency:
 
 jobs:
   build:
-    # only run if on master branch OR if PR is updated and build_docs label present OR if build_docs_label is added
+    # only run if on master branch OR if PR is updated and build_docs label present OR if build_docs_label is added OR if it's a tag push
     if: github.event_name != 'pull_request' || ((github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'build_docs')) || github.event.label.name == 'build_docs')
     runs-on: ubuntu-latest
     steps:
