@@ -1,4 +1,3 @@
-from codecs import encode
 import copy
 import decorator
 
@@ -112,7 +111,7 @@ def _read_binary(fi, length, left_part):
             raise ValueError('invalid length of bytes to read.\
                              It has to be an integer or 0.5')
     else:
-        return int(encode(fi.read(length), 'hex'), 16)
+        return int.from_bytes(fi.read(length), byteorder='big')
 
 
 if __name__ == '__main__':

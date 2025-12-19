@@ -609,6 +609,7 @@ class TestCore():
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             inv = obspy.read_inventory(filename)
+        print("DEBUG: ", w)
         assert len(w) == 0
 
         assert inv.get_contents()["channels"] == ["JM.NMIA0.00.HNN"]

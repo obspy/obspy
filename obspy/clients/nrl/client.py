@@ -12,7 +12,6 @@ NRL, please see [Templeton2017]_.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import codecs
 import io
 import os
 import warnings
@@ -559,7 +558,7 @@ class LocalNRL(NRL):
         Returns a configparser from a path to an index.txt
         """
         cp = ConfigParser()
-        with codecs.open(path, mode='r', encoding='UTF-8') as f:
+        with open(path, mode='r', encoding='UTF-8') as f:
             cp.read_file(f)
         return cp
 
