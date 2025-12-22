@@ -1,0 +1,43 @@
+[{
+    "SID": "FDSN:XX_TEST__L_H_Z",
+    "RecordLength": 328,
+    "FormatVersion": 3,
+    "Flags": {
+        "RawUInt8": 0
+    },
+    "StartTime": "2004-07-28T20:28:09.000000000Z",
+    "EncodingFormat": 0,
+    "SampleRate": 1.0,
+    "SampleCount": 0,
+    "CRC": "0x7A078953",
+    "PublicationVersion": 2,
+    "ExtraLength": 269,
+    "DataLength": 0,
+    "ExtraHeaders": {
+        "FDSN": {
+            "Event": {
+                "Detection": [
+                    {
+                        "Type": "MURDOCK",
+                        "SignalAmplitude": 80,
+                        "SignalPeriod": 0.399999976,
+                        "BackgroundEstimate": 18,
+                        "Wave": "DILATATION",
+                        "OnsetTime": "2022-06-05T20:32:39.120000Z",
+                        "MEDSNR": [
+                            1,
+                            3,
+                            2,
+                            1,
+                            4,
+                            0
+                        ],
+                        "MEDLookback": 2,
+                        "MEDPickAlgorithm": 0,
+                        "Detector": "Z_SPWWSS"
+                    }
+                ]
+            }
+        }
+    }
+}]
