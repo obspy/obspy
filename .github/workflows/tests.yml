@@ -164,7 +164,11 @@ jobs:
         id: cache
 
       - name: Update environment
-        run: conda env update -n test -f ${{ env.env_file }}
+        run: |
+          conda config --set remote_connect_timeout_secs 10
+          conda config --set remote_max_retries 2
+          conda config --set repodata_threads 1
+          conda env update -n test -f ${{ env.env_file }} -v -v
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: print package info
