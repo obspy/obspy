@@ -149,12 +149,29 @@ jobs:
       - name: Update environment
         run: conda env update -n test -f ${{ env.env_file }}
         if: steps.cache.outputs.cache-hit != 'true'
+        timeout-minutes: 5
 
       - name: print package info
         shell: bash -l {0}
         run: |
           conda info -a
           conda list
+
+      - name: Fix for missing libtiff.so.5 for Python3.8 on Ubuntu
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.8'
+        shell: bash -l {0}
+        run: |
+          # Create symlink in conda environment
+          if [ -f $CONDA_PREFIX/lib/libtiff.so.6 ]; then
+            ln -sf $CONDA_PREFIX/lib/libtiff.so.6 $CONDA_PREFIX/lib/libtiff.so.5
+            echo "Created symlink: libtiff.so.6 -> libtiff.so.5"
+          elif [ -f $CONDA_PREFIX/lib/libtiff.so ]; then
+            ln -sf $CONDA_PREFIX/lib/libtiff.so $CONDA_PREFIX/lib/libtiff.so.5
+            echo "Created symlink: libtiff.so -> libtiff.so.5"
+          else
+            echo "Warning: Could not find libtiff library to link"
+            ls -la $CONDA_PREFIX/lib/libtiff* || echo "No libtiff files found"
+          fi
 
       - name: install obspy
         shell: bash -l {0}
@@ -168,7 +185,7 @@ jobs:
           obspy-runtests --cov obspy --cov-report=xml:${GITHUB_WORKSPACE}/coverage.xml --cov-append --report ${{ env.runtest_options }}
 
       - name: upload coverage
-        uses: codecov/codecov-action@v5.5.1
+        uses: codecov/codecov-action@v5.5.2
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure')
         with:
           flags: ${{ contains(matrix.options, 'network') && 'unittests_network' || 'unittests' }}

@@ -1209,7 +1209,7 @@ class TestClient():
             Client('GFZ', eida_token=token, user="foo", password="bar")
 
         # now lets test the RoutingClient with credentials..
-        credentials_ = {'geofon.gfz-potsdam.de': {'eida_token': token}}
+        credentials_ = {'geofon.gfz.de': {'eida_token': token}}
         credentials_mapping_ = {'GFZ': {'eida_token': token}}
         global_eida_credentials_ = {'EIDA_TOKEN': token}
         for credentials, should_have_credentials in zip(
@@ -1222,7 +1222,7 @@ class TestClient():
                 a dummy stream.
                 """
                 # check that we're at the expected FDSN WS server
-                assert 'https://geofon.gfz-potsdam.de' == self_.base_url
+                assert 'https://geofon.gfz.de' == self_.base_url
                 # check if credentials were used
                 # eida auth availability should be positive in all cases
                 assert self_._has_eida_auth

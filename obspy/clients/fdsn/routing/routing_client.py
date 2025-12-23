@@ -176,7 +176,7 @@ class BaseRoutingClient(HTTPClient):
             dictionary that maps base url of FDSN web service to either
             username/password or EIDA token, e.g.
             ``credentials={
-            'geofon.gfz-potsdam.de': {'eida_token': 'my_token_file.txt'},
+            'geofon.gfz.de': {'eida_token': 'my_token_file.txt'},
             'service.iris.edu': {'user': 'me', 'password': 'my_pass'}
             'EIDA_TOKEN': '/path/to/token.txt'
             }``
