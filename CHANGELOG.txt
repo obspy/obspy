@@ -5,6 +5,9 @@ Changes:
  - General
    * Fix documentation for the command line scripts (see #1208 #3569)
    * Fix code coverage reporting (see #3646)
+   * Github CI: update min numpy version to 1.21 and symlink libtiff.so.5
+     for ubuntu 3.8 tests (see #3639)
+   * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
