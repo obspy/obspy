@@ -328,12 +328,15 @@ class TestPsd:
         inv = read_inventory(testdata['IUANMO.xml'])
 
         # load expected results, for both only PAZ and full response
-        filename_paz = testdata['IUANMO_ppsd_paz.npz']
-        results_paz = PPSD.load_npz(filename_paz, metadata=None,
-                                    allow_pickle=True)
-        filename_full = testdata['IUANMO_ppsd_fullresponse.npz']
-        results_full = PPSD.load_npz(filename_full, metadata=None,
-                                     allow_pickle=True)
+        # we need to catch numpy 2.4.0 warnings (#3668)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            filename_paz = testdata['IUANMO_ppsd_paz.npz']
+            results_paz = PPSD.load_npz(filename_paz, metadata=None,
+                                        allow_pickle=True)
+            filename_full = testdata['IUANMO_ppsd_fullresponse.npz']
+            results_full = PPSD.load_npz(filename_full, metadata=None,
+                                         allow_pickle=True)
 
         # Calculate the PPSDs and test against expected results
         # first: only PAZ
@@ -823,7 +826,10 @@ class TestPsd:
             data = np.load(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
         # we have to load, modify 'ppsd_version' and save the npz file for the
         # test..
-        items = {key: data[key] for key in data.files}
+            # we need to catch numpy 2.4.0 warnings (#3668)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            items = {key: data[key] for key in data.files}
         # deliberately set a higher ppsd_version number
         items['ppsd_version'] = items['ppsd_version'].copy()
         items['ppsd_version'].fill(100)
