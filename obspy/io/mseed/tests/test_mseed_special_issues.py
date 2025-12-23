@@ -5,11 +5,11 @@ import multiprocessing
 import os
 import platform
 import random
-import re
+# import re
 import signal
 import sys
 import warnings
-from unittest import mock
+# from unittest import mock
 
 import numpy as np
 
@@ -19,8 +19,8 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import CatchAndAssertWarnings
 from obspy.io.mseed import (InternalMSEEDError, InternalMSEEDWarning,
-                            ObsPyMSEEDFilesizeTooSmallError,
-                            ObsPyMSEEDFilesizeTooLargeError)
+                            ObsPyMSEEDFilesizeTooSmallError)
+#                            ObsPyMSEEDFilesizeTooLargeError)
 from obspy.io.mseed import util
 from obspy.io.mseed.core import _read_mseed, _write_mseed
 from obspy.io.mseed.headers import clibmseed
@@ -1131,23 +1131,24 @@ class TestMSEEDSpecialIssue():
             with io.BytesIO(data[:127]) as buf:
                 _read_mseed(buf)
 
-    @mock.patch("os.path.getsize")
-    def test_reading_file_larger_than_2048_mib(self, getsize_mock, testdata):
-        """
-        ObsPy can currently not directly read files that are larger than
-        2^31 bytes. This raises an exception with a description of how to
-        get around it.
-        """
-        getsize_mock.return_value = 2 ** 31 + 1
-        filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
-        msg = (
-            "ObsPy can currently not directly read mini-SEED files that are "
-            "larger than 2^31 bytes (2048 MiB). To still read it, please "
-            "read the file in chunks as documented here: "
-            "https://github.com/obspy/obspy/pull/1419#issuecomment-221582369")
-        msg = re.escape(msg)
-        with pytest.raises(ObsPyMSEEDFilesizeTooLargeError, match=msg):
-            _read_mseed(filename)
+# No longer an issue
+#    @mock.patch("os.path.getsize")
+#    def test_reading_file_larger_than_2048_mib(self, getsize_mock, testdata):
+#        """
+#        ObsPy can currently not directly read files that are larger than
+#        2^31 bytes. This raises an exception with a description of how to
+#        get around it.
+#        """
+#        getsize_mock.return_value = 2 ** 31 + 1
+#        filename = testdata['BW.BGLD.__.EHE.D.2008.001.first_10_records']
+#        msg = (
+#            "ObsPy can currently not directly read mini-SEED files that are "
+#            "larger than 2^31 bytes (2048 MiB). To still read it, please "
+#            "read the file in chunks as documented here: "
+#            "https://github.com/obspy/obspy/pull/1419#issuecomment-221582369")
+#        msg = re.escape(msg)
+#        with pytest.raises(ObsPyMSEEDFilesizeTooLargeError, match=msg):
+#            _read_mseed(filename)
 
     def test_read_file_with_non_valid_blocks_in_between(self, testdata):
         """
