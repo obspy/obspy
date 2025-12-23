@@ -718,7 +718,7 @@ class TestPsd:
         """
         Test plot of several period bins over time
         """
-        # we need to catch numpy 2.4.0 warnings (#3667)
+        # we need to catch numpy 2.4.0 warnings (#3668)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('always')
             ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'],
@@ -761,7 +761,7 @@ class TestPsd:
         """
         Test spectrogram type plot of PPSD
         """
-        # we need to catch numpy 2.4.0 warnings (#3667)
+        # we need to catch numpy 2.4.0 warnings (#3668)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('always')
             ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'],
@@ -816,7 +816,7 @@ class TestPsd:
                "ObsPy version (current 'ppsd_version' is {!s}). Please "
                "consider updating your ObsPy installation.".format(
                    PPSD(stats=Stats(), metadata=None).ppsd_version))
-        # we need to catch numpy 2.4.0 warnings (#3667)
+        # we need to catch numpy 2.4.0 warnings (#3668)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('always')
             # 1 - loading a npz
@@ -865,7 +865,7 @@ class TestPsd:
         allow np.load the use of pickle, or that a helpful error message is
         raised if allow_pickle is required. See #2409.
         """
-        # we need to catch numpy 2.4.0 warnings (#3667)
+        # we need to catch numpy 2.4.0 warnings (#3668)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('always')
             # Init a test PPSD and empty byte stream.
@@ -906,7 +906,7 @@ class TestPsd:
             temp_path = ntemp.name
             self._save_npz_require_pickle(temp_path, ppsd)
             # We should be able to load the files when allowing pickle.
-            # we need to catch numpy 2.4.0 warnings (#3667)
+            # we need to catch numpy 2.4.0 warnings (#3668)
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('always')
                 ppsd.add_npz(temp_path, allow_pickle=True)
