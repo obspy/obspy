@@ -5,6 +5,9 @@ Changes:
  - General
    * Fix documentation for the command line scripts (see #1208 #3569)
    * Fix code coverage reporting (see #3646)
+   * Github CI: update min numpy version to 1.21 and symlink libtiff.so.5
+     for ubuntu 3.8 tests (see #3639)
+   * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
@@ -69,6 +72,8 @@ Changes:
    * Less strict date/time parsing (#3283).
  - obspy.io.seiscomp:
    * add seiscomp scxml 0.13 support (see #3345)
+ - obspy.io.shapefile:
+   * add support for pyshp v3 (see #3599)
  - obspy.io.stationxml:
    * Fix a bug writing the informational "description" field of instrument
      sensitivity input/output units (see #3572).
@@ -86,13 +91,13 @@ Changes:
    * fix potential out of bounds array access in AR picker (see #1801)
    * fix a small issue in evalresp linked to picky new gcc (see #3578)
    * array analysis: minor docstring fix in "get_geometry()" (see #3516, #3606)
-
-maintenance_1.4.x
-=================
-
-Changes:
- - obspy.io.shapefile:
-   * add support for pyshp v3 (see #3599)
+   * MSEEDMetadata: Computation of sample metrics replaced with vectorised
+     numpy code. Speedup of roughly factor 10 for integer data and 1.5 for
+     floating point data. (see #3621)
+   * Fix filter construction (_filter) where freqs has len 1, linked to
+     numpy 2.4.0 deprecation expiration. (see #3668)
+   * Add warnings.catch_warnings for spectral_estimation tests, linked to
+     a new numpy 2.4.0 deprecation. (see #3668)
 
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================
