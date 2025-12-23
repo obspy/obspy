@@ -1,7 +1,6 @@
 name: test
 channels:
   - conda-forge
-  - defaults
 dependencies:
   # obspy
   - numpy=1.21
