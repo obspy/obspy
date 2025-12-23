@@ -34,7 +34,7 @@ SCHEMA_VERSION = ['0.7', '0.8', '0.9', '0.10',
 NEW_SCHEMA_VERSION = ['0.14']
 
 
-def _read_scml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
+def _read_scml(filename, id_prefix=None):
     """
     Read a SeisComp XML file and returns a :class:`~obspy.core.event.Catalog`.
 
@@ -54,7 +54,8 @@ def _read_scml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     :param id_prefix: ID prefix. SCML does not enforce any particular ID
         restriction, this ID prefix allows to convert the IDs to a well
         formatted QuakeML ID. You can modify the default ID prefix with the
-        reverse DNS name of your institute.
+        reverse DNS name of your institute. If None, defaults to either the
+        old GFZ prefix or new for SCML versions >= 0.14.
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: An ObsPy Catalog object.
 
@@ -87,10 +88,14 @@ def _read_scml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
     xslt_filename = Path(__file__).parent / 'data'
     if version in NEW_SCHEMA_VERSION:
         xslt_filename = xslt_filename / f'scml_{version}__quakeml_1.2.xsl'
-        # this doesn't need to be set necessarily, but may as well stay in tune
-        id_prefix = 'smi:org.gfz.de/geofon/'
+        # set to new prefix
+        if not id_prefix:
+            id_prefix = 'smi:org.gfz.de/geofon/'
     else:
         xslt_filename = xslt_filename / f'sc3ml_{version}__quakeml_1.2.xsl'
+        # set to old prefix
+        if not id_prefix:
+            id_prefix = 'smi:org.gfz-potsdam.de/geofon/'
 
     transform = etree.XSLT(etree.parse(str(xslt_filename)))
     quakeml_doc = transform(scml_doc,
@@ -128,7 +133,7 @@ def _write_scml(catalog, filename, validate=False, verbose=False,
         be useful to associate origins with scevent when injecting SCML file
         into seiscomp.
     :type version: str
-    :param version: SCML version to output (default is 0.12 ~ SC 5.0)
+    :param version: SCML version to output (default is 0.12)
     """
     if version not in SCHEMA_VERSION:
         raise ValueError('%s is not a supported version. Use one of these '

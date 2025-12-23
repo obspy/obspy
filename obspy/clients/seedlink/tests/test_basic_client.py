@@ -23,7 +23,7 @@ class TestClient():
     def test_get_waveform(self):
         def _test_offset_from_realtime(offset):
             t = UTCDateTime() - offset
-            request = ["G", "FDFM", "00", "LHN", t, t + 20]
+            request = ["G", "FDFM", "10", "LHN", t, t + 20]
             st = self.client.get_waveforms(*request)
             assert len(st) > 0
             for tr in st:
@@ -75,7 +75,7 @@ class TestClient():
             t = UTCDateTime() - offset
             # first do a request that needs an info request on station level
             # only
-            st = self.client.get_waveforms("*", "F?FM", "??", "B??", t, t + 5)
+            st = self.client.get_waveforms("*", "F?FM", "1?", "B??", t, t + 5)
             assert len(st) > 2
             assert len(self.client._station_cache) > 20
             station_cache_size = len(self.client._station_cache)
@@ -87,10 +87,10 @@ class TestClient():
                 assert tr.stats.channel[0] == "B"
             # now make a subsequent request that needs an info request on
             # channel level
-            st = self.client.get_waveforms("*", "F?FM", "*", "B*", t, t + 5)
+            st = self.client.get_waveforms("*", "F?FM", "1*", "B*", t, t + 5)
             assert len(st) > 2
             assert len(self.client._station_cache) > station_cache_size
-            assert ("G", "FDFM", "00", "BHZ") in self.client._station_cache
+            assert ("G", "FDFM", "10", "BHZ") in self.client._station_cache
             assert self.client._station_cache_level == "channel"
             for tr in st:
                 assert tr.stats.network == "G"

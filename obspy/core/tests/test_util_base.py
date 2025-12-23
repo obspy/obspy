@@ -26,10 +26,8 @@ class TestUtilBase:
                     ("1.2.x", [1, 2, 0]), ("1.3.1rc2", [1, 3, 1]))
 
         for version_string, expected in versions:
-            with mock.patch('pkg_resources.get_distribution') as p:
-                class _D(object):
-                    version = version_string
-                p.return_value = _D()
+            with mock.patch('importlib.metadata.version') as p:
+                p.return_value = version_string
                 got = get_dependency_version('matplotlib')
             assert expected == got
 
