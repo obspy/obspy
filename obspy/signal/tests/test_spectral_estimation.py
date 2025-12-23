@@ -843,7 +843,8 @@ class TestPsd:
         # we need to catch numpy 2.4.0 warnings (#3668)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('always')
-            ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
+            ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'],
+                                 allow_pickle=True)
         for method in (ppsd.add_npz, ppsd._add_npz):
             with NamedTemporaryFile() as tf:
                 filename = tf.name
