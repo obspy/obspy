@@ -32,6 +32,7 @@ Changes:
  - obspy.clients.fdsn
    * Natural Resources Canada (NRCAN) added to list of known clients
    * Spanish National Geographic Institute (IGN) added to known clients
+   * GFZ FDSN url updated to https://geofon.gfz.de
    * Various FDSNWS URL mappings updated to https
    * A FDSNNoServiceException is now raised instead of a ValueError when
      querying a webservice not present in Client.services  (see #3483)
