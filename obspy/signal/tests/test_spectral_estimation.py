@@ -724,7 +724,6 @@ class TestPsd:
             ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'],
                                  allow_pickle=True)
 
-
         restrictions = {'starttime': UTCDateTime(2011, 2, 6, 1, 1),
                         'endtime': UTCDateTime(2011, 2, 7, 21, 12),
                         'year': [2011],
