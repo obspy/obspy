@@ -34,7 +34,7 @@ class TestSCML():
         self.scml_path = testdata["EB_response_sc3ml"]
         self.stationxml_inventory = read_inventory(self.stationxml_path,
                                                    format="STATIONXML")
-        self.scml_inventory = read_inventory(self.scml_path, format="SC3ML")
+        self.scml_inventory = read_inventory(self.scml_path, format="SCML")
         self.USE_NAMESPACE = "http://geofon.gfz-potsdam.de/ns/seiscomp"
 
     def test_scml_versions(self, testdata):
