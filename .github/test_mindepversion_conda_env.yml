@@ -3,8 +3,8 @@ channels:
   - conda-forge
 dependencies:
   # obspy
-  - numpy>=1.21
-  - scipy=1.7
+  - numpy=1.21
+  - scipy=1.8
   - matplotlib=3.3
   - decorator
   - lxml
