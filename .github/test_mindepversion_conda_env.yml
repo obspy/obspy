@@ -1,10 +1,9 @@
 name: test
 channels:
   - conda-forge
-  - defaults
 dependencies:
   # obspy
-  - numpy=1.21
+  - numpy>=1.21
   - scipy=1.7
   - matplotlib=3.3
   - decorator
