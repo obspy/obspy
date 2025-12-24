@@ -14,13 +14,13 @@ dependencies:
   # see #3258
   - sqlalchemy < 2.0
   # soft dependencies
-  - cartopy
+  - cartopy < 0.22
   - geographiclib
   # pinning != 3.0.0 - see #3600
   - pyshp != 3.0.0
   # tests
   - packaging
-  - pyproj
+  - pyproj < 3.5
   - pytest
   - pytest-cov
   - pytest-json-report >= 1.4
