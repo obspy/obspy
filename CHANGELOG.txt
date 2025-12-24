@@ -9,7 +9,7 @@ Changes:
      for ubuntu 3.8 tests (see #3639)
    * Github CI: pin cartopy < 0.22, pyproj < 3.5 for ubuntu 3.8
      mindepversion tests
-   * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639) 
+   * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
@@ -59,6 +59,8 @@ Changes:
      stations (see #2808)
  - obspy.io:
    * add read and write support for CSV, EVENTTXT and CSZ formats (see #3285)
+ - obspy.io.ascii:
+   * add support for more dtypes (INT32, INT64, FLOAT32 etc) (see #3611)
  - obspy.io.cybershake:
    * add read support for CyberShake seismogram format (see #3370)
  - obspy.io.kinemetrics:
@@ -81,6 +83,15 @@ Changes:
    * Less strict date/time parsing (#3283).
  - obspy.io.seiscomp:
    * add seiscomp scxml 0.13 support (see #3345)
+ - obspy.io.nordic:
+   * Parse ID-lines (type I) into event.extra['nordic_event_id] (see #3287)
+   * Support reading of compact Nordic files (only containing header lines)
+   * Write amplitude with highest possible precision
+   * Fix writing / reading of high-frequency IAMLHF amplitudes
+   * Fix parsing of BAZ when they precede the associated phase pick in file
+   * Fix bug where check for nordic format version crashed on long phase names
+ - obspy.io.seisan:
+   * Fix parsing of files written in int16 (see #3287)
  - obspy.io.shapefile:
    * add support for pyshp v3 (see #3599)
  - obspy.io.stationxml:

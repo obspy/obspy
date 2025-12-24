@@ -51,6 +51,10 @@ class TestCore():
         fn = testdata['2005-07-23-1452-04S.CER___030']
         assert _is_seisan(fn)
 
+        # 4 - big endian, 16 bit, version 7
+        fn = testdata['90010319.1320J90']
+        assert _is_seisan(fn)
+
     def test_read_seisan(self, testdata):
         """
         Test SEISAN file reader.
@@ -101,6 +105,14 @@ class TestCore():
         assert len(st) == 3
         assert st[0].stats.npts == 10650
         assert list(st[0].data[0:5]) == [7520, 7484, 7482, 7480, 7478]
+
+        # 5 - big endian, 16 bit, version 7
+        fn = testdata['90010319.1320J90']
+        st = _read_seisan(fn)
+        st.verify()
+        assert len(st) == 8
+        assert st[0].stats.npts == 4740
+        assert list(st[0].data[0:5]) == [-18, -20, -19, -11, -4]
 
     def test_read_seisan_head_only(self, testdata):
         """
@@ -172,6 +184,15 @@ class TestCore():
             assert st[i].stats.sampling_rate == 150.0
             assert st[i].stats.npts == 10650
             assert list(st[i].data) == []
+
+        # 5 - big endian, 16 bit, version 7
+        fn = testdata['90010319.1320J90']
+        st = _read_seisan(fn, headonly=True)
+        assert len(st) == 8
+        assert st[0].stats.npts == 4740
+        assert st[0].stats.channel == 'S Z'
+        assert st[1].stats.channel == 'S N'
+        assert st[2].stats.channel == 'S E'
 
     def test_read_obspy(self, testdata):
         """
