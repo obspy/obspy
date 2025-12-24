@@ -2843,26 +2843,37 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             import matplotlib.pyplot as plt
 
         response = self._get_response(inventory)
+
         # polynomial response using blockette 62 stage 0
         if not response.response_stages and response.instrument_polynomial:
             coefficients = response.instrument_polynomial.coefficients
             self.data = np.poly1d(coefficients[::-1])(self.data)
             return self
 
-        # polynomial response using blockette 62 stage 1 and no other stages
-        if len(response.response_stages) == 1 and \
-           isinstance(response.response_stages[0], PolynomialResponseStage):
-            # check for gain
-            if response.response_stages[0].stage_gain is None:
-                msg = 'Stage gain not defined for %s - setting it to 1.0'
-                warnings.warn(msg % self.id)
-                gain = 1
+        # cannot handle polynomial response we can still replicate
+        # linear (1 or 2 coeffs) instances
+        if isinstance(response.response_stages[0], PolynomialResponseStage):
+            if len(response.response_stages) == 1:
+                if response.response_stages[0].stage_gain is None:
+                    msg = "Stage gain not defined for %s - setting it to 1.0"
+                    warnings.warn(msg % self.id)
+                    gain = 1
+                else:
+                    gain = response.response_stages[0].stage_gain
             else:
-                gain = response.response_stages[0].stage_gain
-            coefficients = response.response_stages[0].coefficients[:]
-            for i in range(len(coefficients)):
-                coefficients[i] /= math.pow(gain, i)
-            self.data = np.poly1d(coefficients[::-1])(self.data)
+                # multiple stages, will need to calculate overall sensitivity
+                if not response.instrument_sensitivity:
+                    # this will abort of more than 2 inst_poly.coeffs
+                    response.recalculate_overall_sensitivity()
+                gain = response.instrument_sensitivity.value
+
+            coefficients = response.response_stages[0].coefficients
+            # can do a simple divide if linear
+            self.data = self.data / gain
+            # attempt to account for DC offset also
+            if len(coefficients) >= 1 and coefficients[0] != 0:
+                self.data = self.data + coefficients[0]
+
             return self
 
         # use evalresp
@@ -3023,7 +3034,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr.remove_sensitivity(inv)  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         """
+        from obspy.core.inventory import PolynomialResponseStage
+
         response = self._get_response(inventory)
+        if (isinstance(response.response_stages[0],
+                       PolynomialResponseStage) and not
+                response.instrument_sensitivity):
+            response.recalculate_overall_sensitivity()
+
         self.data = self.data / response.instrument_sensitivity.value
         return self
 

@@ -11,8 +11,12 @@ Changes:
      mindepversion tests
    * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
  - obspy.core:
+   * response: tweaks to allow sane processing of PolynomialResponseStage 
+     responses if they have 2 coefficients or less (see #3632)
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
+   * trace: additional catch to remove_response for PolynomialResponseStage
+     responses with 2 coefficients (see #3632)
    * trace: 5x quicker retrieval of seed-id with trace.id / trace.get_id()
      (see #3251)
    * inventory: additional formatting tweaks to expanded channel information
