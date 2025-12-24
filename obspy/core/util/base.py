@@ -714,8 +714,9 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
         pathname_or_url = str(pathname_or_url)
     if not isinstance(pathname_or_url, str):
         # first check if bytes
-        if isinstance(pathname_or_url, bytes):
-            # probably XML string, but handle any type bytes object
+        if isinstance(pathname_or_url, bytes) and \
+                pathname_or_url.strip().startswith(b'<'):
+            # XML string
             return callback_func(io.BytesIO(pathname_or_url), **kwargs)
         # not a string OR bytes- we assume a file-like object
         try:
