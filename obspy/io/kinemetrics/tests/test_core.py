@@ -284,7 +284,8 @@ class TestCore():
         for key in dico:
             assert round(abs(dico[key]-evt_stats[key]), 6) == 0
 
-        assert UTCDateTime(2013, 8, 15, 9, 20, 28) == evt_stats['starttime']
+        assert (UTCDateTime(2013, 8, 15, 9, 20, 28) ==
+                UTCDateTime(evt_stats['starttime']))
 
     def verify_data_evt0(self, data):
         valuesdeb = np.array([-2.4464752525e-002, -2.4534918368e-002,
