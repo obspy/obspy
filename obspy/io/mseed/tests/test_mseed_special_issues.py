@@ -6,7 +6,6 @@ import os
 import platform
 import random
 import re
-import signal
 import sys
 import warnings
 from unittest import mock
@@ -703,8 +702,15 @@ class TestMSEEDSpecialIssue():
         """
         filename = testdata['infinite-loop.mseed']
 
-        process = multiprocessing.Process(target=_test_function,
-                                          args=(filename, ))
+        # Problem with overlap between obspy.signal and mp
+        # so, try using 'fork' for unix systems
+        if platform.system() == 'Windows':
+            ctx = multiprocessing.get_context('spawn')
+        else:
+            ctx = multiprocessing.get_context('fork')
+
+        process = ctx.Process(target=_test_function,
+                              args=(filename, ))
         process.start()
         process.join(60)
 
@@ -712,9 +718,11 @@ class TestMSEEDSpecialIssue():
         process.terminate()
         if process.is_alive():
             if platform.system() == 'Windows':
-                os.kill(process.pid, signal.CTRL_BREAK_EVENT)
+                # CTRL_BREAK_EVENT
+                os.kill(process.pid, 1)
             else:
-                os.kill(process.pid, signal.SIGKILL)
+                # SKIGKILL
+                os.kill(process.pid, 9)
         assert not fail
 
     def test_microsecond_accuracy_reading_and_writing_before_1970(self):

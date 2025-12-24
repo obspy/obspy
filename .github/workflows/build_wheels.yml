@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        build: [cp38, cp39, cp310, cp311, cp312]
+        build: [cp313, cp314]
         exclude-flag:
           - ${{ github.ref_name == 'master' && github.event_name == 'push' }}
         exclude:

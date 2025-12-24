@@ -104,8 +104,8 @@ class TestNLLOC():
 
         # remove (changing) obspy version number from output
         re_pattern = '<version>ObsPy .*?</version>'
-        quakeml_expected = re.sub(re_pattern, '', quakeml_expected, 1)
-        quakeml_got = re.sub(re_pattern, '', quakeml_got, 1)
+        quakeml_expected = re.sub(re_pattern, '', quakeml_expected, count=1)
+        quakeml_got = re.sub(re_pattern, '', quakeml_got, count=1)
 
         compare_xml_strings(quakeml_expected.encode(), quakeml_got.encode())
 

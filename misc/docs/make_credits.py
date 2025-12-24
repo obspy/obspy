@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import codecs
 import os
 
 
 # generate credits
-fh = codecs.open(os.path.join('source', 'credits.rst'), 'w', 'utf-8')
+fh = open(os.path.join('source', 'credits.rst'), 'w', 'utf-8')
 fh.write(""".. DON'T EDIT THIS FILE MANUALLY!
    Instead edit txt files in the credits folder and
    run ``make credits`` from command line to automatically create this file!
@@ -41,7 +40,7 @@ def name_key_function(name):
 
 
 filename = os.path.join(os.pardir, os.pardir, 'CONTRIBUTORS.txt')
-lines = [line for line in codecs.open(filename, 'r', 'utf-8').readlines()
+lines = [line for line in open(filename, 'r', 'utf-8').readlines()
          if line.strip()]
 contributors = sorted(lines, key=name_key_function)
 
@@ -57,7 +56,7 @@ ObsPy was partially funded by the
 
 # add funds
 filename = os.path.join('source', 'credits', 'FUNDS.txt')
-funds = codecs.open(filename, 'r', 'utf-8').readlines()
+funds = open(filename, 'r', 'utf-8').readlines()
 
 for item in funds:
     fh.write("* %s" % (item))
@@ -69,7 +68,7 @@ fh.write("""
 
 # add quotes
 filename = os.path.join('source', 'credits', 'QUOTES.txt')
-funds = codecs.open(filename, 'r', 'utf-8').readlines()
+funds = open(filename, 'r', 'utf-8').readlines()
 
 for item in funds:
     item = item.split('---')
