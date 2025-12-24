@@ -270,35 +270,43 @@ class UTCDateTime(object):
     .. _ISO8601:2004: https://en.wikipedia.org/wiki/ISO_8601
     """
     DEFAULT_PRECISION = 6
-    _initialized = False
-    _has_warned = False  # this is a temporary, it will be removed soon
+    __slots__ = ('__ns', '__precision', '_initialized', '_has_warned',
+                 '__weakref__')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, ns=None, strict=True, iso8601=None,
+                 precision=None, **kwargs):
         """
         Creates a new UTCDateTime object.
         """
+        # this is a temporary, it will be removed soon
+        self._initialized = False
+        self._has_warned = False
+
         # set default precision
-        self.precision = kwargs.pop('precision', self.DEFAULT_PRECISION)
+        if precision is None:
+            self.__precision = self.DEFAULT_PRECISION
+        else:
+            self._set_precision(precision)
+
         # set directly to nanoseconds if given
-        ns = kwargs.pop('ns', None)
-        strict = kwargs.pop('strict', True)
         if ns is not None:
-            self._ns = ns
+            self._set_ns(ns)
             return
-        # iso8601 flag
-        iso8601 = kwargs.pop('iso8601', None)
+
         # check parameter
-        if len(args) == 0 and len(kwargs) == 0:
+        n_args = len(args)
+        n_kwargs = len(kwargs)
+        if n_args == 0 and n_kwargs == 0:
             # use current date/time if no argument is given
             self._from_timestamp(time.time())
             return
-        elif len(args) == 1 and len(kwargs) == 0:
+        elif n_args == 1 and n_kwargs == 0:
             value = args[0]
             if isinstance(value, UTCDateTime):
                 # ugly workaround to be able to unpickle UTCDateTime objects
                 # that were pickled on ObsPy <1.1
                 try:
-                    self._ns = value._ns
+                    self._set_ns(value.__ns)
                 except AttributeError:
                     # work around floating point accuracy/rounding issue on
                     # Py3.3, see
@@ -422,7 +430,7 @@ class UTCDateTime(object):
             if 'year' in kwargs:
                 # year given as kwargs
                 year = kwargs['year']
-            elif len(args) == 1:
+            elif n_args == 1:
                 # year is first (and only) argument
                 year = args[0]
             days_in_year = calendar.isleap(year) and 366 or 365
@@ -442,7 +450,7 @@ class UTCDateTime(object):
                 kwargs.pop('julday')
 
         # check if seconds are given as float value
-        if len(args) == 6 and isinstance(args[5], float):
+        if n_args == 6 and isinstance(args[5], float):
             _frac, _sec = math.modf(round(args[5], 6))
             kwargs['second'] = int(_sec)
             kwargs['microsecond'] = int(round(_frac * 1e6))
@@ -471,7 +479,7 @@ class UTCDateTime(object):
         # Init UTCDateTime based on year, month, day, add seconds
         utc_base = UTCDateTime(year=year, month=month, day=day)
         # Add seconds and set nanoseconds on self
-        self._ns = (utc_base + seconds + microsecond / 1000000).ns
+        self._set_ns((utc_base + seconds + microsecond / 1000000).__ns)
 
     def _set(self, **kwargs):
         """
@@ -521,10 +529,12 @@ class UTCDateTime(object):
                        'Python builtin integer ({!s}).').format(value, value_)
                 raise ValueError(msg)
             value = value_
-        if not isinstance(value, int):
+        elif not isinstance(value, int):
             raise TypeError('nanoseconds must be set as int/long type')
+
         self.__ns = value
         # flag that this instance has been initialized; any changes will warn
+        self._warn_on_change()
         self._initialized = True
 
     _ns = property(_get_ns, _set_ns)
@@ -537,7 +547,7 @@ class UTCDateTime(object):
         :type dt: :class:`datetime.datetime`
         :param dt: Python datetime object.
         """
-        self._ns = _datetime_to_ns(dt)
+        self._set_ns(_datetime_to_ns(dt))
 
     def _from_timestamp(self, value):
         """
@@ -546,7 +556,7 @@ class UTCDateTime(object):
         :type value: int, float
         :param value: Timestamp in seconds.
         """
-        self._ns = int(round(value * 10**9))
+        self._set_ns(int(round(value * 10**9)))
 
     def _from_iso8601_string(self, value):
         """
@@ -645,7 +655,7 @@ class UTCDateTime(object):
         >>> dt.timestamp
         1222864235.123456
         """
-        return self._ns / 1e9
+        return self.__ns / 1e9
 
     timestamp = property(_get_timestamp)
 
@@ -679,7 +689,7 @@ class UTCDateTime(object):
         """
         # datetime.utcfromtimestamp will cut off but not round
         # avoid through adding timedelta - also avoids the year 2038 problem
-        rounded_ns = round(self._ns, self.precision - 9)
+        rounded_ns = round(self.__ns, self.__precision - 9)
         dt = datetime.timedelta(seconds=rounded_ns // 10**9,
                                 microseconds=rounded_ns % 10**9 // 1000)
         try:
@@ -704,7 +714,7 @@ class UTCDateTime(object):
         >>> dt.date
         datetime.date(2008, 10, 1)
         """
-        return self.datetime.date()
+        return self._get_datetime().date()
 
     date = property(_get_date)
 
@@ -721,7 +731,7 @@ class UTCDateTime(object):
         >>> dt.year
         2012
         """
-        return self.datetime.year
+        return self._get_datetime().year
 
     def _set_year(self, value):
         """
@@ -748,7 +758,7 @@ class UTCDateTime(object):
         >>> dt.month
         2
         """
-        return self.datetime.month
+        return self._get_datetime().month
 
     def _set_month(self, value):
         """
@@ -774,7 +784,7 @@ class UTCDateTime(object):
         >>> dt.day
         11
         """
-        return self.datetime.day
+        return self._get_datetime().day
 
     def _set_day(self, value):
         """
@@ -801,7 +811,7 @@ class UTCDateTime(object):
         >>> dt.weekday
         2
         """
-        return self.datetime.weekday()
+        return self._get_datetime().weekday()
 
     weekday = property(_get_weekday)
 
@@ -818,7 +828,7 @@ class UTCDateTime(object):
         >>> dt.time
         datetime.time(12, 30, 35, 45020)
         """
-        return self.datetime.time()
+        return self._get_datetime().time()
 
     time = property(_get_time)
 
@@ -835,7 +845,7 @@ class UTCDateTime(object):
         >>> dt.hour
         10
         """
-        return self.datetime.hour
+        return self._get_datetime().hour
 
     def _set_hour(self, value):
         """
@@ -861,7 +871,7 @@ class UTCDateTime(object):
         >>> dt.minute
         11
         """
-        return self.datetime.minute
+        return self._get_datetime().minute
 
     def _set_minute(self, value):
         """
@@ -887,7 +897,7 @@ class UTCDateTime(object):
         >>> dt.second
         12
         """
-        return self.datetime.second
+        return self._get_datetime().second
 
     def _set_second(self, value):
         """
@@ -913,7 +923,7 @@ class UTCDateTime(object):
         >>> dt.microsecond
         345234
         """
-        ms = int(round(self._ns % 10**9, self.precision - 9) // 1000)
+        ms = int(round(self.__ns % 10**9, self.__precision - 9) // 1000)
         return ms % 1000000
 
     def _set_microsecond(self, value):
@@ -1001,7 +1011,7 @@ class UTCDateTime(object):
         # which means we can't keep full precision when converting input
         # seconds to nanoseconds
         value = float(value)
-        return UTCDateTime(ns=self._ns + int(round(value * 1e9)))
+        return UTCDateTime(ns=self.__ns + int(round(value * 1e9)))
 
     def __sub__(self, value):
         """
@@ -1026,12 +1036,12 @@ class UTCDateTime(object):
         86400.0
         """
         if isinstance(value, UTCDateTime):
-            return round((self._ns - value._ns) / 1e9, self.__precision)
+            return round((self.__ns - value.__ns) / 1e9, self.__precision)
         elif isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
                      86400) * 10**6) / 1e6
-        return UTCDateTime(ns=self._ns - int(round((value * 1e9))))
+        return UTCDateTime(ns=self.__ns - int(round((value * 1e9))))
 
     def __str__(self):
         """
@@ -1072,17 +1082,17 @@ class UTCDateTime(object):
         return str(self.__str__())
 
     def _operate(self, other, op_func):
-        if isinstance(other, UTCDateTime):
-            ndigits = min(self.precision, other.precision) - 9
-            if self.precision != other.precision:
+        try:
+            if self.__precision != other.__precision:
                 msg = ('Comparing UTCDateTime objects of different precision'
                        ' is not defined will raise an Exception in a future'
                        ' version of obspy')
                 warnings.warn(msg, ObsPyDeprecationWarning)
-            a = round(self._ns, ndigits)
-            b = round(other._ns, ndigits)
-            return op_func(a, b)
-        else:
+            ndigits = min(self.__precision, other.__precision) - 9
+            lhs = round(self.__ns, ndigits)
+            rhs = round(other.__ns, ndigits)
+            return op_func(lhs, rhs)
+        except AttributeError:
             try:
                 return self._operate(UTCDateTime(other), op_func)
             except TypeError:
@@ -1256,15 +1266,19 @@ class UTCDateTime(object):
         # explicitly flag it as unhashable
         return None
 
-    def __setattr__(self, key, value):
-        # raise a warning if overwriting previous ns (see #2072)
-        if self._initialized and not self._has_warned:
-            msg = ('Setting attributes on UTCDateTime instances will raise an'
-                   ' Exception in a future version of Obspy.')
-            warnings.warn(msg, ObsPyDeprecationWarning)
-            # only issue the warning once per object
-            self.__dict__['_has_warned'] = True
-        super(UTCDateTime, self).__setattr__(key, value)
+    def __getstate__(self):
+        """
+        Support for pickling UTCDateTime objects.
+        """
+        return (self.__ns, self.__precision)
+
+    def __setstate__(self, state):
+        """
+        Support for unpickling UTCDateTime objects.
+        """
+        self._initialized = True
+        self._has_warned = False
+        self.__ns, self.__precision = state
 
     def strftime(self, format):
         """
@@ -1287,7 +1301,7 @@ class UTCDateTime(object):
         # all platforms
         if sys.platform.startswith("linux"):
             format = format.replace("%Y", "%04Y")
-        return self.datetime.strftime(format)
+        return self._get_datetime().strftime(format)
 
     @staticmethod
     def strptime(date_string, format):
@@ -1317,7 +1331,7 @@ class UTCDateTime(object):
         >>> dt.timetz()
         datetime.time(12, 30, 35, 45020)
         """
-        return self.datetime.timetz()
+        return self._get_datetime().timetz()
 
     def utcoffset(self):
         """
@@ -1328,7 +1342,7 @@ class UTCDateTime(object):
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.utcoffset()
         """
-        return self.datetime.utcoffset()
+        return self._get_datetime().utcoffset()
 
     def dst(self):
         """
@@ -1339,7 +1353,7 @@ class UTCDateTime(object):
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.dst()
         """
-        return self.datetime.dst()
+        return self._get_datetime().dst()
 
     def tzname(self):
         """
@@ -1350,7 +1364,7 @@ class UTCDateTime(object):
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.tzname()
         """
-        return self.datetime.tzname()
+        return self._get_datetime().tzname()
 
     def ctime(self):
         """
@@ -1361,7 +1375,7 @@ class UTCDateTime(object):
         >>> UTCDateTime(2002, 12, 4, 20, 30, 40).ctime()
         'Wed Dec  4 20:30:40 2002'
         """
-        return self.datetime.ctime()
+        return self._get_datetime().ctime()
 
     def isoweekday(self):
         """
@@ -1377,7 +1391,7 @@ class UTCDateTime(object):
         >>> dt.isoweekday()
         3
         """
-        return self.datetime.isoweekday()
+        return self._get_datetime().isoweekday()
 
     def isocalendar(self):
         """
@@ -1394,7 +1408,7 @@ class UTCDateTime(object):
         >>> tuple(dt.isocalendar())
         (2008, 40, 3)
         """
-        return self.datetime.isocalendar()
+        return self._get_datetime().isocalendar()
 
     def isoformat(self, sep="T"):
         """
@@ -1415,7 +1429,7 @@ class UTCDateTime(object):
         >>> dt.isoformat()
         '2008-10-01T00:00:00'
         """
-        return self.datetime.isoformat(sep=sep)
+        return self._get_datetime().isoformat(sep=sep)
 
     def format_fissures(self):
         """
@@ -1565,8 +1579,17 @@ class UTCDateTime(object):
             warnings.warn(msg)
             value = 9
         self.__precision = int(value)
+        self._warn_on_change()
 
     precision = property(_get_precision, _set_precision)
+
+    def _warn_on_change(self):
+        if self._initialized and not self._has_warned:
+            msg = ('Setting attributes on UTCDateTime instances will raise an'
+                   ' Exception in a future version of Obspy.')
+            warnings.warn(msg, ObsPyDeprecationWarning)
+            # only issue the warning once per object
+            self._has_warned = True
 
     def replace(self, **kwargs):
         """
@@ -1635,7 +1658,7 @@ class UTCDateTime(object):
         >>> dt.toordinal()
         734503
         """
-        return self.datetime.toordinal()
+        return self._get_datetime().toordinal()
 
     @staticmethod
     def now():
@@ -1659,9 +1682,10 @@ class UTCDateTime(object):
         >>> t._get_hours_after_midnight()
         3.270034293333333
         """
+        datetime = self._get_datetime()
         timedelta = (
-            self.datetime -
-            self.datetime.replace(hour=0, minute=0, second=0, microsecond=0))
+            datetime -
+            datetime.replace(hour=0, minute=0, second=0, microsecond=0))
         return timedelta.total_seconds() / 3600.0
 
     @property
