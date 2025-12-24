@@ -56,7 +56,7 @@ WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
                             'GCF', 'DMX', 'ALSEP_PSE', 'ALSEP_WTN',
                             'ALSEP_WTH', 'CYBERSHAKE']
-EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
+EVENT_PREFERRED_ORDER = ['QUAKEML', 'SCML', 'NLLOC_HYP']
 INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP']
 # waveform plugins accepting a byteorder keyword
 WAVEFORM_ACCEPT_BYTEORDER = ['MSEED', 'Q', 'SAC', 'SEGY', 'SU']
@@ -456,6 +456,23 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
     """
+    DEPRECATED_FORMATS = {
+        'SC3ML': ('SCML', '1.5.0')
+    }
+
+    if format and format.upper() in DEPRECATED_FORMATS:
+        from obspy.core.util.deprecation_helpers import \
+            ObsPyDeprecationWarning
+        new_format, deprecated_version = DEPRECATED_FORMATS[format.upper()]
+        warnings.warn(
+            f"Format '{format.upper()}' is deprecated since ObsPy "
+            f"{deprecated_version} and will be removed in a future release."
+            f" Use '{new_format}' instead.",
+            category=ObsPyDeprecationWarning,
+            stacklevel=3
+        )
+        format = new_format
+
     if isinstance(filename, str):
         if not Path(filename).exists():
             msg = "[Errno 2] No such file or directory: '{}'".format(
@@ -538,7 +555,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
     NORDIC    :mod:`obspy.io.nordic` :func:`obspy.io.nordic.core.write_select`
     QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
-    SC3ML   :mod:`...io.seiscomp` :func:`obspy.io.seiscomp.event._write_sc3ml`
+    SCML    :mod:`...io.seiscomp` :func:`obspy.io.seiscomp.event._write_scml`
     SCARDEC   :mod:`obspy.io.scardec`
                              :func:`obspy.io.scardec.core._write_scardec`
     SHAPEFILE :mod:`obspy.io.shapefile`

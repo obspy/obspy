@@ -193,6 +193,12 @@ Change log
     value.
   - Remove ID_PREFIX from comment/id and waveformID/resourceURI
 
+* 26.07.2024:
+  - Fix origin/confidenceEllipsoid conversion. The unit for
+    'semiMajorAxisLength', 'semiMinorAxisLength' and
+    'semiIntermediateAxisLength' is already meter and does not need a
+    conversion.
+
 -->
 <xsl:stylesheet version="1.0"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -612,10 +618,7 @@ Change log
                          | qml:origin/qml:depth/qml:upperUncertainty
                          | qml:origin/qml:originUncertainty/qml:horizontalUncertainty
                          | qml:origin/qml:originUncertainty/qml:minHorizontalUncertainty
-                         | qml:origin/qml:originUncertainty/qml:maxHorizontalUncertainty
-                         | qml:confidenceEllipsoid/qml:semiMajorAxisLength
-                         | qml:confidenceEllipsoid/qml:semiMinorAxisLength
-                         | qml:confidenceEllipsoid/qml:semiIntermediateAxisLength">
+                         | qml:origin/qml:originUncertainty/qml:maxHorizontalUncertainty">
         <xsl:element name="{local-name()}">
             <xsl:value-of select="current() div 1000"/>
         </xsl:element>

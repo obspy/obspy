@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<seiscomp xmlns="http://geofon.gfz.de/ns/seiscomp-schema/0.14" version="0.14">
+<seiscomp xmlns="http://geofon.gfz.de/ns/seiscomp-schema/0.15" version="0.15">
     <EventParameters />
     <Inventory />
 </seiscomp>

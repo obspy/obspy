@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='utf-8'?>
+<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
+  <eventParameters publicID="smi:local/EventParameters">
+    <event publicID="smi:local/event/230826094944/-32.73/116.39/">
+      <preferredOriginID>smi:local/Origin/20251120091408.850212.113577</preferredOriginID>
+      <preferredMagnitudeID>smi:local/Origin/20251120091408.850212.113577/netMag/MLv</preferredMagnitudeID>
+      <type>mining explosion</type>
+      <description>
+        <text>Western Australia</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <creationInfo>
+        <agencyID>RSES</agencyID>
+        <author>pickle</author>
+        <creationTime>2024-06-01T21:39:13.769923Z</creationTime>
+      </creationInfo>
+      <origin publicID="smi:local/Origin/20251120091408.850212.113577">
+        <time>
+          <value>2023-08-26T09:49:43.871357Z</value>
+        </time>
+        <latitude>
+          <value>-32.7399</value>
+          <uncertainty>1.270</uncertainty>
+        </latitude>
+        <longitude>
+          <value>116.3876</value>
+          <uncertainty>1.424</uncertainty>
+        </longitude>
+        <depth>
+          <value>1462.5</value>
+          <uncertainty>1900.6232348485344</uncertainty>
+        </depth>
+        <methodID>smi:local/NonLinLoc</methodID>
+        <earthModelID>smi:local/swaus</earthModelID>
+        <quality>
+          <associatedPhaseCount>83</associatedPhaseCount>
+          <usedPhaseCount>83</usedPhaseCount>
+          <usedStationCount>45</usedStationCount>
+          <standardError>1.2510</standardError>
+          <azimuthalGap>85.4851</azimuthalGap>
+          <secondaryAzimuthalGap>85.4851543596966</secondaryAzimuthalGap>
+          <groundTruthLevel>-</groundTruthLevel>
+          <minimumDistance>0.1587</minimumDistance>
+          <maximumDistance>2.3615</maximumDistance>
+          <medianDistance>1.4662</medianDistance>
+        </quality>
+        <evaluationMode>manual</evaluationMode>
+        <evaluationStatus>confirmed</evaluationStatus>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>pickle</author>
+          <creationTime>2025-11-20T09:14:08.850244Z</creationTime>
+        </creationInfo>
+        <originUncertainty>
+          <horizontalUncertainty>2160</horizontalUncertainty>
+          <minHorizontalUncertainty>1926</minHorizontalUncertainty>
+          <maxHorizontalUncertainty>2160</maxHorizontalUncertainty>
+          <azimuthMaxHorizontalUncertainty>91.4</azimuthMaxHorizontalUncertainty>
+          <confidenceEllipsoid>
+            <semiMajorAxisLength>3576</semiMajorAxisLength>
+            <semiMinorAxisLength>2377</semiMinorAxisLength>
+            <semiIntermediateAxisLength>2676</semiIntermediateAxisLength>
+            <majorAxisPlunge>4.4025</majorAxisPlunge>
+            <majorAxisAzimuth>-91.3324</majorAxisAzimuth>
+            <majorAxisRotation>94.4024</majorAxisRotation>
+          </confidenceEllipsoid>
+        </originUncertainty>
+      </origin>
+      <magnitude publicID="smi:local/Origin/20251120091408.850212.113577/netMag/MLv">
+        <mag>
+          <value>2.64</value>
+          <uncertainty>0.359</uncertainty>
+        </mag>
+        <type>MLv</type>
+        <originID>smi:local/Origin/20251120091408.850212.113577</originID>
+        <methodID>smi:local/trimmed_mean(25)</methodID>
+        <stationCount>4</stationCount>
+        <creationInfo>
+          <agencyID>RSES</agencyID>
+          <author>pickle</author>
+          <creationTime>2025-11-20T09:14:10.766538Z</creationTime>
+        </creationInfo>
+      </magnitude>
+    </event>
+  </eventParameters>
+</q:quakeml>

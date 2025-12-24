@@ -89,8 +89,8 @@
  *
  *  - Enumerations: Both schema use enumerations. Numerous mappings are applied.
  *
- *  - Unit conversion: SC3ML uses kilometer for origin depth, origin
- *    uncertainty and confidence ellipsoid, QuakeML uses meter
+ *  - Unit conversion: SC3ML uses kilometer for origin depth and origin
+ *    uncertainty, QuakeML uses meter
  *
  *  - Unmapped nodes: The following nodes can not be mapped to the QuakeML
  *    schema, thus their data is lost:
@@ -186,6 +186,12 @@
  *
  *  * 24.03.2023:
  *    - Do not export duplicated picks referenced by different amplitudes.
+ *
+ *  * 26.07.2024:
+ *    - Fix origin/confidenceEllipsoid conversion. The unit for
+ *      'semiMajorAxisLength', 'semiMinorAxisLength' and
+ *      'semiIntermediateAxisLength' is already meter and does not need a
+ *      conversion.
  *
  ********************************************************************** -->
 <xsl:stylesheet version="1.0"
@@ -346,10 +352,7 @@
                          | scs:origin/scs:depth/scs:upperUncertainty
                          | scs:origin/scs:uncertainty/scs:horizontalUncertainty
                          | scs:origin/scs:uncertainty/scs:minHorizontalUncertainty
-                         | scs:origin/scs:uncertainty/scs:maxHorizontalUncertainty
-                         | scs:confidenceEllipsoid/scs:semiMajorAxisLength
-                         | scs:confidenceEllipsoid/scs:semiMinorAxisLength
-                         | scs:confidenceEllipsoid/scs:semiIntermediateAxisLength">
+                         | scs:origin/scs:uncertainty/scs:maxHorizontalUncertainty">
         <xsl:element name="{local-name()}">
             <xsl:value-of select="current() * 1000"/>
         </xsl:element>

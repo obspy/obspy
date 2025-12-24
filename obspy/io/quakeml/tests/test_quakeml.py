@@ -217,11 +217,11 @@ class TestQuakeML():
         assert u.azimuth_max_horizontal_uncertainty == 80.0
         # confidence ellipsoid
         c = u.confidence_ellipsoid
-        assert c.semi_intermediate_axis_length == 2.123
+        assert c.semi_intermediate_axis_length == 2123.0
         assert c.major_axis_rotation == 5.123
         assert c.major_axis_plunge == 3.123
-        assert c.semi_minor_axis_length == 1.123
-        assert c.semi_major_axis_length == 0.123
+        assert c.semi_minor_axis_length == 1123.0
+        assert c.semi_major_axis_length == 123.0
         assert c.major_axis_azimuth == 4.123
         # exporting back to XML should result in the same document
         with open(filename, "rb") as fp:

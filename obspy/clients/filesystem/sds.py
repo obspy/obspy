@@ -27,7 +27,7 @@ These fields are defined by SDS as follows::
     LOC    :  Location identifier, up to 8 characters, no spaces
     DAY    :  3 digit day of year, padded with zeros
 
-See https://www.seiscomp3.org/wiki/doc/applications/slarchive/SDS.
+See https://www.seiscomp.de/doc/apps/slarchive.html#slarchive
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
