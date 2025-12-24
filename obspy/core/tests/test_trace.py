@@ -427,6 +427,52 @@ class TestTrace:
         # verify
         trace.verify()
 
+    def test_add_trace_with_overlap_crossfade(self):
+        """
+        Tests __add__ method of the Trace class.
+        """
+        # we generate a linearly increasing trace,
+        # then we cut it into two pieces and see if it
+        # is the same when we merge it again. This
+        # tests whether there is any shift or missing
+        # sample, when traces are combined.
+
+        # start times of the traces
+        start1 = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        start2 = UTCDateTime(2000, 1, 1, 0, 0, 0, 0) + 1000.
+        end1 = start2 + 800.  # overlapping traces
+
+        # generate long trace
+        tr_long = Trace(data=np.arange(5000.))
+        tr_long.stats.sampling_rate = 1.
+        tr_long.stats.starttime = start1
+
+        # cut out left trace
+        tr1 = tr_long.copy()
+        tr1.trim(endtime=end1)
+
+        # cut out right trace
+        tr2 = tr_long.copy()
+        tr2.trim(starttime=start2)
+
+        # cut traces in the middle of the overlap
+        trace = tr1.__add__(tr2, method=2, crossfade='middle')
+        self.assertTrue(np.all(trace.data == tr_long.data))
+        trace.verify()
+
+        # don't test sum method because it doesn't yield the original trace
+        # trace = tr1.__add__(tr2, method=2, crossfade='sum')
+
+        # linear transition of the two traces
+        trace = tr1.__add__(tr2, method=2, crossfade='linear')
+        self.assertTrue(np.all(trace.data == tr_long.data))
+        trace.verify()
+
+        # sinusoidal transition of the two traces
+        trace = tr1.__add__(tr2, method=2, crossfade='sinus')
+        self.assertTrue(np.all(trace.data == tr_long.data))
+        trace.verify()
+
     def test_add_same_trace(self):
         """
         Tests __add__ method of the Trace class.
