@@ -7,7 +7,9 @@ Changes:
    * Fix code coverage reporting (see #3646)
    * Github CI: update min numpy version to 1.21 and symlink libtiff.so.5
      for ubuntu 3.8 tests (see #3639)
-   * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
+   * Github CI: pin cartopy < 0.22, pyproj < 3.5 for ubuntu 3.8
+     mindepversion tests
+   * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639) 
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
@@ -28,6 +30,8 @@ Changes:
    * window 'slepian' was removed in Trace/Stream.taper() as it was removed
      from scipy with version 1.6, add new window 'dpss' that scipy promotes as
      replacement but might need other parameters passed in (see #3331)
+   * util: fix logic bug in _generic_reader to properly catch byte objects
+     (see #3643)
  - obspy.clients.filesystem:
    * tsindex: update syntax for SQLAlchemy 2.0 compatibility (see #3269)
    * tsindex: leap second handling was deactivated as it is not needed with
