@@ -6,6 +6,7 @@ The obspy.io.kinemetrics.core test suite.
 import io
 
 import numpy as np
+import warnings
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
@@ -89,7 +90,9 @@ class TestCore():
         Read files via obspy.core.stream.read function.
         """
         filename = testdata['BX456_MOLA-02351.evt']
-        st = read(filename, apply_calib=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            st = read(filename, apply_calib=True)
         st.verify()
         assert len(st) == 6
         assert st[0].stats.starttime == \
@@ -147,7 +150,9 @@ class TestCore():
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
-        st = read(buf, apply_calib=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            st = read(buf, apply_calib=True)
         st.verify()
         assert len(st) == 6
         assert st[0].stats.starttime == \
@@ -198,7 +203,9 @@ class TestCore():
         Read files via obspy.io.kinemetrics.core.read_evt function.
         """
         filename = testdata['BX456_MOLA-02351.evt']
-        st = read_evt(filename, apply_calib=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            st = read_evt(filename, apply_calib=True)
         st.verify()
         assert len(st) == 6
         assert st[0].stats.starttime == \
@@ -252,7 +259,9 @@ class TestCore():
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
-        st = read_evt(buf, apply_calib=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            st = read_evt(buf, apply_calib=True)
         st.verify()
         assert len(st) == 6
         assert st[0].stats.starttime == \
