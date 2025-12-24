@@ -713,12 +713,22 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
     if isinstance(pathname_or_url, PurePath):
         pathname_or_url = str(pathname_or_url)
     if not isinstance(pathname_or_url, str):
-        # not a string - we assume a file-like object
-        return callback_func(pathname_or_url, **kwargs)
-    elif isinstance(pathname_or_url, bytes) and \
-            pathname_or_url.strip().startswith(b'<'):
-        # XML string
-        return callback_func(io.BytesIO(pathname_or_url), **kwargs)
+        # first check if bytes
+        if isinstance(pathname_or_url, bytes):
+            # probably XML string, but handle any type bytes object
+            return callback_func(io.BytesIO(pathname_or_url), **kwargs)
+        # not a string OR bytes- we assume a file-like object
+        try:
+            # first try reading directly
+            generic = callback_func(pathname_or_url, **kwargs)
+        except TypeError:
+            # if this fails, create a temporary file which is read directly
+            # from the file system
+            pathname_or_url.seek(0)
+            with NamedTemporaryFile() as fh:
+                fh.write(pathname_or_url.read())
+                generic = callback_func(fh.name, **kwargs)
+        return generic
     elif "://" in pathname_or_url[:10]:
         # URL
         # extract extension if any
