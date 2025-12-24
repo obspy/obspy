@@ -3,7 +3,7 @@
   <Source>IRIS-DMC</Source>
   <Sender>IRIS-DMC</Sender>
   <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.33</Module>
-  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?network=TA&amp;station=034A&amp;level=response</ModuleURI>
+  <ModuleURI>https://service.iris.edu/fdsnws/station/1/query?network=TA&amp;station=034A&amp;level=response</ModuleURI>
   <Created>2018-07-31T17:06:40.000000Z</Created>
   <Network code="TA" endDate="2500-12-31T23:59:59.000000Z" restrictedStatus="open" startDate="2003-01-01T00:00:00.000000Z">
     <Description>USArray Transportable Array (NSF EarthScope Project)</Description>

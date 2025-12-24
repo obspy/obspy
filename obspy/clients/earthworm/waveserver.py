@@ -258,70 +258,75 @@ def read_wave_server_v(server, port, scnl, start, end, timeout=None,
     reqstr = 'GETSCNLRAW: %s %s %f %f\n' % (rid, scnlstr, start, end)
     sock = send_sock_req(server, port, reqstr.encode('ascii', 'strict'),
                          timeout=timeout)
-    r = get_sock_char_line(sock, timeout=timeout)
-    if not r:
-        return []
-    tokens = str(r.decode()).split()
-    flag = tokens[6]
-    if flag != 'F':
-        msg = 'read_wave_server_v returned flag %s - %s'
-        print(msg % (flag, RETURNFLAG_KEY[flag]), file=sys.stderr)
-        return []
-    nbytes = int(tokens[-1])
-    dat = get_sock_bytes(sock, nbytes, timeout=timeout)
-    sock.close()
 
-    tbl = []
-    bytesread = 1
-    p = 0
-    dat_len = len(dat)
-    current_tb = None
-    period = None
-    bufs = None
+    try:
+        r = get_sock_char_line(sock, timeout=timeout)
+        if not r:
+            return []
+        tokens = str(r.decode()).split()
+        flag = tokens[6]
+        if flag != 'F':
+            msg = 'read_wave_server_v returned flag %s - %s'
+            print(msg % (flag, RETURNFLAG_KEY[flag]), file=sys.stderr)
+            return []
+        nbytes = int(tokens[-1])
+        dat = get_sock_bytes(sock, nbytes, timeout=timeout)
+        sock.close()
 
-    while bytesread and p < dat_len:
-        if not dat_len > p + 64:
-            break  # no tracebufs left
+        tbl = []
+        bytesread = 1
+        p = 0
+        dat_len = len(dat)
+        current_tb = None
+        period = None
+        bufs = None
 
-        new_tb = TraceBuf2()
-        new_tb.parse_header(dat[p:p + 64])
-        p += 64
-        nbytes = new_tb.ndata * new_tb.input_type.itemsize
+        while bytesread and p < dat_len:
+            if not dat_len > p + 64:
+                break  # no tracebufs left
 
-        if dat_len < p + nbytes:
-            break   # not enough array to hold data specified in header
+            new_tb = TraceBuf2()
+            new_tb.parse_header(dat[p:p + 64])
+            p += 64
+            nbytes = new_tb.ndata * new_tb.input_type.itemsize
 
-        if current_tb is not None:
-            if cleanup and new_tb.start - current_tb.end == period:
-                buf = dat[p:p + nbytes]
-                bufs.append(from_buffer(buf, current_tb.input_type))
-                current_tb.end = new_tb.end
+            if dat_len < p + nbytes:
+                break   # not enough array to hold data specified in header
 
-            else:
-                if len(bufs) > 1:
-                    current_tb.data = np.concatenate(bufs)
+            if current_tb is not None:
+                if cleanup and new_tb.start - current_tb.end == period:
+                    buf = dat[p:p + nbytes]
+                    bufs.append(from_buffer(buf, current_tb.input_type))
+                    current_tb.end = new_tb.end
+
                 else:
-                    current_tb.data = bufs[0]
+                    if len(bufs) > 1:
+                        current_tb.data = np.concatenate(bufs)
+                    else:
+                        current_tb.data = bufs[0]
 
-                current_tb.ndata = len(current_tb.data)
-                current_tb = None
+                    current_tb.ndata = len(current_tb.data)
+                    current_tb = None
 
-        if current_tb is None:
-            current_tb = new_tb
-            tbl.append(current_tb)
-            period = 1 / current_tb.rate
-            bufs = [from_buffer(dat[p:p + nbytes], current_tb.input_type)]
+            if current_tb is None:
+                current_tb = new_tb
+                tbl.append(current_tb)
+                period = 1 / current_tb.rate
+                bufs = [from_buffer(dat[p:p + nbytes], current_tb.input_type)]
 
-        p += nbytes
+            p += nbytes
 
-    if len(bufs) > 1:
-        current_tb.data = np.concatenate(bufs)
-    else:
-        current_tb.data = bufs[0]
+        if len(bufs) > 1:
+            current_tb.data = np.concatenate(bufs)
+        else:
+            current_tb.data = bufs[0]
 
-    current_tb.ndata = len(current_tb.data)
+        current_tb.ndata = len(current_tb.data)
 
-    return tbl
+        return tbl
+    # ensure socket closes regardless
+    finally:
+        sock.close()
 
 
 def trace_bufs2obspy_stream(tbuflist):
