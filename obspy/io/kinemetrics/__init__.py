@@ -193,8 +193,8 @@ of each trace.
 
     >>> type(st[0].data)  # doctest: +ELLIPSIS
     <... 'numpy.ndarray'>
-    >>> print(st[0].data)
-    [-20920. -20980. -20922. ..., -20972. -20956. -20886.]
+    >>> print(st[0].data)  # doctest: +ELLIPSIS
+    [-20920. -20980. -20922. ... -20972. -20956. -20886.]
 
 Writing
 -------
