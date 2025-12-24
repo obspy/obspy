@@ -143,7 +143,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     }
 
 
-    // estimate the maximum of the trace
+    // estimate the maximum of the Z trace
     buff4_max = 0.0;
     for(i=0;i<ndat;i++){
         if(fabsf(buff4[i]) > buff4_max)
@@ -194,15 +194,15 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             stlt = buf_sta[i+nlta]/buf_lta[i+nlta];
             i2 = i+nlta;
         }
-
     } 
 
     nl_p = (int)(l_p*sample_rate);
     nl_s = (int)(l_s*sample_rate);
     if((i2+nl_p+m1_p)>ndat){
-        i2 -= nl_p +m1_p;
+        i2 -= 2*nl_p +m1_p;
     }
     i2 += m1_p + nl_p;
+
 
     // Leonard & Kennett AIC Criterion - Model2
     for(i=0;i<(i2+nl_p);i++){
@@ -315,6 +315,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
 
     // estimation of P-Onset
     *ptime = ((float) (i4-nl_p))/sample_rate;
+    fprintf(stderr,"P-Onset: %f",ptime);
 
     if(s_pick == 1){
         memset(f_error,0,ndat*sizeof(float));
@@ -327,36 +328,35 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         // now sta-lta
         nsta = (int)(sta_s*sample_rate);
         nlta = (int)(lta_s*sample_rate);
-        stlt = 0.;
-        for(i=0;i<(ndat-nlta);i++){
-            for(j=(i+nlta-nsta);j<(i+nlta);j++){
-                buf_sta[i+nlta] += fabsf(buff4_s[j])/(float)nsta;
+        //stlt = 0.;
+        for(i=nsta;i<(ndat-nlta);i++){
+            for(j=(i-nsta);j<(i);j++){
+                buf_sta[i] += fabsf(buff4_s[j])/(float)nsta;
             }
-            for(j=(i);j<(i+nlta);j++){
-                buf_lta[i+nlta] += fabsf(buff4_s[j])/(float)nlta;
+            for(j=(i-nsta);j<(i+nlta-nsta);j++){
+                buf_lta[i] += fabsf(buff4_s[j])/(float)nlta;
             }
         }
 
         // estimation of STA-LTA on horizontal component
         lta_max = 0.;
         for(i = i4;i<(ndat-nlta);i++){
-            if((buf_sta[i+nlta] - buf_lta[i+nlta])>lta_max){
-                lta_max = buf_sta[i+nlta] - buf_lta[i+nlta];
-                i5 = i+nlta;
+            if((buf_sta[i] - buf_lta[i])>lta_max){
+                lta_max = buf_sta[i] - buf_lta[i];
+                i5 = i;
             }
         }
         i5 += m1_s + nl_s;
         i6 = 0;
-        if (i5 > ndat)
+        if (i5 > ndat){
             i5 = ndat;
-        // we try this for now
-        //   i6 = i4 - m1_s - nl_s;
-#if 0
-#endif
+        }
+
         // STA-LTA in reversed direction
         memset(buf_sta,0,ndat*sizeof(float));
         memset(buf_lta,0,ndat*sizeof(float));
-        for(i=(ndat-nlta-1);i>nlta;i--){
+        /*for(i=(ndat-nlta-1);i>nlta;i--){*/
+        for(i=(ndat-nlta-1);i>i4;i--){
             for(j=(i+nsta-1);j>=(i);j--){
                 buf_sta[i] += fabsf(buff4_s[j])/(float)nsta;
             }
@@ -365,14 +365,18 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             }
         }
         lta_max = 0.;
-        for(i=(i5+nlta);i>=i4;i--){
-            if(i < i5 && (buf_sta[i-nlta] - buf_lta[i-nlta])<lta_max){
-                lta_max = buf_sta[i-nlta] - buf_lta[i-nlta];
-                i6 = i-nlta;
+        // here might exist a problem when i4 close to the start of the trace
+        for(i=(i5);i>=i4;i--){
+            if((buf_sta[i] - buf_lta[i])<lta_max){
+                lta_max = buf_sta[i] - buf_lta[i];
+                i6 = i;
             }
         }
+        if(i6 < 0){
+            i6 = 0;
+        }
 
-        if(i6 > 0){  
+        if(i6 > 0 && i6 > i4){
             n65 = (i5-i6);
 
             if(n65 > ndat)
@@ -396,7 +400,11 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
                 EXIT(errcode);
             }
 
-            //estimating the Forward-AIC 
+            //estimating the Forward-AIC
+            if((n65-nl_s) <= 0){
+                EXIT(-5);
+            }
+
             for(i=m1_s;i<(n65-nl_s);i++){
                 for(k=0;k<nl_s;k++){
                     f = buff1_s[i+k];
@@ -429,7 +437,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
                 }
             }
             // S-onsettime, changed to return seconds
-            if(i7 > 0)
+            if(i7 > 0 && i7 > i4)
                 *stime = ((float) (i7-nl_s))/sample_rate;
             else
                 *stime = 0.0f;
