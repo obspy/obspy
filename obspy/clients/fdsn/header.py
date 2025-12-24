@@ -96,41 +96,48 @@ class FDSNNoServiceException(FDSNException):
     pass
 
 
-# A curated list collecting some implementations:
-# https://www.fdsn.org/webservices/datacenters/
-# https://www.orfeus-eu.org/data/eida/nodes/
+# A curated list collecting FDSNWS implementations
+# primarily but not exclusively drawn from:
+#    https://www.fdsn.org/ws/datacenters/1/query
+# last updated November 5 2025
 URL_MAPPINGS = {
-    "AUSPASS": "http://auspass.edu.au",
-    "BGR": "http://eida.bgr.de",
+    "AUSPASS": "https://auspass.edu.au",
+    "BGR": "https://eida.bgr.de",
+    "BGS": 'https://eida.bgs.ac.uk',
+    "EARTHSCOPE": "https://service.iris.edu",
     "EIDA": "http://eida-federator.ethz.ch",
-    "ETH": "http://eida.ethz.ch",
-    "EMSC": "http://www.seismicportal.eu",
-    "GEONET": "http://service.geonet.org.nz",
-    "GEOFON": "http://geofon.gfz-potsdam.de",
-    "GFZ": "http://geofon.gfz-potsdam.de",
-    "ICGC": "http://ws.icgc.cat",
+    "ETH": "https://eida.ethz.ch",
+    "EMSC": "https://www.seismicportal.eu",
+    "GEOFON": "https://geofon.gfz.de",
+    "GEONET": "https://service.geonet.org.nz",
+    "GFZ": "https://geofon.gfz.de",
+    "ICGC": "https://ws.icgc.cat",
     "IESDMC": "http://batsws.earth.sinica.edu.tw",
-    "INGV": "http://webservices.ingv.it",
-    "IPGP": "http://ws.ipgp.fr",
-    "IRIS": "http://service.iris.edu",
-    "IRISPH5": "http://service.iris.edu",
-    "ISC": "http://www.isc.ac.uk",
-    "KNMI": "http://rdsa.knmi.nl",
-    "KOERI": "http://eida.koeri.boun.edu.tr",
+    "IGN": "http://fdsnws.sismologia.ign.es",
+    "INGV": "https://webservices.ingv.it",
+    "IPGP": "https://ws.ipgp.fr",
+    "IRIS": "https://service.iris.edu",
+    "IRISDMC": "https://service.iris.edu",
+    "IRISPH5": "https://service.iris.edu",
+    "ISC": "https://www.isc.ac.uk",
+    "KAGSR": "http://sdis.emsd.ru",
+    "KNMI": "https://rdsa.knmi.nl",
+    "KOERI": "https://eida.koeri.boun.edu.tr",
     "LMU": "https://erde.geophysik.uni-muenchen.de",
     "NCEDC": "https://service.ncedc.org",
-    "NIEP": "http://eida-sc3.infp.ro",
-    "NOA": "http://eida.gein.noa.gr",
-    "ODC": "http://www.orfeus-eu.org",
-    "ORFEUS": "http://www.orfeus-eu.org",
-    "RESIF": "http://ws.resif.fr",
+    "NIEP": "https://eida-sc3.infp.ro",
+    "NOA": "https://eida.gein.noa.gr",
+    "NRCAN": "https://earthquakescanada.nrcan.gc.ca",
+    "ODC": "https://www.orfeus-eu.org",
+    "ORFEUS": "https://www.orfeus-eu.org",
+    "RESIF": "https://ws.resif.fr",
     "RESIFPH5": "http://ph5ws.resif.fr",
     "RASPISHAKE": "https://data.raspberryshake.org",
-    "SCEDC": "http://service.scedc.caltech.edu",
+    "SCEDC": "https://service.scedc.caltech.edu",
     "TEXNET": "http://rtserve.beg.utexas.edu",
-    "UIB-NORSAR": "http://eida.geo.uib.no",
-    "USGS": "http://earthquake.usgs.gov",
-    "USP": "http://sismo.iag.usp.br",
+    "UIB-NORSAR": "https://eida.geo.uib.no",
+    "USGS": "https://earthquake.usgs.gov",
+    "USP": "https://sismo.iag.usp.br"
 }
 URL_MAPPING_SUBPATHS = {
     "IRISPH5": "/ph5ws",
@@ -327,6 +334,6 @@ for service in ["dataselect", "event", "station"]:
 
 # This list collects WADL parameters that will not be parsed because they are
 # not useful for the ObsPy client.
-# Current the nodata parameter used by IRIS is part of that list. The ObsPy
-# client relies on the HTTP codes.
+# Current the nodata parameter used by EARTHSCOPE/IRIS is part of that list.
+# The ObsPy client relies on the HTTP codes.
 WADL_PARAMETERS_NOT_TO_BE_PARSED = ["nodata"]

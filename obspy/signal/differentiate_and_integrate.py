@@ -22,10 +22,7 @@ def integrate_cumtrapz(data, dx, **kwargs):
     """
     # Integrate. Set first value to zero to avoid changing the total
     # length of the array.
-    # (manually adding the zero and not using `cumtrapz(..., initial=0)` is a
-    # backwards compatibility fix for scipy versions < 0.11.
-    ret = scipy.integrate.cumulative_trapezoid(data, dx=dx)
-    return np.concatenate([np.array([0], dtype=ret.dtype), ret])
+    return scipy.integrate.cumulative_trapezoid(data, dx=dx, initial=0)
 
 
 def integrate_spline(data, dx, k=3, **kwargs):

@@ -26,7 +26,7 @@ class TestCore():
         """
         Test multiple schema versions
         """
-        for version in ['0.10', '0.11', '0.12']:
+        for version in ['0.10', '0.11', '0.12', '0.13']:
             filename = testdata['version%s' % version]
             assert _is_sc3ml(filename)
 
@@ -41,6 +41,6 @@ class TestCore():
 
         expected_error = re.escape(
             "0.99 is not a supported version. Use one of these "
-            "versions: [0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12].")
+            "versions: [0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13].")
         with pytest.raises(ValueError, match=expected_error):
             validate(filename, version='0.99')

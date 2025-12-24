@@ -3,14 +3,15 @@
 REFTEK130 read support, core routines.
 """
 import copy
-import io
 import os
+from io import BytesIO
 from pathlib import Path
 import warnings
 
 import numpy as np
 
 from obspy import Trace, Stream, UTCDateTime
+from obspy.core.util import open_bytes_stream
 from obspy.core.util.obspy_types import ObsPyException
 
 from .packet import (Packet, EHPacket, _initial_unpack_packets, PACKET_TYPES,
@@ -38,14 +39,17 @@ def _is_reftek130(filename):
     bytes) and checks for valid packet type identifiers in the first 20
     expected packet positions.
     """
-    if not Path(filename).is_file():
-        return False
-    filesize = Path(filename).stat().st_size
+    if isinstance(filename, BytesIO):
+        filesize = filename.getbuffer().nbytes
+    else:
+        if not Path(filename).is_file():
+            return False
+        filesize = Path(filename).stat().st_size
     # check if overall file size is a multiple of 1024
     if filesize < 1024 or filesize % 1024 != 0:
         return False
 
-    with open(filename, 'rb') as fp:
+    with open_bytes_stream(filename) as fp:
         # check first 20 expected packets' type header field
         for i in range(20):
             packet_type = fp.read(2).decode("ASCII", "replace")
@@ -142,7 +146,7 @@ class Reftek130(object):
 
     @staticmethod
     def from_file(filename):
-        with io.open(filename, "rb") as fh:
+        with open_bytes_stream(filename) as fh:
             string = fh.read()
         rt = Reftek130()
         rt._data = _initial_unpack_packets(string)

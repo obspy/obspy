@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.10" version="0.10">
-  <EventParameters publicID="smi:ca.seismo/catalog/pickfile.npf">
+  <EventParameters>
+    <event publicID="smi:ca.seismo/event/evid/19521225.0428002">
+      <preferredOriginID>smi:ca.seismo/origin/solid/19521225.0428001</preferredOriginID>
+      <preferredMagnitudeID>smi:ca.seismo/magnitude/solid/magcnt/19521225.0428001/1</preferredMagnitudeID>
+      <type>earthquake</type>
+      <typeCertainty>known</typeCertainty>
+      <originReference>smi:ca.seismo/origin/solid/19521225.0428001</originReference>
+    </event>
     <pick publicID="smi:ca.seismo/pick/solid/arrid/19521225.0428001/19521225.0429001">
       <time>
         <value>1952-12-25T04:29:33.000000Z</value>
@@ -59,6 +66,7 @@
         </magnitude>
         <type>MN</type>
         <amplitudeID>smi:ca.seismo/amplitude/solid/arrid/19521225.0428001/19521225.0430003</amplitudeID>
+        <waveformID networkCode="CN" stationCode="OTT" locationCode="" channelCode="SZ"/>
       </stationMagnitude>
       <magnitude publicID="smi:ca.seismo/magnitude/solid/magcnt/19521225.0428001/1">
         <magnitude>
@@ -71,12 +79,5 @@
         </stationMagnitudeContribution>
       </magnitude>
     </origin>
-    <event publicID="smi:ca.seismo/event/evid/19521225.0428002">
-      <preferredOriginID>smi:ca.seismo/origin/solid/19521225.0428001</preferredOriginID>
-      <preferredMagnitudeID>smi:ca.seismo/magnitude/solid/magcnt/19521225.0428001/1</preferredMagnitudeID>
-      <type>earthquake</type>
-      <typeCertainty>known</typeCertainty>
-      <originReference>smi:ca.seismo/origin/solid/19521225.0428001</originReference>
-    </event>
   </EventParameters>
 </seiscomp>

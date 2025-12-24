@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Client for accessing the `IRIS Library of Nominal Response for Seismic
-Instruments <https://ds.iris.edu/NRL/>`_ (NRL).  To cite use of the NRL, please
-see [Templeton2017]_.
+Client for accessing the `EarthScope/IRIS Library of Nominal Response for
+Seismic Instruments <https://ds.iris.edu/NRL/>`_ (NRL).  To cite use of the
+NRL, please see [Templeton2017]_.
 
 :copyright:
     Lloyd Carothers IRIS/PASSCAL, 2016
@@ -35,13 +35,10 @@ class NRL(object):
     """
     NRL client base class for accessing the Nominal Response Library.
 
-    https://ds.iris.edu/NRL/
+    https://ds.iris.edu/ds/nrl/
 
     Created with a URL for remote access or filesystem accessing a local copy.
 
-    .. warning::
-        Remote access to online NRL is deprecated as it will stop working in
-        Spring 2023 due to server side changes.
     """
     _index = 'index.txt'
 
@@ -58,7 +55,7 @@ class NRL(object):
                 raise ValueError(msg)
             return super(NRL, cls).__new__(LocalNRL)
         # Otherwise delegate to the remote NRL client to deal with all kinds
-        # of remote resources (currently only HTTP).
+        # of remote resources.
         return super(NRL, cls).__new__(RemoteNRL)
 
     def __init__(self):

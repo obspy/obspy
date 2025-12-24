@@ -1419,7 +1419,8 @@ class UTCDateTime(object):
 
     def format_fissures(self):
         """
-        Returns string representation for the IRIS Fissures protocol.
+        Returns string representation for the Earthscope/IRIS Fissures
+        protocol.
 
         :return: string
 
@@ -1508,7 +1509,8 @@ class UTCDateTime(object):
 
     def format_iris_web_service(self):
         """
-        Returns string representation usable for the IRIS Web services.
+        Returns string representation usable for the EarthScope/IRIS Web
+        services.
 
         :return: string
 

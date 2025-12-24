@@ -127,7 +127,7 @@
  *
  * ================
  * Change log
- * ===============
+ * ================
  *
  *  * 08.09.2014: Fixed typo in event type conversion (meteo[r] impact)
  *
@@ -184,6 +184,9 @@
  *
  *  * 31.10.2022: Improve performance when processing origins with many arrivals.
  *
+ *  * 24.03.2023:
+ *    - Do not export duplicated picks referenced by different amplitudes.
+ *
  ********************************************************************** -->
 <xsl:stylesheet version="1.0"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -229,47 +232,40 @@
         <xsl:element name="{local-name()}">
             <xsl:apply-templates select="@*"/>
 
-            <!-- search origins referenced by this event -->
-            <xsl:for-each select="scs:originReference">
-                <xsl:for-each select="../../scs:origin[@publicID=current()]">
-                    <xsl:variable name="origin" select="current()" />
+            <!-- collect origins referenced by event/originReference -->
+            <xsl:variable name="origins" select="../scs:origin[@publicID=current()/scs:originReference]" />
 
-                    <!-- stationMagnitudes and referenced amplitudes -->
-                    <xsl:for-each select="scs:stationMagnitude">
-                        <xsl:for-each select="../../scs:amplitude[@publicID=current()/scs:amplitudeID]">
-                            <!-- amplitude/genericAmplitude is mandatory in QuakeML -->
-                            <xsl:if test="scs:amplitude">
-                                <!-- copy picks referenced in amplitudes -->
-                                <xsl:for-each select="../scs:pick[@publicID=current()/scs:pickID]">
-                                    <xsl:call-template name="genericNode" />
-                                </xsl:for-each>
-                                <xsl:call-template name="genericNode"/>
-                            </xsl:if>
-                        </xsl:for-each>
-                        <xsl:apply-templates select="." mode="originMagnitude">
-                            <xsl:with-param name="oID" select="../@publicID"/>
-                        </xsl:apply-templates>
-                    </xsl:for-each>
+            <!-- picks referenced via origin/stationMagnitude/amplitudeID or origin/arrival -->
+            <xsl:variable name="amplitudes" select="../scs:amplitude[@publicID=$origins/scs:stationMagnitude/scs:amplitudeID]" />
+            <xsl:variable name="picks" select="$origins/scs:arrival/scs:pickID | $amplitudes/scs:pickID" />
+            <xsl:for-each select="../scs:pick[@publicID = $picks]">
+                <xsl:call-template name="genericNode" />
+            </xsl:for-each>
 
-                    <!-- magnitudes -->
-                    <xsl:for-each select="scs:magnitude">
-                        <xsl:apply-templates select="." mode="originMagnitude">
-                            <xsl:with-param name="oID" select="../@publicID"/>
-                        </xsl:apply-templates>
-                    </xsl:for-each>
+            <xsl:for-each select="$origins">
 
-                    <!-- picks, referenced by arrivals -->
-                    <!-- we exclude picks already referenced in amplitudes: -->
-                    <xsl:variable name="amplitudes" select="../scs:amplitude[@publicID=$origin/scs:stationMagnitude/scs:amplitudeID]" />
-                    <xsl:for-each select="scs:arrival[not(./scs:pickID=$amplitudes/scs:pickID)]">
-                        <xsl:for-each select="../../scs:pick[@publicID=current()/scs:pickID]">
+                <!-- stationMagnitudes and referenced amplitudes -->
+                <xsl:for-each select="scs:stationMagnitude">
+                    <xsl:for-each select="../../scs:amplitude[@publicID=current()/scs:amplitudeID]">
+                        <!-- amplitude/genericAmplitude is mandatory in QuakeML -->
+                        <xsl:if test="scs:amplitude">
                             <xsl:call-template name="genericNode"/>
-                        </xsl:for-each>
+                        </xsl:if>
                     </xsl:for-each>
-
-                    <!-- origin -->
-                    <xsl:call-template name="genericNode"/>
+                    <xsl:apply-templates select="." mode="originMagnitude">
+                        <xsl:with-param name="oID" select="../@publicID"/>
+                    </xsl:apply-templates>
                 </xsl:for-each>
+
+                <!-- magnitudes -->
+                <xsl:for-each select="scs:magnitude">
+                    <xsl:apply-templates select="." mode="originMagnitude">
+                        <xsl:with-param name="oID" select="../@publicID"/>
+                    </xsl:apply-templates>
+                </xsl:for-each>
+
+                <!-- origin -->
+                <xsl:call-template name="genericNode"/>
             </xsl:for-each>
 
             <!-- search focalMechanisms referenced by this event -->

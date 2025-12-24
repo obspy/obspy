@@ -14,14 +14,17 @@ from packaging.version import parse as parse_version
 import pytest
 
 import obspy
+from obspy.core.util.base import CatchAndAssertWarnings
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+from obspy.clients.fdsn import RoutingClient
 from obspy.clients.fdsn.routing.federator_routing_client import \
     FederatorRoutingClient
 
 
 _DummyResponse = collections.namedtuple("_DummyResponse", ["content"])
-pytestmark = pytest.mark.network
 
 
+@pytest.mark.network
 class TestFederatorRoutingClient():
     @classmethod
     def setup_class(cls):
@@ -35,13 +38,74 @@ class TestFederatorRoutingClient():
         assert parse_version(self.client.get_service_version()) >= \
             parse_version("1.1.1")
 
+    def test_get_waveforms_integration_test(self):
+        """
+        Integration test that does not mock anything but actually downloads
+        things.
+        """
+        st = self.client.get_waveforms(
+            starttime=obspy.UTCDateTime(2017, 1, 1),
+            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
+            latitude=35.0, longitude=-110, maxradius=0.3,
+            channel="LHZ")
+        # This yields 1 channel at the time of writing this test - I assume
+        # it is unlikely to every yield less. So this test should be fairly
+        # stable.
+        assert len(st) >= 1
+
+        # Same with the bulk request.
+        st2 = self.client.get_waveforms_bulk(
+            [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
+              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
+            latitude=35.0, longitude=-110, maxradius=0.3)
+        assert len(st2) >= 1
+
+        assert st == st2
+
+    def test_get_stations_integration_test(self):
+        """
+        Integration test that does not mock anything but actually downloads
+        things.
+        """
+        inv = self.client.get_stations(
+            starttime=obspy.UTCDateTime(2017, 1, 1),
+            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
+            latitude=35.0, longitude=-110, maxradius=0.3, network="TA",
+            channel="LHZ", level="station")
+        # This yields 1 network at the time of writing this test - I assume
+        # it is unlikely to every yield less. So this test should be fairly
+        # stable.
+        assert len(inv) >= 1
+
+        # Again repeat with the bulk request.
+        inv2 = self.client.get_stations_bulk(
+            [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
+              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
+            latitude=35.0, longitude=-110, maxradius=0.3,
+            level="station")
+        assert len(inv2) >= 1
+        inv2 = inv2.select(network="TA")
+
+        # The results should be basically identical - they will still differ
+        # because times stamps and also order might change slightly.
+        # But the get_contents() method should be safe enough.
+        assert inv.get_contents() == inv2.get_contents()
+
+
+class TestFederatorRoutingClientNoNetwork():
+    @classmethod
+    def setup_class(cls):
+        cls.client = FederatorRoutingClient()
+        cls._cls = ("obspy.clients.fdsn.routing.federator_routing_client."
+                    "FederatorRoutingClient")
+
     def test_response_splitting(self):
         data = """
 RANDOM_KEY=true
 
-DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
-DATASELECTSERVICE=http://geofon.gfz-potsdam1.de/fdsnws/dataselect/1/
-STATIONSERVICE=http://geofon.gfz-potsdam2.de/fdsnws/station/1/
+DATACENTER=GEOFON,http://geofon.gfz.de
+DATASELECTSERVICE=http://geofon.gfz.de/fdsnws/dataselect/1/
+STATIONSERVICE=http://geofon.gfz.de/fdsnws/station/1/
 AF CER -- BHE 2007-03-15T00:47:00 2599-12-31T23:59:59
 AF CER -- BHN 2007-03-15T00:47:00 2599-12-31T23:59:59
 
@@ -54,14 +118,14 @@ AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00
         """
         assert FederatorRoutingClient._split_routing_response(
             data, "dataselect") == \
-            {"http://geofon.gfz-potsdam1.de": (
+            {"http://geofon.gfz.de": (
                 "AF CER -- BHE 2007-03-15T00:47:00 2599-12-31T23:59:59\n"
                 "AF CER -- BHN 2007-03-15T00:47:00 2599-12-31T23:59:59"),
              "http://webservices1.rm.ingv.it": (
                 "AC PUK -- HHE 2009-05-29T00:00:00 2009-12-22T00:00:00")}
         assert FederatorRoutingClient._split_routing_response(
             data, "station") == \
-            {"http://geofon.gfz-potsdam2.de": (
+            {"http://geofon.gfz.de": (
                 "AF CER -- BHE 2007-03-15T00:47:00 2599-12-31T23:59:59\n"
                 "AF CER -- BHN 2007-03-15T00:47:00 2599-12-31T23:59:59"),
                 "http://webservices2.rm.ingv.it": (
@@ -135,18 +199,18 @@ AM RA14E * * 2017-10-20T00:00:00 2599-12-31T23:59:59
     def test_get_waveforms_bulk(self):
         # Some mock routing response.
         content = """
-DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
-DATASELECTSERVICE=http://geofon.gfz-potsdam.de/fdsnws/dataselect/1/
-STATIONSERVICE=http://geofon.gfz-potsdam.de/fdsnws/station/1/
+DATACENTER=GEOFON,http://geofon.gfz.de
+DATASELECTSERVICE=http://geofon.gfz.de/fdsnws/dataselect/1/
+STATIONSERVICE=http://geofon.gfz.de/fdsnws/station/1/
 AF CER -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 AF CVNA -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 
 DATACENTER=IRISDMC,http://ds.iris.edu
-DATASELECTSERVICE=http://service.iris.edu/fdsnws/dataselect/1/
-STATIONSERVICE=http://service.iris.edu/fdsnws/station/1/
-EVENTSERVICE=http://service.iris.edu/fdsnws/event/1/
-SACPZSERVICE=http://service.iris.edu/irisws/sacpz/1/
-RESPSERVICE=http://service.iris.edu/irisws/resp/1/
+DATASELECTSERVICE=https://service.iris.edu/fdsnws/dataselect/1/
+STATIONSERVICE=https://service.iris.edu/fdsnws/station/1/
+EVENTSERVICE=https://service.iris.edu/fdsnws/event/1/
+SACPZSERVICE=https://service.iris.edu/irisws/sacpz/1/
+RESPSERVICE=https://service.iris.edu/irisws/resp/1/
 AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         """
@@ -166,17 +230,17 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 
         assert p1.call_count == 1
         assert p1.call_args[0][0] == \
-            "http://service.iris.edu/irisws/fedcatalog/1/query"
+            "https://service.iris.edu/irisws/fedcatalog/1/query"
         assert p1.call_args[1]["data"] == (
             b"format=request\n"
             b"A* C* -- LHZ 2017-01-01T00:00:00.000000 "
             b"2017-01-02T00:00:00.000000")
 
         assert p2.call_args[0][0] == {
-            "http://geofon.gfz-potsdam.de": (
+            "http://geofon.gfz.de": (
                 "AF CER -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00\n"
                 "AF CVNA -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00"),
-            "http://service.iris.edu": (
+            "https://service.iris.edu": (
                 "AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00\n"
                 "AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00")}
         assert p2.call_args[1] == {"longestonly": True, "minimumlength": 2}
@@ -233,18 +297,18 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
     def test_get_stations_bulk(self):
         # Some mock routing response.
         content = """
-DATACENTER=GEOFON,http://geofon.gfz-potsdam.de
-DATASELECTSERVICE=http://geofon.gfz-potsdam.de/fdsnws/dataselect/1/
-STATIONSERVICE=http://geofon.gfz-potsdam.de/fdsnws/station/1/
+DATACENTER=GEOFON,http://geofon.gfz.de
+DATASELECTSERVICE=http://geofon.gfz.de/fdsnws/dataselect/1/
+STATIONSERVICE=http://geofon.gfz.de/fdsnws/station/1/
 AF CER -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 AF CVNA -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 
 DATACENTER=IRISDMC,http://ds.iris.edu
-DATASELECTSERVICE=http://service.iris.edu/fdsnws/dataselect/1/
-STATIONSERVICE=http://service.iris.edu/fdsnws/station/1/
-EVENTSERVICE=http://service.iris.edu/fdsnws/event/1/
-SACPZSERVICE=http://service.iris.edu/irisws/sacpz/1/
-RESPSERVICE=http://service.iris.edu/irisws/resp/1/
+DATASELECTSERVICE=https://service.iris.edu/fdsnws/dataselect/1/
+STATIONSERVICE=https://service.iris.edu/fdsnws/station/1/
+EVENTSERVICE=https://service.iris.edu/fdsnws/event/1/
+SACPZSERVICE=https://service.iris.edu/irisws/sacpz/1/
+RESPSERVICE=https://service.iris.edu/irisws/resp/1/
 AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
         """
@@ -264,7 +328,7 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
 
         assert p1.call_count == 1
         assert p1.call_args[0][0] == \
-            "http://service.iris.edu/irisws/fedcatalog/1/query"
+            "https://service.iris.edu/irisws/fedcatalog/1/query"
         assert p1.call_args[1]["data"] == (
             b"level=network\n"
             b"format=request\n"
@@ -272,10 +336,10 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
             b"2017-01-02T00:00:00.000000")
 
         assert p2.call_args[0][0] == {
-            "http://geofon.gfz-potsdam.de": (
+            "http://geofon.gfz.de": (
                 "AF CER -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00\n"
                 "AF CVNA -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00"),
-            "http://service.iris.edu": (
+            "https://service.iris.edu": (
                 "AF CNG -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00\n"
                 "AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00")}
         assert p2.call_args[1] == {"level": "network"}
@@ -289,55 +353,18 @@ AK CAPN -- LHZ 2017-01-01T00:00:00 2017-01-02T00:00:00
                 "AA", "BB", "", "LHZ", obspy.UTCDateTime(2016, 1, 1),
                 obspy.UTCDateTime(2016, 1, 2)]], network="BB")
 
-    def test_get_waveforms_integration_test(self):
+    def test_iris_deprecation(self):
         """
-        Integration test that does not mock anything but actually downloads
-        things.
+        Test deprecation warning for "iris-federator" routing type
         """
-        st = self.client.get_waveforms(
-            starttime=obspy.UTCDateTime(2017, 1, 1),
-            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
-            latitude=35.0, longitude=-110, maxradius=0.3,
-            channel="LHZ")
-        # This yields 1 channel at the time of writing this test - I assume
-        # it is unlikely to every yield less. So this test should be fairly
-        # stable.
-        assert len(st) >= 1
-
-        # Same with the bulk request.
-        st2 = self.client.get_waveforms_bulk(
-            [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
-              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
-            latitude=35.0, longitude=-110, maxradius=0.3)
-        assert len(st2) >= 1
-
-        assert st == st2
-
-    def test_get_stations_integration_test(self):
-        """
-        Integration test that does not mock anything but actually downloads
-        things.
-        """
-        inv = self.client.get_stations(
-            starttime=obspy.UTCDateTime(2017, 1, 1),
-            endtime=obspy.UTCDateTime(2017, 1, 1, 0, 1),
-            latitude=35.0, longitude=-110, maxradius=0.3, network="TA",
-            channel="LHZ", level="station")
-        # This yields 1 network at the time of writing this test - I assume
-        # it is unlikely to every yield less. So this test should be fairly
-        # stable.
-        assert len(inv) >= 1
-
-        # Again repeat with the bulk request.
-        inv2 = self.client.get_stations_bulk(
-            [["*", "*", "*", "LHZ", obspy.UTCDateTime(2017, 1, 1),
-              obspy.UTCDateTime(2017, 1, 1, 0, 1)]],
-            latitude=35.0, longitude=-110, maxradius=0.3,
-            level="station")
-        assert len(inv2) >= 1
-        inv2 = inv2.select(network="TA")
-
-        # The results should be basically identical - they will still differ
-        # because times stamps and also order might change slightly.
-        # But the get_contents() method should be safe enough.
-        assert inv.get_contents() == inv2.get_contents()
+        mock_path = (
+            'obspy.clients.fdsn.routing.federator_routing_client.'
+            'FederatorRoutingClient.__init__')
+        msg = ("IRIS is now EarthScope, please consider changing the "
+               "'routing_type' to 'earthscope-federator'.")
+        with mock.patch(mock_path) as p:
+            p.return_value = None
+            with CatchAndAssertWarnings(
+                    expected=[(ObsPyDeprecationWarning, msg)]):
+                client = RoutingClient("iris-federator")
+        assert isinstance(client, FederatorRoutingClient)

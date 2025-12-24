@@ -81,7 +81,7 @@ class Parser(object):
 
         The XML-SEED format was proposed in [Tsuboi2004]_.
 
-        The IRIS RESP format can be found at
+        The EarthScope/IRIS RESP format can be found at
         http://ds.iris.edu/ds/nodes/dmc/data/formats/resp/
 
     """
@@ -172,9 +172,11 @@ class Parser(object):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
         # try to transform everything into BytesIO object
+        potential_filename_provided = None
         if isinstance(data, (str, Path)):
             if isinstance(data, Path):
                 data = str(data)
+            potential_filename_provided = data
             if re.search(r"://", data) is not None:
                 url = data
                 data = io.BytesIO()
@@ -232,7 +234,11 @@ class Parser(object):
                 raise
             self._format = 'XSEED'
         else:
-            raise IOError("First byte of data must be in [0-9<]")
+            msg = "First byte of data must be in [0-9<]"
+            if potential_filename_provided is not None \
+                    and not os.path.exists(potential_filename_provided):
+                msg += '. If a filename was provided, the file does not exist.'
+            raise IOError(msg)
 
     def get_xseed(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
@@ -665,7 +671,7 @@ class Parser(object):
         """
         Reads RESP files.
 
-        Reads IRIS RESP formatted data as produced with
+        Reads EarthScope/IRIS RESP formatted data as produced with
         'rdseed -f seed.test -R'.
 
         :type data: file or io.BytesIO

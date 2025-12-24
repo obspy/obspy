@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ObsPy client for the IRIS Syngine service.
+ObsPy client for the EarthScope/IRIS Syngine service.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -23,9 +23,9 @@ from ..base import WaveformClient, HTTPClient, DEFAULT_USER_AGENT, \
 
 class Client(WaveformClient, HTTPClient):
     """
-    Client for the IRIS Syngine service.
+    Client for the EarthScope/IRIS Syngine service.
     """
-    def __init__(self, base_url="http://service.iris.edu/irisws/syngine/1",
+    def __init__(self, base_url="https://service.iris.edu/irisws/syngine/1",
                  user_agent=DEFAULT_USER_AGENT, debug=False, timeout=20):
         """
         Initializes a Syngine Client.

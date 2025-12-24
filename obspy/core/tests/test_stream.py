@@ -2,6 +2,7 @@
 import io
 import pickle
 import platform
+import re
 import warnings
 from copy import deepcopy
 from unittest import mock
@@ -2840,3 +2841,90 @@ class TestStream:
         n1 = len(st.slice(None, utc)[0])
         n2 = len(st.trim(None, utc)[0])
         assert n1 == n2
+
+    def test_filter_ftype(self):
+        st = read()
+        ftypes = ['butter', 'cheby1', 'cheby2', 'ellip', 'bessel']
+        streams = [st.copy().filter('bandpass', 5, 10,
+                                    ftype=ftype, rp=10, rs=100)
+                   for ftype in ftypes]
+        for st in streams[1:]:
+            assert not streams_almost_equal(st, streams[0])
+
+    def test_filter_freq_args(self):
+        st = read()
+        for filtert, freq in [('lowpass', 5,),
+                              ('highpass', 5)]:
+            stf1 = st.copy().filter(filtert, freq=freq)
+            stf2 = st.copy().filter(filtert, freq)
+            assert streams_almost_equal(stf2, stf1)
+        for filtert, freqmin, freqmax in [('bandpass', 1, 5),
+                                          ('bandstop', 1, 5)]:
+            stf1 = st.copy().filter(filtert, freqmin=freqmin, freqmax=freqmax)
+            stf2 = st.copy().filter(filtert, freqmin, freqmax)
+            assert streams_almost_equal(stf2, stf1)
+
+    def test_merge_checks_messages(self, mseed_stream):
+        """
+        Test improved error messages
+        """
+        # dtype
+        st = mseed_stream.copy()
+        st[0].data = np.require(
+            st[0].data, dtype=st[0].data.dtype.newbyteorder('<'))
+        st[1].data = np.require(
+            st[1].data, dtype=st[1].data.dtype.newbyteorder('>'))
+        msg = ('Can not merge traces with same ids (BW.BGLD..EHE) but '
+               'differing data types (float64, >f8)!')
+        with pytest.raises(Exception, match=re.escape(msg)):
+            st.merge()
+        # sampling rate
+        st = mseed_stream.copy()
+        st[0].stats.sampling_rate = 200
+        st[1].stats.sampling_rate = 20
+        msg = ('Can not merge traces with same ids (BW.BGLD..EHE) but '
+               'differing sampling rates (200.0, 20.0)!')
+        with pytest.raises(Exception, match=re.escape(msg)):
+            st.merge()
+        # calib
+        st = mseed_stream.copy()
+        st[0].stats.calib = 12345
+        st[1].stats.calib = 100
+        msg = ('Can not merge traces with same ids (BW.BGLD..EHE) but '
+               'differing calibration factors (12345, 100)!')
+        with pytest.raises(Exception, match=re.escape(msg)):
+            st.merge()
+
+    def test_newbyteorder(self, mseed_stream):
+        """
+        Test switching byteorder on trace/stream, for simplicity both things
+        tested here
+        """
+        msg = ('Can not merge traces with same ids (BW.BGLD..EHE) but '
+               'differing data types (float64, >f8)!')
+        # set different byteorders
+        st = mseed_stream
+        st[0].data = np.require(
+            st[0].data, dtype=st[0].data.dtype.newbyteorder('<'))
+        st[1].data = np.require(
+            st[1].data, dtype=st[1].data.dtype.newbyteorder('>'))
+        # check that we set up correctly this should fail now
+        assert st[0].data.dtype == np.dtype('float64')
+        assert st[1].data.dtype == np.dtype('>f8')
+        with pytest.raises(Exception, match=re.escape(msg)):
+            st.merge()
+        # check working on trace
+        st = mseed_stream.copy()
+        assert st[0].data.dtype == np.dtype('float64')
+        assert st[1].data.dtype == np.dtype('>f8')
+        st[1].newbyteorder('<')
+        assert st[1].data.dtype == np.dtype('float64')
+        st.merge()
+        # check working on stream
+        st = mseed_stream.copy()
+        assert st[0].data.dtype == np.dtype('float64')
+        assert st[1].data.dtype == np.dtype('>f8')
+        st.newbyteorder('=')
+        for tr in st:
+            assert tr.data.dtype == np.dtype('float64')
+        st.merge()

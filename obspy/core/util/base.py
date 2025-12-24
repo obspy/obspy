@@ -10,9 +10,12 @@ Base utilities and constants for ObsPy.
 """
 import glob
 import importlib
+import importlib.metadata
 import inspect
 import io
 import os
+from contextlib import contextmanager
+from io import IOBase, TextIOBase, TextIOWrapper
 from pathlib import Path
 import re
 import sys
@@ -23,16 +26,16 @@ from collections import OrderedDict
 from pathlib import PurePath
 
 import numpy as np
-import pkg_resources
-from pkg_resources import get_entry_info, iter_entry_points
 
+from obspy.core.util.attribdict import (AttribDict)
 from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 
 
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['clients.filesystem', 'core', 'geodetics', 'imaging',
                    'io.ah', 'io.alsep', 'io.arclink', 'io.ascii',
-                   'io.cmtsolution', 'io.cnv', 'io.css', 'io.dmx', 'io.focmec',
+                   'io.cmtsolution', 'io.cnv', 'io.css', 'io.csv',
+                   'io.cybershake', 'io.dmx', 'io.focmec',
                    'io.hypodd', 'io.iaspei', 'io.gcf', 'io.gse2', 'io.json',
                    'io.kinemetrics', 'io.kml', 'io.mseed', 'io.ndk', 'io.nied',
                    'io.nlloc', 'io.nordic', 'io.pdas', 'io.pde', 'io.quakeml',
@@ -52,7 +55,7 @@ WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'SEGY', 'SU', 'SEG2', 'WAV', 'WIN', 'CSS',
                             'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
                             'GCF', 'DMX', 'ALSEP_PSE', 'ALSEP_WTN',
-                            'ALSEP_WTH']
+                            'ALSEP_WTH', 'CYBERSHAKE']
 EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
 INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP']
 # waveform plugins accepting a byteorder keyword
@@ -220,6 +223,45 @@ def get_example_file(filename):
     raise OSError(msg)
 
 
+def get_entry_point_dist_name(entry_point):
+    """
+    Gets the distribution name from an entry point regardless of whether
+    it comes from pkg_resources or importlib.metadata.
+
+    :param entry_point: An EntryPoint object from pkg_resources
+     or importlib.metadata
+    :return: The distribution name as a string
+    """
+    # Check for pkg_resources style EntryPoint
+    if hasattr(entry_point, 'dist') and hasattr(entry_point.dist, 'name'):
+        return entry_point.dist.name
+
+    # Check for importlib.metadata style EntryPoint
+    if hasattr(entry_point, 'dist'):
+        # Python 3.10+ approach where ep.dist might be the distribution name
+        try:
+            from importlib.metadata import distribution
+            dist = distribution(entry_point.dist)
+            return dist.metadata['Name']
+        except KeyError:
+            return str(entry_point.dist)
+
+    # Fallback for older importlib.metadata versions
+    import os
+    import re
+
+    if hasattr(entry_point, 'origin') and entry_point.origin:
+        # Extract distribution name from the path
+        path = entry_point.origin
+        dist_info_dir = os.path.basename(os.path.dirname(path))
+        match = re.match(r'(.+?)(?:-\d+.*)?.dist-info', dist_info_dir)
+        if match:
+            return match.group(1)
+
+    # Last resort
+    return entry_point.value.split('.')[0]
+
+
 def _get_entry_points(group, subgroup=None):
     """
     Gets a dictionary of all available plug-ins of a group or subgroup.
@@ -233,16 +275,60 @@ def _get_entry_points(group, subgroup=None):
 
     .. rubric:: Example
 
-    >>> _get_entry_points('obspy.plugin.waveform')  # doctest: +ELLIPSIS
-    {...'SLIST': EntryPoint.parse('SLIST = obspy.io.ascii.core')...}
+    >>> _get_entry_points(
+    ...     'obspy.plugin.waveform') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    {...'SLIST': EntryPoint(name='SLIST', value='obspy.io.ascii.core',
+                            group='obspy.plugin.waveform')...}
     """
-    features = {}
-    for ep in iter_entry_points(group):
+    if sys.version_info.minor < 10:
+        # compatibility workaround for Python 3.8 and 3.9
+        eps_all = importlib.metadata.entry_points()
+
+        try:
+            eps = eps_all[group]
+        except KeyError:
+            eps = {}
+            for key, ep in eps.items():
+                if group in key:
+                    eps[key] = ep
+
         if subgroup:
-            if list(iter_entry_points(group + '.' + ep.name, subgroup)):
+            features = {}
+            for ep in eps:
+                # workaround to get the dist dict populated here
+                if hasattr(ep, "dist"):
+                    if not hasattr(ep.dist, "name"):
+                        ep.dist.name = get_entry_point_dist_name(ep)
+                else:
+                    ep.dist = AttribDict({"name":
+                                          get_entry_point_dist_name(ep)})
+                for sub_ep in eps_all[f'{group}.{ep.name}']:
+                    if sub_ep.name == subgroup:
+                        features[ep.name] = ep
+                        break
+        else:
+            features = {}
+            for ep in eps:
+                # workaround to get the dist dict populated here
+                if hasattr(ep, "dist"):
+                    if not hasattr(ep.dist, "name"):
+                        ep.dist.name = get_entry_point_dist_name(ep)
+                else:
+                    ep.dist = AttribDict({"name":
+                                          get_entry_point_dist_name(ep)})
+                features[ep.name] = ep
+    else:
+        eps = importlib.metadata.entry_points(group=group)
+        if subgroup:
+            features = {}
+            for ep in eps:
+                sub_eps = tuple(importlib.metadata.entry_points(
+                    group=f'{group}.{ep.name}', name=subgroup))
+                if not sub_eps:
+                    continue
                 features[ep.name] = ep
         else:
-            features[ep.name] = ep
+            features = {ep.name: ep for ep in eps}
     return features
 
 
@@ -328,7 +414,7 @@ def _get_function_from_entry_point(group, type):
     # import function point
     # any issue during import of entry point should be raised, so the user has
     # a chance to correct the problem
-    func = buffered_load_entry_point(entry_point.dist.key,
+    func = buffered_load_entry_point(entry_point.dist.name,
                                      'obspy.plugin.%s' % (group),
                                      entry_point.name)
     return func
@@ -350,8 +436,8 @@ def get_dependency_version(package_name, raw_string=False):
         0.
     """
     try:
-        version_string = pkg_resources.get_distribution(package_name).version
-    except pkg_resources.DistributionNotFound:
+        version_string = importlib.metadata.version(package_name)
+    except importlib.metadata.PackageNotFoundError:
         return []
     if raw_string:
         return version_string
@@ -383,7 +469,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
         for format_ep in eps.values():
             # search isFormat for given entry point
             is_format = buffered_load_entry_point(
-                format_ep.dist.key,
+                format_ep.dist.name,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
             # If it is a file-like object, store the position and restore it
@@ -413,7 +499,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     try:
         # search readFormat for given entry point
         read_format = buffered_load_entry_point(
-            format_ep.dist.key,
+            format_ep.dist.name,
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
             'readFormat')
     except ImportError:
@@ -481,10 +567,19 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
                                     WAVEFORM_PREFERRED_ORDER)
     mod_list = []
     for name, ep in eps.items():
-        module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
-        ep_list = [ep.dist.key, "obspy.plugin.%s.%s" % (group, name), method]
-        entry_info = str(get_entry_info(*ep_list))
-        func_str = ':func:`%s`' % entry_info.split(' = ')[1].replace(':', '.')
+        if sys.version_info.minor < 10:
+            # compatibility workaround for Python 3.8 and 3.9
+            module_short = ":mod:`%s`" % ".".join(ep.value.split(".")[:3])
+            func_str = list(
+                _ep for _ep in
+                importlib.metadata.entry_points()[f'{ep.group}.{ep.name}'] if
+                _ep.name == method)[0].value
+        else:
+            module_short = ":mod:`%s`" % ".".join(ep.module.split(".")[:3])
+            func_str = tuple(importlib.metadata.entry_points(
+                group=f'{ep.group}.{ep.name}', name=method))[0].value
+        func_str = func_str.replace(':', '.')
+        func_str = f':func:`{func_str}`'
         mod_list.append((name, module_short, func_str))
 
     mod_list = sorted(mod_list)
@@ -618,7 +713,12 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
     if isinstance(pathname_or_url, PurePath):
         pathname_or_url = str(pathname_or_url)
     if not isinstance(pathname_or_url, str):
-        # not a string - we assume a file-like object
+        # first check if bytes
+        if isinstance(pathname_or_url, bytes) and \
+                pathname_or_url.strip().startswith(b'<'):
+            # XML string
+            return callback_func(io.BytesIO(pathname_or_url), **kwargs)
+        # not a string OR bytes- we assume a file-like object
         try:
             # first try reading directly
             generic = callback_func(pathname_or_url, **kwargs)
@@ -630,10 +730,6 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
                 fh.write(pathname_or_url.read())
                 generic = callback_func(fh.name, **kwargs)
         return generic
-    elif isinstance(pathname_or_url, bytes) and \
-            pathname_or_url.strip().startswith(b'<'):
-        # XML string
-        return callback_func(io.BytesIO(pathname_or_url), **kwargs)
     elif "://" in pathname_or_url[:10]:
         # URL
         # extract extension if any
@@ -660,6 +756,103 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
             for filename in pathnames[1:]:
                 generic.extend(callback_func(filename, **kwargs))
         return generic
+
+
+def get_bytes_stream(file_or_stream):
+    """
+    Return a file-like object streaming bytes data (``bytes`` objects)
+
+    :type file_or_stream: str, Path or file-like object
+    :param file_or_stream: the input from which to return the stream of bytes
+    :return: a file-like object streaming bytes data
+    """
+    if isinstance(file_or_stream, IOBase):
+        return file_or_stream
+    else:
+        return open(file_or_stream, 'rb')
+
+
+@contextmanager
+def open_bytes_stream(file_or_stream):
+    """
+    Context manager to read bytes data stream from the argument,
+    e.g.: ``with open_bytes_stream(file_or_stream)``
+
+    :type file_or_stream: str, Path or file-like object
+    :param file_or_stream: The input object to open.
+        If this parameter is already a file-like object,
+        it will not be closed on exit but the stream position
+        will be reset so that the object can be reused
+    :return: a context manager to read bytes data
+    """
+    cur_pos = None
+    if isinstance(file_or_stream, IOBase):
+        cur_pos = file_or_stream.tell()
+    stream = get_bytes_stream(file_or_stream)
+    try:
+        yield stream
+    finally:
+        if cur_pos is None:  # str or Path passed: close stream
+            stream.close()
+        else:
+            file_or_stream.seek(cur_pos, 0)
+
+
+def get_text_stream(file_or_stream, encoding='utf-8'):
+    """
+    Return a file-like object streaming text data (``str`` objects)
+
+    :type file_or_stream: str, Path or file-like object
+    :param file_or_stream:  the input from which to return the stream of text
+    :type encoding: str
+    :param encoding: the encoding used. If the passed argument
+        is already a file-like object of encoded text data, this
+        argument is ignored
+    :return: a file-like object streaming text data
+    """
+    if isinstance(file_or_stream, TextIOBase):
+        return file_or_stream
+    elif isinstance(file_or_stream, IOBase):
+        return TextIOWrapper(file_or_stream, encoding=encoding)
+    else:
+        return open(file_or_stream, 'rt', encoding=encoding)
+
+
+@contextmanager
+def open_text_stream(file_or_stream, encoding='utf-8'):
+    """
+    Context manager releasing a text data stream from the argument,
+    e.g.: ``with open_text_stream(file_or_stream)``
+
+    :type file_or_stream: str, Path or file-like object.
+    :param file_or_stream: The input object to open.
+        If this parameter is already a file-like object,
+        it will not be closed on exit but the stream position
+        will be reset so that the object can be reused
+    :type encoding: str
+    :param encoding: the encoding used. If the passed argument
+        is already a file-like object of encoded text data, this
+        argument is ignored
+    :return: a context manager to read text data
+    """
+    cur_pos = None
+    if isinstance(file_or_stream, IOBase):
+        cur_pos = file_or_stream.tell()
+    stream = get_text_stream(file_or_stream, encoding=encoding)
+    try:
+        yield stream
+    finally:
+        if cur_pos is None:  # str or Path passed: close stream
+            stream.close()
+        else:
+            # if we wrapped file_or_stream in a TextIOWrapper,
+            # closing the latter would close also the underlying
+            # stream. Simply detach the wrapper in this case:
+            if isinstance(stream, TextIOWrapper) and \
+                    stream is not file_or_stream:
+                stream.detach()
+            # reset position:
+            file_or_stream.seek(cur_pos, 0)
 
 
 class CatchAndAssertWarnings(warnings.catch_warnings):

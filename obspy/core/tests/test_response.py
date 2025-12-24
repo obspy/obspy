@@ -622,3 +622,23 @@ class TestResponse:
             paz_after.zeros, expected_zeros, rtol=1e-6)
         np.testing.assert_allclose(
             paz_after.poles, expected_poles, rtol=1e-6)
+
+    def test_unknown_units_PA_recalculate_sensitivity(self, testdata):
+        """
+        Test recalculating overall sensitivity in presence of unusual units, in
+        this case Pascal.
+        """
+        inv = read_inventory(testdata['hydrophone_response_PA.xml'],
+                             format="STATIONXML")
+        resp = inv[0][0][0].response
+        msg = ("ObsPy can not map unit 'PA' to "
+               "displacement, velocity, or acceleration - "
+               "evalresp should still work and just use the response as "
+               "is. This might not be covered by tests, though, so "
+               "proceed with caution and report any unexpected "
+               "behavior.")
+        with pytest.warns(UserWarning, match=msg):
+            resp.recalculate_overall_sensitivity()
+        assert np.isclose(
+            resp.instrument_sensitivity.value, 133579131859239.3, atol=0,
+            rtol=1e-5)

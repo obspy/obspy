@@ -113,7 +113,8 @@ def skip_on_network_error(func, *args, **kwargs):
     Decorator to mark test routines that fail with certain network
     errors (e.g. timeouts) as "skipped" rather than "Error".
     """
-    import pytest
+    import pytest  # NOQA
+
     try:
         return func(*args, **kwargs)
     ###################################################

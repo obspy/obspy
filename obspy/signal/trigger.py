@@ -284,6 +284,73 @@ def z_detect(a, nsta):
     return _z
 
 
+def energy_ratio(a, nsta):
+    r"""
+    Energy ratio detector.
+
+    Energy ratio defined as
+
+    .. math::
+        \text{er}(i) = \frac{\sum_{j=i}^{i+L}{a_j^2}}{\sum_{j=i-L}^{i}{a_j^2}}
+
+    where :math:`L` is ``nsta``.
+
+    :type a: NumPy :class:`~numpy.ndarray`
+    :param a: Seismic Trace
+    :type nsta: int
+    :param nsta: Length of the energy ratio window in samples. It's the same
+                 length as ``nsta`` in the classical STA/LTA methods.
+    :rtype: NumPy :class:`~numpy.ndarray`
+    :return: Energy Ratio
+
+    .. seealso:: [Han2009]_
+    """
+    if nsta > len(a) // 2:
+        # Half forward, half backward -> empty medium
+        msg = (
+            f'nsta ({nsta}) must not be larger than half the length of the '
+            f'data ({len(a)} samples).')
+        raise ValueError(msg)
+    if nsta <= 0:
+        # If nsta is zero, the sum is undefined
+        msg = f'nsta ({nsta}) must not be equal to or less than zero.'
+        raise ValueError(msg)
+    sig_power = np.r_[0, np.cumsum(a ** 2, dtype=np.float64)]
+    energy_diff = sig_power[nsta:] - sig_power[:len(sig_power) - nsta]
+    er = np.zeros(len(a), dtype=np.float64)
+    np.divide(energy_diff[nsta:], energy_diff[:len(energy_diff) - nsta],
+              where=energy_diff[:len(energy_diff) - nsta] != 0,
+              out=er[nsta:len(er) - nsta + 1])
+    return er
+
+
+def modified_energy_ratio(a, nsta, power=3):
+    r"""
+    Modified energy ratio detector.
+
+    Improvement of the :func:`energy_ratio` that accounts for the signal
+    itself:
+
+    .. math::
+        \text{mer}(i) = (\text{er}(i) * |a(i)|)^3
+
+    where :math:`text{er}(i)` is the :func:`energy_ratio`.
+
+    :type a: NumPy :class:`~numpy.ndarray`
+    :param a: Seismic Trace
+    :type nsta: int
+    :param nsta: Length of energy ratio window in samples. It's the same length
+                 as ``nsta`` in the classical STA/LTA methods.
+    :type power: int
+    :param power: The power exponent in the equation above. Default: 3
+    :rtype: NumPy :class:`~numpy.ndarray`
+    :return: Modified Energy Ratio
+    """
+    er = energy_ratio(a, nsta=nsta)
+    mer = np.power(er * np.abs(a), power, out=er)
+    return mer
+
+
 def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     """
     Calculate trigger on and off times.
@@ -326,10 +393,10 @@ def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     # 5) if the signal stays above thres2 longer than max_len an event
     #    is triggered and following a new event can be triggered as soon as
     #    the signal is above thres1
-    ind1 = np.where(charfct > thres1)[0]
+    ind1 = np.where(charfct >= thres1)[0]
     if len(ind1) == 0:
         return []
-    ind2 = np.where(charfct > thres2)[0]
+    ind2 = np.where(charfct >= thres2)[0]
     #
     on = deque([ind1[0]])
     of = deque([-1])
@@ -539,6 +606,31 @@ def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     return ptime.value, stime.value
 
 
+def plot_trace(trace, cft):
+    """
+    Plot characteristic function of trigger along with waveform data.
+
+    :type trace: :class:`~obspy.core.trace.Trace`
+    :param trace: waveform data
+    :type cft: :class:`numpy.ndarray`
+    :param cft: characteristic function as returned by a trigger in
+        :mod:`obspy.signal.trigger`
+    :rtype: tuple
+    :returns: Matplotlib figure instance and axes
+    """
+    import matplotlib.pyplot as plt
+    df = trace.stats.sampling_rate
+    npts = trace.stats.npts
+    t = np.arange(npts, dtype=np.float32) / df
+    fig, axes = plt.subplots(nrows=2, sharex=True)
+    axes[0].plot(t, trace.data, 'k')
+    axes[1].plot(t, cft, 'k')
+    axes[1].set_xlabel("Time after %s [s]" % trace.stats.starttime.isoformat())
+    fig.suptitle(trace.id)
+    fig.canvas.draw()
+    return fig, axes
+
+
 def plot_trigger(trace, cft, thr_on, thr_off, show=True):
     """
     Plot characteristic function of trigger along with waveform data and
@@ -556,22 +648,19 @@ def plot_trigger(trace, cft, thr_on, thr_off, show=True):
     :type show: bool
     :param show: Do not call `plt.show()` at end of routine. That way,
         further modifications can be done to the figure before showing it.
+    :rtype: tuple
+    :returns: Matplotlib figure instance and axes
     """
     import matplotlib.pyplot as plt
     df = trace.stats.sampling_rate
-    npts = trace.stats.npts
-    t = np.arange(npts, dtype=np.float32) / df
-    fig = plt.figure()
-    ax1 = fig.add_subplot(211)
-    ax1.plot(t, trace.data, 'k')
-    ax2 = fig.add_subplot(212, sharex=ax1)
-    ax2.plot(t, cft, 'k')
+    fig, axes = plot_trace(trace, cft)
+    ax1, ax2 = axes
     on_off = np.array(trigger_onset(cft, thr_on, thr_off))
-    i, j = ax1.get_ylim()
+    ymin, ymax = ax1.get_ylim()
     try:
-        ax1.vlines(on_off[:, 0] / df, i, j, color='r', lw=2,
+        ax1.vlines(on_off[:, 0] / df, ymin, ymax, color='r', lw=2,
                    label="Trigger On")
-        ax1.vlines(on_off[:, 1] / df, i, j, color='b', lw=2,
+        ax1.vlines(on_off[:, 1] / df, ymin, ymax, color='b', lw=2,
                    label="Trigger Off")
         ax1.legend()
     except IndexError:
@@ -583,6 +672,7 @@ def plot_trigger(trace, cft, thr_on, thr_off, show=True):
     fig.canvas.draw()
     if show:
         plt.show()
+    return fig, axes
 
 
 def coincidence_trigger(trigger_type, thr_on, thr_off, stream,

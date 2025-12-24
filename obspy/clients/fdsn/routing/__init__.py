@@ -6,7 +6,7 @@ obspy.clients.fdsn.routing - Routing services for FDSN web services
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
     Celso G Reyes, 2017
-    IRIS-DMC
+    EarthScope/IRIS-DMC
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)

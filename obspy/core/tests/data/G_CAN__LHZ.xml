@@ -4,7 +4,7 @@
   <Source>IRIS-DMC</Source>
   <Sender>IRIS-DMC</Sender>
   <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.52</Module>
-  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?net=G&amp;sta=CAN&amp;cha=LHZ&amp;starttime=2004-12-26&amp;endtime=2004-12-26&amp;level=response&amp;format=xml&amp;includecomments=true&amp;nodata=404</ModuleURI>
+  <ModuleURI>https://service.iris.edu/fdsnws/station/1/query?net=G&amp;sta=CAN&amp;cha=LHZ&amp;starttime=2004-12-26&amp;endtime=2004-12-26&amp;level=response&amp;format=xml&amp;includecomments=true&amp;nodata=404</ModuleURI>
   <Created>2023-07-25T14:33:04.2071</Created>
   <Network code="G" startDate="1982-01-01T00:00:00.0000" alternateCode="GEOSCOPE" restrictedStatus="open">
    <Description>GEOSCOPE ()</Description>

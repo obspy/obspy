@@ -20,10 +20,10 @@ from obspy.io.quakeml.core import Pickler, Unpickler, _xml_doc_from_anything
 from obspy.io.seiscomp.core import validate as validate_scxml
 
 
-SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12']
+SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12', '0.13']
 
 
-def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
+def _read_sc3ml(filename, id_prefix='smi:org.gfz.de/geofon/'):
     """
     Read a SeisComp XML file and returns a :class:`~obspy.core.event.Catalog`.
 
@@ -86,7 +86,7 @@ def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
 def _write_sc3ml(catalog, filename, validate=False, verbose=False,
                  event_removal=False, **kwargs):  # @UnusedVariable
     """
-    Write a SCXML 0.12 event file. Since a XSLT file is used to write the
+    Write a SCXML 0.13 event file. Since a XSLT file is used to write the
     SCXML file from a QuakeML file, the catalog is first converted in QuakeML.
 
     .. warning::
@@ -113,7 +113,7 @@ def _write_sc3ml(catalog, filename, validate=False, verbose=False,
     nsmap_ = getattr(catalog, "nsmap", {})
     quakeml_doc = Pickler(nsmap=nsmap_).dumps(catalog)
     xslt_filename = Path(__file__).parent / 'data'
-    xslt_filename = xslt_filename / 'quakeml_1.2__sc3ml_0.12.xsl'
+    xslt_filename = xslt_filename / 'quakeml_1.2__sc3ml_0.13.xsl'
     transform = etree.XSLT(etree.parse(str(xslt_filename)))
     scxml_doc = transform(etree.parse(io.BytesIO(quakeml_doc)))
 

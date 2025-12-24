@@ -212,10 +212,12 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         if isinstance(pathname_or_url, Path):
             pathname_or_url = str(pathname_or_url)
         # try to give more specific information why the stream is empty
-        if has_magic(pathname_or_url) and not glob(pathname_or_url):
+        if isinstance(pathname_or_url, str) and \
+                has_magic(pathname_or_url) and not glob(pathname_or_url):
             raise Exception("No file matching file pattern: %s" %
                             pathname_or_url)
-        elif not has_magic(pathname_or_url) and \
+        elif isinstance(pathname_or_url, str) and \
+                not has_magic(pathname_or_url) and \
                 not Path(pathname_or_url).is_file():
             raise IOError(2, "No such file or directory", pathname_or_url)
         # Only raise error if no start/end time has been set. This
@@ -1450,7 +1452,7 @@ class Stream(object):
             format_ep = ENTRY_POINTS['waveform_write'][format]
             # search writeFormat method for given entry point
             write_format = buffered_load_entry_point(
-                format_ep.dist.key,
+                format_ep.dist.name,
                 'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
             msg = "Writing format \"%s\" is not supported. Supported types: %s"
@@ -1973,20 +1975,23 @@ class Stream(object):
             # Check sampling rate.
             sr.setdefault(trace.id, trace.stats.sampling_rate)
             if trace.stats.sampling_rate != sr[trace.id]:
-                msg = "Can't merge traces with same ids but differing " + \
-                      "sampling rates!"
+                msg = (f"Can not merge traces with same ids ({trace.id}) but "
+                       f"differing sampling rates ({sr[trace.id]}, "
+                       f"{trace.stats.sampling_rate})!")
                 raise Exception(msg)
             # Check dtype.
             dtype.setdefault(trace.id, trace.data.dtype)
             if trace.data.dtype != dtype[trace.id]:
-                msg = "Can't merge traces with same ids but differing " + \
-                      "data types!"
+                msg = (f"Can not merge traces with same ids ({trace.id}) but "
+                       f"differing data types ({dtype[trace.id]}, "
+                       f"{trace.data.dtype})!")
                 raise Exception(msg)
             # Check calibration factor.
             calib.setdefault(trace.id, trace.stats.calib)
             if trace.stats.calib != calib[trace.id]:
-                msg = "Can't merge traces with same ids but differing " + \
-                      "calibration factors.!"
+                msg = (f"Can not merge traces with same ids ({trace.id}) but "
+                       f"differing calibration factors ({calib[trace.id]}, "
+                       f"{trace.stats.calib})!")
                 raise Exception(msg)
 
     def merge(self, method=0, fill_value=None, interpolation_samples=0,
@@ -2182,7 +2187,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     @raise_if_masked
-    def filter(self, type, **options):
+    def filter(self, type, *args, **options):
         """
         Filter the data of all traces in the Stream.
 
@@ -2190,7 +2195,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: String that specifies which filter is applied (e.g.
             ``"bandpass"``). See the `Supported Filter`_ section below for
             further details.
-        :param options: Necessary keyword arguments for the respective filter
+        :param args: Only filter frequency/frequencies can be specified
+            as argument(s). Alternatively filter frequencies can be specified
+            as keyword arguments.
+        :param options: Keyword arguments for the respective filter
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
             ``"bandpass"``)
 
@@ -2243,7 +2251,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st.plot()
         """
         for tr in self:
-            tr.filter(type, **options)
+            tr.filter(type, *args, **options)
         return self
 
     def trigger(self, type, **options):
@@ -2290,6 +2298,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'carlstatrig'``
             Computes the carl_sta_trig characteristic function (uses
             :func:`obspy.signal.trigger.carl_sta_trig`).
+
+        ``'energyratio'``
+            Computes the energy ratio characteristic function (uses
+            :func:`obspy.signal.trigger.energy_ratio`).
+
+        ``'modifiedenergyratio'``
+            Computes the modified energy ratio characteristic function (uses
+            :func:`obspy.signal.trigger.modified_energy_ratio`).
 
         ``'zdetect'``
             Z-detector (uses :func:`obspy.signal.trigger.z_detect`).
@@ -3168,6 +3184,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         To subsequently deconvolve the instrument response use
         :meth:`Stream.remove_response`.
 
+        .. note::
+
+            It is recommended to rather just provide the metadata information
+            directly whenever needed so that the lookup of appropriate response
+            is done right at the time when it is used, e.g.
+            ``stream.remove_response(inventory=inv, ...)``
+
         >>> from obspy import read, read_inventory
         >>> st = read()
         >>> inv = read_inventory()
@@ -3620,6 +3643,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 tr.data = new_data
                 tr.stats.channel = tr.stats.channel[:-1] + component
             self.traces += traces
+        return self
+
+    def newbyteorder(self, byteorder='native'):
+        """
+        Change byteorder of the data
+
+        For details see
+        :meth:`Trace.newbyteorder <obspy.core.trace.Trace.newbyteorder>`.
+        """
+        for tr in self:
+            tr.newbyteorder(byteorder)
         return self
 
 

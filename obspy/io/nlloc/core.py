@@ -16,7 +16,7 @@ import numpy as np
 from obspy import Catalog, UTCDateTime, __version__
 from obspy.core.event import (Arrival, Comment, CreationInfo, Event, Origin,
                               OriginQuality, OriginUncertainty, Pick,
-                              WaveformStreamID)
+                              WaveformStreamID, ConfidenceEllipsoid)
 from obspy.core.inventory.util import (
     _add_resolve_seedid_doc, _add_resolve_seedid_ph2comp_doc, _resolve_seedid)
 from obspy.geodetics import kilometer2degrees
@@ -189,7 +189,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     if date.startswith('run:'):
         date = date[4:]
     signature = signature.strip()
-    creation_time = UTCDateTime.strptime(date + time, str("%d%b%Y%Hh%Mm%S"))
+    creation_time = UTCDateTime.strptime(date + time, "%d%b%Y%Hh%Mm%S")
 
     if coordinate_converter:
         # maximum likelihood origin location in km info line
@@ -212,7 +212,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     covariance_xx = float(line.split()[7])
     covariance_yy = float(line.split()[13])
     covariance_zz = float(line.split()[17])
-    stats_info_string = str(
+    stats_info_string = (
         "Note: Depth/Latitude/Longitude errors are calculated from covariance "
         "matrix as 1D marginal (Lon/Lat errors as great circle degrees) "
         "while OriginUncertainty min/max horizontal errors are calculated "
@@ -241,6 +241,8 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     hor_unc, min_hor_unc, max_hor_unc, hor_unc_azim = \
         map(float, line.split()[1:9:2])
 
+    nlloc_info_line = 'NLLOC ' + lines['NLLOC']
+
     # assign origin info
     event = Event()
     o = Origin()
@@ -251,7 +253,10 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     ou = o.origin_uncertainty
     oq = o.quality
     o.comments.append(Comment(text=stats_info_string, force_resource_id=False))
+    o.comments.append(Comment(text=nlloc_info_line, force_resource_id=False))
     event.comments.append(Comment(text=comment, force_resource_id=False))
+    event.comments.append(Comment(text=nlloc_info_line,
+                                  force_resource_id=False))
 
     # SIGNATURE field's first item is LOCSIG, which is supposed to be
     # 'Identification of an individual, institiution or other entity'
@@ -264,6 +269,13 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     o.creation_info = CreationInfo(creation_time=creation_time,
                                    version=version,
                                    author=signature)
+
+    # nlloc writes location status in "NLLOC" line
+    # char location status LOCATED, ABORTED, IGNORED, REJECTED
+    # set evaluation status to "rejected" if it is anything but LOCATED
+    nlloc_location_status = lines['NLLOC'].split()[1].strip('\'"')
+    if nlloc_location_status in ('ABORTED', 'IGNORED', 'REJECTED'):
+        o.evaluation_status = 'rejected'
 
     # negative values can appear on diagonal of covariance matrix due to a
     # precision problem in NLLoc implementation when location coordinates are
@@ -293,7 +305,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
     o.depth = z * 1e3  # meters!
     o.depth_errors.uncertainty = sqrt(covariance_zz) * 1e3  # meters!
     o.depth_errors.confidence_level = 68
-    o.depth_type = str("from location")
+    o.depth_type = "from location"
     o.time = time
 
     ou.horizontal_uncertainty = hor_unc
@@ -307,8 +319,21 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
         else:
             ou[field] *= 1e3  # meters!
     ou.azimuth_max_horizontal_uncertainty = hor_unc_azim
-    ou.preferred_description = str("uncertainty ellipse")
+    ou.preferred_description = "uncertainty ellipse"
     ou.confidence_level = 68  # NonLinLoc in general uses 1-sigma (68%) level
+    if "QML_ConfidenceEllipsoid" in lines:
+        #  From at least NLLoc v6, confidence ellipsoids have been provided
+        line = lines["QML_ConfidenceEllipsoid"]
+        majax_len, minax_len, intax_len, majax_plunge, majax_az, majax_rot = \
+            map(float, line.split()[1:12:2])
+        ou.confidence_ellipsoid = ConfidenceEllipsoid(
+            semi_major_axis_length=majax_len,
+            semi_minor_axis_length=minax_len,
+            semi_intermediate_axis_length=intax_len,
+            major_axis_plunge=majax_plunge,
+            major_axis_azimuth=majax_az,
+            major_axis_rotation=majax_rot)
+        ou.preferred_description = "confidence ellipsoid"
 
     oq.standard_error = stderr
     oq.azimuthal_gap = az_gap

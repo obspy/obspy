@@ -4,7 +4,7 @@
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.11</Module>
- <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?channel=LKS&amp;station=CMB&amp;network=BK&amp;starttime=2004-06-15T00%3A00%3A00.000000&amp;level=response</ModuleURI>
+ <ModuleURI>https://service.iris.edu/fdsnws/station/1/query?channel=LKS&amp;station=CMB&amp;network=BK&amp;starttime=2004-06-15T00%3A00%3A00.000000&amp;level=response</ModuleURI>
  <Created>2014-02-16T15:50:00</Created>
  <Network code="BK" startDate="1980-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
   <Description>Berkeley Digital Seismograph Network</Description>

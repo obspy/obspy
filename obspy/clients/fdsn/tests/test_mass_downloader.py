@@ -13,18 +13,12 @@ import copy
 import logging
 import os
 import shutil
-import sys
 import tempfile
+from http.client import HTTPException
 from socket import timeout as socket_timeout
 from unittest import mock
 
 import pytest
-
-if sys.version_info.major == 2:
-    from httplib import HTTPException
-else:
-    from http.client import HTTPException
-
 import numpy as np
 
 import obspy
@@ -39,9 +33,6 @@ from obspy.clients.fdsn.mass_downloader.utils import (
     _get_stationxml_contents_slow)
 from obspy.clients.fdsn.mass_downloader.download_helpers import (
     Channel, TimeInterval, Station, STATUS, ClientDownloadHelper)
-
-
-pytestmark = pytest.mark.network
 
 
 class TestDomain():
@@ -2534,13 +2525,13 @@ class TestDownloadHelper():
         # The amount of services is variable and more and more get added.
         # Assert it's larger then 8 and contains a couple stable ones.
         assert len(d.providers) > 8
-        assert "IRIS" in d.providers
+        assert "EARTHSCOPE" in d.providers
         assert "ORFEUS" in d.providers
         patch.reset_mock()
 
-        d = MassDownloader(providers=["A", "B", "IRIS"])
+        d = MassDownloader(providers=["A", "B", "EARTHSCOPE"])
         assert patch.call_count == 1
-        assert d.providers == ("A", "B", "IRIS")
+        assert d.providers == ("A", "B", "EARTHSCOPE")
         patch.reset_mock()
 
     @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
@@ -2571,9 +2562,9 @@ class TestDownloadHelper():
             logger.setLevel(_l)
 
         assert len(d._initialized_clients) > 10
-        assert not ("IRIS" in d._initialized_clients)
-        assert not ("RESIF" in d._initialized_clients)
-        assert not ("GFZ" in d._initialized_clients)
+        assert "EARTHSCOPE" not in d._initialized_clients
+        assert "RESIF" not in d._initialized_clients
+        assert "GFZ" not in d._initialized_clients
         assert "ORFEUS" in d._initialized_clients
 
     @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
@@ -2585,7 +2576,7 @@ class TestDownloadHelper():
             self.services = {"dataselect": "dummy", "station": "dummy"}
         patch.side_effect = side_effect
 
-        client = Client("IRIS", user="random", password="something")
+        client = Client("EARTHSCOPE", user="random", password="something")
 
         assert patch.call_count == 1
         patch.reset_mock()
@@ -2605,9 +2596,9 @@ class TestDownloadHelper():
         assert patch.call_count == 2
 
         assert list(d._initialized_clients.keys()) == \
-            ['GFZ', 'http://service.iris.edu', 'ORFEUS']
+            ['GFZ', 'https://service.iris.edu', 'ORFEUS']
         # Make sure it is the same object.
-        assert d._initialized_clients["http://service.iris.edu"] is client
+        assert d._initialized_clients["https://service.iris.edu"] is client
 
     @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
                 autospec=True)
@@ -2649,7 +2640,7 @@ class TestDownloadHelper():
         d = MassDownloader()
 
         def avail(self):
-            if self.client_name == "IRIS":
+            if self.client_name == "EARTHSCOPE":
                 self.is_availability_reliable = True
             else:
                 self.is_availability_reliable = False

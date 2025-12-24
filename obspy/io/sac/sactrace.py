@@ -1247,7 +1247,8 @@ class SACTrace(object):
 
         return sac
 
-    def to_obspy_trace(self, debug_headers=False, encoding='ASCII'):
+    def to_obspy_trace(self, debug_headers=False, encoding='ASCII',
+                       round_sampling_interval=True):
         """
         Return an ObsPy Trace instance.
 
@@ -1260,6 +1261,10 @@ class SACTrace(object):
         :param encoding: Encoding string that passes the user specified
             encoding scheme.
         :type encoding: str
+        :param round_sampling_interval: Whether to round sampling interval to
+            microseconds before calculating sampling rate to avoid floating
+            point accuracy issues with some SAC files (see #3408)
+        :type round_sampling_interval: bool
 
         .. rubric:: Example
 
@@ -1296,7 +1301,8 @@ class SACTrace(object):
                                            encoding=encoding)
         # TODO: logic to use debug_headers for real
 
-        stats = _ut.sac_to_obspy_header(sachdr)
+        stats = _ut.sac_to_obspy_header(
+            sachdr, round_sampling_interval=round_sampling_interval)
 
         return Trace(data=data, header=stats)
 

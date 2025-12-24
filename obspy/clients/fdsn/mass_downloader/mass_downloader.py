@@ -77,11 +77,14 @@ class MassDownloader(object):
                 # exclude RASPISHAKE by default
                 del providers["RASPISHAKE"]
 
-            if "IRIS" in providers:
-                has_iris = True
-                del providers["IRIS"]
+            if "IRIS" in providers or "EARTHSCOPE" in providers:
+                has_earthscope = True
+                if "IRIS" in providers:
+                    del providers["IRIS"]
+                if "EARTHSCOPE" in providers:
+                    del providers["EARTHSCOPE"]
             else:
-                has_iris = False
+                has_earthscope = False
 
             if "ODC" in providers:
                 providers["ORFEUS"] = providers["ODC"]
@@ -101,8 +104,8 @@ class MassDownloader(object):
             _p = sorted(providers)
             if has_orfeus:
                 _p.append("ORFEUS")
-            if has_iris:
-                _p.append("IRIS")
+            if has_earthscope:
+                _p.append("EARTHSCOPE")
 
             providers = _p
 

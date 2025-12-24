@@ -15,18 +15,26 @@ import gzip
 import io
 import os
 import re
-from socket import timeout as socket_timeout
 import textwrap
 import threading
 import warnings
 from collections import OrderedDict
 from http.client import HTTPException, IncompleteRead
 from urllib.parse import urlparse
+# since python 3.10 socket.timeout is just an alias for builtin TimeoutError
+# and python docs state that it is a "deprecated alias", so that alias might
+# get removed at some point (or probably just kept forever), so be ready for it
+# here
+try:
+    from socket import timeout as socket_timeout
+except ImportError:
+    socket_timeout = TimeoutError
 
 from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES,
                      URL_DEFAULT_SUBPATH, URL_MAPPINGS, URL_MAPPING_SUBPATHS,
@@ -146,16 +154,16 @@ class Client(object):
         else:
             return False
 
-    def __init__(self, base_url="IRIS", major_versions=None, user=None,
+    def __init__(self, base_url="EARTHSCOPE", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
                  timeout=120, service_mappings=None, force_redirect=False,
-                 eida_token=None, _discover_services=True):
+                 eida_token=None, _discover_services=True, use_gzip=True):
         """
         Initializes an FDSN Web Service client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> print(client)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-        FDSN Webservice Client (base url: http://service.iris.edu)
+        FDSN Webservice Client (base url: https://service.iris.edu)
         Available Services: 'dataselect' (v...), 'event' (v...),
         'station' (v...), 'available_event_catalogs',
         'available_event_contributors'
@@ -166,7 +174,7 @@ class Client(object):
 
         :type base_url: str
         :param base_url: Base URL of FDSN web service compatible server
-            (e.g. "http://service.iris.edu") or key string for recognized
+            (e.g. "https://service.iris.edu") or key string for recognized
             server (one of %s).
         :type major_versions: dict
         :param major_versions: Allows to specify custom major version numbers
@@ -206,7 +214,7 @@ class Client(object):
             followed even if credentials are given.
         :type eida_token: str
         :param eida_token: Token for EIDA authentication mechanism, see
-            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php. If a
+            http://geofon.gfz.de/waveform/archive/auth/index.php. If a
             token is provided, options ``user`` and ``password`` must not be
             used. This mechanism is only available on select EIDA nodes. The
             token can be provided in form of the PGP message as a string, or
@@ -218,15 +226,29 @@ class Client(object):
             to ``False``, no service discovery is performed and default
             parameter support is assumed. This parameter is experimental and
             will likely be removed in the future.
+        :type use_gzip: bool
+        :param use_gzip: Can be set to ``False`` to opt out of gzip
+            compression, i.e. not tell the server that gzip compressed response
+            is acceptable which should make the server not try gzip compression
+            on results. Can be used if servers experience server side issues
+            with gzip compression but results in downloads being larger in
+            size.
         """
         self.debug = debug
         self.user = user
         self.timeout = timeout
         self._force_redirect = force_redirect
+        self.use_gzip = use_gzip
 
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
         self.__version_cache = {}
+
+        if base_url.upper() == 'IRIS':
+            base_url = 'EARTHSCOPE'
+            msg = ("IRIS is now EarthScope, please consider changing the FDSN "
+                   "client short URL to 'EARTHSCOPE'.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
 
         if base_url.upper() in URL_MAPPINGS:
             url_mapping = base_url.upper()
@@ -321,13 +343,13 @@ class Client(object):
         authenticated for potential access to restricted data.
         This only works for select EIDA nodes and relies on the auth mechanism
         described here:
-        http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php
+        http://geofon.gfz.de/waveform/archive/auth/index.php
 
         This will overwrite any previously set-up credentials/authentication.
 
         :type token: str
         :param token: Token for EIDA authentication mechanism, see
-            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php.
+            http://geofon.gfz.de/waveform/archive/auth/index.php.
             This mechanism is only available on select EIDA nodes. The token
             can be provided in form of the PGP message as a string, or the
             filename of a local file with the PGP message in it.
@@ -399,7 +421,7 @@ class Client(object):
 
         # Already does the error checking with fdsnws semantics.
         response = self._download(url=url, data=token.encode(),
-                                  use_gzip=True, return_string=True,
+                                  return_string=True,
                                   content_type='application/octet-stream')
 
         user, password = response.decode().split(':')
@@ -421,7 +443,7 @@ class Client(object):
         """
         Query the event service of the client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> cat = client.get_events(eventid=609301)
         >>> print(cat)
         1 Event(s) in Catalog:
@@ -539,7 +561,7 @@ class Client(object):
         """
         if "event" not in self.services:
             msg = "The current client does not have an event service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         locs = locals()
         setup_query_dict('event', locs, kwargs)
@@ -569,7 +591,7 @@ class Client(object):
         """
         Query the station service of the FDSN client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> starttime = UTCDateTime("2001-01-01")
         >>> endtime = UTCDateTime("2001-01-02")
         >>> inventory = client.get_stations(network="IU", station="A*",
@@ -737,7 +759,7 @@ class Client(object):
         """
         if "station" not in self.services:
             msg = "The current client does not have a station service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         locs = locals()
         setup_query_dict('station', locs, kwargs)
@@ -768,7 +790,7 @@ class Client(object):
         """
         Query the dataselect service of the client.
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 5
         >>> st = client.get_waveforms("IU", "ANMO", "00", "LHZ", t1, t2)
@@ -800,7 +822,7 @@ class Client(object):
 
             from obspy import UTCDateTime
             from obspy.clients.fdsn import Client
-            client = Client("IRIS")
+            client = Client("EARTHSCOPE")
             t = UTCDateTime("2012-12-14T10:36:01.6Z")
             st = client.get_waveforms("TA", "E42A", "*", "BH?", t+300, t+400,
                                       attach_response=True)
@@ -855,7 +877,7 @@ class Client(object):
         """
         if "dataselect" not in self.services:
             msg = "The current client does not have a dataselect service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         locs = locals()
         setup_query_dict('dataselect', locs, kwargs)
@@ -935,7 +957,7 @@ class Client(object):
             - a string with the path to a local file with the request
             - an open file handle (or file-like object) with the request
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 1
         >>> t3 = t1 + 3
@@ -987,7 +1009,7 @@ class Client(object):
 
             from obspy import UTCDateTime
             from obspy.clients.fdsn import Client
-            client = Client("IRIS")
+            client = Client("EARTHSCOPE")
             t = UTCDateTime("2012-12-14T10:36:01.6Z")
             t1 = t + 300
             t2 = t + 400
@@ -1037,7 +1059,7 @@ class Client(object):
         """
         if "dataselect" not in self.services:
             msg = "The current client does not have a dataselect service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         arguments = OrderedDict(
             quality=quality,
@@ -1092,7 +1114,7 @@ class Client(object):
             - a string with the path to a local file with the request
             - an open file handle (or file-like object) with the request
 
-        >>> client = Client("IRIS")
+        >>> client = Client("EARTHSCOPE")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 1
         >>> t3 = t1 + 3
@@ -1120,7 +1142,7 @@ class Client(object):
             from obspy import UTCDateTime
             from obspy.clients.fdsn import Client
 
-            client = Client("IRIS")
+            client = Client("EARTHSCOPE")
             t1 = UTCDateTime("2010-02-27T06:30:00.000")
             t2 = t1 + 1
             t3 = t1 + 3
@@ -1224,7 +1246,7 @@ class Client(object):
         """
         if "station" not in self.services:
             msg = "The current client does not have a station service."
-            raise ValueError(msg)
+            raise FDSNNoServiceException(msg)
 
         arguments = OrderedDict(
             minlatitude=minlatitude,
@@ -1474,8 +1496,13 @@ class Client(object):
 
         print("\n".join(msg))
 
-    def _download(self, url, return_string=False, data=None, use_gzip=True,
+    def _download(self, url, return_string=False, data=None, use_gzip=None,
                   content_type=None):
+        # make it possible to have a default for gzip set on client
+        # initialization but also be able to override it here (for dataselect
+        # requests)
+        if use_gzip is None:
+            use_gzip = self.use_gzip
         headers = self.request_headers.copy()
         if content_type:
             headers['Content-Type'] = content_type
@@ -1741,13 +1768,13 @@ def build_url(base_url, service, major_version, resource_type,
 
     Built as a separate function to enhance testability.
 
-    >>> print(build_url("http://service.iris.edu", "dataselect", 1, \
+    >>> print(build_url("https://service.iris.edu", "dataselect", 1, \
                         "application.wadl"))
-    http://service.iris.edu/fdsnws/dataselect/1/application.wadl
+    https://service.iris.edu/fdsnws/dataselect/1/application.wadl
 
-    >>> print(build_url("http://service.iris.edu", "dataselect", 1, \
+    >>> print(build_url("https://service.iris.edu", "dataselect", 1, \
                         "query", {"cha": "EHE"}))
-    http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE
+    https://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE
     """
     # Avoid mutable kwargs.
     if parameters is None:
@@ -1809,7 +1836,20 @@ def raise_on_error(code, data):
     :type data: :class:`io.BytesIO`
     :param data: Data returned by the server
     """
-    # get detailed server response message
+    # there can be random network issues that prevent us getting a proper HTTP
+    # response and they need to handled differently
+    if code is None:
+        if (isinstance(data, (socket_timeout, TimeoutError)) or
+                "timeout" in str(data).lower() or
+                "timed out" in str(data).lower()):
+            raise FDSNTimeoutException("Timed Out")
+        else:
+            raise FDSNException("Unknown Error (%s): %s" % (
+                (str(data.__class__.__name__), str(data))))
+
+    # get detailed server response message from a proper HTTP response to
+    # prepare raising a specific exception including the info response from the
+    # server
     if code != 200:
         # let's try to resolve all the different types that `data` can sadly
         # have..
@@ -1829,6 +1869,7 @@ def raise_on_error(code, data):
         if server_info:
             server_info = "\n".join(
                 line for line in server_info.splitlines() if line)
+
     # No data.
     if code == 204:
         raise FDSNNoDataException("No data available for request.",
@@ -1870,12 +1911,6 @@ def raise_on_error(code, data):
         raise FDSNServiceUnavailableException("Service temporarily "
                                               "unavailable",
                                               server_info)
-    elif code is None:
-        if "timeout" in str(data).lower() or "timed out" in str(data).lower():
-            raise FDSNTimeoutException("Timed Out")
-        else:
-            raise FDSNException("Unknown Error (%s): %s" % (
-                (str(data.__class__.__name__), str(data))))
     # Catch any non 200 codes.
     elif code != 200:
         raise FDSNException("Unknown HTTP code: %i" % code, server_info)

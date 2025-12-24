@@ -3,7 +3,7 @@
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.4</Module>
- <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?starttime=2013-01-01&amp;network=IU&amp;sta=ANMO&amp;level=channel&amp;nodata=404&amp;channel=BH1&amp;location=00&amp;includeavailability=true</ModuleURI>
+ <ModuleURI>https://service.iris.edu/fdsnws/station/1/query?starttime=2013-01-01&amp;network=IU&amp;sta=ANMO&amp;level=channel&amp;nodata=404&amp;channel=BH1&amp;location=00&amp;includeavailability=true</ModuleURI>
  <Created>2014-07-22T09:51:56.000000Z</Created>
  <Network code="IU" startDate="1988-01-01T00:00:00.000000Z" endDate="2500-12-12T23:59:59.000000Z" restrictedStatus="open">
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>

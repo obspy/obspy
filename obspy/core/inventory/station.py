@@ -76,7 +76,7 @@ class Station(BaseNode):
         :type external_references: list of
             :class:`~obspy.core.inventory.util.ExternalReference`
         :param external_references: URI of any type of external report, such as
-            IRIS data reports or dataless SEED volumes.
+            EarthScope/IRIS data reports or dataless SEED volumes.
         :type description: str
         :param description: A description of the resource
         :type comments: list of :class:`~obspy.core.inventory.util.Comment`
@@ -376,8 +376,8 @@ class Station(BaseNode):
             Access: None
             Latitude: 48.1629, Longitude: 11.2752, Elevation: 565.0 m
             Available Channels:
-             ..BHZ        20.0 Hz  2006-12-16 to None
-             ..LHZ         1.0 Hz  2006-12-16 to None
+                ..BHZ        20.0 Hz  2006-12-16(350) -
+                ..LHZ         1.0 Hz  2006-12-16(350) -
 
         The `location` and `channel` selection criteria  may also contain UNIX
         style wildcards (e.g. ``*``, ``?``, ...; see

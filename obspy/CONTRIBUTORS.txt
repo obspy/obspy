@@ -1,3 +1,4 @@
+Aagaard, Brad
 Ackerley, Nick
 Alexeev, Nicholas
 Allgeyer, Sebastien
@@ -81,11 +82,13 @@ Michelini, Alberto
 Miller, Nathaniel C.
 Mizuno, Naoto
 Morgenstern, Bernhard
+Moushall, Brenainn
 Münchmeyer, Jannes
 Muñoz Mesa, Jesús A.
 Murray-Bergquist, Louisa
 Nesbitt, Ian M.
 Nof, Ran Novitsky
+Panay, Simon
 Panning, Mark P.
 Parker, Tom
 Pestourie, Romain
@@ -93,6 +96,7 @@ Pickle, Robert
 Pourpoint, Maeva
 Racine, Roman
 Rapagnani, Giovanni
+Rekoske, John
 Reyes, Celso
 Ringler, Adam
 Rothenhäusler, Nicolas
@@ -108,6 +112,7 @@ Scheingraber, Chris
 Schmidt, Peter
 Schneider, Felix M.
 Schneider, Simon
+Shibai, Subaru
 Shimizu, Toshiya
 Sippl, Christian
 Snoke, Arthur

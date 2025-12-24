@@ -872,8 +872,8 @@ class Trace(object):
         >>> print(tr.id)
         BW.MANZ..EHZ
         """
-        out = "%(network)s.%(station)s.%(location)s.%(channel)s"
-        return out % (self.stats)
+        return '.'.join((self.stats.network, self.stats.station,
+                         self.stats.location, self.stats.channel))
 
     id = property(get_id)
 
@@ -1481,7 +1481,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     @_add_processing_info
     @raise_if_masked
-    def filter(self, type, **options):
+    def filter(self, type, *args, **options):
         """
         Filter the data of the current trace.
 
@@ -1489,7 +1489,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: String that specifies which filter is applied (e.g.
             ``"bandpass"``). See the `Supported Filter`_ section below for
             further details.
-        :param options: Necessary keyword arguments for the respective filter
+        :param args: Only filter frequency/frequencies can be specified
+            as argument(s). Alternatively filter frequencies can be specified
+            as keyword arguments.
+        :param options: Keyword arguments for the respective filter
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
             ``"bandpass"``)
 
@@ -1533,6 +1536,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr = st[0]
         >>> tr.filter("highpass", freq=1.0)  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
+        >>> tr2 = st[1]
+        >>> tr2.filter("lowpass", 1.0)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.plot()  # doctest: +SKIP
 
         .. plot::
@@ -1549,7 +1555,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # filtering
         # the options dictionary is passed as kwargs to the function that is
         # mapped according to the filter_functions dictionary
-        self.data = func(self.data, df=self.stats.sampling_rate, **options)
+        self.data = func(self.data, *args,
+                         df=self.stats.sampling_rate, **options)
         return self
 
     @_add_processing_info
@@ -1598,6 +1605,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'carlstatrig'``
             Computes the carl_sta_trig characteristic function (uses
             :func:`obspy.signal.trigger.carl_sta_trig`).
+
+        ``'energyratio'``
+            Computes the energy ratio characteristic function (uses
+            :func:`obspy.signal.trigger.energy_ratio`).
+
+        ``'modifiedenergyratio'``
+            Computes the modified energy ratio characteristic function (uses
+            :func:`obspy.signal.trigger.modified_energy_ratio`).
 
         ``'zdetect'``
             Z-detector (uses :func:`obspy.signal.trigger.z_detect`).
@@ -2130,10 +2145,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             (uses: :func:`scipy.signal.windows.nuttall`)
         ``'parzen'``
             Parzen window. (uses: :func:`scipy.signal.windows.parzen`)
-        ``'slepian'``
-            Slepian window. (uses: :func:`scipy.signal.windows.slepian`)
         ``'triang'``
             Triangular window. (uses: :func:`scipy.signal.windows.triang`)
+        ``'dpss'``
+            Discrete Prolate Spheroidal Sequences window. (uses:
+            :func:`scipy.signal.windows.dpss`)
         """
         type = type.lower()
         side = side.lower()
@@ -3009,6 +3025,19 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         response = self._get_response(inventory)
         self.data = self.data / response.instrument_sensitivity.value
+        return self
+
+    def newbyteorder(self, byteorder='native'):
+        """
+        Change byteorder of the data
+
+        :type byteorder: str
+        :param byteorder: Byte order to set on the numpy data array, e.g.
+            ``'native'``, ``'little'`` or ``'big'``. See
+            :meth:`numpy.dtype.newbyteorder`.
+        """
+        dtype = self.data.dtype.newbyteorder(byteorder)
+        self.data = np.require(self.data, dtype=dtype)
         return self
 
 

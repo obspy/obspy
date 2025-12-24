@@ -1021,15 +1021,20 @@ class Response(ComparingObject):
             "VEL": ["M/S", "M/SEC"],
             "ACC": ["M/S**2", "M/(S**2)", "M/SEC**2", "M/(SEC**2)",
                     "M/S/S"]}
-        unit = None
+
         for key, value in unit_map.items():
             if i_u and i_u.upper() in value:
                 unit = key
-        if not unit:
-            msg = ("ObsPy does not know how to map unit '%s' to "
-                   "displacement, velocity, or acceleration - overall "
-                   "sensitivity will not be recalculated.") % i_u
-            raise ValueError(msg)
+                break
+        else:
+            unit = "DEF"
+            msg = (f"ObsPy can not map unit '{i_u}' to "
+                   f"displacement, velocity, or acceleration - "
+                   f"evalresp should still work and just use the response as "
+                   f"is. This might not be covered by tests, though, so "
+                   f"proceed with caution and report any unexpected "
+                   f"behavior.")
+            warnings.warn(msg)
 
         # Determine frequency if not given.
         if frequency is None:
