@@ -4,7 +4,7 @@
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.3</Module>
- <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?network=TM&amp;level=response&amp;station=SKLT&amp;starttime=2012-08-11T12%3A42%3A58.619999&amp;endtime=2012-08-11T13%3A17%3A59.999999&amp;channel=BHZ</ModuleURI>
+ <ModuleURI>https://service.iris.edu/fdsnws/station/1/query?network=TM&amp;level=response&amp;station=SKLT&amp;starttime=2012-08-11T12%3A42%3A58.619999&amp;endtime=2012-08-11T13%3A17%3A59.999999&amp;channel=BHZ</ModuleURI>
  <Created>2014-07-09T10:15:48</Created>
  <Network code="TM" startDate="2008-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
   <Description>Thai Seismic Monitoring Network</Description>

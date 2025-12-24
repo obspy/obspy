@@ -163,7 +163,7 @@ class Client(object):
 
         >>> client = Client("EARTHSCOPE")
         >>> print(client)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-        FDSN Webservice Client (base url: http://service.iris.edu)
+        FDSN Webservice Client (base url: https://service.iris.edu)
         Available Services: 'dataselect' (v...), 'event' (v...),
         'station' (v...), 'available_event_catalogs',
         'available_event_contributors'
@@ -174,7 +174,7 @@ class Client(object):
 
         :type base_url: str
         :param base_url: Base URL of FDSN web service compatible server
-            (e.g. "http://service.iris.edu") or key string for recognized
+            (e.g. "https://service.iris.edu") or key string for recognized
             server (one of %s).
         :type major_versions: dict
         :param major_versions: Allows to specify custom major version numbers
@@ -214,7 +214,7 @@ class Client(object):
             followed even if credentials are given.
         :type eida_token: str
         :param eida_token: Token for EIDA authentication mechanism, see
-            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php. If a
+            http://geofon.gfz.de/waveform/archive/auth/index.php. If a
             token is provided, options ``user`` and ``password`` must not be
             used. This mechanism is only available on select EIDA nodes. The
             token can be provided in form of the PGP message as a string, or
@@ -343,13 +343,13 @@ class Client(object):
         authenticated for potential access to restricted data.
         This only works for select EIDA nodes and relies on the auth mechanism
         described here:
-        http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php
+        http://geofon.gfz.de/waveform/archive/auth/index.php
 
         This will overwrite any previously set-up credentials/authentication.
 
         :type token: str
         :param token: Token for EIDA authentication mechanism, see
-            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php.
+            http://geofon.gfz.de/waveform/archive/auth/index.php.
             This mechanism is only available on select EIDA nodes. The token
             can be provided in form of the PGP message as a string, or the
             filename of a local file with the PGP message in it.
@@ -1768,13 +1768,13 @@ def build_url(base_url, service, major_version, resource_type,
 
     Built as a separate function to enhance testability.
 
-    >>> print(build_url("http://service.iris.edu", "dataselect", 1, \
+    >>> print(build_url("https://service.iris.edu", "dataselect", 1, \
                         "application.wadl"))
-    http://service.iris.edu/fdsnws/dataselect/1/application.wadl
+    https://service.iris.edu/fdsnws/dataselect/1/application.wadl
 
-    >>> print(build_url("http://service.iris.edu", "dataselect", 1, \
+    >>> print(build_url("https://service.iris.edu", "dataselect", 1, \
                         "query", {"cha": "EHE"}))
-    http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE
+    https://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE
     """
     # Avoid mutable kwargs.
     if parameters is None:

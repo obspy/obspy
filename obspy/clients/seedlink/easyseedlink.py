@@ -22,7 +22,7 @@ URL:
         print()
 
     # Create the client and pass the function as a callback
-    client = create_client('geofon.gfz-potsdam.de', on_data=handle_data)
+    client = create_client('geofon.gfz.de', on_data=handle_data)
     client.select_stream('BW', 'MANZ', 'EHZ')
     client.run()
 
@@ -90,7 +90,7 @@ class EasySeedLinkClient(object):
                 print(trace)
 
         # Connect to a SeedLink server
-        client = MyClient('geofon.gfz-potsdam.de:18000')
+        client = MyClient('geofon.gfz.de:18000')
 
         # Retrieve INFO:STREAMS
         streams_xml = client.get_info('STREAMS')
@@ -127,7 +127,7 @@ class EasySeedLinkClient(object):
         # Catch invalid server_url parameters
         if not isinstance(server_url, str):
             raise ValueError('Expected string for SeedLink server URL')
-        # Allow for sloppy server URLs (e.g. 'geofon.gfz-potsdam.de:18000).
+        # Allow for sloppy server URLs (e.g. 'geofon.gfz.de:18000).
         # (According to RFC 1808 the net_path segment needs to start with '//'
         # and this is expected by the urlparse function, so it is silently
         # added if it was omitted by the user.)
@@ -486,7 +486,7 @@ def create_client(server_url, on_data=None, on_seedlink_error=None,
         ...     print(trace)
         ...     print()
         ...
-        >>> client = create_client('geofon.gfz-potsdam.de',
+        >>> client = create_client('geofon.gfz.de',
         ...                        handle_data)  # doctest: +SKIP
         >>> client.select_stream('BW', 'MANZ', 'EHZ')  # doctest: +SKIP
         >>> client.run()  # doctest: +SKIP

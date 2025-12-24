@@ -1,4 +1,4 @@
-Parameter description for the 'station' service (v1.1.12) of 'http://service.iris.edu':
+Parameter description for the 'station' service (v1.1.12) of 'https://service.iris.edu':
 The service offers the following optional standard parameters:
     startbefore (UTCDateTime)
         limit to stations starting before the specified time
