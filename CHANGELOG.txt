@@ -12,7 +12,8 @@ Changes:
    * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
-     one of VEL/ACC/DISP (see #3235)
+     one of VEL/ACC/DISP (see #3235), add method for calculating the normalization
+     factor for pole–zero response stages (see #3580)
    * trace: 5x quicker retrieval of seed-id with trace.id / trace.get_id()
      (see #3251)
    * inventory: additional formatting tweaks to expanded channel information
