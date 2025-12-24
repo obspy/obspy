@@ -484,7 +484,7 @@ class EvtHeader(EvtVirtual):
                         try:
                             vals.append(structures[key][v])
                         except KeyError:
-                            msg = "Unmatched raw value: {}".format(v)
+                            msg = f"Unmatched raw value: {v} (type={type(v)})"
                             warnings.warn(key+": "+msg)
                             vals.append(msg)
                     self.HEADER[key][2] = vals
@@ -492,7 +492,8 @@ class EvtHeader(EvtVirtual):
                     try:
                         self.HEADER[key][2] = structures[key][value]
                     except KeyError:
-                        msg = "Unmatched raw value: {}".format(value)
+                        msg = (f"Unmatched raw value: {value}"
+                               f" (type={type(value)})")
                         warnings.warn(key + ": " + msg)
                         self.HEADER[key][2] = "Unmatched raw value: " \
                                               "{}".format(value)
