@@ -481,10 +481,9 @@ def read_nordic(select_file, return_wavnames=False, encoding='latin-1',
             elif len(event_str) > 0:
                 catalog, wav_names = _extract_event(
                     event_str=event_str, catalog=catalog, wav_names=wav_names,
-                    return_wavnames=return_wavnames, nordic_format=nordic_format,
-                    **kwargs)
+                    return_wavnames=return_wavnames,
+                    nordic_format=nordic_format, **kwargs)
                 event_str = []
-
 
     if len(event_str) > 0:
         # May occur if the last line of the file is not blank as it should be
