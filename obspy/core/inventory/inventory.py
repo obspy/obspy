@@ -197,8 +197,29 @@ class Inventory(ComparingObject):
     def __len__(self):
         return len(self.networks)
 
-    def __getitem__(self, index):
-        return self.networks[index]
+    def __getitem__(self, key):
+        # Traditional indexing
+        if isinstance(key, (int, slice)):
+            return self.networks[key]
+        # Tuple for hierarchical access
+        elif isinstance(key, tuple):
+            if len(key) == 1:
+                return self.networks[key[0]]
+            elif len(key) == 2:
+                return self.networks[key[0]].stations[key[1]]
+            elif len(key) == 3:
+                return self.networks[key[0]].stations[key[1]].channels[key[2]]
+            else:
+                raise IndexError(f"Key: {key} has wrong # of indices")
+        # OR a list of tuples
+        elif isinstance(key, list):
+            # must be explicit loop
+            result = []
+            for idx in key:
+                result.append(self[idx])
+            return result
+        else:
+            raise TypeError(f"Invalid key type: {type(key)}")
 
     def __copy_inventory_metadata(self, other):
         """
@@ -551,12 +572,9 @@ class Inventory(ComparingObject):
         criteria (e.g. all channels with ``channel="EHZ"``).
 
         .. warning::
-            The returned object is based on a shallow copy of the original
+            The returned object is NOT a shallow copy of the original
             object. That means that modifying any mutable child elements will
-            also modify the original object
-            (see https://docs.python.org/3/library/copy.html).
-            Use :meth:`copy()` afterwards to make a new copy of the data in
-            memory.
+            NOT modify the original object. Use "remove"
 
         .. rubric:: Example
 
@@ -671,6 +689,196 @@ class Inventory(ComparingObject):
         inv = copy.copy(self)
         inv.networks = networks
         return inv
+
+    def where(self, seed_id=None, **kwargs):
+        """
+        Find indices of inventory elements matching selection criteria.
+
+        Can use either a SEED ID string or the same parameters as select().
+
+        :type seed_id: str, optional
+        :param seed_id: SEED ID string to search for. Can be:
+
+            * ``"N"`` (network code only)
+            * ``"N.S"`` (network and station codes)
+            * ``"N.S.L.C"`` (network, station, location, and channel codes)
+
+            Supports wildcards (?,*) in any component.
+        :type network: str
+        :param network: Potentially wildcarded network code. If not given,
+            all network codes will be accepted.
+        :type station: str
+        :param station: Potentially wildcarded station code. If not given,
+            all station codes will be accepted.
+        :type location: str
+        :param location: Potentially wildcarded location code. If not given,
+            all location codes will be accepted.
+        :type channel: str
+        :param channel: Potentially wildcarded channel code. If not given,
+            all channel codes will be accepted.
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only include networks/stations/channels active at given
+            point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only include networks/stations/channels active at
+            or after given point in time (i.e. channels ending before given
+            time will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only include networks/stations/channels active before
+            or at given point in time (i.e. channels starting after given
+            time will not be shown).
+        :type sampling_rate: float
+        :param sampling_rate: Only include channels whose sampling rate
+            matches the given sampling rate, in Hz (within absolute tolerance
+            of 1E-8 Hz and relative tolerance of 1E-5)
+        :type minlatitude: float
+        :param minlatitude: Only include stations/channels with a latitude
+            larger than the specified minimum.
+        :type maxlatitude: float
+        :param maxlatitude: Only include stations/channels with a latitude
+            smaller than the specified maximum.
+        :type minlongitude: float
+        :param minlongitude: Only include stations/channels with a longitude
+            larger than the specified minimum.
+        :type maxlongitude: float
+        :param maxlongitude: Only include stations/channels with a longitude
+            smaller than the specified maximum.
+        :type latitude: float
+        :param latitude: Specify the latitude to be used for a radius
+            selection.
+        :type longitude: float
+        :param longitude: Specify the longitude to be used for a radius
+            selection.
+        :type minradius: float
+        :param minradius: Only include stations/channels within the specified
+            minimum number of degrees from the geographic point defined by
+            the latitude and longitude parameters.
+        :type maxradius: float
+        :param maxradius: Only include stations/channels within the specified
+            maximum number of degrees from the geographic point defined by
+            the latitude and longitude parameters.
+        :rtype: list
+        :return: List of tuples for matching elements:
+
+            * ``(net_idx,)`` for network-only matches
+            * ``(net_idx, sta_idx)`` for station matches
+            * ``(net_idx, sta_idx, chan_idx)`` for channel matches
+
+        .. rubric:: Example
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> inv = read_inventory()
+        >>> # Find specific channel by SEED ID
+        >>> indices = inv.where("BW.RJOB")
+        >>> print(indices) # doctest: +NORMALIZE_WHITESPACE
+        [(1, 2), (1, 2), (1, 2)]
+        >>> channels = inv[indices[0]]
+        >>> print(channels) # doctest: +NORMALIZE_WHITESPACE
+        Station RJOB (Jochberg, Bavaria, BW-Net)
+                Station Code: RJOB
+                Channel Count: None/None (Selected/Total)
+                2007-12-17T00:00:00.000000Z -
+                Access: None
+                Latitude: 47.7372, Longitude: 12.7957, Elevation: 860.0 m
+                Available Channels:
+                    ..EH[ZNE]   200.0 Hz  2007-12-17(351) -
+
+        >>> # Find all LH? channels across networks
+        >>> indices = inv.where("*.*.*.LH?")
+        >>> channels = inv[indices]
+
+        >>> # Find all stations in BW network
+        >>> indices = inv.where("BW.*")
+        >>> stations = inv[indices]
+
+        >>> # Alternative: use select parameters
+        >>> indices = inv.where(channel="BHZ", network="BW")
+
+        """
+
+        if seed_id is not None:
+            parts = seed_id.split('.')
+
+            # check filtering conflicts
+            conflicts = []
+            if len(parts) >= 1 and 'network' in kwargs:
+                conflicts.append('network')
+            if len(parts) >= 2 and 'station' in kwargs:
+                conflicts.append('station')
+            if len(parts) >= 4:
+                if parts[2] and 'location' in kwargs:
+                    conflicts.append('location')
+                if 'channel' in kwargs:
+                    conflicts.append('channel')
+
+            if conflicts:
+                msg = (f"{', '.join(conflicts)} filter params"
+                       " will be superseded by seed_id filter")
+                warnings.warn(msg)
+
+            if len(parts) == 1:
+                # Network only: "BW" - allows S.L.C. kwargs
+                kwargs['network'] = parts[0]
+            elif len(parts) == 2:
+                # Network and station: "BW.RJOB" - allows L.C kwargs
+                kwargs['network'] = parts[0]
+                kwargs['station'] = parts[1]
+            elif len(parts) == 4:
+                # Full SEED ID: "BW.RJOB.00.BHZ" - supersedes all
+                kwargs['network'] = parts[0]
+                kwargs['station'] = parts[1]
+                kwargs['location'] = parts[2] if parts[2] else None
+                kwargs['channel'] = parts[3]
+            else:
+                raise ValueError(f"Invalid SEED ID format: {seed_id}."
+                                 " Expected N, N.S, or N.S.L.C")
+
+        filtered = self.select(**kwargs)
+
+        indices = []
+
+        if not filtered.networks:
+            return indices
+
+        # Build a map of elements in the ORIGINAL inventory
+        code_to_indices = {}
+        for net_idx, net in enumerate(self.networks):
+            code_to_indices[net.code] = (net_idx,)
+            for sta_idx, sta in enumerate(net.stations):
+                code_to_indices[f"{net.code}.{sta.code}"] = (net_idx, sta_idx)
+                for chan_idx, chan in enumerate(sta.channels):
+                    code_to_indices[id(chan)] = (net_idx, sta_idx, chan_idx)
+
+        # Determine the search level based on seed_id
+        if (kwargs.get('channel') is not None or
+           kwargs.get('location') is not None):
+            search_level = 4  # channel
+        elif kwargs.get('station') is not None:
+            search_level = 2  # station
+        else:
+            search_level = 1  # network
+
+        for fnet in filtered.networks:
+            if search_level == 1:
+                net_indices = code_to_indices.get(fnet.code)
+                if net_indices:
+                    indices.append(net_indices)
+                continue
+
+            for fsta in fnet.stations:
+                if search_level == 2:
+                    sta_indices = code_to_indices.get(
+                        f"{fnet.code}.{fsta.code}")
+                    if sta_indices:
+                        indices.append(sta_indices)
+                    continue
+
+                for fchan in fsta.channels:
+                    chan_indices = code_to_indices.get(id(fchan))
+                    if chan_indices:
+                        indices.append(chan_indices)
+
+        return indices
 
     def remove(self, network='*', station='*', location='*', channel='*',
                keep_empty=False):

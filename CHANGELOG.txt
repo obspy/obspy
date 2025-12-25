@@ -17,6 +17,10 @@ Changes:
      (see #3251)
    * inventory: additional formatting tweaks to expanded channel information
      (see #3261)
+   * inventory: correct select docstring; does not return a shallow copy
+   * inventory: add 'where' function to retrieve network, station, and channel
+     index values via seed_id and/or select search parameters
+   * inventory: expand functionality of _getitem_ to accept index tuples
    * replace pkg_resources with importlib for internal entry point and plugin
      handling, add compatibility code for py 3.8 and 3.9 (should not affect
      users, see #3333)
