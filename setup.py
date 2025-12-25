@@ -42,6 +42,8 @@ from setuptools import Extension, find_packages, setup
 
 
 # The minimum python version which can be used to run ObsPy
+# TODO: when dropping support for Python 3.9 some workarounds can be removed in
+# the entry point lookup routines, see #3333
 # XXX when dropping Python 3.9, get rid of socket.timeout and just use
 # TimeoutError, e.g. in fdsn/client.py
 MIN_PYTHON_VERSION = (3, 8)

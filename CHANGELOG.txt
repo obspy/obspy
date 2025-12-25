@@ -7,6 +7,8 @@ Changes:
    * Fix code coverage reporting (see #3646)
    * Github CI: update min numpy version to 1.21 and symlink libtiff.so.5
      for ubuntu 3.8 tests (see #3639)
+   * Github CI: pin cartopy < 0.22, pyproj < 3.5 for ubuntu 3.8
+     mindepversion tests
    * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
@@ -19,6 +21,9 @@ Changes:
    * inventory: add 'where' function to retrieve network, station, and channel
      index values via seed_id and/or select search parameters
    * inventory: expand functionality of _getitem_ to accept index tuples
+   * replace pkg_resources with importlib for internal entry point and plugin
+     handling, add compatibility code for py 3.8 and 3.9 (should not affect
+     users, see #3333)
    * read(): better support for reading from file-like objects in many plugins
      (see #3346)
    * allow to specify Trace and Stream filter frequencies as arguments
@@ -29,6 +34,8 @@ Changes:
    * window 'slepian' was removed in Trace/Stream.taper() as it was removed
      from scipy with version 1.6, add new window 'dpss' that scipy promotes as
      replacement but might need other parameters passed in (see #3331)
+   * util: fix logic bug in _generic_reader to properly catch byte objects
+     (see #3643)
  - obspy.clients.filesystem:
    * tsindex: update syntax for SQLAlchemy 2.0 compatibility (see #3269)
    * tsindex: leap second handling was deactivated as it is not needed with
@@ -56,8 +63,12 @@ Changes:
      stations (see #2808)
  - obspy.io:
    * add read and write support for CSV, EVENTTXT and CSZ formats (see #3285)
+ - obspy.io.ascii:
+   * add support for more dtypes (INT32, INT64, FLOAT32 etc) (see #3611)
  - obspy.io.cybershake:
    * add read support for CyberShake seismogram format (see #3370)
+ - obspy.io.kinemetrics:
+   * extract all headers from EVT files (see #3606)
  - obspy.io.mseed.spread_time_over_file:
    * new routine to spread a time interval progressively across all mseed
      blockettes in a file (see #3271)
@@ -76,6 +87,15 @@ Changes:
    * Less strict date/time parsing (#3283).
  - obspy.io.seiscomp:
    * add seiscomp scxml 0.13 support (see #3345)
+ - obspy.io.nordic:
+   * Parse ID-lines (type I) into event.extra['nordic_event_id] (see #3287)
+   * Support reading of compact Nordic files (only containing header lines)
+   * Write amplitude with highest possible precision
+   * Fix writing / reading of high-frequency IAMLHF amplitudes
+   * Fix parsing of BAZ when they precede the associated phase pick in file
+   * Fix bug where check for nordic format version crashed on long phase names
+ - obspy.io.seisan:
+   * Fix parsing of files written in int16 (see #3287)
  - obspy.io.shapefile:
    * add support for pyshp v3 (see #3599)
  - obspy.io.stationxml:

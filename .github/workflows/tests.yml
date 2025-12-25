@@ -166,6 +166,7 @@ jobs:
       - name: Update environment
         run: conda env update -n test -f ${{ env.env_file }}
         if: steps.cache.outputs.cache-hit != 'true'
+        timeout-minutes: 5
 
       - name: print package info
         shell: bash -l {0}
