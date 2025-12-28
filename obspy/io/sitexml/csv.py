@@ -21,15 +21,25 @@ from collections import defaultdict
 import obspy
 from obspy.core.inventory.util import ExternalReference
 from obspy.io.sitexml.core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
-                                   EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency, VelocityS30, 
-                                   VelocityProfile, VelocityProfileData, VelocityProfileSurvey, 
-                                   LiteratureSource, ValueWithUncertainty)
+                                   EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency, 
+                                   VelocityS30, VelocityProfile, VelocityProfileData, 
+                                   VelocityProfileSurvey, LiteratureSource, ValueWithUncertainty)
 from obspy.io.sitexml.write import _write_sitexml
-from obspy.io.sitexml.excel import _read_sheet, _empty_value
 
+def csv_to_sitexml(sera_site_dict, output_folder="."):
+    """
+    Exports a dictionary of SERAsite objects to the respective SiteXML files. 
+    The files are written to a folder given with argument "output_folder".
+    The name of the SiteXML file is either:
+    - the station_code if the metadata belong to a station site
+    - The siteID otherwise
 
-def csv_to_sitexml(sera_site_dict, output_folder):
-
+    :type sera_site_dict: dict of :class:`~obspy.io.sitexml.core.SERASite`
+    :param sera_site_dict: Dictionary of SERAsite objects
+    :type output_folder: str, optional
+    :param output_folder: Output folder to write the SiteXMl files. 
+                        If not provided writes to the current folder.
+    """
     for sera_site in sera_site_dict.values():
         if sera_site.site_description.station_code:
             print("Creating SiteXMl for station: ", sera_site.site_description.station_code)
@@ -46,23 +56,35 @@ def csv_to_sera_site(site_owner_csv,
                      velocity_profiles_csv=None, 
                      delim='\t'):
     """
-    Function import metadata for SiteXML from csv files.
+    Function to import SiteXML metadata from CSV files.
+    The Excel file should contain the following sheets:
+    - siteOwner: With site ownership metadata. Mandatory.
+    - siteDescription: With site description metadata. Mandatory.
+    - analysis: With analysis metadata. Optional
 
-    :type site_owner_csv: File name or file like object
-    :param site_owner_csv: One line csv file with site owner metadata. Mandatory.
-    :type site_description_csv: File name or file like object
+    Returns a dictionary of SERASite objects. Dictionary keys are the unique SiteIDs.
+
+    :type site_owner_csv: File name or file like object, required
+    :param site_owner_csv: One line csv file with site owner metadata.
+    :type site_description_csv: File name or file like object, required
     :param site_description_csv: CSV file with site description metadata. 
-            One line per station/location. Mandatory.
-    :type analysis_csv: File name or file like object
+            One line per station/location.
+    :type analysis_csv: File name or file like object, optional
     :param analysis_csv: CSV file with analysis metadata. 
-            One line per analysisID. Optional.
+            One line per analysisID.
     :type velocity_profiles_csv: 
     :param velocity_profiles_csv: CSV file or path to a folder with velocity profile metadata.
             The folder can contain any number of CSV files. Optional.
-    :type delim: str
+    :type delim: str, optional
     :param delim: CSV file delimiter. Default tab delimeted.
+    :rtype: dictionary of :class:`~obspy.io.sitexml.core.SERASite`
 
-    Returns a dictionary of SERASite objects. Dictionary keys are the unique SiteIDs.
+    .. rubric:: Example
+
+        >>> from obspy.io.sitexml.csv import csv_to_sera_site
+        >>> sera_site_dict = csv_to_sera_site("site_owner.csv", 
+                            "site_description.csv", "analysis.csv",
+                            "velocity_profiles_dir", ';')
     """
     # This is probably not needed as these two arguments are mandatory.
     #
@@ -89,9 +111,10 @@ def csv_to_sera_site(site_owner_csv,
     # Read the velocity profiles and store them
     # in a dictionary of dataframes with key the siteID 
     #
-    df_vp_dict = _import_velocity_profiles(velocity_profiles_csv, delim=delim)
+    df_vp_dict = _csv_import_velocity_profiles(velocity_profiles_csv, delim=delim)
     
-    site_owner_dict = _read_sheet(df_site_owner, SERASiteOwner)
+    #site_owner_dict = _read_sheet(df_site_owner, SERASiteOwner)
+    site_owner = _read_site_owner(df_site_owner)
     site_description_dict = _read_site_description(df_site_description)
 
     if exists_analysis:
@@ -101,7 +124,77 @@ def csv_to_sera_site(site_owner_csv,
     #
     sera_site_dict = {}
     for siteID in site_description_dict:
-        sera_site_dict[siteID] = SERASite(site_owner = site_owner_dict['site_owner'],
+        sera_site_dict[siteID] = SERASite(site_owner = site_owner,
+                                           site_description = site_description_dict[siteID],
+                                           created = obspy.UTCDateTime(),
+                                           resource_id = siteID)
+        if exists_analysis and siteID in analysis_dict:
+            sera_site_dict[siteID].analysis = analysis_dict[siteID]
+
+    return sera_site_dict
+
+def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
+    """
+    Function to import SiteXML metadata from Excel file.
+    The Excel file should contain the following sheets:
+    - siteOwner: With site ownership metadata. Mandatory.
+    - siteDescription: With site description metadata. Mandatory.
+    - analysis: With analysis metadata. Optional
+
+    Returns a dictionary of SERASite objects. Dictionary keys are the unique SiteIDs.
+
+    :type path_or_file_object: File name or file like object
+    :param path_or_file_object: Excel file with site metadata.
+    :type velocity_profiles: str, optional
+    :param velocity_profiles: Excel file or path to a folder with velocity profile metadata.
+    :rtype: dictionary of :class:`~obspy.io.sitexml.core.SERASite`
+    
+    .. rubric:: Example
+
+        >>> from obspy.io.sitexml.csv import excel_to_sera_site
+        >>> sera_site_dict = excel_to_sera_site("InputExcel.xlsx", 
+                                velocity_profiles="vp.xlsx")
+    """
+    try:
+        xls = pd.ExcelFile(path_or_file_object)
+    except FileNotFoundError:
+        print(f"Error: File not found: {path_or_file_object}")
+        return {}
+    
+    try:
+        df_dict = pd.read_excel(xls, None, dtype={'year': str})
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+    if not all(k in df_dict for k in ("siteOwner", "siteDescription")):
+        print("Error: The site owner and site description metadata are madatory. Aborting")
+        return None
+    
+    # Read the velocity profiles and store them
+    # in a dictionary of dataframes with key the siteID
+    #
+    df_vp_dict = _excel_import_velocity_profiles(velocity_profiles) \
+        if velocity_profiles else None
+    
+    #site_owner_dict = _read_sheet(df_dict['siteOwner'], SERASiteOwner)
+    site_owner = _read_site_owner(df_dict['siteOwner'])
+    site_description_dict = _read_site_description(df_dict['siteDescription'])
+
+    # Read the analysis metadata if the 'analysis' sheet exists.
+    #
+    if 'analysis' in df_dict:
+        exists_analysis = True
+        analysis_dict = _read_analysis(df_dict['analysis'], df_vp_dict)
+    else:
+        print("Warning: Missing analysis metadata.")
+        exists_analysis = False
+        
+    # All dictionaries use the unique SiteID for key.
+    #
+    sera_site_dict = {}
+    for siteID in site_description_dict:
+        sera_site_dict[siteID] = SERASite(site_owner = site_owner,
                                            site_description = site_description_dict[siteID],
                                            created = obspy.UTCDateTime(),
                                            resource_id = siteID)
@@ -169,7 +262,17 @@ def _read_site_description(df_site_description):
     return site_description_dict
 
 def _read_analysis(df_analysis, df_vp_dict=None):
-    
+    """
+    Return a dictionary of Analysis objects for all sites.
+    Dictionary key is the siteID.
+
+    :type df_analysis: pandas dataframe, required
+    :param df_analysis: Dataframe with analysis metadata for all sites
+    :type df_vp_dict: dictionary of pandas dataframes, optional
+    :param df_vp_dict: Dictionary of pandas dataframes with velocity
+            profile metadata for all sites. Dictionary key is the siteID.
+    :rtype: dictionary of :class:`~obspy.io.sitexml.core.Analysis`
+    """
     analysis_dict = defaultdict(list)
 
     for row in df_analysis.iterrows():
@@ -221,10 +324,11 @@ def _read_velocity_profiles_for_analysis(df_vp, analysis_id):
     """
     Return a list of VelocityProfile objects for a given analysisID.
 
-    :type df_vp: Pandas dataframe 
-    :param df_vp: Dataframe of velocity profiles for a station
-    :type analysis_id: str
+    :type df_vp: pandas dataframe, required
+    :param df_vp: Dataframe of velocity profiles for a single site
+    :type analysis_id: str, required
     :param analysis_id: The analysis for which to read velocity profiles
+    :rtype: list of :class:`~obspy.io.sitexml.core.velocityProfile`
     """
 
     # 1. Filter the DataFrame to this analysisID
@@ -247,6 +351,7 @@ def _read_velocity_profile(rows):
     Build a VelocityProfile object from a subset of rows belonging to a single profile.
 
     :param rows: A group of dataframe rows
+    :rtype: :class:`~obspy.io.sitexml.core.velocityProfile`
     """
     rows = rows.sort_values("layerCount")
     layer_objects = []
@@ -307,7 +412,7 @@ def _read_site_indicator(df_row, cls, indicator):
 
     return obj
 
-def _import_velocity_profiles(path, delim='\t'):
+def _csv_import_velocity_profiles(path, delim='\t'):
     
     df = pd.DataFrame()
 
@@ -340,6 +445,52 @@ def _import_velocity_profiles(path, delim='\t'):
         return df_dict 
     else:
         return None
+
+def _excel_import_velocity_profiles(path):
+    
+    df = pd.DataFrame()
+
+    def _read_excel_file(file_path):
+        nonlocal df
+        try:
+            df_dict = pd.read_excel(file_path, None)
+        except Exception as e:
+            print(f"Error reading excel file {file_path}: {e}")
+            return
+        
+        for sheet_name, sheet_df in df_dict.items():
+            if sheet_df is None or sheet_df.empty:
+                continue
+            if "siteID" not in sheet_df.columns:
+                print(f"Error: Missing 'siteID' column in sheet {sheet_name} of {file_path}")
+                raise ValueError("Missing required 'siteID' column.")
+            df = pd.concat([df, sheet_df], ignore_index=True)
+
+    if os.path.isdir(path):
+        for filename in os.listdir(path):
+            if filename.lower().endswith((".xls", ".xlsx", ".xlsm", ".xlsb")):
+                try:
+                    _read_excel_file(os.path.join(path, filename))
+                except ValueError:
+                    return None
+
+    elif os.path.isfile(path):
+        if path.lower().endswith((".xls", ".xlsx", ".xlsm", ".xlsb")):
+            try:
+                _read_excel_file(path)
+            except ValueError:
+                return None
+        else:
+            print(f"File is not an Excel file: {path}")
+
+    else:
+        print(f"Invalid path: {path}")
+
+    if not df.empty:
+        df_dict = {site_id: group for site_id, group in df.groupby("siteID")}
+        return df_dict
+
+    return None
 
 def _read_reference(df_row, indicator):
 
@@ -388,6 +539,22 @@ def _read_value_with_uncertainty(row, name):
 
     return metric
 
+def _read_site_owner(df):
+
+    obj = SERASiteOwner()
+
+    for _, row in df.iterrows():
+        #obj = _safe_create_instance(cls)
+        
+        for attr in vars(obj).keys():
+            pub_attr = attr.strip('_')
+            if pub_attr in df.columns and not _empty_value(row[pub_attr]):
+                try:
+                    setattr(obj, pub_attr, row[pub_attr])
+                except Exception as e:
+                    print(f"Warning: Could not set attribute '{pub_attr}' on {cls.__name__}: {e}")
+    return obj
+
 def _read_cell(df_row, argument, indicator=None):
 
     if indicator:
@@ -400,3 +567,12 @@ def _read_cell(df_row, argument, indicator=None):
                     return df_row[argument]
         
     return None
+
+def _empty_value(value):
+    if pd.isna(value):
+        return True
+    if isinstance(value, str):
+        if not value.strip():
+            return True
+    
+    return False
