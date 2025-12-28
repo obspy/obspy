@@ -799,23 +799,23 @@ def quality_index2(sera_site):
     Qindex1 = {}
     if sera_site.site_description:
         if sera_site.site_description.ec8:
-            Qindex1["siteClassEC8"] = sera_site.site_description.ec8.quality_index.value
+            Qindex1["siteClassEC8"] = sera_site.site_description.ec8.quality_index
         if sera_site.site_description.h800:
-            Qindex1["h800"] = sera_site.site_description.h800.quality_index.value
+            Qindex1["h800"] = sera_site.site_description.h800.quality_index
         if sera_site.site_description.bedrock_depth:
-            Qindex1["bedrockDepth"] = sera_site.site_description.bedrock_depth.quality_index.value
+            Qindex1["bedrockDepth"] = sera_site.site_description.bedrock_depth.quality_index
         if sera_site.site_description.geological_unit:
-            Qindex1["geologicalUnit"] = sera_site.site_description.geological_unit.quality_index.value
+            Qindex1["geologicalUnit"] = sera_site.site_description.geological_unit.quality_index
     
     # TODOs: We must select the prefered analysis and prefered VP for the calculation of QI2
     #
     if sera_site.analysis:
         if sera_site.analysis[0].resonance_frequency:
-            Qindex1["resonanceFrequency"] = sera_site.analysis[0].resonance_frequency.quality_index.value
+            Qindex1["resonanceFrequency"] = sera_site.analysis[0].resonance_frequency.quality_index
         if sera_site.analysis[0].velocity_profile_survey:
-            Qindex1["velocityProfile"] = sera_site.analysis[0].velocity_profile_survey.quality_index.value
+            Qindex1["velocityProfile"] = sera_site.analysis[0].velocity_profile_survey.quality_index
         if sera_site.analysis[0].velocity_s30:
-            Qindex1["velocityS30"] = sera_site.analysis[0].velocity_s30.quality_index.value
+            Qindex1["velocityS30"] = sera_site.analysis[0].velocity_s30.quality_index
     
     quality_index2_sum = 0
     for key in Qindex1:

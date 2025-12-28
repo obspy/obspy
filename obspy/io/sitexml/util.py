@@ -255,6 +255,89 @@ def _add_iterable_property(
 
     return property(getter, setter)
 
+class _EnumList(list):
+    def __init__(self, values, enum_type, attr_name="values"):
+        self._enum_type = enum_type
+        self._attr_name = attr_name
+        super().__init__()
+        self.extend(values)
+
+    def _validate_item(self, value):
+        if value not in self._enum_type:
+            valid_values = [e for e in self._enum_type]
+            raise ValueError(
+                f"Invalid {self._attr_name}: {value}. Expected values from {valid_values}."
+            )
+
+    def append(self, value):
+        self._validate_item(value)
+        super().append(value)
+
+    def extend(self, values):
+        if not isinstance(values, (list, tuple)) or isinstance(values, (str, bytes)):
+            enum_name = getattr(self._enum_type, "__name__", "enum")
+            raise TypeError(
+                f"{self._attr_name} must be a list or tuple of {enum_name} values."
+            )
+        for value in values:
+            self._validate_item(value)
+        super().extend(values)
+
+    def insert(self, index, value):
+        self._validate_item(value)
+        super().insert(index, value)
+
+    def __setitem__(self, index, value):
+        if isinstance(index, slice):
+            if not isinstance(value, (list, tuple)) or isinstance(value, (str, bytes)):
+                enum_name = getattr(self._enum_type, "__name__", "enum")
+                raise TypeError(
+                    f"{self._attr_name} must be a list or tuple of {enum_name} values."
+                )
+            for item in value:
+                self._validate_item(item)
+        else:
+            self._validate_item(value)
+        super().__setitem__(index, value)
+
+    def __iadd__(self, values):
+        self.extend(values)
+        return self
+
+def _validate_enum_list(
+    attr_name,
+    enum_type,
+    iterable_type=list,
+    allow_none=True
+):
+    """
+    Creates a property that validates a list of enum values.
+
+    :param attr_name: name of the attribute
+    :param enum_type: Enum to validate against
+    :param iterable_type: list, tuple, etc.
+    :param allow_none: whether None is allowed
+    """
+    private_name = f"_{attr_name}"
+
+    def getter(self):
+        return getattr(self, private_name)
+
+    def setter(self, values):
+        if values is None:
+            if allow_none:
+                setattr(self, private_name, None)
+                return
+            raise TypeError(f"{attr_name} cannot be None")
+
+        enum_list = _EnumList(values, enum_type, attr_name=attr_name)
+        if iterable_type is list:
+            setattr(self, private_name, enum_list)
+        else:
+            setattr(self, private_name, iterable_type(enum_list))
+
+    return property(getter, setter)
+
 def _validate_list_of_vwu(self, name, value):
     """
     Validates and standardizes a list of ValueWithUncertainty objects.
