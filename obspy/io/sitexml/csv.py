@@ -408,8 +408,8 @@ def _read_site_indicator(df_row, cls, indicator):
         obj = cls()
 
     [obj.literature_source, obj.file_resource] = _read_reference(df_row, indicator)
-    obj.quality_index = _read_quality_index(df_row, indicator)
-
+    obj.quality_index = _read_cell(df_row, indicator+'Qindex1')
+    
     return obj
 
 def _csv_import_velocity_profiles(path, delim='\t'):
@@ -517,17 +517,6 @@ def _read_reference(df_row, indicator):
         file_resource = None
 
     return literature_source, file_resource
-
-def _read_quality_index(df_row, indicator):
-    if _read_cell(df_row, indicator+'Qindex1_value'):
-        if _read_cell(df_row, indicator+'Qindex1_uncertainty'):
-            vwu = ValueWithUncertainty(value = df_row[indicator+'Qindex1_value'],
-                                        uncertainty = df_row[indicator+'Qindex1_uncertainty'])
-        else:
-            vwu = ValueWithUncertainty(value = df_row[indicator+'Qindex1_value'])
-        return vwu
-    else:       
-        return None
 
 def _read_value_with_uncertainty(row, name):
 

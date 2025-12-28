@@ -275,7 +275,7 @@ def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
 				str(site_indicator_obj.value)
 		
 		# Write site indicator quality index
-		_write_value_with_uncertainty(parent, 
+		_write_value(parent, 
 			site_indicator_name + "Qindex1", 
 			site_indicator_obj.quality_index)
 
