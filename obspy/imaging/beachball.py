@@ -69,7 +69,7 @@ def mopad_fallback(func, *args, **kwargs):
 @mopad_fallback
 def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
-          plot_zerotrace=True, zorder=100, axes=None):
+          zorder=100, axes=None, plot_zerotrace=True):
     """
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection).
@@ -106,14 +106,14 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to ``100``.
     :param nofill: Do not fill the beach ball, but only plot the planes.
-    :param plot_zerotrace: If True, ignore the isotropic component. Default
-        is True.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
     :type axes: :class:`matplotlib.axes.Axes`
     :param axes: Used to make beach balls circular on non-scaled axes. Also
         maintains the aspect ratio when resizing the figure. Will not add
         the returned collection to the axes instance.
+    :param plot_zerotrace: If True, ignore the isotropic component. Default
+        is True.
     """
     # check if one or two widths are specified (Circle or Ellipse)
     from matplotlib import collections, transforms
@@ -148,8 +148,8 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
             colors, p = plot_dc(np1, size, xy=xy, width=width)
         else:
             colors, p = plot_mt(t, n, p, size,
-                                plot_zerotrace=plot_zerotrace,
-                                xy=xy, width=width)
+                                xy=xy, width=width,
+                                plot_zerotrace=plot_zerotrace)
             plot_dc_used = False
     else:
         colors, p = plot_dc(np1, size=size, xy=xy, width=width)
@@ -197,8 +197,8 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
 def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
               alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
-              plot_zerotrace=True, zorder=100, outfile=None, format=None,
-              fig=None):
+              zorder=100, outfile=None, format=None, fig=None,
+              plot_zerotrace=True):
     """
     Draws a beach ball diagram of an earthquake focal mechanism.
 
@@ -230,8 +230,6 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to ``100``.
     :param nofill: Do not fill the beach ball, but only plot the planes.
-    :param plot_zerotrace: If True, ignore the isotropic component. Default
-        is True.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
     :param outfile: Output file string. Also used to automatically
@@ -246,6 +244,8 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         Defaults to ``None``.
     :param fig: Give an existing figure instance to plot into. New Figure if
         set to ``None``.
+    :param plot_zerotrace: If True, ignore the isotropic component. Default
+        is True.
     """
     import matplotlib.pyplot as plt
     plot_width = width * 0.95
@@ -286,8 +286,8 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         return fig
 
 
-def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
-            x0=0, y0=0, xy=(0, 0), width=200):
+def plot_mt(T, N, P, size=200, x0=0, y0=0, xy=(0, 0), width=200, # noqa
+            plot_zerotrace=True):
     """
     Uses a principal axis T, N and P to draw a beach ball plot.
 
@@ -295,6 +295,8 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
     :param T: :class:`~PrincipalAxis`
     :param N: :class:`~PrincipalAxis`
     :param P: :class:`~PrincipalAxis`
+    :param plot_zerotrace: If True, ignore the isotropic component. Default
+        is True.
 
     Adapted from ps_tensor / utilmeca.c / `Generic Mapping Tools (GMT)`_.
 
