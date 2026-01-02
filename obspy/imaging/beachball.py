@@ -286,7 +286,7 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         return fig
 
 
-def plot_mt(T, N, P, size=200, plot_zerotrace=True, # noqa
+def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
             x0=0, y0=0, xy=(0, 0), width=200):
     """
     Uses a principal axis T, N and P to draw a beach ball plot.
