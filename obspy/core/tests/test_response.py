@@ -95,6 +95,62 @@ class TestResponse:
                 expected = [seed_response[i_] for i_ in indices]
                 np.testing.assert_allclose(got, expected, rtol=1E-5)
 
+    def test_calculate_normalization_factor(self):
+        """
+        Test calculation of the normalization factor for pole–zero stages given
+        in both radians/second and hertz. Streckeisen STS-1 poles and zeros and
+        baseline values ("A0 normalization") are taken from:
+        https://docs.fdsn.org/projects/stationxml/en/latest/response.html#stage-1-the-analog-sensor
+        """
+        _paz_sts1_kwargs = dict(
+            stage_sequence_number=1,
+            stage_gain=2400,
+            stage_gain_frequency=0.02,
+            input_units='M/S',
+            output_units='V',
+            normalization_frequency=0.02,
+        )
+        # (1) Test for radians/second — use normalization_factor=1.0 (default)
+        paz_sts1_rads = PolesZerosResponseStage(
+            pz_transfer_function_type='LAPLACE (RADIANS/SECOND)',
+            poles=[
+                -0.01234 + 0.01234j,
+                -0.01234 - 0.01234j,
+                -39.18 + 49.12j,
+                -39.18 - 49.12j,
+            ],
+            zeros=[0j, 0j],
+            **_paz_sts1_kwargs,
+        )
+        np.testing.assert_allclose(  # Calculation is run below
+            paz_sts1_rads.calculate_normalization_factor(), 3948.58, rtol=1e-5
+        )
+        # (2) Test for hertz — use normalization_factor=None to calculate it
+        paz_sts1_hz = PolesZerosResponseStage(
+            pz_transfer_function_type='LAPLACE (HERTZ)',
+            poles=[
+                -0.0019639 + 0.0019639j,
+                -0.0019639 - 0.0019639j,
+                -6.2357 + 7.8177j,
+                -6.2357 - 7.8177j,
+            ],
+            zeros=[0j, 0j],
+            normalization_factor=None,  # Calculated at initialization time
+            **_paz_sts1_kwargs,
+        )
+        np.testing.assert_allclose(  # Just accessing the calculated attribute
+            paz_sts1_hz.normalization_factor, 100.01869, rtol=1e-5
+        )
+        # (3) Test for an unsupported transfer function type (use dummy paz)
+        paz_dummy = PolesZerosResponseStage(
+            pz_transfer_function_type='DIGITAL (Z-TRANSFORM)',
+            poles=[],
+            zeros=[],
+            **_paz_sts1_kwargs,
+        )
+        with pytest.raises(NotImplementedError):
+            paz_dummy.calculate_normalization_factor()
+
     def test_pitick2latex(self):
         assert _pitick2latex(3 * pi / 2) == r'$\frac{3\pi}{2}$'
         assert _pitick2latex(2 * pi / 2) == r'$\pi$'
