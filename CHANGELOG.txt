@@ -118,6 +118,10 @@ Changes:
      numpy 2.4.0 deprecation expiration. (see #3668)
    * Add warnings.catch_warnings for spectral_estimation tests, linked to
      a new numpy 2.4.0 deprecation. (see #3668)
+ - obspy.signal.spectral_estimation.PPSD:
+   * performance improvement in __init__: faster frequency array calculation
+     (see #3644)
+
 
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================
