@@ -23,7 +23,7 @@ from obspy.io.seiscomp.core import validate as validate_scxml
 SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12', '0.13']
 
 
-def _read_sc3ml(filename, id_prefix='smi:org.gfz-potsdam.de/geofon/'):
+def _read_sc3ml(filename, id_prefix='smi:org.gfz.de/geofon/'):
     """
     Read a SeisComp XML file and returns a :class:`~obspy.core.event.Catalog`.
 

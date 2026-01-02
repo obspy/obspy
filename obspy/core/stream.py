@@ -1452,7 +1452,7 @@ class Stream(object):
             format_ep = ENTRY_POINTS['waveform_write'][format]
             # search writeFormat method for given entry point
             write_format = buffered_load_entry_point(
-                format_ep.dist.key,
+                format_ep.dist.name,
                 'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
             msg = "Writing format \"%s\" is not supported. Supported types: %s"
