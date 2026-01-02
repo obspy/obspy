@@ -148,8 +148,8 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
             colors, p = plot_dc(np1, size, xy=xy, width=width)
         else:
             colors, p = plot_mt(t, n, p, size,
-                                xy=xy, width=width,
-                                plot_zerotrace=plot_zerotrace)
+                                plot_zerotrace=plot_zerotrace,
+                                xy=xy, width=width)
             plot_dc_used = False
     else:
         colors, p = plot_dc(np1, size=size, xy=xy, width=width)
