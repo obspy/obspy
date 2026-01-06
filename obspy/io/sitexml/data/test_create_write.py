@@ -46,4 +46,4 @@ sera_site.site_characterization = SiteCharacterizationParameters(publicID="SomeI
                                                             velocity_s30=vs30, 
                                                             resonance_frequency=rf, 
                                                             velocity_profile_count=5)
-_write_sitexml(sera_site, "output.xml", validate=False)
+_write_sitexml(sera_site, "output_create.xml", validate=False)

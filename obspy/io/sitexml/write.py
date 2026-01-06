@@ -22,11 +22,10 @@ from obspy.io.sitexml.core import ValueWithUncertainty
 from obspy.io.sitexml.sitexml import validate_sitexml
 
 # Define some constants for writing SiteXML files.
-SCHEMA_VERSION = "1.3.4"
+SCHEMA_VERSION = "1.3"
 NAMESPACE = "http://www.orfeus-eu.org/xml/site/1"
-#READABLE_VERSIONS = ("1.0", "1.1", "1.2")
 
-def _write_sitexml(sera_site, file_or_file_object, validate=False,
+def _write_sitexml(sera_site, file_or_file_object, validate=True,
 					  nsmap=None):
 	"""
 	Writes a sera_site object to a buffer.
@@ -34,10 +33,10 @@ def _write_sitexml(sera_site, file_or_file_object, validate=False,
 	:type sera_site: :class:`~obspy.io.sitexml.core.SERASite`
 	:param sera_site: The sitexml instance to be written.
 	:param file_or_file_object: The file or file-like object to be written to.
-	:type validate: bool
+	:type validate: bool, optional
 	:param validate: If True, the created document will be validated with the
 		SiteXML schema before being written. Useful for debugging or if you
-		don't trust ObsPy. Defaults to False.
+		don't trust ObsPy. Defaults to True.
 	:type nsmap: dict
 	:param nsmap: Additional custom namespace abbreviation
 		mappings (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
@@ -55,10 +54,8 @@ def _write_sitexml(sera_site, file_or_file_object, validate=False,
 	if sera_site.resource_id:
 		attribs["publicID"] = sera_site.resource_id.id
 
-	#site_owner_elem = etree.SubElement(parent, "siteOwner", attribs)
 	root = etree.Element("SERA_quakeml", attribs, nsmap=nsmap)
 	
-	#etree.SubElement(root, "schemaVersion").text = SCHEMA_VERSION
 	if sera_site.created:
 		etree.SubElement(root, "creationTime").text = str(sera_site.created)
 	else:
@@ -75,8 +72,6 @@ def _write_sitexml(sera_site, file_or_file_object, validate=False,
 		_write_site_description(root, sera_site.site_description)
 	if sera_site.analysis:
 		_write_analysis(root, sera_site.analysis)
-
-	#_write_site_characterization(root, sera_site.site_characterization)
 
 	tree = root.getroottree()
 
@@ -193,10 +188,6 @@ def _write_site_description(parent, site_description):
 
 def _write_analysis(parent, analysis_list):
 
-	#attribs = {"publicID": site_characterization.publicID} if site_characterization.publicID else None
-	#site_characterization_elem = etree.SubElement(parent, 
-	#					"siteCharacterizationParameters", attribs)
-	
 	for analysis in analysis_list:
 		
 		attribs = {"publicID": analysis.resource_id} if analysis.resource_id else None

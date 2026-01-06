@@ -162,7 +162,11 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
         return {}
     
     try:
-        df_dict = pd.read_excel(xls, None, dtype={'year': str})
+        conv_dict = {'velocityS30_year': int, 'velocityProfile_year': int,
+                     'resonanceFrequency_year': int, 'siteClassEC8_year': int,
+                     'bedrockDepth_year': int, 'h800_year': int,
+                     'geologicalUnit_year': int}
+        df_dict = pd.read_excel(xls, None, converters=conv_dict)
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
@@ -541,7 +545,7 @@ def _read_site_owner(df):
                 try:
                     setattr(obj, pub_attr, row[pub_attr])
                 except Exception as e:
-                    print(f"Warning: Could not set attribute '{pub_attr}' on {cls.__name__}: {e}")
+                    print(f"Warning: Could not set attribute '{pub_attr}' on SiteOwner: {e}")
     return obj
 
 def _read_cell(df_row, argument, indicator=None):

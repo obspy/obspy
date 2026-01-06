@@ -74,7 +74,7 @@ class ValueWithUncertainty:
             return f"{self.value:.2f}"
 
 class LiteratureSource(ComparingObject):
-    
+    year = _add_property("year", int)
     def __init__(self, title, first_author=None, secondary_authors=None, 
                  year=None, booktitle=None, language=None, doi=None):
         self.title = title

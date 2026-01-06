@@ -26,9 +26,8 @@ from obspy.io.sitexml.core import (SERASite, SERASiteOwner, SiteDescription, Ana
                                    ValueWithUncertainty, LiteratureSource)
 
 # Define some constants for writing SiteXML files.
-SCHEMA_VERSION = "1.3.4"
+SCHEMA_VERSION = "1.3"
 NAMESPACE = "http://www.orfeus-eu.org/xml/site/1"
-#READABLE_VERSIONS = ("1.0", "1.1", "1.2")
 
 def _ns(tagname):
         return "{%s}%s" % (NAMESPACE, tagname)
@@ -109,10 +108,7 @@ def _read_sitexml(path_or_file_object):
         raise Exception(msg)
         
     root = etree.parse(path_or_file_object).getroot()
-    #xmldoc = etree.parse(path_or_file_object)
-
-    #namespace = "http://www.orfeus-eu.org/xml/site/1"
-
+    
     siteID = _attr2obj(root, "publicID", str)
     created = obspy.UTCDateTime(root.find(_ns("creationTime")).text)
 
@@ -738,7 +734,7 @@ def quality_index1(method=None, evaluation=None, reliability=None, completeness=
         C = 0
 
     # D. Completeness of the report. Takes three values:
-    #       1   - Yes: A well-documented report for the specific 1 indicator is present
+    #       1   - Yes: A well-documented report for the specific indicator is present
     #       0.5 - Partial: A report associated to a site is present, but the information 
     #               is partial and not very detailed
     #       0   - No: The value is provided without any documentation
