@@ -6,6 +6,7 @@ The obspy.io.kinemetrics.core test suite.
 import io
 
 import numpy as np
+import warnings
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
@@ -59,7 +60,7 @@ class TestCore():
             # The is_evt() method should not change the file pointer.
             assert buf.tell() == 0
 
-    def test_read_via_obspy(self, testdata):
+    def test_read_via_obspy1(self, testdata):
         """
         Read files via obspy.core.stream.read function.
         """
@@ -78,14 +79,20 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.1694431304931641e-06
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
-        # 2
+    def test_read_via_obspy2(self, testdata):
+        """
+        Read files via obspy.core.stream.read function.
+        """
         filename = testdata['BX456_MOLA-02351.evt']
-        st = read(filename, apply_calib=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            st = read(filename, apply_calib=True)
         st.verify()
         assert len(st) == 6
         assert st[0].stats.starttime == \
@@ -104,8 +111,9 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
+        assert st[0].stats.calib == 1.170754369670621e-06
 
-    def test_reading_via_obspy_and_bytesio(self, testdata):
+    def test_read_via_obspy_and_bytesio1(self, testdata):
         """
         Test the reading of Evt files from BytesIO objects.
         """
@@ -127,17 +135,24 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.1694431304931641e-06
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
+    def test_read_via_obspy_and_bytesio2(self, testdata):
+        """
+        Test the reading of Evt files from BytesIO objects.
+        """
         # 2
         filename = testdata['BX456_MOLA-02351.evt']
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
-        st = read(buf, apply_calib=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            st = read(buf, apply_calib=True)
         st.verify()
         assert len(st) == 6
         assert st[0].stats.starttime == \
@@ -156,8 +171,9 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
+        assert st[0].stats.calib == 1.170754369670621e-06
 
-    def test_read_via_module(self, testdata):
+    def test_read_via_module1(self, testdata):
         """
         Read files via obspy.io.kinemetrics.core.read_evt function.
         """
@@ -176,14 +192,20 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.0
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
         self.verify_data_evt2(st[2].data)
 
-        # 2
+    def test_read_via_module2(self, testdata):
+        """
+        Read files via obspy.io.kinemetrics.core.read_evt function.
+        """
         filename = testdata['BX456_MOLA-02351.evt']
-        st = read_evt(filename, apply_calib=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            st = read_evt(filename, apply_calib=True)
         st.verify()
         assert len(st) == 6
         assert st[0].stats.starttime == \
@@ -226,6 +248,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.0
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0(st[0].data)
@@ -236,7 +259,9 @@ class TestCore():
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
         buf.seek(0, 0)
-        st = read_evt(buf, apply_calib=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            st = read_evt(buf, apply_calib=True)
         st.verify()
         assert len(st) == 6
         assert st[0].stats.starttime == \
@@ -255,6 +280,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
+        assert st[0].stats.calib == 1.0
 
     def verify_stats_evt(self, evt_stats):
         dico = {'chan_fullscale': 2.5, 'chan_sensorgain': 1,
@@ -267,7 +293,8 @@ class TestCore():
         for key in dico:
             assert round(abs(dico[key]-evt_stats[key]), 6) == 0
 
-        assert UTCDateTime(2013, 8, 15, 9, 20, 28) == evt_stats['starttime']
+        assert (UTCDateTime(2013, 8, 15, 9, 20, 28) ==
+                UTCDateTime(evt_stats['starttime']))
 
     def verify_data_evt0(self, data):
         valuesdeb = np.array([-2.4464752525e-002, -2.4534918368e-002,
@@ -330,6 +357,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
+        assert st[0].stats.calib == 1.1694431304931641e-06
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
         self.verify_data_evt0_raw(st[0].data)

@@ -76,7 +76,7 @@ class EvtVirtual(object):
             except IndexError:
                 pass
 
-    def set_dict(self, val, offset=0):
+    def set_dict(self, val, offset=0, offset_max=None):
         """
         fill the dictionary with values found in the input 'val' list
             the nth value in val is placed in the dictionary if a key
@@ -90,9 +90,13 @@ class EvtVirtual(object):
         """
         if not isinstance(val, tuple):
             raise TypeError("set_dict() expects a tuple")
+        if offset_max:
+            items = offset_max - offset + 1
+        else:
+            items = len(val)
         for key in self.HEADER:
             index = self.HEADER[key][0] - offset
-            if 0 <= index < len(val):
+            if 0 <= index < items:
                 if self.HEADER[key][1] != "":
                     fct = self.HEADER[key][1][0]
                     param = self.HEADER[key][1][1]
@@ -131,7 +135,7 @@ class EvtVirtual(object):
             frame_milli = 0
         frame_time += 315532800  # diff between 1970/1/1 and 1980/1/1
         time = UTCDateTime(frame_time) + frame_milli / 1000.0
-        return UTCDateTime(ns=time.ns)
+        return UTCDateTime(ns=time.ns, precision=3)
 
     def _strnull(self, strn,
                  unused_param=None, unused_val=None, unused_offset=None):
@@ -145,7 +149,7 @@ class EvtVirtual(object):
         :param offset: not used
         :rtype: str
         """
-        return strn.split(b"\0", 1)[0].decode()
+        return strn.rstrip(b'\0').replace(b"\0", b" ").decode()
 
     def _array(self, unused_firstval, param, val, offset):
         """
@@ -190,18 +194,17 @@ class EvtVirtual(object):
             ret.append(mystr)
         return ret
 
-    def _instrument(self, code, unused_param, unused_val, unused_offset):
+    def _gpsstatus(self, value, unused_a, unused_b, unused_c):
         """
-        change instrument type code to name
-        :param code: code to convert
-        :param param: not used
-        :param val: not used
-        :param offset: not used
-        :rtype: str
+        Transform bitarray for gpsstatus in human readable string
+
+        :param value: gps status
+        :rtype: string
         """
-        dico = {0: 'QDR', 9: 'K2', 10: 'Makalu', 20: 'New Etna',
-                30: 'Rock', 40: 'SSA2EVT'}
-        if code in dico:
-            return dico[code]
-        else:
-            raise EvtBadHeaderError("Bad Instrument Code")
+        dico = {1: 'Checking', 2: 'Present', 4: 'Error', 8: 'Failed',
+                16: 'Not Locked', 32: 'ON'}
+        retval = ""
+        for key in sorted(dico):
+            if value & key:
+                retval += dico[key] + " "
+        return retval
