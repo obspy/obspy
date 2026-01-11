@@ -24,9 +24,9 @@ from obspy.io.sitexml.core import (SERASite, SiteDescription, SERASiteOwner, Ana
                                    EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency, 
                                    VelocityS30, VelocityProfile, VelocityProfileData, 
                                    VelocityProfileSurvey, LiteratureSource, ValueWithUncertainty)
-from obspy.io.sitexml.write import _write_sitexml
+from obspy.io.sitexml.write import write_sitexml
 
-def csv_to_sitexml(sera_site_dict, output_folder="."):
+def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     """
     Exports a dictionary of SERAsite objects to the respective SiteXML files. 
     The files are written to a folder given with argument "output_folder".
@@ -48,7 +48,7 @@ def csv_to_sitexml(sera_site_dict, output_folder="."):
             print("Creating SiteXMl for site: ", sera_site.resource_id.id)
             filename = re.sub(r"[^A-Za-z0-9]+", "_", sera_site.resource_id.id).strip("_")
             output_file = output_folder + "/" + filename + ".xml"
-        _write_sitexml(sera_site, output_file, validate=True)
+        write_sitexml(sera_site, output_file, validate=True)
 
 def csv_to_sera_site(site_owner_csv,
                      site_description_csv, 
@@ -96,7 +96,7 @@ def csv_to_sera_site(site_owner_csv,
         df_site_owner = pd.read_csv(site_owner_csv, sep=delim)
         df_site_description = pd.read_csv(site_description_csv, sep=delim)
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error reading site_owner or site_description CSV files: {e}")
         sys.exit(1)
     
     # Try to read the analysis metadata if a csv is provided.
@@ -168,7 +168,7 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
                      'geologicalUnit_year': int}
         df_dict = pd.read_excel(xls, None, converters=conv_dict)
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error reading input excel file with site metadata: {e}")
         sys.exit(1)
 
     if not all(k in df_dict for k in ("siteOwner", "siteDescription")):
@@ -406,6 +406,7 @@ def _read_site_indicator(df_row, cls, indicator):
             obj.manual_quality_index = _read_cell(df_row, 'velocityS30ManualIndex')
         
         if indicator == "geologicalUnit":
+            obj.value = obj.value[0:255]
             obj.geological_map_scale = _read_cell(df_row, 'geologicalMapScale')
             obj.geological_unit_OGE = _read_cell(df_row, 'geologicalUnitOGE')
     else:
