@@ -14,12 +14,10 @@ from obspy.core.util.base import ComparingObject
 from obspy.core.event import ResourceIdentifier
 from obspy.core.inventory.util import (Latitude, Longitude, Distance, ExternalReference)
 from obspy.io.sitexml.util import (TopographySchemaA, TopographySchemaB, EC8Class, 
-                                    ResonanceFrequencyMethod, VelocityS30Method,
-                                _pretty_str, _add_property, _enum_property, _add_iterable_property,
-                                _validate_enum_list)
-
-# Update Site indicator so that some indicatos have a simple / str value
-# and others have valuewithuncertainty
+                                ResonanceFrequencyMethod, VelocityS30Method,
+                                Vs30MethodCombined, Vs30ManualIndex,
+                                _pretty_str, _add_property, _enum_property, 
+                                _add_iterable_property, _validate_enum_list)
 
 class ValueWithUncertainty:
     def __init__(self, value, uncertainty=None, valid_type=float):
@@ -258,9 +256,11 @@ class ResonanceFrequency(SiteIndicator):
 class VelocityS30(SiteIndicator):
     value = _add_property("value", ValueWithUncertainty)
     methods = _validate_enum_list("methods", VelocityS30Method)
+    method_combined_qindex = _enum_property("velocityS30MethodCombIndex", Vs30MethodCombined)
+    manual_qindex = _enum_property("velocityS30ManualIndex", Vs30ManualIndex)
     
     def __init__(self, value, quality_index=None, methods=None,
-                 method_combined_quality_index=None, manual_quality_index=None, 
+                 method_combined_qindex=None, manual_qindex=None, 
                  literature_source=None, file_resource=None):
         """
         :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required.         
@@ -270,18 +270,20 @@ class VelocityS30(SiteIndicator):
             Calculated according to the guidelines of the SERA D7.2 Deliverable.
         :type methods: List of Enum type :class:`~obspy.io.sitexml.util.VelocityS30Method`
         :param methods: Methods used for the estimation of Velocity S30
-        :type method_combined_quality_index: float
-        :param method_combined_quality_index: 
-        :type manual_quality_index: float
-        :param manual_quality_index: 
+        :type method_combined_qindex: Enum of type :class:`~obspy.io.sitexml.util.Vs30MethodCombined`, optional
+        :param method_combined_qindex: Carries the information on whether a combination of 
+            two or more methodshas been applied to estimate the Vs30 value.
+        :type manual_qindex: Enum of type :class:`~obspy.io.sitexml.util.Vs30ManualIndex`, optional
+        :param manual_qindex: Overall qualitative factor on the knowledge of the 
+            maximum depth of Vs measurements
         :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
         :param literature_source: The literature source related with the provided site indicator value
         :type file_resource: :class:`~obspy.core.inventory.util.ExternalReference` ????
         :param file_resource: A public URL for the literature_source
         """
 
-        self.method_combined_quality_index = method_combined_quality_index
-        self.manual_quality_index = manual_quality_index
+        self.method_combined_qindex = method_combined_qindex
+        self.manual_qindex = manual_qindex
         super(VelocityS30, self).__init__(
             name="velocityS30", 
             value=value, 
@@ -491,7 +493,8 @@ class SiteDescription(ComparingObject):
                  min_distance_from_station=None, max_distance_from_station=None, 
                  ec8=None, bedrock_depth=None, h800=None, geological_unit=None, 
                  morphology=None, topographyA=None, topographyB=None, 
-                 preferred_site_analysisID=None, preferred_velocity_profileID=None):
+                 preferred_site_analysisID=None, preferred_velocity_profileID=None,
+                 overall_quality_index=None):
         """
         :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
         :param resource_id: Unique Site Description Resource ID
@@ -536,6 +539,9 @@ class SiteDescription(ComparingObject):
         :type preferred_velocity_profileID: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
         :param preferred_velocity_profileID: Preferred Velocity Profile ID. If you provide one or more
                 velocity profiles for this site you should use this field to designate the prefered VP.
+        :type overall_quality_index: float, optional.
+        :param overall_quality_index: The overall quality index of the site 
+                            characterization parameters.
         """
 
         self.resource_id = resource_id
@@ -557,6 +563,8 @@ class SiteDescription(ComparingObject):
 
         self.preferred_site_analysisID = preferred_site_analysisID
         self.preferred_velocity_profileID = preferred_velocity_profileID
+
+        self.overall_quality_index = overall_quality_index
     
     def __str__(self):
         ret = ("Site Description parameters:\n"
@@ -627,7 +635,8 @@ class Analysis(ComparingObject):
         :param borehole_logs_count: Number of available borehole log profile(s). 
        """
         self.resource_id = resource_id        
-        self.site_descriptionID = site_descriptionID   
+        self.site_descriptionID = site_descriptionID
+        self.creation_date = creation_date
         self.resonance_frequency = resonance_frequency
         self.velocity_s30 = velocity_s30
         self.velocity_profile_count = velocity_profile_count
@@ -640,6 +649,7 @@ class Analysis(ComparingObject):
         ret = ("Analysis:\n"
                "\tResource ID: {analysis_id},\n"
                "\tSite Description ID: {sd_id},\n"
+               "\tCreation Date: {dt},\n"
                "\tResonance Frequency: {rfreq},\n"
                "\tVelocity S30: {vs30},\n"
                "\tVelocity Profiles count: {vp_count},\n"
@@ -649,6 +659,7 @@ class Analysis(ComparingObject):
         ret = ret.format(
             analysis_id = self.resource_id, 
             sd_id = self.site_descriptionID,
+            dt = self.creation_date,
             rfreq = self.resonance_frequency.value if self.resonance_frequency else "None",
             vs30 = self.velocity_s30.value if self.velocity_s30 else "None",
             vp_count = self.velocity_profile_count, 
@@ -668,8 +679,7 @@ class SERASite(ComparingObject):
     resource_id = _add_property("resource_id", ResourceIdentifier)
     
     def __init__(self, resource_id, site_owner, site_description, 
-                 analysis=None, overall_quality_index=None, 
-                 created=None, external_references=None):
+                 analysis=None, created=None, external_references=None):
         """
         :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
         :param resource_id: SERA SiteXML Unique Identifier (siteID).
@@ -681,9 +691,6 @@ class SERASite(ComparingObject):
         :type analysis: list of :class:`~obspy.io.sitexml.core.Analysis`, optional.
         :param analysis: The site characterization parameters 
                             (VS30, resonance frequency, velocity profiles).
-        :type overall_quality_index: float, optional.
-        :param overall_quality_index: The overall quality index of the site 
-                            characterization parameters.
         :type created: :class:`~obspy.UTCDateTime`
         :param created: DateTime the SiteXML file was generated
         :type external_references: List of :class:`~obspy.core.inventory.util.ExternalReference`, optional.
@@ -695,8 +702,6 @@ class SERASite(ComparingObject):
         self.analysis = analysis
         self.created = created
         self.external_references = external_references
-        # TO CHECK: If this one is calculated it should be removed from the parameters 
-        self.overall_quality_index = overall_quality_index
     
         """
         # From ObsPy event for resource id
