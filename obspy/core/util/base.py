@@ -45,7 +45,7 @@ DEFAULT_MODULES = ['clients.filesystem', 'core', 'geodetics', 'imaging',
                    'io.segy', 'io.seisan', 'io.sh', 'io.shapefile',
                    'io.seiscomp', 'io.stationtxt', 'io.stationxml', 'io.wav',
                    'io.win', 'io.xseed', 'io.y', 'io.zmap', 'realtime',
-                   'scripts', 'signal', 'taup']
+                   'scripts', 'signal', 'taup', 'io.sitexml']
 NETWORK_MODULES = ['clients.earthworm', 'clients.fdsn',
                    'clients.iris', 'clients.neic', 'clients.nrl',
                    'clients.seedlink', 'clients.syngine']
