@@ -161,6 +161,40 @@ Allowed values are:
 * ``"DH Strong Motion Arrays"``
 """
 
+Vs30MethodCombined = Enum([
+    "1.0",
+    "1.2",
+])
+"""
+Carries the information on whether a combination of two methods or more has been applied 
+to estimate the Vs30 value. It is used for the estimation of the Vs30 quality index.
+Allowed values are: 
+
+1.0 : if only one method has been used to estimate the Vs30 value
+1.2 : if a combination of two or more methods has been applied to estimate the Vs30 value
+
+* ``"1.0"``
+* ``"1.2"``
+"""
+
+Vs30ManualIndex = Enum([
+    "0.2",
+    "0.4",
+    "0.8",
+    "1.0",
+])
+"""
+Overall qualitative factor on the knowledge of the maximum depth of Vs measurements, 
+which is most commonly related to the depth the EC8 engineering bedrock (Vs≥800 m/s). 
+The reasoning for introducing this index and description of its values is provided in 
+SERA Deliverable 7.1, Appendix III.
+
+* ``"0.2"``
+* ``"0.4"``
+* ``"0.8"``
+* ``"1.0"``
+"""
+
 def _pretty_str(obj):
     return ", ".join(
         f"{key}='{value}'" for key, value in vars(obj).items() 
