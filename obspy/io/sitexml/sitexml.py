@@ -50,9 +50,46 @@ def _get_version_from_xmldoc(xmldoc):
         return None
     return version
 
+def _is_sitexml(path_or_file_object):
+    """
+    Simple function checking if the passed object contains a valid SiteXML
+    file. Returns True of False.
+
+    The test is not exhaustive - 
+    it only checks the root tag and the schema version. 
+
+    :param path_or_file_object: File name or file like object.
+    """
+    if hasattr(path_or_file_object, "tell") and hasattr(path_or_file_object,
+                                                        "seek"):
+        current_position = path_or_file_object.tell()
+
+    try:
+        if isinstance(path_or_file_object, etree._Element):
+            xmldoc = path_or_file_object
+        else:
+            try:
+                xmldoc = etree.parse(path_or_file_object)
+            except etree.XMLSyntaxError:
+                return False
+        version = _get_version_from_xmldoc(xmldoc)
+        if version is None:
+            return False
+        if version != SCHEMA_VERSION:
+            warnings.warn("The SiteXML file has version %s, ObsPy can "
+                          "read version (%s)." % (
+                              version, ", ".join(SCHEMA_VERSION)))
+        return True
+    finally:
+        # Make sure to reset file pointer position.
+        try:
+            path_or_file_object.seek(current_position, 0)
+        except Exception:
+            pass
+
 def validate_sitexml(path_or_object):
     """
-    Checks if the given path is a valid StationXML file.
+    Checks if the given path is a valid SiteXML file.
 
     Returns a tuple. The first item is a boolean describing if the validation
     was successful or not. The second item is a list of all found validation
@@ -69,7 +106,6 @@ def validate_sitexml(path_or_object):
         except etree.XMLSyntaxError:
             return (False, ("Not a XML file.",))
     version = _get_version_from_xmldoc(xmldoc)
-    print(version)
 
     # Get the schema location.
     schema_location = Path(inspect.getfile(inspect.currentframe())).parent
@@ -89,7 +125,7 @@ def validate_sitexml(path_or_object):
         return (False, xmlschema.error_log)
     return (True, ())
 
-def _read_sitexml(path_or_file_object):
+def read_sitexml(path_or_file_object):
     """
     Function reading a SiteXML file.
 
@@ -99,7 +135,7 @@ def _read_sitexml(path_or_file_object):
     At least site owener and site description metadata should be present in XMl file 
     in order to create the SERASite object.
     """
-    print(path_or_file_object)
+    #print(path_or_file_object)
     validates, errors = validate_sitexml(path_or_file_object)
     if validates is False:
         msg = "The provided SiteXML file fails to validate against the schema.\n"
@@ -122,21 +158,26 @@ def _read_sitexml(path_or_file_object):
         site_description = _read_site_description(
             site_description_element)
     
+    # Only create the SERA_Site object if both 
+    # site_owner and site_description exists
+    #
+    if site_owner and site_description:
+        sera_site = SERASite(site_owner = site_owner, 
+                         site_description = site_description, 
+                         resource_id = siteID,
+                         created = created)
+    else:
+        print("Error: Missing site owner and/or site description in provided siteXML file")
+        return None
+    
+    # Analysis element is optional
+    #
     analysis_element_list = root.findall(_ns("analysis"))
     if len(analysis_element_list) != 0:
         analysis = []
         for analysis_element in analysis_element_list:
             analysis.append(_read_analysis(analysis_element))
-    
-    if site_owner and site_description:
-        sera_site = SERASite(site_owner = site_owner, 
-                         site_description = site_description, 
-                         resource_id = siteID,
-                         analysis = analysis,
-                         created = created)
-    else:
-        print("Error: Missing site owner and/or site description in provided siteXML file")
-        return None
+        sera_site.analysis = analysis
         
     # Read External References
     #
@@ -217,11 +258,6 @@ def _read_site_owner(owner_element):
     site_owner.institution_phone = _tag2obj(institution_element, _ns("phone"), str)
     site_owner.institution_homepage = _tag2obj(institution_element, _ns("homepage"), str)
 
-    #identifier_element = institution_element.find(_ns("identifier"))
-    #site_owner.institutionID = _tag2obj(identifier_element, _ns("resourceID"), str) 
-    #resourceID_element = identifier_element.find(_ns("identifier"))
-    #site_owner.institutionID = institutionID,
-
     # Read postalAddress element
     postal_address_element = institution_element.find(_ns("postalAddress"))
     if postal_address_element is None:
@@ -265,7 +301,6 @@ def _read_site_description(site_description_element):
     #
     # Add checks for all resource IDs that are mandatory
     #
-
     resource_id = _attr2obj(site_description_element, "publicID", str) 
     station_code = _tag2obj(site_description_element, _ns("station"), str)
     
@@ -304,10 +339,10 @@ def _read_site_description(site_description_element):
         _tag2obj(site_description_element, _ns("preferredSiteAnalysisID"), str)
     site_description.preferred_velocity_profileID = \
         _tag2obj(site_description_element, _ns("preferredVelocityProfileID"), str)
-
-    # 
-    # TODOs:  Qindex
-    # site_description.overall_qindex = _read_value(site_description_element, "OverallQindex", float)
+ 
+    # Overall Quality Index
+    site_description.overall_quality_index = \
+        _read_value(site_description_element, "overallQindex", float)
     # Comments
     #
     return site_description
@@ -400,6 +435,7 @@ def _read_analysis(analysis_element):
 
     - Analysis [List]
         - PublicID (attr)
+        - creationTime
         - resonanceFrequency, resonanceFrequencyQIndex1, 
         - resonanceFrequencyReference, resonanceFrequencyMethod
         - velocityS30, velocityS30Qindex1, velocityS30Reference, 
@@ -427,6 +463,10 @@ def _read_analysis(analysis_element):
     analysis_obj.resource_id = _attr2obj(analysis_element, "publicID", str)
     analysis_obj.site_descriptionID = _tag2obj(analysis_element, _ns("siteDescriptionID"), str)
 
+    if not analysis_obj.resource_id or not analysis_obj.site_descriptionID:
+        return None
+    
+    analysis_obj.creation_date = obspy.UTCDateTime(analysis_element.find(_ns("creationTime")).text)
     # Resonance Frequency 
     rfreq_value = _read_value_with_uncertainty(
         analysis_element, "resonanceFrequency", float)
@@ -460,8 +500,8 @@ def _read_analysis(analysis_element):
                 value = vs30_value,
                 quality_index = vs30_qindex,
                 methods = vs30_methods,
-                method_combined_quality_index = vs30_methods_index,
-                manual_quality_index = vs30_manual_index,
+                method_combined_qindex = vs30_methods_index,
+                manual_qindex = vs30_manual_index,
                 literature_source = vs30_literature_source,
                 file_resource = vs30_file_resource)
 
