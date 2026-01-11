@@ -130,7 +130,7 @@
 		</xs:annotation>
 		<xs:sequence>
 			<xs:element name="person" type="PersonType"/>
-			<xs:element name="affiliation" type="AffiliationType"/>
+			<xs:element name="affiliation" type="AffiliationType" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -200,7 +200,7 @@
 		</xs:annotation>
 		<xs:sequence>
 			<xs:element name="name" type="xs:string"/>
-			<xs:element name="mbox" type="EmailType" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="mbox" type="EmailType"/>
 			<xs:element name="phone" type="xs:string" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="homepage" type="xs:anyURI" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="postalAddress" type="PostalAddressType" minOccurs="0" maxOccurs="1"/>
@@ -476,7 +476,7 @@
 	<!-- Site Analysis Type Definitions -->
 	<xs:complexType name="AnalysisType">
 		<xs:sequence>
-			<xs:element name="siteDescriptionID" type="ResourceIdentifier"> <!-- mandatory -->
+			<xs:element name="siteDescriptionID" type="ResourceIdentifier"> <!-- required -->
 				<xs:annotation>
 					<xs:documentation>The Site Description this Analysis object refers to.<br/>
 					<strong>Example: </strong>quakeml:isterre.fr/site_description/001</xs:documentation>
