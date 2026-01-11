@@ -1,0 +1,308 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Test suite for the StationXML reader and writer.
+
+:copyright:
+    Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
+"""
+import io
+import re
+import obspy
+from obspy.io.sitexml.sitexml import (_is_sitexml, read_sitexml)
+from obspy.io.sitexml.write import write_sitexml
+
+class TestSiteXML():
+    """
+    """
+    def _assert_station_xml_equality(self, xml_file_buffer,
+                                     expected_xml_file_buffer):
+        """
+        Helper function comparing two BytesIO buffers contain SiteXML
+        files.
+        """
+        new_lines = [_i.decode('utf-8').strip().replace("'", '"')
+                     for _i in xml_file_buffer.read().splitlines()]
+        org_lines = [_i.decode('utf-8').strip().replace("'", '"')
+                     for _i in expected_xml_file_buffer.read().splitlines()]
+
+        # Remove the module lines from the original file.
+        #org_lines = [_i.strip() for _i in org_lines
+        #             if not _i.strip().startswith("<!--")]
+
+        for new_line, org_line in zip(new_lines, org_lines):
+            regex = "<(.*?) (.*?)/?>"
+
+            def callback(pattern):
+                part2 = " ".join(sorted(pattern.group(2).split(" ")))
+                return "<%s %s>" % (pattern.group(1), part2)
+
+            # resort attributes alphabetically
+            org_line = re.sub(regex, callback, org_line, count=1)
+            new_line = re.sub(regex, callback, new_line, count=1)
+            assert org_line == new_line
+
+        # Assert the line length at the end to find trailing non-equal lines.
+        # If it is done before the line comparison it is oftentimes not very
+        # helpful as you do not know which line is missing.
+        assert len(new_lines) == len(org_lines)
+
+    #def test_where(datapath, testdata):
+    #    print("datapath =", datapath)
+    #    print("testdata minimal =", testdata.get("simple_sitexml.xml"))
+
+    def test_is_sitexml(self, testdata, datapath):
+        """
+        Tests the _is_sitexml() function.
+        """
+        # Check positives.
+        sitexmls = [testdata["full_sitexml.xml"]]
+        for stat in sitexmls:
+            assert _is_sitexml(stat)
+        
+        # Check some negatives.
+        not_sitexmls = [
+            "wrong_sitexml.xml", "input_csv/site_description.csv",
+            "input_excel/sera_site_all.xlsx"]
+        not_sitexmls = [datapath / name
+                           for name in not_sitexmls]
+        for stat in not_sitexmls:
+            assert not _is_sitexml(stat)
+    
+    def test_read_and_write_minimal_file(self, testdata):
+        """
+        Test that reading and writing of a minimal SiteXML document, 
+        with the least possible tags, works.
+        """
+        filename = testdata["minimal_sitexml.xml"]
+        sera_site = read_sitexml(filename)
+
+        # Write it again. Also validate it to get more confidence.
+        file_buffer = io.BytesIO()
+
+        write_sitexml(sera_site, file_buffer, validate=True)
+        file_buffer.seek(0, 0)
+
+        with open(filename, "rb") as open_file:
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
+
+        self._assert_station_xml_equality(file_buffer,
+                                          expected_xml_file_buffer)
+        
+    def test_read_and_write_full_file(self, testdata):
+        """
+        Test that reading and writing of a full SiteXML document with all
+        possible tags works.
+        """
+        filename = testdata["minimal_sitexml.xml"]
+        sera_site = read_sitexml(filename)
+
+        # Write it again. Also validate it to get more confidence.
+        file_buffer = io.BytesIO()
+
+        write_sitexml(sera_site, file_buffer, validate=True)
+        file_buffer.seek(0, 0)
+
+        with open(filename, "rb") as open_file:
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
+
+        self._assert_station_xml_equality(file_buffer,
+                                          expected_xml_file_buffer)
+        
+    def test_reading_and_writing_full_siteowner_tag(self, testdata):
+        """
+        Tests reading and writing a full SiteXML <siteOwner> tag.
+        """
+        filename = testdata["full_siteowner.xml"]
+        sera_site = read_sitexml(filename)
+
+        assert sera_site.site_owner.owner_codename == "SITEOWNER"
+        assert sera_site.site_owner.owner_fullname == "Site Owner Full Name"
+        assert sera_site.site_owner.ownerID == "quakeml:domain/siteOwner/001"
+
+        assert sera_site.site_owner.personID == "quakeml:domain/person/001"
+        assert sera_site.site_owner.person_firstname == "Name"
+        assert sera_site.site_owner.person_lastname == "Surname"
+        assert sera_site.site_owner.person_mbox == "someemail@domain.ab"
+        assert sera_site.site_owner.person_homepage == "https://www.domain.ab/person"
+
+        assert sera_site.site_owner.institutionID == "quakeml:domain/institution/1001"
+        assert sera_site.site_owner.institution_name == "INSTITUTION_ABBR"
+        assert sera_site.site_owner.institution_mbox == "info@domain.ab"
+        assert sera_site.site_owner.institution_phone == "+30 123 456789"
+        assert sera_site.site_owner.institution_homepage == "http://www.domain.ab"
+
+        assert sera_site.site_owner.affiliation_department == "Seismology"
+        assert sera_site.site_owner.affiliation_function == "Senior researcher"
+
+        assert sera_site.site_owner.address_street == "Some streetAddress"
+        assert sera_site.site_owner.address_locality == "City" 
+        assert sera_site.site_owner.address_postal_code == "12345"
+    
+        assert sera_site.site_owner.address_country == "Somecountry" 
+        assert sera_site.site_owner.address_country_code == "AB" 
+
+        # Write it again and compare the two files.
+        file_buffer = io.BytesIO()
+        write_sitexml(sera_site, file_buffer, validate=True)
+        file_buffer.seek(0, 0)
+
+        with open(filename, "rb") as open_file:
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
+
+        self._assert_station_xml_equality(
+            file_buffer, expected_xml_file_buffer)
+        
+    def test_reading_and_writing_full_sitedescription_tag(self, testdata):
+        """
+        Tests reading and writing a full SiteXML <siteDescription> tag.
+        """
+        filename = testdata["full_sitedescription.xml"]
+        sera_site = read_sitexml(filename)
+
+        assert sera_site.site_description is not None
+        assert sera_site.site_description.resource_id == "quakeml:domain.ab/site_description/001"
+        assert sera_site.site_description.station_code == "ABCD"
+        assert sera_site.site_description.latitude == 45.137174
+        assert sera_site.site_description.longitude == 5.998905
+
+        assert sera_site.site_description.altitude == 239.0
+        assert sera_site.site_description.min_distance_from_station == 10.3
+        assert sera_site.site_description.max_distance_from_station == 10.3
+
+        assert sera_site.site_description.topographyA == "T1"
+        assert sera_site.site_description.topographyB == "Valley"
+        assert sera_site.site_description.morphology == "Plain"
+
+        assert sera_site.site_description.ec8 is not None
+        assert sera_site.site_description.ec8.value == "C"
+        assert sera_site.site_description.ec8.quality_index == 1.0
+
+        assert sera_site.site_description.ec8.literature_source is not None
+        ls = sera_site.site_description.ec8.literature_source
+        assert ls.title == "Some title"
+        assert ls.first_author == "Author A."
+        assert ls.secondary_authors == "Author B., Author C."
+        assert ls.year == 2018
+        assert ls.booktitle == "Some magazine"
+        assert ls.doi == "10.1007/s10518-017-0135-5"
+        assert ls.language == "en"
+
+        assert sera_site.site_description.ec8.file_resource is not None
+        fr = sera_site.site_description.ec8.file_resource
+        assert fr.uri == "https://doi.org/10.1007/s10518-017-0135-5/"
+        assert fr.description == "paper"
+
+        assert sera_site.site_description.bedrock_depth is not None
+        assert sera_site.site_description.bedrock_depth.value.value == 774.6218
+        assert sera_site.site_description.bedrock_depth.value.uncertainty == 107.8669
+        assert sera_site.site_description.bedrock_depth.quality_index == 0.5
+
+        assert sera_site.site_description.h800 is not None
+        assert sera_site.site_description.h800.value.value == 94.0736
+        assert sera_site.site_description.h800.value.uncertainty == 15.5748
+        assert sera_site.site_description.h800.quality_index == 0.43
+
+        assert sera_site.site_description.geological_unit is not None
+        assert sera_site.site_description.geological_unit.value == "Some geology"
+        assert sera_site.site_description.geological_unit.quality_index == 0.25
+        assert sera_site.site_description.geological_unit.geological_map_scale == "1:50000"
+        assert sera_site.site_description.geological_unit.geological_unit_OGE == "Some description"
+        
+        # Write it again and compare the two files.
+        file_buffer = io.BytesIO()
+        write_sitexml(sera_site, file_buffer, validate=True)
+        file_buffer.seek(0, 0)
+
+        with open(filename, "rb") as open_file:
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
+
+        self._assert_station_xml_equality(
+            file_buffer, expected_xml_file_buffer)
+
+    def test_reading_and_writing_full_analysis_tag(self, testdata):
+        """
+        Tests reading and writing a full SiteXML <analysis> tag.
+        """
+        filename = testdata["full_analysis.xml"]
+        sera_site = read_sitexml(filename)
+
+        assert sera_site.site_description.preferred_site_analysisID == \
+            "quakeml:domain.ab/analysis/001"
+
+        assert len(sera_site.analysis) == 1
+        analysis = sera_site.analysis[0]
+        assert analysis.resource_id == "quakeml:domain.ab/analysis/001"
+        assert analysis.site_descriptionID == "quakeml:domain.ab/site_description/001"
+        assert analysis.creation_date == obspy.UTCDateTime(2015, 11, 10)
+        assert analysis.spt_logs_count == 2
+        assert analysis.cpt_logs_count == 0
+        assert analysis.borehole_logs_count == 0
+        assert analysis.velocity_profile_count == 2
+
+        assert analysis.resonance_frequency is not None
+        f0 = analysis.resonance_frequency
+        assert f0.value.value == 4.9962
+        assert f0.value.uncertainty == 0.3494
+        assert f0.quality_index == 0.8
+        assert len(f0.methods) == 2
+        assert f0.methods[0] == "HVSR EARTHQUAKE RECORDS"
+        assert f0.methods[1] == "SSR EARTHQUAKE RECORDS"
+
+        assert f0.literature_source is not None
+        ls = f0.literature_source
+        assert ls.title == "Some title"
+        assert ls.first_author == "Author A."
+        assert ls.secondary_authors == "Author B., Author C."
+        assert ls.year == 2018
+        assert ls.booktitle == "Some magazine"
+        assert ls.doi == "10.1007/s10518-017-0135-5"
+        assert ls.language == "en"
+
+        assert f0.file_resource is not None
+        fr = f0.file_resource
+        assert fr.uri == "https://doi.org/10.1007/s10518-017-0135-5/"
+        assert fr.description == "paper"
+
+        assert analysis.velocity_s30 is not None
+        vs30 = analysis.velocity_s30
+        assert vs30.value.value == 221.5954
+        assert vs30.value.uncertainty == 18.34
+        assert vs30.quality_index == 0.8
+        assert len(vs30.methods) == 2
+        assert vs30.methods[0] == "Geology"
+        assert vs30.methods[1] == "Crosshole"
+        assert vs30.method_combined_qindex == "1.2"
+        assert vs30.manual_qindex == "1.0"
+
+        # Write it again and compare the two files.
+        file_buffer = io.BytesIO()
+        write_sitexml(sera_site, file_buffer, validate=True)
+        file_buffer.seek(0, 0)
+
+        with open(filename, "rb") as open_file:
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
+
+        self._assert_station_xml_equality(
+            file_buffer, expected_xml_file_buffer)
+
+    def test_reading_and_writing_full_vp_tag(self, testdata):
+        """
+        Tests reading and writing a full SiteXML <analysis> tag.
+        """
+        filename = testdata["full_analysis.xml"]
+        sera_site = read_sitexml(filename)
+
+        assert len(sera_site.analysis) == 1
+        analysis = sera_site.analysis[0]
+        assert analysis.resource_id == "quakeml:domain.ab/analysis/001"
+        assert analysis.site_descriptionID == "quakeml:domain.ab/site_description/001"
+        assert analysis.creation_date == obspy.UTCDateTime(2015, 11, 10)
