@@ -25,7 +25,7 @@ from obspy.io.sitexml.sitexml import validate_sitexml
 SCHEMA_VERSION = "1.3"
 NAMESPACE = "http://www.orfeus-eu.org/xml/site/1"
 
-def _write_sitexml(sera_site, file_or_file_object, validate=True,
+def write_sitexml(sera_site, file_or_file_object, validate=True,
 					  nsmap=None):
 	"""
 	Writes a sera_site object to a buffer.
@@ -107,41 +107,47 @@ def _get_base_node_attributes(element):
 
 def _write_site_owner(parent, site_owner):
 
-	#attribs = _get_base_node_attributes(site_owner)
-	attribs = {"publicID": site_owner.ownerID} if site_owner.ownerID else None
-	site_owner_elem = etree.SubElement(parent, "siteOwner", attribs)
-	_obj2tag(site_owner_elem, "codeName", site_owner.owner_codename)
-	_obj2tag(site_owner_elem, "fullName", site_owner.owner_fullname)
+	if site_owner.owner_codename and site_owner.owner_fullname:
+		attribs = {"publicID": site_owner.ownerID} if site_owner.ownerID else None
+		site_owner_elem = etree.SubElement(parent, "siteOwner", attribs)
+		_obj2tag(site_owner_elem, "codeName", site_owner.owner_codename)
+		_obj2tag(site_owner_elem, "fullName", site_owner.owner_fullname)
+	else:
+		return
 	
-	contact_elem = etree.SubElement(site_owner_elem, "contact")
+	if site_owner.person_firstname and site_owner.person_lastname and site_owner.person_mbox:
+		contact_elem = etree.SubElement(site_owner_elem, "contact")
 
-	attribs = {"publicID": site_owner.personID} if site_owner.personID else None
-	person_elem = etree.SubElement(contact_elem, "person", attribs)
-	_obj2tag(person_elem, "firstname", site_owner.person_firstname)
-	_obj2tag(person_elem, "lastname", site_owner.person_lastname)
-	_obj2tag(person_elem, "mbox", site_owner.person_mbox)
-	_obj2tag(person_elem, "homepage", site_owner.person_homepage)
+		attribs = {"publicID": site_owner.personID} if site_owner.personID else None
+		person_elem = etree.SubElement(contact_elem, "person", attribs)
+		_obj2tag(person_elem, "firstname", site_owner.person_firstname)
+		_obj2tag(person_elem, "lastname", site_owner.person_lastname)
+		_obj2tag(person_elem, "mbox", site_owner.person_mbox)
+		_obj2tag(person_elem, "homepage", site_owner.person_homepage)
+	else:
+		return
 	
-	affiliation_elem = etree.SubElement(contact_elem, "affiliation")
+	if site_owner.institution_name and site_owner.institution_mbox:
+		affiliation_elem = etree.SubElement(contact_elem, "affiliation")
 	
-	attribs = {"publicID": site_owner.institutionID} if site_owner.institutionID else None
-	institution_elem = etree.SubElement(affiliation_elem, "institution", attribs)	
-	_obj2tag(institution_elem, "name", site_owner.institution_name)
-	_obj2tag(institution_elem, "mbox", site_owner.institution_mbox)
-	_obj2tag(institution_elem, "phone", site_owner.institution_phone)
-	_obj2tag(institution_elem, "homepage", site_owner.institution_homepage)
-	_obj2tag(affiliation_elem, "department", site_owner.affiliation_department)
-	_obj2tag(affiliation_elem, "function", site_owner.affiliation_function)
+		attribs = {"publicID": site_owner.institutionID} if site_owner.institutionID else None
+		institution_elem = etree.SubElement(affiliation_elem, "institution", attribs)	
+		_obj2tag(institution_elem, "name", site_owner.institution_name)
+		_obj2tag(institution_elem, "mbox", site_owner.institution_mbox)
+		_obj2tag(institution_elem, "phone", site_owner.institution_phone)
+		_obj2tag(institution_elem, "homepage", site_owner.institution_homepage)
+		_obj2tag(affiliation_elem, "department", site_owner.affiliation_department)
+		_obj2tag(affiliation_elem, "function", site_owner.affiliation_function)
 
-	
-	postal_address_elem = etree.SubElement(institution_elem, "postalAddress")
-	_obj2tag(postal_address_elem, "streetAddress", site_owner.address_street)
-	_obj2tag(postal_address_elem, "locality", site_owner.address_locality)
-	_obj2tag(postal_address_elem, "postalCode", site_owner.address_postal_code)
-	
-	country_elem = etree.SubElement(postal_address_elem, "country")
-	_obj2tag(country_elem, "code", site_owner.address_country_code)
-	_obj2tag(country_elem, "country", site_owner.address_country)
+		if site_owner.address_street:
+			postal_address_elem = etree.SubElement(institution_elem, "postalAddress")
+			_obj2tag(postal_address_elem, "streetAddress", site_owner.address_street)
+			_obj2tag(postal_address_elem, "locality", site_owner.address_locality)
+			_obj2tag(postal_address_elem, "postalCode", site_owner.address_postal_code)
+		
+			country_elem = etree.SubElement(postal_address_elem, "country")
+			_obj2tag(country_elem, "code", site_owner.address_country_code)
+			_obj2tag(country_elem, "country", site_owner.address_country)
 	
 def _write_site_description(parent, site_description):
 
@@ -169,22 +175,29 @@ def _write_site_description(parent, site_description):
 		_obj2tag(site_topography_elem, "schemaA", site_description.topographyA)
 		_obj2tag(site_topography_elem, "schemaB", site_description.topographyB)
 
-	site_morphology_elem = etree.SubElement(site_description_elem, "siteMorphology")
-	_obj2tag(site_morphology_elem, "morphology", site_description.morphology)
-	
-	_write_site_indicator(site_morphology_elem, "siteClassEC8", 
-					   site_description.ec8)
-	_write_site_indicator(site_morphology_elem, "bedrockDepth", 
-					   site_description.bedrock_depth)
-	_write_site_indicator(site_morphology_elem, "h800", 
-					   site_description.h800)
-	_write_site_indicator(site_morphology_elem, "geologicalUnit", 
-					   site_description.geological_unit)
+	if site_description.morphology or site_description.ec8 or \
+		site_description.bedrock_depth or site_description.h800 or \
+		site_description.geological_unit:
+
+		site_morphology_elem = etree.SubElement(site_description_elem, "siteMorphology")
+		_obj2tag(site_morphology_elem, "morphology", site_description.morphology)
+		
+		_write_site_indicator(site_morphology_elem, "siteClassEC8", 
+						site_description.ec8)
+		_write_site_indicator(site_morphology_elem, "bedrockDepth", 
+						site_description.bedrock_depth)
+		_write_site_indicator(site_morphology_elem, "h800", 
+						site_description.h800)
+		_write_site_indicator(site_morphology_elem, "geologicalUnit", 
+						site_description.geological_unit)
 
 	_obj2tag(site_description_elem, "preferredSiteAnalysisID", 
 		  site_description.preferred_site_analysisID)
 	_obj2tag(site_description_elem, "preferredVelocityProfileID", 
 		  site_description.preferred_velocity_profileID)
+	
+	_write_value(site_description_elem, "overallQindex", 
+				site_description.overall_quality_index)
 
 def _write_analysis(parent, analysis_list):
 
@@ -194,9 +207,9 @@ def _write_analysis(parent, analysis_list):
 		analysis_elem = etree.SubElement(parent, "analysis", attribs)
 
 		_obj2tag(analysis_elem, "siteDescriptionID", analysis.site_descriptionID)
+		_obj2tag(analysis_elem, "creationTime", analysis.creation_date)
 
 		# TODOs
-		# Write CreationInfo
 		# Write Comments
 
 		_write_site_indicator(analysis_elem, "resonanceFrequency", 
@@ -281,9 +294,9 @@ def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
 
 		if site_indicator_name == "velocityS30":
 			_obj2tag(parent, "velocityS30MethodCombIndex", 
-			site_indicator_obj.method_combined_quality_index)
+			site_indicator_obj.method_combined_qindex)
 			_obj2tag(parent, "velocityS30ManualIndex", 
-			site_indicator_obj.manual_quality_index)
+			site_indicator_obj.manual_qindex)
 
 		# Write site indicator reference
 		_write_reference(parent, site_indicator_obj)
