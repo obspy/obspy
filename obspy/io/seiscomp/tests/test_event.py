@@ -430,7 +430,7 @@ class TestEvent():
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             try:
-                catalog.write(tmpfile, format='SC3ML', validate=True,
+                catalog.write(tmpfile, format='SCML', validate=True,
                               verbose=True)
             except AssertionError as e:
                 self.fail(e)
@@ -465,7 +465,7 @@ class TestEvent():
         catalog = _read_quakeml(filename)
 
         with NamedTemporaryFile() as tf:
-            catalog.write(tf, format='SC3ML', validate=True,
+            catalog.write(tf, format='SCML', validate=True,
                           event_removal=True, version='0.13')
             filepath_cmp = \
                 testdata['qml-example-1.2-RC3_no_events.sc3ml']

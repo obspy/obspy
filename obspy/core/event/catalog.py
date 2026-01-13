@@ -503,8 +503,8 @@ class Catalog(object):
             new_format, deprecated_version = DEPRECATED_FORMATS[format]
             warnings.warn(
                 f"Format '{format}' is deprecated since ObsPy "
-                f"{deprecated_version} and will be removed in a future release."
-                f" Use '{new_format}' instead.",
+                f"{deprecated_version} and will be removed in a future"
+                f" release. Use '{new_format}' instead.",
                 category=ObsPyDeprecationWarning,
                 stacklevel=3
             )
