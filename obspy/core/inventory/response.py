@@ -1142,7 +1142,7 @@ class Response(ComparingObject):
         elif has_polynomial:
             if len(self.instrument_polynomial.coefficients) > 2:
                 msg = ("Cannot recalculate sensitivity for polynomial with"
-                       f" more than 2 coefficients "
+                       " more than 2 coefficients "
                        "(has {len(self.instrument_polynomial.coefficients)})")
                 raise ValueError(msg)
 
