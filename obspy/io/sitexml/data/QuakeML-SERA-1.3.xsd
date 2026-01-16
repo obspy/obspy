@@ -361,7 +361,6 @@
 				</xs:annotation>
 			</xs:element>
 			<xs:element name="overallQindex" type="QIndexType" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="comment" type="CommentType" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 		<xs:attribute name="publicID" type="ResourceIdentifier" use="required">
@@ -488,7 +487,6 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="comment" type="CommentType" minOccurs="0" maxOccurs="unbounded"/>
 			<!--   ************** RESONANCE FREQUENCY  **********     -->
 			<xs:element name="resonanceFrequency" type="RealQuantity" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
@@ -771,14 +769,6 @@
 			<xs:element name="description" type="xs:string"/>
 		</xs:sequence>
 	</xs:complexType>
-
-	<xs:complexType name="CommentType">
-		<xs:sequence>
-			<xs:element name="text" type="xs:string"/>
-			<xs:element name="author" type="PersonType" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="creationTime" type="xs:dateTime"/>
-		</xs:sequence>
-    </xs:complexType>
 
 	<xs:complexType name="RealQuantity">
 		<xs:annotation>
