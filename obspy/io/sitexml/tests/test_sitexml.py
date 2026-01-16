@@ -11,6 +11,8 @@ Test suite for the StationXML reader and writer.
 """
 import io
 import re
+import warnings
+
 import obspy
 from obspy.io.sitexml.sitexml import (_is_sitexml, read_sitexml)
 from obspy.io.sitexml.write import write_sitexml
@@ -54,6 +56,33 @@ class TestSiteXML():
     #    print("datapath =", datapath)
     #    print("testdata minimal =", testdata.get("simple_sitexml.xml"))
 
+    def _write_and_compare(self, orig_filename, sera_site):
+        """
+        Helper function for creating two BytesIO buffers contain SiteXML
+        files to be compared by _assert_station_xml_equality().
+        
+        :type orig_filename: str
+        :param orig_filename: Name of the file to read from siteXML doc
+        :type sera_site: :class:`~obspy.core.io.sitexml.core.SERASite` 
+        :param sera_site: A SERASite object containing site metadata from orig_filename
+        """
+        # Read orig_filename into orig_xml_file_buffer BytesIO buffer
+        #
+        with open(orig_filename, "rb") as open_file:
+            orig_xml_file_buffer = io.BytesIO(open_file.read())
+        orig_xml_file_buffer.seek(0, 0)
+
+        # Write sera_site into new_xml_file_buffer BytesIO buffer
+        #
+        new_xml_file_buffer = io.BytesIO()
+        write_sitexml(sera_site, new_xml_file_buffer, validate=True)
+        new_xml_file_buffer.seek(0, 0)
+        
+        # Compare the two buffers
+        #
+        self._assert_station_xml_equality(
+            new_xml_file_buffer, orig_xml_file_buffer)
+        
     def test_is_sitexml(self, testdata, datapath):
         """
         Tests the _is_sitexml() function.
@@ -81,17 +110,7 @@ class TestSiteXML():
         sera_site = read_sitexml(filename)
 
         # Write it again. Also validate it to get more confidence.
-        file_buffer = io.BytesIO()
-
-        write_sitexml(sera_site, file_buffer, validate=True)
-        file_buffer.seek(0, 0)
-
-        with open(filename, "rb") as open_file:
-            expected_xml_file_buffer = io.BytesIO(open_file.read())
-        expected_xml_file_buffer.seek(0, 0)
-
-        self._assert_station_xml_equality(file_buffer,
-                                          expected_xml_file_buffer)
+        self._write_and_compare(filename, sera_site)
         
     def test_read_and_write_full_file(self, testdata):
         """
@@ -102,17 +121,7 @@ class TestSiteXML():
         sera_site = read_sitexml(filename)
 
         # Write it again. Also validate it to get more confidence.
-        file_buffer = io.BytesIO()
-
-        write_sitexml(sera_site, file_buffer, validate=True)
-        file_buffer.seek(0, 0)
-
-        with open(filename, "rb") as open_file:
-            expected_xml_file_buffer = io.BytesIO(open_file.read())
-        expected_xml_file_buffer.seek(0, 0)
-
-        self._assert_station_xml_equality(file_buffer,
-                                          expected_xml_file_buffer)
+        self._write_and_compare(filename, sera_site)
         
     def test_reading_and_writing_full_siteowner_tag(self, testdata):
         """
@@ -147,17 +156,8 @@ class TestSiteXML():
         assert sera_site.site_owner.address_country == "Somecountry" 
         assert sera_site.site_owner.address_country_code == "AB" 
 
-        # Write it again and compare the two files.
-        file_buffer = io.BytesIO()
-        write_sitexml(sera_site, file_buffer, validate=True)
-        file_buffer.seek(0, 0)
-
-        with open(filename, "rb") as open_file:
-            expected_xml_file_buffer = io.BytesIO(open_file.read())
-        expected_xml_file_buffer.seek(0, 0)
-
-        self._assert_station_xml_equality(
-            file_buffer, expected_xml_file_buffer)
+        # Write it again and compare to the original file.
+        self._write_and_compare(filename, sera_site)
         
     def test_reading_and_writing_full_sitedescription_tag(self, testdata):
         """
@@ -215,17 +215,8 @@ class TestSiteXML():
         assert sera_site.site_description.geological_unit.geological_map_scale == "1:50000"
         assert sera_site.site_description.geological_unit.geological_unit_OGE == "Some description"
         
-        # Write it again and compare the two files.
-        file_buffer = io.BytesIO()
-        write_sitexml(sera_site, file_buffer, validate=True)
-        file_buffer.seek(0, 0)
-
-        with open(filename, "rb") as open_file:
-            expected_xml_file_buffer = io.BytesIO(open_file.read())
-        expected_xml_file_buffer.seek(0, 0)
-
-        self._assert_station_xml_equality(
-            file_buffer, expected_xml_file_buffer)
+        # Write it again and compare to the original file.
+        self._write_and_compare(filename, sera_site)
 
     def test_reading_and_writing_full_analysis_tag(self, testdata):
         """
@@ -234,6 +225,7 @@ class TestSiteXML():
         filename = testdata["full_analysis.xml"]
         sera_site = read_sitexml(filename)
 
+        # Test that a preferred analysis ID is provided 
         assert sera_site.site_description.preferred_site_analysisID == \
             "quakeml:domain.ab/analysis/001"
 
@@ -247,6 +239,7 @@ class TestSiteXML():
         assert analysis.borehole_logs_count == 0
         assert analysis.velocity_profile_count == 2
 
+        # Test Resonance Frequency specific tags
         assert analysis.resonance_frequency is not None
         f0 = analysis.resonance_frequency
         assert f0.value.value == 4.9962
@@ -271,6 +264,7 @@ class TestSiteXML():
         assert fr.uri == "https://doi.org/10.1007/s10518-017-0135-5/"
         assert fr.description == "paper"
 
+        # Test VelocityS30 specific tags
         assert analysis.velocity_s30 is not None
         vs30 = analysis.velocity_s30
         assert vs30.value.value == 221.5954
@@ -282,27 +276,72 @@ class TestSiteXML():
         assert vs30.method_combined_qindex == "1.2"
         assert vs30.manual_qindex == "1.0"
 
-        # Write it again and compare the two files.
-        file_buffer = io.BytesIO()
-        write_sitexml(sera_site, file_buffer, validate=True)
-        file_buffer.seek(0, 0)
+        # Write it again and compare to the original file.
+        self._write_and_compare(filename, sera_site)
 
-        with open(filename, "rb") as open_file:
-            expected_xml_file_buffer = io.BytesIO(open_file.read())
-        expected_xml_file_buffer.seek(0, 0)
-
-        self._assert_station_xml_equality(
-            file_buffer, expected_xml_file_buffer)
-
-    def test_reading_and_writing_full_vp_tag(self, testdata):
+    def test_reading_and_writing_velocity_profile_tag(self, testdata):
         """
-        Tests reading and writing a full SiteXML <analysis> tag.
+        Tests reading and writing a full SiteXML <velocityProfile> tag.
         """
         filename = testdata["full_analysis.xml"]
         sera_site = read_sitexml(filename)
 
-        assert len(sera_site.analysis) == 1
-        analysis = sera_site.analysis[0]
-        assert analysis.resource_id == "quakeml:domain.ab/analysis/001"
-        assert analysis.site_descriptionID == "quakeml:domain.ab/site_description/001"
-        assert analysis.creation_date == obspy.UTCDateTime(2015, 11, 10)
+        assert sera_site.analysis[0] is not None
+        assert sera_site.analysis[0].velocity_profile_count == 2
+        assert sera_site.analysis[0].velocity_profile_survey is not None
+
+        vps = sera_site.analysis[0].velocity_profile_survey
+        assert vps.quality_index == 1.0
+        assert vps.velocity_profiles is not None
+        assert len(vps.velocity_profiles) == 2
+
+        # Test first/last layer from first velocity profile        
+        vp = vps.velocity_profiles[0]
+        assert vp.resource_id == "quakeml:domain.ab/velocity_profile/001"
+        assert vp.layer_count == 8
+        assert vp.velocity_profile_data is not None
+        assert len(vp.velocity_profile_data) == 8
+        
+        vpd = vp.velocity_profile_data[0]               # First Layer
+        assert vpd.velocityS.value == 118.08
+        assert vpd.velocityS.uncertainty == 2.0
+        assert vpd.top_depth.value == 0.0
+        assert vpd.bottom_depth.value == 0.19
+        
+        vpd = vp.velocity_profile_data[7]               # Last Layer
+        assert vpd.velocityS.value == 1108.37
+        assert vpd.top_depth.value == 209.23
+
+        # Test first/last layer from second velocity profile
+        vp = vps.velocity_profiles[1]
+        assert vp.resource_id == "quakeml:domain.ab/velocity_profile/002"
+        assert vp.layer_count == 8
+        assert vp.velocity_profile_data is not None
+        assert len(vp.velocity_profile_data) == 8
+        
+        vpd = vp.velocity_profile_data[0]               # First Layer
+        assert vpd.velocityS.value == 119.4
+        assert vpd.top_depth.value == 0.0
+        assert vpd.bottom_depth.value == 0.2
+        
+        vpd = vp.velocity_profile_data[7]               # Last Layer
+        assert vpd.velocityS.value == 1097.0
+        assert vpd.top_depth.value == 226.6
+
+        # Write it again and compare to the original file.
+        self._write_and_compare(filename, sera_site)
+
+    def test_reading_twice_raises_no_warning(self, testdata):
+        """
+        Tests that reading a siteXML file twice does not raise a warnings.
+        """
+        filename = testdata['full_analysis.xml']
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            site1 = read_sitexml(filename)
+            assert len(w) == 0
+            site2 = read_sitexml(filename)
+            assert len(w) == 0
+
+        assert site1 == site2
