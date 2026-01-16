@@ -154,7 +154,7 @@ def __read_header(buf, index, record_length):
 
         returns obspy.core.trace.Trace object without data
     """
-    # replace with util..
+
     header = _read_mseed(buf[index:index+record_length], reclen=record_length,
                          headonly=True)
     return header[0]
@@ -184,7 +184,7 @@ def __bisect_mseed(buf, timestamp, record_length, before=True):
                         raw miniseed data.
          :param timestamp: :class:`~obspy.core.utcdatetime.UTCDateTime`
                            timestamp to look for in buffer
-         :param racordlength: miniseed record length
+         :param recordlength: miniseed record length
          :param before: If ``True``, return the index of the record containing
                         the timestamp, if ``False``, return the index of the
                         next record.
