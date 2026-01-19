@@ -73,6 +73,10 @@ only read certain records from a file or force the header byteorder:
 :meth:`~obspy.io.mseed.core._read_mseed` method so refer to it for details to
 each parameter.
 
+Reading a file is implemented using numpy.memmap(). Deleting a miniseed file
+while it is still being used by the software may result in undefined
+behaviour on non-UNIX style systems. 
+
 Writing
 -------
 Write data back to disc or a file like object using the
