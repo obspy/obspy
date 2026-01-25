@@ -11,6 +11,7 @@ SiteXML schema.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 from obspy.core.util import Enum
+#from enum import Enum
 from collections.abc import Iterable
 
 TopographySchemaA = Enum([
@@ -201,7 +202,7 @@ def _pretty_str(obj):
         if value is not None
     )
 
-def _enum_property(attr_name, enum_type):
+def enum_property(attr_name, enum_type):
     """
     Method to produce getter/setter functions 
     and validate enum type values.
@@ -222,7 +223,56 @@ def _enum_property(attr_name, enum_type):
             )
     return property(getter, setter)
 
-def _add_property(attr_name, wrapper_type):
+def enum_list_property(attr_name, enum_type, allow_none=True):
+    """
+    Validates an iterable of enum entries and stores canonical strings.
+
+    - Accepts strings (case-insensitive) that match enum keys, and returns the
+      canonical enum value string (original casing from Enum definition).
+    - Stores a plain Python list for deepcopy safety.
+    """
+
+    # TODOS
+    # Validate when values are appended / inserted in the list
+    #
+    private_name = f"_{attr_name}"
+
+    def getter(self):
+        return getattr(self, private_name)
+
+    def _eval_enum(x):
+        if not isinstance(x, str):
+            raise TypeError(f"{attr_name} items must be strings, got {type(x).__name__}")
+        try:
+            # Enum.get() lowercases internally and returns canonical string
+            return enum_type.get(x)
+        except KeyError:
+            raise ValueError(
+                f"Invalid {attr_name} entry {x!r}. Allowed: {enum_type.values()}"
+            )
+
+    def setter(self, values):
+        if values is None:
+            if allow_none:
+                setattr(self, private_name, None)
+                return
+            raise TypeError(f"{attr_name} cannot be None")
+
+        if not hasattr(values, "__iter__") or isinstance(values, (str, bytes)):
+            raise TypeError(f"{attr_name} must be an iterable of strings")
+
+        normalized = [_eval_enum(v) for v in values]
+
+        setattr(self, private_name, normalized)
+
+        # store as tuple by default to prevent mutation without validation
+        #if iterable_type is list:    
+        #else:
+        #setattr(self, private_name, iterable_type(normalized))
+
+    return property(getter, setter)
+
+def wrapped_property(attr_name, wrapper_type):
     """
     Method to produce getter/setter functions 
     and wrap argument values into the appropriate type.
@@ -244,18 +294,12 @@ def _add_property(attr_name, wrapper_type):
 
     return property(getter, setter)
 
-def _add_iterable_property(
-    attr_name,
-    wrapper_type,
-    iterable_type=list,
-    allow_none=True
-):
+def wrapped_list_property(attr_name, wrapper_type, allow_none=True):
     """
     Creates a property that wraps iterable elements into wrapper_type.
 
     :param attr_name: name of the attribute
     :param wrapper_type: class used to wrap each element
-    :param iterable_type: list, tuple, etc.
     :param allow_none: whether None is allowed
     """
     private_name = f"_{attr_name}"
@@ -285,7 +329,7 @@ def _add_iterable_property(
                         f"Could not convert element {v} to {wrapper_type.__name__}: {e}"
                     )
 
-        setattr(self, private_name, iterable_type(wrapped_items))
+        setattr(self, private_name, wrapped_items)
 
     return property(getter, setter)
 
@@ -337,40 +381,6 @@ class _EnumList(list):
     def __iadd__(self, values):
         self.extend(values)
         return self
-
-def _validate_enum_list(
-    attr_name,
-    enum_type,
-    iterable_type=list,
-    allow_none=True
-):
-    """
-    Creates a property that validates a list of enum values.
-
-    :param attr_name: name of the attribute
-    :param enum_type: Enum to validate against
-    :param iterable_type: list, tuple, etc.
-    :param allow_none: whether None is allowed
-    """
-    private_name = f"_{attr_name}"
-
-    def getter(self):
-        return getattr(self, private_name)
-
-    def setter(self, values):
-        if values is None:
-            if allow_none:
-                setattr(self, private_name, None)
-                return
-            raise TypeError(f"{attr_name} cannot be None")
-
-        enum_list = _EnumList(values, enum_type, attr_name=attr_name)
-        if iterable_type is list:
-            setattr(self, private_name, enum_list)
-        else:
-            setattr(self, private_name, iterable_type(enum_list))
-
-    return property(getter, setter)
 
 def _validate_list_of_vwu(self, name, value):
     """
