@@ -345,3 +345,22 @@ class TestSiteXML():
             assert len(w) == 0
 
         assert site1 == site2
+
+    def test_deepcopy(self, testdata):
+        """
+        Tests that creating a deep copy of a siteXML object results in two identical objects.
+        """
+        import copy
+        filename = testdata['full_analysis.xml']
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            site1 = read_sitexml(filename)
+            assert len(w) == 0
+            site2 = copy.deepcopy(site1)
+            assert len(w) == 0
+
+        assert site1 == site2
+
+        # Write deep copied object site2 and compare to the original file.
+        self._write_and_compare(filename, site2)
