@@ -258,7 +258,7 @@ def enum_list_property(attr_name, enum_type, allow_none=True):
                 return
             raise TypeError(f"{attr_name} cannot be None")
 
-        if not hasattr(values, "__iter__") or isinstance(values, (str, bytes)):
+        if not isinstance(values, Iterable) or isinstance(values, (str, bytes)):
             raise TypeError(f"{attr_name} must be an iterable of strings")
 
         normalized = [_eval_enum(v) for v in values]
@@ -332,97 +332,3 @@ def wrapped_list_property(attr_name, wrapper_type, allow_none=True):
         setattr(self, private_name, wrapped_items)
 
     return property(getter, setter)
-
-class _EnumList(list):
-    def __init__(self, values, enum_type, attr_name="values"):
-        self._enum_type = enum_type
-        self._attr_name = attr_name
-        super().__init__()
-        self.extend(values)
-
-    def _validate_item(self, value):
-        if value not in self._enum_type:
-            valid_values = [e for e in self._enum_type]
-            raise ValueError(
-                f"Invalid {self._attr_name}: {value}. Expected values from {valid_values}."
-            )
-
-    def append(self, value):
-        self._validate_item(value)
-        super().append(value)
-
-    def extend(self, values):
-        if not isinstance(values, (list, tuple)) or isinstance(values, (str, bytes)):
-            enum_name = getattr(self._enum_type, "__name__", "enum")
-            raise TypeError(
-                f"{self._attr_name} must be a list or tuple of {enum_name} values."
-            )
-        for value in values:
-            self._validate_item(value)
-        super().extend(values)
-
-    def insert(self, index, value):
-        self._validate_item(value)
-        super().insert(index, value)
-
-    def __setitem__(self, index, value):
-        if isinstance(index, slice):
-            if not isinstance(value, (list, tuple)) or isinstance(value, (str, bytes)):
-                enum_name = getattr(self._enum_type, "__name__", "enum")
-                raise TypeError(
-                    f"{self._attr_name} must be a list or tuple of {enum_name} values."
-                )
-            for item in value:
-                self._validate_item(item)
-        else:
-            self._validate_item(value)
-        super().__setitem__(index, value)
-
-    def __iadd__(self, values):
-        self.extend(values)
-        return self
-
-def _validate_list_of_vwu(self, name, value):
-    """
-    Validates and standardizes a list of ValueWithUncertainty objects.
-    Converts numbers to ValueWithUncertainty, keeps None, raises on bad types.
-    """
-    if value is None:
-        return []
-
-    if not hasattr(value, "__iter__") or isinstance(value, (str, bytes)):
-        raise ValueError(f"{name} must be an iterable \
-                    (e.g., a list of floats or ValueWithUncertainty).")
-
-    validated = []
-    for i, item in enumerate(value):
-        if item is None:
-            validated.append(None)
-        elif isinstance(item, ValueWithUncertainty):
-            validated.append(item)
-        elif isinstance(item, (int, float)):
-            validated.append(ValueWithUncertainty(item))
-        else:
-            raise TypeError(f"{name}[{i}] is not a valid type \
-                    (expected int, float, ValueWithUncertainty, or None): {item}")
-    
-    return validated
-
-def vwu_list_properties(*attributes):
-    def decorator(cls):
-        cls._validate_list_of_vwu = _validate_list_of_vwu
-
-        for attr_name in attributes:
-            private_name = f"_{attr_name}"
-
-            def getter(self, name=private_name):
-                return getattr(self, name)
-
-            def setter(self, value, name=private_name, attr=attr_name):
-                validated = self._validate_list_of_vwu(attr, value)
-                setattr(self, name, validated)
-
-            setattr(cls, attr_name, property(getter, setter))
-
-        return cls
-    return decorator
