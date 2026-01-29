@@ -9,17 +9,19 @@ Provides the SERASite class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import copy
 
 from obspy.core.util.base import ComparingObject
 from obspy.core.event import ResourceIdentifier
-from obspy.core.inventory.util import (Latitude, Longitude, Distance, ExternalReference)
-from obspy.io.sitexml.util import (TopographySchemaA, TopographySchemaB, EC8Class, 
-                                ResonanceFrequencyMethod, VelocityS30Method,
-                                Vs30MethodCombined, Vs30ManualIndex,
-                                _pretty_str, _add_property, _enum_property, 
-                                _add_iterable_property, _validate_enum_list)
-
-class ValueWithUncertainty:
+from obspy.core.inventory.util import (Latitude, Longitude, Distance, 
+                                       ExternalReference)
+from .util import (TopographySchemaA, TopographySchemaB, EC8Class, 
+                    ResonanceFrequencyMethod, VelocityS30Method,
+                    Vs30MethodCombined, Vs30ManualIndex,
+                    _pretty_str, wrapped_property, enum_property, 
+                    wrapped_list_property, enum_list_property)
+    
+class ValueWithUncertainty(ComparingObject):
     def __init__(self, value, uncertainty=None, valid_type=float):
         """
         :param value: int or float, the main value.
@@ -72,7 +74,7 @@ class ValueWithUncertainty:
             return f"{self.value:.2f}"
 
 class LiteratureSource(ComparingObject):
-    year = _add_property("year", int)
+    year = wrapped_property("year", int)
     def __init__(self, title, first_author=None, secondary_authors=None, 
                  year=None, booktitle=None, language=None, doi=None):
         self.title = title
@@ -87,9 +89,9 @@ class LiteratureSource(ComparingObject):
         return _pretty_str(self)
 
 class SiteIndicator(ComparingObject):
-    literature_source = _add_property("literature_source", LiteratureSource)
-    #quality_index = _add_property("quality_index", float)
-    #file_resource = _add_property("file_resource", ExternalReference)
+    literature_source = wrapped_property("literature_source", LiteratureSource)
+    #quality_index = wrapped_property("quality_index", float)
+    #file_resource = wrapped_property("file_resource", ExternalReference)
 
     def __init__(self, name, value, methods=None, 
                  quality_index=None, literature_source=None, file_resource=None):
@@ -146,7 +148,7 @@ class SiteIndicator(ComparingObject):
         return ret
 
 class EC8(SiteIndicator):
-    value = _enum_property("value", EC8Class)
+    value = enum_property("value", EC8Class)
     
     def __init__(self, value, quality_index=None, literature_source=None, file_resource=None):
         """
@@ -165,7 +167,7 @@ class EC8(SiteIndicator):
                 literature_source=literature_source, file_resource=file_resource)
 
 class H800(SiteIndicator):
-    value = _add_property("value", ValueWithUncertainty)
+    value = wrapped_property("value", ValueWithUncertainty)
 
     def __init__(self, value, quality_index=None, literature_source=None, 
                  file_resource=None):
@@ -186,7 +188,7 @@ class H800(SiteIndicator):
                 literature_source=literature_source, file_resource=file_resource)
 
 class BedrockDepth(SiteIndicator):
-    value = _add_property("value", ValueWithUncertainty)
+    value = wrapped_property("value", ValueWithUncertainty)
 
     def __init__(self, value, quality_index=None, literature_source=None, 
                  file_resource=None):
@@ -230,8 +232,8 @@ class GeologicalUnit(SiteIndicator):
                 literature_source=literature_source, file_resource=file_resource)
         
 class ResonanceFrequency(SiteIndicator):
-    value = _add_property("value", ValueWithUncertainty)
-    methods = _validate_enum_list("methods", ResonanceFrequencyMethod)
+    value = wrapped_property("value", ValueWithUncertainty)
+    methods = enum_list_property("methods", ResonanceFrequencyMethod)
 
     def __init__(self, value, quality_index=None, methods=None, 
                  literature_source=None, file_resource=None):
@@ -254,10 +256,10 @@ class ResonanceFrequency(SiteIndicator):
             file_resource=file_resource)
         
 class VelocityS30(SiteIndicator):
-    value = _add_property("value", ValueWithUncertainty)
-    methods = _validate_enum_list("methods", VelocityS30Method)
-    method_combined_qindex = _enum_property("velocityS30MethodCombIndex", Vs30MethodCombined)
-    manual_qindex = _enum_property("velocityS30ManualIndex", Vs30ManualIndex)
+    value = wrapped_property("value", ValueWithUncertainty)
+    methods = enum_list_property("methods", VelocityS30Method)
+    method_combined_qindex = enum_property("velocityS30MethodCombIndex", Vs30MethodCombined)
+    manual_qindex = enum_property("velocityS30ManualIndex", Vs30ManualIndex)
     
     def __init__(self, value, quality_index=None, methods=None,
                  method_combined_qindex=None, manual_qindex=None, 
@@ -325,11 +327,11 @@ class VelocityProfileSurvey(SiteIndicator):
         return "\n".join(output) 
 
 class VelocityProfileData(ComparingObject):
-    density = _add_property("density", ValueWithUncertainty)
-    velocityP = _add_property("velocityP", ValueWithUncertainty)
-    velocityS = _add_property("velocityS", ValueWithUncertainty)
-    top_depth = _add_property("top_depth", ValueWithUncertainty)
-    bottom_depth = _add_property("bottom_depth", ValueWithUncertainty)
+    density = wrapped_property("density", ValueWithUncertainty)
+    velocityP = wrapped_property("velocityP", ValueWithUncertainty)
+    velocityS = wrapped_property("velocityS", ValueWithUncertainty)
+    top_depth = wrapped_property("top_depth", ValueWithUncertainty)
+    bottom_depth = wrapped_property("bottom_depth", ValueWithUncertainty)
 
     def __init__(self, density=None, velocityP=None, velocityS=None, 
                  top_depth=None, bottom_depth=None):
@@ -352,7 +354,8 @@ class VelocityProfileData(ComparingObject):
         self.bottom_depth = bottom_depth
 
 class VelocityProfile(ComparingObject):
-    velocity_profile_data = _add_iterable_property("velocity_profile_data", VelocityProfileData)
+    velocity_profile_data = wrapped_list_property("velocity_profile_data", VelocityProfileData)
+    #resource_id = wrapped_property("resource_id", ResourceIdentifier)
 
     def __init__(self, layer_count, resource_id=None, velocity_profile_data=None):
         """
@@ -419,6 +422,7 @@ class VelocityProfile(ComparingObject):
         return "\n".join(lines)
     
 class SERASiteOwner(ComparingObject):
+    #ownerID = wrapped_property("ownerID", ResourceIdentifier)
     def __init__(self, owner_codename=None, owner_fullname=None, ownerID=None, 
                  person_firstname=None, person_lastname=None, person_mbox=None, person_homepage=None, personID=None, 
                  institution_name=None, institution_mbox=None, institution_phone=None, institution_homepage=None, institutionID=None,
@@ -476,21 +480,22 @@ class SERASiteOwner(ComparingObject):
         return ret
     
 class SiteDescription(ComparingObject):
-    station_code = _add_property("station_code", str)
-    latitude = _add_property("latitude", Latitude)
-    longitude = _add_property("longitude", Longitude)
-    altitude = _add_property("altitude", Distance)
-    min_distance_from_station = _add_property("min_distance_from_station", Distance)
-    max_distance_from_station = _add_property("max_distance_from_station", Distance)
-    bedrock_depth = _add_property("bedrock_depth", BedrockDepth)
-    h800 = _add_property("h800", H800)
-    ec8 = _add_property("ec8", EC8)
-    geological_unit = _add_property("geological_unit", GeologicalUnit)
-    topographyA = _enum_property("topographyA", TopographySchemaA)
-    topographyB = _enum_property("topographyB", TopographySchemaB)
+    latitude = wrapped_property("latitude", Latitude)
+    longitude = wrapped_property("longitude", Longitude)
+    altitude = wrapped_property("altitude", Distance)
+    min_distance_from_station = wrapped_property("min_distance_from_station", Distance)
+    max_distance_from_station = wrapped_property("max_distance_from_station", Distance)
+    station_code = wrapped_property("station_code", str)
+    bedrock_depth = wrapped_property("bedrock_depth", BedrockDepth)
+    h800 = wrapped_property("h800", H800)
+    ec8 = wrapped_property("ec8", EC8)
+    geological_unit = wrapped_property("geological_unit", GeologicalUnit)
+    topographyA = enum_property("topographyA", TopographySchemaA)
+    topographyB = enum_property("topographyB", TopographySchemaB)
 
-    def __init__(self, resource_id, station_code=None, latitude=0, longitude=0, altitude=None, 
+    def __init__(self, resource_id, latitude=0, longitude=0, altitude=None, 
                  min_distance_from_station=None, max_distance_from_station=None, 
+                 station_code=None, 
                  ec8=None, bedrock_depth=None, h800=None, geological_unit=None, 
                  morphology=None, topographyA=None, topographyB=None, 
                  preferred_site_analysisID=None, preferred_velocity_profileID=None,
@@ -498,9 +503,6 @@ class SiteDescription(ComparingObject):
         """
         :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
         :param resource_id: Unique Site Description Resource ID
-        :type station_code: str, optional.
-        :param station_code: Not used in SiteXML, but is needed in order to 
-                            correlate with the Station Object. 
         :type latitude: :class:`~obspy.core.inventory.util.Latitude`, required
         :param latitude: The latitude of the site.
         :type longitude: :class:`~obspy.core.inventory.util.Longitude`, required
@@ -515,6 +517,8 @@ class SiteDescription(ComparingObject):
         :param max_distance_from_station: Maximum distance between the permanent seismological station and 
             site characterization measurement. Should be used only when representative latitude and longitude 
             of site characterization measurements cannot be provided. 
+        :type station_code: str, optional.
+        :param station_code: The seismological station code installed in the site (if any). 
         :type ec8: :class:`~obspy.io.sitexml.core.EC8`, optional.
         :param ec8: Ground type according to Eurocode 8, based on the velocity S30 value and geotechnical description. 
         :type h800: :class:`~obspy.io.sitexml.core.H800`, optional.
@@ -595,13 +599,13 @@ class SiteDescription(ComparingObject):
         return ret
 
 class Analysis(ComparingObject):
-    resonance_frequency = _add_property("resonance_frequency", ResonanceFrequency)
-    velocity_s30 = _add_property("velocity_s30", VelocityS30)
-    velocity_profile_survey = _add_property("velocity_profile_survey", VelocityProfileSurvey)
-    velocity_profile_count = _add_property("velocity_profile_count", int)
-    spt_logs_count = _add_property("spt_logs_count", int)
-    cpt_logs_count = _add_property("cpt_logs_count", int)
-    borehole_logs_count = _add_property("borehole_logs_count", int)
+    resonance_frequency = wrapped_property("resonance_frequency", ResonanceFrequency)
+    velocity_s30 = wrapped_property("velocity_s30", VelocityS30)
+    velocity_profile_survey = wrapped_property("velocity_profile_survey", VelocityProfileSurvey)
+    velocity_profile_count = wrapped_property("velocity_profile_count", int)
+    spt_logs_count = wrapped_property("spt_logs_count", int)
+    cpt_logs_count = wrapped_property("cpt_logs_count", int)
+    borehole_logs_count = wrapped_property("borehole_logs_count", int)
 
     # TODOS
     # Check counter type if value > 0 (like layer count)
@@ -672,11 +676,11 @@ class SERASite(ComparingObject):
     """
     This is the parent class for the siteXML object tree.
     """
-    site_owner = _add_property("site_owner", SERASiteOwner)
-    site_description = _add_property("site_description", SiteDescription)
-    external_references = _add_iterable_property("external_references", ExternalReference)
-    analysis = _add_iterable_property("analysis", Analysis)
-    resource_id = _add_property("resource_id", ResourceIdentifier)
+    site_owner = wrapped_property("site_owner", SERASiteOwner)
+    site_description = wrapped_property("site_description", SiteDescription)
+    external_references = wrapped_list_property("external_references", ExternalReference)
+    analysis = wrapped_list_property("analysis", Analysis)
+    resource_id = wrapped_property("resource_id", ResourceIdentifier)
     
     def __init__(self, resource_id, site_owner, site_description, 
                  analysis=None, created=None, external_references=None):
