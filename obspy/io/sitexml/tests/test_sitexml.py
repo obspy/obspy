@@ -117,7 +117,7 @@ class TestSiteXML():
         Test that reading and writing of a full SiteXML document with all
         possible tags works.
         """
-        filename = testdata["minimal_sitexml.xml"]
+        filename = testdata["full_sitexml.xml"]
         sera_site = read_sitexml(filename)
 
         # Write it again. Also validate it to get more confidence.
@@ -350,17 +350,17 @@ class TestSiteXML():
         """
         Tests that creating a deep copy of a siteXML object results in two identical objects.
         """
-        import copy
-        filename = testdata['full_analysis.xml']
+        filename = testdata['full_sitexml.xml']
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             site1 = read_sitexml(filename)
             assert len(w) == 0
-            site2 = copy.deepcopy(site1)
+            site2 = site1.copy()
             assert len(w) == 0
 
-        assert site1 == site2
+        assert site1 is not site2       # The two objects are not the same
+        assert site1 == site2           # but they have the same data 
 
         # Write deep copied object site2 and compare to the original file.
         self._write_and_compare(filename, site2)
