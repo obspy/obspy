@@ -10,9 +10,52 @@ SiteXML schema.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import copy
 from obspy.core.util import Enum
-#from enum import Enum
+from obspy.core.util.base import ComparingObject
+
 from collections.abc import Iterable
+
+class BaseNode(ComparingObject):
+    """
+    The parent class for SERASite, SiteDescription, Analysis etc classes.
+    """
+    def copy(self):
+        """
+        Returns a deepcopy of the object.
+
+        :rtype: same class as original object
+        :return: Copy of current object.
+
+        .. rubric:: Examples
+
+        1. Create a station object and copy it
+
+            >>> from obspy.io.sitexml.sitexml import read_sitexml
+            >>> site = read_sitexml("site.xml")
+            >>> site2 = site.copy()
+
+           The two objects are not the same:
+
+            >>> site is site2
+            False
+
+           But they have equal data (before applying further processing):
+
+            >>> site == site2
+            True
+
+        2. The following example shows how to make an alias but not copy the
+           data. Any changes on ``site3`` would also change the contents of
+           ``site``.
+
+            >>> site3 = site
+            >>> site is site3
+            True
+            >>> site == site3
+            True
+        """
+        return copy.deepcopy(self)
 
 TopographySchemaA = Enum([
     "T1",
