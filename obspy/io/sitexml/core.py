@@ -9,19 +9,16 @@ Provides the SERASite class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-import copy
-
-from obspy.core.util.base import ComparingObject
 from obspy.core.event import ResourceIdentifier
 from obspy.core.inventory.util import (Latitude, Longitude, Distance, 
                                        ExternalReference)
-from .util import (TopographySchemaA, TopographySchemaB, EC8Class, 
+from .util import (BaseNode, TopographySchemaA, TopographySchemaB, EC8Class, 
                     ResonanceFrequencyMethod, VelocityS30Method,
                     Vs30MethodCombined, Vs30ManualIndex,
                     _pretty_str, wrapped_property, enum_property, 
                     wrapped_list_property, enum_list_property)
     
-class ValueWithUncertainty(ComparingObject):
+class ValueWithUncertainty(BaseNode):
     def __init__(self, value, uncertainty=None, valid_type=float):
         """
         :param value: int or float, the main value.
@@ -73,7 +70,7 @@ class ValueWithUncertainty(ComparingObject):
         else:
             return f"{self.value:.2f}"
 
-class LiteratureSource(ComparingObject):
+class LiteratureSource(BaseNode):
     year = wrapped_property("year", int)
     def __init__(self, title, first_author=None, secondary_authors=None, 
                  year=None, booktitle=None, language=None, doi=None):
@@ -88,7 +85,7 @@ class LiteratureSource(ComparingObject):
     def __str__(self):
         return _pretty_str(self)
 
-class SiteIndicator(ComparingObject):
+class SiteIndicator(BaseNode):
     literature_source = wrapped_property("literature_source", LiteratureSource)
     #quality_index = wrapped_property("quality_index", float)
     #file_resource = wrapped_property("file_resource", ExternalReference)
@@ -326,7 +323,7 @@ class VelocityProfileSurvey(SiteIndicator):
                 output.append(self.velocity_profiles[i].__str__())
         return "\n".join(output) 
 
-class VelocityProfileData(ComparingObject):
+class VelocityProfileData(BaseNode):
     density = wrapped_property("density", ValueWithUncertainty)
     velocityP = wrapped_property("velocityP", ValueWithUncertainty)
     velocityS = wrapped_property("velocityS", ValueWithUncertainty)
@@ -353,7 +350,7 @@ class VelocityProfileData(ComparingObject):
         self.top_depth = top_depth
         self.bottom_depth = bottom_depth
 
-class VelocityProfile(ComparingObject):
+class VelocityProfile(BaseNode):
     velocity_profile_data = wrapped_list_property("velocity_profile_data", VelocityProfileData)
     #resource_id = wrapped_property("resource_id", ResourceIdentifier)
 
@@ -421,7 +418,7 @@ class VelocityProfile(ComparingObject):
         ] + [format_row(row) for row in rows]
         return "\n".join(lines)
     
-class SERASiteOwner(ComparingObject):
+class SERASiteOwner(BaseNode):
     #ownerID = wrapped_property("ownerID", ResourceIdentifier)
     def __init__(self, owner_codename=None, owner_fullname=None, ownerID=None, 
                  person_firstname=None, person_lastname=None, person_mbox=None, person_homepage=None, personID=None, 
@@ -479,7 +476,7 @@ class SERASiteOwner(ComparingObject):
         
         return ret
     
-class SiteDescription(ComparingObject):
+class SiteDescription(BaseNode):
     latitude = wrapped_property("latitude", Latitude)
     longitude = wrapped_property("longitude", Longitude)
     altitude = wrapped_property("altitude", Distance)
@@ -598,7 +595,7 @@ class SiteDescription(ComparingObject):
             vp_id = self.preferred_velocity_profileID)
         return ret
 
-class Analysis(ComparingObject):
+class Analysis(BaseNode):
     resonance_frequency = wrapped_property("resonance_frequency", ResonanceFrequency)
     velocity_s30 = wrapped_property("velocity_s30", VelocityS30)
     velocity_profile_survey = wrapped_property("velocity_profile_survey", VelocityProfileSurvey)
@@ -672,7 +669,7 @@ class Analysis(ComparingObject):
             bh_logs_count = self.borehole_logs_count)
         return ret
      
-class SERASite(ComparingObject):
+class SERASite(BaseNode):
     """
     This is the parent class for the siteXML object tree.
     """
