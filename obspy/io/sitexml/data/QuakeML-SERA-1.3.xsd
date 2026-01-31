@@ -68,7 +68,7 @@
 		<xs:attribute name="publicID" type="ResourceIdentifier" use="required">
 			<xs:annotation>
 				<xs:documentation>Unique resource ID of the site.<br/>
-					<strong>Example: </strong>quakeml:isterre.fr/site/001.
+					<strong>Example: </strong>quakeml:domain.ab/site/001.
 				</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
@@ -82,6 +82,7 @@
 	</xs:complexType>
 
 	<!-- Site Owner Type Definition -->
+
 	<xs:complexType name="SiteOwnerType">
 		<xs:annotation>
 			<xs:documentation>
@@ -116,7 +117,7 @@
 		<xs:attribute name="publicID" type="ResourceIdentifier">
 			<xs:annotation>
 				<xs:documentation>Unique resource ID of the site owner.<br/>
-					<strong>Example: </strong>quakeml:isterre.fr/site_owner/001.
+					<strong>Example: </strong>quakeml:domain.ab/site_owner/001.
 				</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
@@ -146,14 +147,14 @@
 			<xs:element name="mbox" type="EmailType">
 				<xs:annotation>
 					<xs:documentation>
-						<strong>Example: </strong>cecile.cornou@univ-grenoble-alpes.fr
+						<strong>Example: </strong>someemail@domain.ab
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
 			<xs:element name="homepage" type="xs:anyURI" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>
-						<strong>Example: </strong>https://www.isterre.fr/annuaire/pages-web-du-personnel/cecile-cornou/
+						<strong>Example: </strong>https://www.domain.ab/person
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
@@ -161,7 +162,7 @@
 		<xs:attribute name="publicID" type="ResourceIdentifier">
 			<xs:annotation>
 				<xs:documentation>Unique resource ID of the person.<br/>
-					<strong>Example: </strong>quakeml:isterre.fr/person/001.
+					<strong>Example: </strong>quakeml:domain.ab/person/001.
 				</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
@@ -199,16 +200,40 @@
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
-			<xs:element name="name" type="xs:string"/>
-			<xs:element name="mbox" type="EmailType"/>
-			<xs:element name="phone" type="xs:string" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="homepage" type="xs:anyURI" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="name" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						<strong>Example: </strong>Seismological Institute
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="mbox" type="EmailType">
+				<xs:annotation>
+					<xs:documentation>
+						<strong>Example: </strong>info@domain.ab
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="phone" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						<strong>Example: </strong>+30 123 4567890
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="homepage" type="xs:anyURI" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						<strong>Example: </strong>https://www.domain.ab
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 			<xs:element name="postalAddress" type="PostalAddressType" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 		<xs:attribute name="publicID" type="ResourceIdentifier">
 			<xs:annotation>
 				<xs:documentation>Unique resource ID of the institution.<br/>
-					<strong>Example: </strong>quakeml:isterre.fr/institution/001.
+					<strong>Example: </strong>quakeml:domain.ab/institution/001.
 				</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
@@ -224,7 +249,7 @@
 			<xs:element name="streetAddress" type="xs:string">
 				<xs:annotation>
 					<xs:documentation>
-						<strong>Example: </strong>Universite Grenoble Alpes CS 40700
+						<strong>Example: </strong>Some streetAddress
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
@@ -232,14 +257,14 @@
 				<xs:annotation>
 					<xs:documentation>
 						Use this field to provide the city of the location.<br/>
-						<strong>Example: </strong>Grenoble
+						<strong>Example: </strong>Thessaloniki
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
 			<xs:element name="postalCode" type="xs:string">
 				<xs:annotation>
 					<xs:documentation>
-						<strong>Example: </strong>38058
+						<strong>Example: </strong>12 345
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
@@ -275,6 +300,7 @@
 	</xs:complexType>	
 
 	<!-- Site Description Type Definitions -->
+
 	<xs:complexType name="SiteDescriptionType">
 		<xs:sequence>
 			<xs:element name="station" type="xs:string" minOccurs="0" maxOccurs="1">
@@ -346,7 +372,7 @@
 						you should use this field to designate the prefered analysis.<br/>
 						<strong>Note: </strong>The Overall Quality index of the Site Characterization will be calculated 
 						using the preferred analysis.<br/>
-						<strong>Example: </strong>quakeml:isterre.fr/analysis/001
+						<strong>Example: </strong>quakeml:domain.ab/analysis/001
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
@@ -356,17 +382,23 @@
 						you should use this field to designate the prefered Velocity Profile.<br/>
 						<strong>Note: </strong>The Overall Quality index of the Site Characterization will be calculated 
 						using the preferred velocity profile.<br/>
-						<strong>Example: </strong>quakeml:isterre.fr/velocity_profile/001
+						<strong>Example: </strong>quakeml:domain.ab/velocity_profile/001
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="overallQindex" type="QIndexType" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="overallQindex" type="QIndexType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The Overall Quality index for this site. Must be a decimal value between 0 an 1.
+						<strong>Example: </strong>0.8
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 		<xs:attribute name="publicID" type="ResourceIdentifier" use="required">
 			<xs:annotation>
 				<xs:documentation>Unique resource ID of the site description.<br/>
-					<strong>Example: </strong>quakeml:isterre.fr/site_description/001.
+					<strong>Example: </strong>quakeml:domain.ab/site_description/001.
 				</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
@@ -473,12 +505,13 @@
 	</xs:complexType>
 
 	<!-- Site Analysis Type Definitions -->
+
 	<xs:complexType name="AnalysisType">
 		<xs:sequence>
 			<xs:element name="siteDescriptionID" type="ResourceIdentifier"> <!-- required -->
 				<xs:annotation>
 					<xs:documentation>The Site Description this Analysis object refers to.<br/>
-					<strong>Example: </strong>quakeml:isterre.fr/site_description/001</xs:documentation>
+					<strong>Example: </strong>quakeml:domain.ab/site_description/001</xs:documentation>
 				</xs:annotation>
 			</xs:element>
 			<xs:element name="creationTime" type="xs:dateTime" minOccurs="0" maxOccurs="1">
@@ -593,7 +626,7 @@
 		<xs:attribute name="publicID" type="ResourceIdentifier" use="required"> 
 			<xs:annotation>
 				<xs:documentation>Unique resource ID of the analysis.<br/>
-					<strong>Example: </strong>quakeml:isterre.fr/analysis/001.
+					<strong>Example: </strong>quakeml:domain.ab/analysis/001.
 				</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
@@ -619,7 +652,7 @@
     	<xs:attribute name="publicID" use="required" type="ResourceIdentifier">
 			 <xs:annotation>
 				<xs:documentation>Unique resource ID of the velocity profile.<br/>
-					<strong>Example: </strong>quakeml:isterre.fr/velocity_profile/001.
+					<strong>Example: </strong>quakeml:domain.ab/velocity_profile/001.
 				</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
@@ -960,6 +993,7 @@
 	</xs:simpleType>
 
 	<!-- Type tightening and basic lexical constraints -->
+
 	<xs:simpleType name="SchemaVersionType">
 		<xs:annotation>
 			<xs:documentation>Schema version string (e.g., 1.3.4).</xs:documentation>
@@ -983,7 +1017,7 @@
 	<xs:simpleType name="EmailType">
 		<xs:annotation>
 			<xs:documentation>Email address.<br/>
-			<strong>Example: </strong>kiriaki@itsak.gr</xs:documentation>
+			<strong>Example: </strong>someemail@domain.ab</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:string">
 			<xs:pattern value="[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"/>
@@ -1035,7 +1069,7 @@
 				This identifier can be interpreted differently depending on the datacenter/software 
 				that generated the document. It should follow the QuakML Resource ID convention:<br/>
 				<em>authority:domain/resource-type/local-id</em><br/>
-				<strong>Example: </strong>quakeml:isterre.fr/analysis/001
+				<strong>Example: </strong>quakeml:domain.ab/analysis/001
 			</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:anyURI"/> 
