@@ -213,7 +213,7 @@ class MassDownloader(object):
 
             # Download StationXML data.
             helper.prepare_stationxml_download()
-            helper.download_stationxml()
+            helper.download_stationxml(threads_per_client=threads_per_client)
 
             # Sanitize the downloaded things if desired. Assures that all
             # waveform data also has the corresponding station information.

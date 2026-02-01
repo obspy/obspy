@@ -648,7 +648,7 @@ class ClientDownloadHelper(object):
                 stationxml_storage=self.stationxml_storage,
                 logger=self.logger)
 
-    def download_stationxml(self, threads=3):
+    def download_stationxml(self, threads_per_client=3):
         """
         Actually download the StationXML files.
 
@@ -690,7 +690,7 @@ class ClientDownloadHelper(object):
 
         # Download it.
         s_time = timeit.default_timer()
-        pool = ThreadPool(min(threads, len(arguments)))
+        pool = ThreadPool(min(threads_per_client, len(arguments)))
         results = pool.map(star_download_station, arguments)
         pool.close()
         e_time = timeit.default_timer()
