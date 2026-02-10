@@ -40,6 +40,7 @@ BGS         https://eida.bgs.ac.uk
 EARTHSCOPE  https://service.iris.edu
 EIDA        http://eida-federator.ethz.ch
 EMSC        https://www.seismicportal.eu
+EPOSFR      https://seisdata.epos-france.fr
 ETH         https://eida.ethz.ch
 GEOFON      https://geofon.gfz.de
 GEONET      https://service.geonet.org.nz
@@ -65,7 +66,6 @@ ODC         https://www.orfeus-eu.org
 ORFEUS      https://www.orfeus-eu.org
 RASPISHAKE  https://data.raspberryshake.org
 RESIF       https://ws.resif.fr
-RESIFPH5    http://ph5ws.resif.fr
 SCEDC       https://service.scedc.caltech.edu
 TEXNET      http://rtserve.beg.utexas.edu
 UIB-NORSAR  https://eida.geo.uib.no
