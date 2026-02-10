@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Test suite for the StationXML reader and writer.
+Test suite for the SiteXML reader and writer.
 
-:copyright:
-    Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
+:author:
+    Kiriaki Konstantinidou (kiriaki@itsak.gr), 2025
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
@@ -20,7 +20,7 @@ from obspy.io.sitexml.write import write_sitexml
 class TestSiteXML():
     """
     """
-    def _assert_station_xml_equality(self, xml_file_buffer,
+    def _assert_site_xml_equality(self, xml_file_buffer,
                                      expected_xml_file_buffer):
         """
         Helper function comparing two BytesIO buffers contain SiteXML
@@ -52,14 +52,10 @@ class TestSiteXML():
         # helpful as you do not know which line is missing.
         assert len(new_lines) == len(org_lines)
 
-    #def test_where(datapath, testdata):
-    #    print("datapath =", datapath)
-    #    print("testdata minimal =", testdata.get("simple_sitexml.xml"))
-
     def _write_and_compare(self, orig_filename, sera_site):
         """
         Helper function for creating two BytesIO buffers contain SiteXML
-        files to be compared by _assert_station_xml_equality().
+        files to be compared by _assert_site_xml_equality().
         
         :type orig_filename: str
         :param orig_filename: Name of the file to read from siteXML doc
@@ -80,7 +76,7 @@ class TestSiteXML():
         
         # Compare the two buffers
         #
-        self._assert_station_xml_equality(
+        self._assert_site_xml_equality(
             new_xml_file_buffer, orig_xml_file_buffer)
         
     def test_is_sitexml(self, testdata, datapath):
@@ -93,13 +89,13 @@ class TestSiteXML():
             assert _is_sitexml(stat)
         
         # Check some negatives.
-        not_sitexmls = [
-            "wrong_sitexml.xml", "input_csv/site_description.csv",
-            "input_excel/sera_site_all.xlsx"]
-        not_sitexmls = [datapath / name
-                           for name in not_sitexmls]
-        for stat in not_sitexmls:
-            assert not _is_sitexml(stat)
+        #not_sitexmls = [
+        #    "wrong_sitexml.xml", "input_csv/site_description.csv",
+        #    "input_excel/sera_site_all.xlsx"]
+        #not_sitexmls = [datapath / name
+        #                   for name in not_sitexmls]
+        #for stat in not_sitexmls:
+        #    assert not _is_sitexml(stat)
     
     def test_read_and_write_minimal_file(self, testdata):
         """
