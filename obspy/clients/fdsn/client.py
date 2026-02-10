@@ -250,6 +250,12 @@ class Client(object):
                    "client short URL to 'EARTHSCOPE'.")
             warnings.warn(msg, ObsPyDeprecationWarning)
 
+        if base_url.upper() == 'RESIF':
+            msg = ("RESIF is now EPOSFR. Webservices and client will be "
+                   "shutdown in 2026. Please consider changing the FDSN "
+                   "client short URL to 'EPOSFR'.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
+
         if base_url.upper() in URL_MAPPINGS:
             url_mapping = base_url.upper()
             base_url = URL_MAPPINGS[url_mapping]
