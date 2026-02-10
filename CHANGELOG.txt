@@ -128,6 +128,8 @@ Changes:
      numpy 2.4.0 deprecation expiration. (see #3668)
    * Add warnings.catch_warnings for spectral_estimation tests, linked to
      a new numpy 2.4.0 deprecation. (see #3668)
+   * Prep SciPy dropping ODR for polarization.partical_motion_odr, prompt user
+     to install odrpack if they have SciPy >= 1.19.0 (see #3676)
  - obspy.signal.spectral_estimation.PPSD:
    * performance improvement in __init__: faster frequency array calculation
      (see #3644)
