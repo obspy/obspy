@@ -332,9 +332,9 @@ def particle_motion_odr(stream, noise_thres=0):
     from importlib.metadata import version
     scipy_ver = tuple(int(x) for x in version("scipy").split(".")[:2])
     use_scipy = True
-    if scipy_ver < (1,17):
+    if scipy_ver < (1, 17):
         import scipy.odr
-    elif scipy_ver < (1,19):
+    elif scipy_ver < (1, 19):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             import scipy.odr
@@ -387,7 +387,8 @@ def particle_motion_odr(stream, noise_thres=0):
     else:
         # use odrpack which expects f(x, beta)
         # instead of scipy's f(beta, x)
-        odr_fit_func = lambda x, beta: fit_func(beta, x)
+        def odr_fit_func(x, beta):
+            return fit_func(beta, x)
 
         out = odrpack.odr_fit(
             odr_fit_func, e, n, beta0=np.array([1.0])
