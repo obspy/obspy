@@ -2,6 +2,14 @@ master
 ======
 
 Changes:
+ - obspy.imaging.beachball:
+   * allow isotropic component to be plotted. Ensure explosions and
+     implosions plot fully colored/uncolored, and that the correct
+     "dominant" eigenvalue is chosen. Bug fix to fully implement
+     check to see if a new segment is needed for the matplotlib patches.
+     (see #3583)
+   * add tutorial to code_snippets to showcase isotropic plotting.
+     (see #3583)
  - General
    * Fix documentation for the command line scripts (see #1208 #3569)
    * Fix code coverage reporting (see #3646)
