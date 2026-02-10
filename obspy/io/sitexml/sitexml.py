@@ -20,10 +20,10 @@ from lxml import etree
 import obspy
 from obspy.io.stationxml.core import _tag2obj, _attr2obj, _tags2obj
 from obspy.core.inventory.util import ExternalReference
-from obspy.io.sitexml.core import (SERASite, SERASiteOwner, SiteDescription, Analysis,
-                                   EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency, VelocityS30, 
-                                   VelocityProfileSurvey, VelocityProfile, VelocityProfileData, 
-                                   ValueWithUncertainty, LiteratureSource)
+from .core import (SERASite, SERASiteOwner, SiteDescription, Analysis,
+                   EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency, 
+                   VelocityProfileSurvey, VelocityProfile, VelocityProfileData, 
+                   VelocityS30, ValueWithUncertainty, LiteratureSource)
 
 # Define some constants for writing SiteXML files.
 SCHEMA_VERSION = "1.3"
@@ -130,12 +130,18 @@ def read_sitexml(path_or_file_object):
     Function reading a SiteXML file.
 
     :param file_or_file_object: The file name or file-like object to read from.
+    :rtype: :class:`~obspy.io.sitexml.core.SERASite`
 
     Returns a SERASite object with metadata read from the provided SiteXML file.
-    At least site owener and site description metadata should be present in XMl file 
+    At least site owner and site description metadata should be present in XMl file 
     in order to create the SERASite object.
+
+    .. rubric:: Example
+
+        >>> from obspy.io.sitexml.sitexml import read_sitexml
+        >>> site = read_sitexml("site.xml")
+
     """
-    #print(path_or_file_object)
     validates, errors = validate_sitexml(path_or_file_object)
     if validates is False:
         msg = "The provided SiteXML file fails to validate against the schema.\n"
@@ -158,7 +164,7 @@ def read_sitexml(path_or_file_object):
         site_description = _read_site_description(
             site_description_element)
     
-    # Only create the SERA_Site object if both 
+    # Create the SERA_Site object only if both 
     # site_owner and site_description exists
     #
     if site_owner and site_description:
@@ -527,6 +533,7 @@ def _read_velocity_profile(analysis_element, analysis_obj):
     :type analysis_obj: :class:`~obspy.core.io.sitexml.core.Analysis`
     :param analysis_obj: The Analysis object to store the values read from the <velocityProfile> element. 
                         It should be pre-initialized by the calling function.
+    :rtype: :class:`~obspy.io.sitexml.core.VelocityProfileSurvey`
     """
 
     vp_element_list=analysis_element.findall(_ns("velocityProfile"))

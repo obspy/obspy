@@ -1,0 +1,444 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SERA_quakeml xmlns="http://www.orfeus-eu.org/xml/site/1" schemaVersion="1.3" publicID="quakeml:domain.ab/site/001">
+    <creationTime>2025-09-20T12:42:17.000000Z</creationTime>
+    <externalReference>
+        <uri>http://www.domain.ab/SiteXML/report1</uri>
+        <description>Report 1</description>
+    </externalReference>
+    <externalReference>
+        <uri>http://www.domain.ab/SiteXML/report2</uri>
+        <description>Report 2</description>
+    </externalReference>
+    <siteOwner publicID="quakeml:domain.ab/siteOwner/001">
+        <codeName>SITEOWNER</codeName>
+        <fullName>Site Owner Full Name</fullName>
+        <contact>
+            <person publicID="quakeml:domain.ab/person/001">
+                <firstname>Name</firstname>
+                <lastname>Surname</lastname>
+                <mbox>someemail@domain.ab</mbox>
+                <homepage>https://www.domain.ab/person</homepage>
+            </person>
+            <affiliation>
+                <institution publicID="quakeml:domain.ab/institution/1001">
+                    <name>INSTITUTION_ABBR</name>
+                    <mbox>info@domain.ab</mbox>
+                    <phone>+30 123 456789</phone>
+                    <homepage>http://www.domain.ab</homepage>
+                    <postalAddress>
+                        <streetAddress>Some streetAddress</streetAddress>
+                        <locality>City</locality>
+                        <postalCode>12345</postalCode>
+                        <country>
+                            <code>AB</code>
+                            <country>Somecountry</country>
+                        </country>
+                    </postalAddress>
+                </institution>
+                <department>Seismology</department>
+                <function>Senior researcher</function>
+            </affiliation>
+        </contact>
+    </siteOwner>
+    <siteDescription publicID="quakeml:domain.ab/site_description/001">
+        <station>ABCD</station>
+        <latitude>
+            <value>45.137174</value>
+        </latitude>
+        <longitude>
+            <value>5.998905</value>
+        </longitude>
+        <altitude>
+			<value>239.0</value>
+		</altitude>
+        <minDistanceFromStation>
+            <value>10.3</value>
+        </minDistanceFromStation>
+        <maxDistanceFromStation>
+            <value>10.3</value>
+        </maxDistanceFromStation>
+        <siteTopography>
+            <schemaA>T1</schemaA>
+            <schemaB>Valley</schemaB>
+        </siteTopography>
+        <siteMorphology>	
+			<morphology>Plain</morphology>
+            <siteClassEC8>C</siteClassEC8>
+            <siteClassEC8Qindex1>
+                <value>1.0</value>
+            </siteClassEC8Qindex1>
+            <siteClassEC8Reference>
+                <literatureSource>
+					<title>Some title</title>
+					<firstAuthor>Author A.</firstAuthor>
+					<secondaryAuthors>Author B., Author C.</secondaryAuthors>
+					<year>2018</year>
+					<booktitle>Some magazine</booktitle>
+					<doi>10.1007/s10518-017-0135-5</doi>
+                    <languageCode>en</languageCode>
+				</literatureSource>
+				<fileResource>
+					<description>paper</description>
+					<url>https://doi.org/10.1007/s10518-017-0135-5/</url>
+				</fileResource>
+            </siteClassEC8Reference>
+            <bedrockDepth>
+                <value>774.6218</value>
+                <uncertainty>107.8669</uncertainty>
+            </bedrockDepth>
+            <bedrockDepthQindex1>
+                <value>0.5</value>
+            </bedrockDepthQindex1>
+            <bedrockDepthReference>
+                <literatureSource>
+					<title>Some title</title>
+					<firstAuthor>Author A.</firstAuthor>
+					<secondaryAuthors>Author B, Author. C</secondaryAuthors>
+					<year>2018</year>
+					<booktitle>Some magazine</booktitle>
+					<doi>10.1007/s10518-017-0135-5</doi>
+                    <languageCode>en</languageCode>
+				</literatureSource>
+				<fileResource>
+					<description>paper</description>
+					<url>https://doi.org/10.1007/s10518-017-0135-5/</url>
+				</fileResource>
+            </bedrockDepthReference>
+            <h800>
+                <value>94.0736</value>
+                <uncertainty>15.5748</uncertainty>
+            </h800>
+            <h800Qindex1>
+                <value>0.43</value>
+            </h800Qindex1>
+            <h800Reference>
+                <literatureSource>
+					<title>Some title</title>
+					<firstAuthor>Author A.</firstAuthor>
+					<secondaryAuthors>Author B, Author. C</secondaryAuthors>
+					<year>2018</year>
+					<booktitle>Some magazine</booktitle>
+					<doi>10.1007/s10518-017-0135-5</doi>
+                    <languageCode>en</languageCode>
+				</literatureSource>
+				<fileResource>
+					<description>paper</description>
+					<url>https://doi.org/10.1007/s10518-017-0135-5/</url>
+				</fileResource>
+            </h800Reference>		
+			<geologicalUnit>Some geology</geologicalUnit>
+			<geologicalUnitQindex1>
+				<value>0.25</value>
+			</geologicalUnitQindex1>
+			<geologicalMapScale>1:50000</geologicalMapScale>
+			<geologicalUnitOGE>Some description</geologicalUnitOGE>
+            <geologicalUnitReference>
+                <literatureSource>
+					<title>Some title</title>
+					<firstAuthor>Author A.</firstAuthor>
+					<secondaryAuthors>Author B, Author. C</secondaryAuthors>
+					<year>2018</year>
+					<booktitle>Some magazine</booktitle>
+					<doi>10.1007/s10518-017-0135-5</doi>
+                    <languageCode>en</languageCode>
+				</literatureSource>
+				<fileResource>
+					<description>paper</description>
+					<url>https://doi.org/10.1007/s10518-017-0135-5/</url>
+				</fileResource>
+            </geologicalUnitReference>
+		</siteMorphology>
+        <preferredSiteAnalysisID>quakeml:domain.ab/analysis/001</preferredSiteAnalysisID>
+        <preferredVelocityProfileID>quakeml:domain.ab/velocity_profile/001</preferredVelocityProfileID>
+        <overallQindex>
+            <value>0.41</value>
+        </overallQindex>
+    </siteDescription>
+    <analysis publicID="quakeml:domain.ab/analysis/001">
+        <siteDescriptionID>quakeml:domain.ab/site_description/001</siteDescriptionID>
+        <creationTime>2015-11-10T00:00:00.000000Z</creationTime>
+        <resonanceFrequency>
+            <value>4.9962</value>
+            <uncertainty>0.3494</uncertainty>
+        </resonanceFrequency>
+        <resonanceFrequencyQindex1>
+            <value>0.8</value>
+        </resonanceFrequencyQindex1>
+        <resonanceFrequencyMethod>HVSR EARTHQUAKE RECORDS</resonanceFrequencyMethod>
+        <resonanceFrequencyMethod>SSR EARTHQUAKE RECORDS</resonanceFrequencyMethod>
+        <resonanceFrequencyReference>
+            <literatureSource>
+                <title>Some title</title>
+                <firstAuthor>Author A.</firstAuthor>
+                <secondaryAuthors>Author B., Author C.</secondaryAuthors>
+                <year>2018</year>
+                <booktitle>Some magazine</booktitle>
+                <doi>10.1007/s10518-017-0135-5</doi>
+                <languageCode>en</languageCode>
+            </literatureSource>
+            <fileResource>
+                <description>paper</description>
+                <url>https://doi.org/10.1007/s10518-017-0135-5/</url>
+            </fileResource>
+        </resonanceFrequencyReference>
+        <velocityS30>
+            <value>221.5954</value>
+            <uncertainty>18.34</uncertainty>
+        </velocityS30>
+        <velocityS30Qindex1>
+            <value>0.8</value>
+        </velocityS30Qindex1>
+        <velocityS30Method>Geology</velocityS30Method>
+        <velocityS30Method>Crosshole</velocityS30Method>
+        <velocityS30MethodCombIndex>1.2</velocityS30MethodCombIndex>
+        <velocityS30ManualIndex>1.0</velocityS30ManualIndex>
+        <velocityS30Reference>
+            <literatureSource>
+                <title>Some title</title>
+                <firstAuthor>Author A.</firstAuthor>
+                <secondaryAuthors>Author B., Author C.</secondaryAuthors>
+                <year>2018</year>
+                <booktitle>Some magazine</booktitle>
+                <doi>10.1007/s10518-017-0135-5</doi>
+                <languageCode>en</languageCode>
+            </literatureSource>
+            <fileResource>
+                <description>paper</description>
+                <url>https://doi.org/10.1007/s10518-017-0135-5/</url>
+            </fileResource>
+        </velocityS30Reference>
+        <velocityProfileCount>2</velocityProfileCount>
+        <sptLogsCount>2</sptLogsCount>
+        <cptLogsCount>0</cptLogsCount>
+        <boreholeLogsCount>0</boreholeLogsCount>
+        <!-- Velocity profile # 1 -->
+        <velocityProfile publicID="quakeml:domain.ab/velocity_profile/001">
+            <layerCount>8</layerCount>
+            <velocityProfileData>
+                <velocityS>
+                    <value>118.08</value>
+                    <uncertainty>2.0</uncertainty>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>0.0</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>0.19</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>139.94</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>0.19</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>0.57</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>180.3</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>0.57</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>1.34</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>252.54</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>1.34</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>2.87</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>378.24</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>2.87</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>5.93</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>471.03</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>5.93</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>12.33</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>737.07</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>12.33</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>209.23</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>	
+            <velocityProfileData>
+                <velocityS>
+                    <value>1108.37</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>209.23</value>
+                    </layerTopDepth>
+                </layerThickness>
+            </velocityProfileData>
+        </velocityProfile>
+        <!-- Velocity profile # 2 -->
+        <velocityProfile publicID="quakeml:domain.ab/velocity_profile/002">
+            <layerCount>8</layerCount>
+            <velocityProfileData>
+                <velocityS>
+                    <value>119.4</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>0.0</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>0.2</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>141.7</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>0.2</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>0.59</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>182.0</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>0.59</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>1.38</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>256.0</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>1.38</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>2.96</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>382.0</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>2.96</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>6.11</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>475.7</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>6.11</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>12.7</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>806.1</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>12.7</value>
+                    </layerTopDepth>
+                    <layerBottomDepth>
+                        <value>226.6</value>
+                    </layerBottomDepth>
+                </layerThickness>
+            </velocityProfileData>
+            <velocityProfileData>
+                <velocityS>
+                    <value>1097.0</value>
+                </velocityS>
+                <layerThickness>
+                    <layerTopDepth>
+                        <value>226.6</value>
+                    </layerTopDepth>
+                </layerThickness>
+            </velocityProfileData>
+        </velocityProfile>
+        <velocityProfileQindex1>
+            <value>1.0</value>
+        </velocityProfileQindex1>
+        <velocityProfileReference>
+            <literatureSource>
+                <title>Some title</title>
+                <firstAuthor>Author A.</firstAuthor>
+                <secondaryAuthors>Author B., Author C.</secondaryAuthors>
+                <year>2018</year>
+                <booktitle>Some magazine</booktitle>
+                <doi>10.1007/s10518-017-0135-5</doi>
+                <languageCode>en</languageCode>
+            </literatureSource>
+            <fileResource>
+                <description>paper</description>
+                <url>https://doi.org/10.1007/s10518-017-0135-5/</url>
+            </fileResource>
+        </velocityProfileReference>
+    </analysis>
+</SERA_quakeml>

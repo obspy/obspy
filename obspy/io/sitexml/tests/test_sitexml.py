@@ -132,15 +132,15 @@ class TestSiteXML():
 
         assert sera_site.site_owner.owner_codename == "SITEOWNER"
         assert sera_site.site_owner.owner_fullname == "Site Owner Full Name"
-        assert sera_site.site_owner.ownerID == "quakeml:domain/siteOwner/001"
+        assert sera_site.site_owner.ownerID == "quakeml:domain.ab/siteOwner/001"
 
-        assert sera_site.site_owner.personID == "quakeml:domain/person/001"
+        assert sera_site.site_owner.personID == "quakeml:domain.ab/person/001"
         assert sera_site.site_owner.person_firstname == "Name"
         assert sera_site.site_owner.person_lastname == "Surname"
         assert sera_site.site_owner.person_mbox == "someemail@domain.ab"
         assert sera_site.site_owner.person_homepage == "https://www.domain.ab/person"
 
-        assert sera_site.site_owner.institutionID == "quakeml:domain/institution/1001"
+        assert sera_site.site_owner.institutionID == "quakeml:domain.ab/institution/1001"
         assert sera_site.site_owner.institution_name == "INSTITUTION_ABBR"
         assert sera_site.site_owner.institution_mbox == "info@domain.ab"
         assert sera_site.site_owner.institution_phone == "+30 123 456789"
