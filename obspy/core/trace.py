@@ -22,6 +22,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, create_empty_data_chunk, NUMPY_VERSION
 from obspy.core.util.base import _get_function_from_entry_point
 from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.misc import (flat_not_masked_contiguous, get_window_times,
                                   limit_numpy_fft_cache)
 
@@ -2658,27 +2659,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def attach_response(self, inventories):
         """
+        This method is deprecated and will be removed in a future release.
+        Pass metadata via the ``inventory`` argument of
+        :meth:`obspy.core.trace.Trace.remove_response` or
+        :meth:`obspy.core.trace.Trace.remove_sensitivity` instead.
+
         Search for and attach channel response to the trace as
         :class:`obspy.core.trace.Trace`.stats.response. Raises an exception
         if no matching response can be found.
         To subsequently deconvolve the instrument response use
         :meth:`obspy.core.trace.Trace.remove_response`.
-
-        >>> from obspy import read, read_inventory
-        >>> st = read()
-        >>> tr = st[0]
-        >>> inv = read_inventory()
-        >>> tr.attach_response(inv)
-        >>> print(tr.stats.response)  \
-                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-        Channel Response
-           From M/S (Velocity in Meters per Second) to COUNTS (Digital Counts)
-           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
-           4 stages:
-              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
-              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
-              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
 
         :type inventories: :class:`~obspy.core.inventory.inventory.Inventory`
             or :class:`~obspy.core.inventory.network.Network` or a list
@@ -2687,6 +2677,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param inventories: Station metadata to use in search for response for
             each trace in the stream.
         """
+        msg = ("Trace.attach_response() is deprecated and will be removed in "
+               "a future release. Pass metadata via the `inventory` argument "
+               "of remove_response() or remove_sensitivity() instead.")
+        warnings.warn(msg, ObsPyDeprecationWarning, stacklevel=2)
         self.stats.response = self._get_response(inventories)
 
     @_add_processing_info
@@ -2788,8 +2782,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             or None.
         :param inventory: Station metadata to use in search for adequate
             response. If inventory parameter is not supplied, the response
-            has to be attached to the trace with
-            :meth:`obspy.core.trace.Trace.attach_response` beforehand.
+            has to be attached to the trace beforehand.
         :type output: str
         :param output: Output units. One of:
 
@@ -3012,8 +3005,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             or None.
         :param inventory: Station metadata to use in search for adequate
             response. If inventory parameter is not supplied, the response
-            has to be attached to the trace with
-            :meth:`obspy.core.trace.Trace.attach_response` beforehand.
+            has to be attached to the trace beforehand.
 
         .. rubric:: Example
 

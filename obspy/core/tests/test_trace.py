@@ -13,6 +13,7 @@ from obspy import Stream, Trace, __version__, read, read_inventory
 from obspy import UTCDateTime as UTC
 from obspy.core import Stats
 from obspy.core.util.base import _get_entry_points
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.io.xseed import Parser
 import pytest
 
@@ -1756,7 +1757,7 @@ class TestTrace:
         del tr.stats.response
         inv = read_inventory(
             testdata['stationxml_IU.ANTO.30.LDO.xml'], format='StationXML')
-        tr.attach_response(inv)
+        tr.stats.response = tr._get_response(inv)
         tr.remove_response()
 
         # blockette 62, stage 1 + blockette 58, stage 2
@@ -1770,7 +1771,7 @@ class TestTrace:
         del tr.stats.response
         inv = read_inventory(
             testdata['stationxml_BK.CMB.__.LKS.xml'], format='StationXML')
-        tr.attach_response(inv)
+        tr.stats.response = tr._get_response(inv)
 
         # raises UserWarning: Stage gain not defined - ignoring
         with warnings.catch_warnings(record=True) as w:
@@ -2296,7 +2297,7 @@ class TestTrace:
         """
         tr = read("/path/to/IU_ULN_00_LH1_2015-07-18T02.mseed")[0]
         inv = read_inventory("/path/to/IU_ULN_00_LH1.xml")
-        tr.attach_response(inv)
+        tr.stats.response = tr._get_response(inv)
         pre_filt = [0.001, 0.005, 10, 20]
         tr.remove_response(pre_filt=pre_filt, output="DISP",
                            water_level=60, end_stage=None, plot=image_path)
@@ -2307,9 +2308,16 @@ class TestTrace:
         """
         tr = read("/path/to/1T_MONN_00_EDH.mseed")[0]
         inv = read_inventory("/path/to/1T_MONN_00_EDH.xml")
-        tr.attach_response(inv)
+        tr.stats.response = tr._get_response(inv)
         tr.remove_response(output='DEF')
         np.testing.assert_almost_equal(tr.max(), 54.833, decimal=3)
+
+    def test_attach_response_deprecated(self):
+        tr = read()[0]
+        inv = read_inventory()
+        with pytest.warns(
+                ObsPyDeprecationWarning, match=r"Trace\.attach_response\(\)"):
+            tr.attach_response(inv)
 
     def test_normalize(self):
         """

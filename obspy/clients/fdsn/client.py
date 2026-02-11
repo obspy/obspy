@@ -813,28 +813,6 @@ class Client(object):
         IU.AFI.10.LHZ  | 2010-02-27T06:30:00.069538Z - ... | 1.0 Hz, 5 samples
         IU.ANMO.10.LHZ | 2010-02-27T06:30:00.069538Z - ... | 1.0 Hz, 5 samples
 
-        Use ``attach_response=True`` to automatically add response information
-        to each trace. This can be used to remove response using
-        :meth:`~obspy.core.stream.Stream.remove_response`.
-
-        >>> t = UTCDateTime("2012-12-14T10:36:01.6Z")
-        >>> st = client.get_waveforms("TA", "E42A", "*", "BH?", t+300, t+400,
-        ...                           attach_response=True)
-        >>> st.remove_response(output="VEL") # doctest: +ELLIPSIS
-        <obspy.core.stream.Stream object at ...>
-        >>> st.plot()  # doctest: +SKIP
-
-        .. plot::
-
-            from obspy import UTCDateTime
-            from obspy.clients.fdsn import Client
-            client = Client("EARTHSCOPE")
-            t = UTCDateTime("2012-12-14T10:36:01.6Z")
-            st = client.get_waveforms("TA", "E42A", "*", "BH?", t+300, t+400,
-                                      attach_response=True)
-            st.remove_response(output="VEL")
-            st.plot()
-
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
             codes or data center defined codes. Multiple codes are
@@ -869,11 +847,12 @@ class Client(object):
             instead of being parsed to an ObsPy object. Thus it will contain
             the raw data from the webservices.
         :type attach_response: bool
-        :param attach_response: Specify whether the station web service should
-            be used to automatically attach response information to each trace
-            in the result set. A warning will be shown if a response can not be
-            found for a channel. Does nothing if output to a file was
-            specified.
+        :param attach_response: Convenience option to automatically attach
+            response information to each trace in the result set. For new code
+            prefer passing metadata directly to
+            :meth:`~obspy.core.stream.Stream.remove_response` instead. A
+            warning will be shown if a response can not be found for a
+            channel. Does nothing if output to a file was specified.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the
@@ -884,6 +863,12 @@ class Client(object):
         if "dataselect" not in self.services:
             msg = "The current client does not have a dataselect service."
             raise FDSNNoServiceException(msg)
+
+        if attach_response:
+            msg = ("attach_response is deprecated and will be removed in "
+                   "a future release. Use remove_response() instead."
+                   )
+            warnings.warn(msg, ObsPyDeprecationWarning, stacklevel=2)
 
         locs = locals()
         setup_query_dict('dataselect', locs, kwargs)
@@ -935,7 +920,14 @@ class Client(object):
                     starttime=starttime, endtime=endtime, level="response"))
             except Exception as e:
                 warnings.warn(str(e))
-        st.attach_response(inventories)
+        for tr in st:
+            try:
+                tr.stats.response = tr._get_response(inventories)
+            except Exception as e:
+                if str(e) == "No matching response information found.":
+                    warnings.warn(str(e))
+                else:
+                    raise
 
     def get_waveforms_bulk(self, bulk, quality=None, minimumlength=None,
                            longestonly=None, filename=None,
@@ -1000,38 +992,6 @@ class Client(object):
         GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
-        >>> t = UTCDateTime("2012-12-14T10:36:01.6Z")
-        >>> t1 = t + 300
-        >>> t2 = t + 400
-        >>> bulk = [("TA", "S42A", "*", "BHZ", t1, t2),
-        ...         ("TA", "W42A", "*", "BHZ", t1, t2),
-        ...         ("TA", "Z42A", "*", "BHZ", t1, t2)]
-        >>> st = client.get_waveforms_bulk(bulk, attach_response=True)
-        >>> st.remove_response(output="VEL") # doctest: +ELLIPSIS
-        <obspy.core.stream.Stream object at ...>
-        >>> st.plot()  # doctest: +SKIP
-
-        .. plot::
-
-            from obspy import UTCDateTime
-            from obspy.clients.fdsn import Client
-            client = Client("EARTHSCOPE")
-            t = UTCDateTime("2012-12-14T10:36:01.6Z")
-            t1 = t + 300
-            t2 = t + 400
-            bulk = [("TA", "S42A", "*", "BHZ", t1, t2),
-                    ("TA", "W42A", "*", "BHZ", t1, t2),
-                    ("TA", "Z42A", "*", "BHZ", t1, t2)]
-            st = client.get_waveforms_bulk(bulk, attach_response=True)
-            st.remove_response(output="VEL")
-            st.plot()
-
-        .. note::
-
-            Use `attach_response=True` to automatically add response
-            information to each trace. This can be used to remove response
-            using :meth:`~obspy.core.stream.Stream.remove_response`.
-
         :type bulk: str, file or list[list]
         :param bulk: Information about the requested data. See above for
             details.
@@ -1051,11 +1011,12 @@ class Client(object):
             instead of being parsed to an ObsPy object. Thus it will contain
             the raw data from the webservices.
         :type attach_response: bool
-        :param attach_response: Specify whether the station web service should
-            be used to automatically attach response information to each trace
-            in the result set. A warning will be shown if a response can not be
-            found for a channel. Does nothing if output to a file was
-            specified.
+        :param attach_response: Convenience option to automatically attach
+            response information to each trace in the result set. For new code
+            prefer passing metadata directly to
+            :meth:`~obspy.core.stream.Stream.remove_response` instead. A
+            warning will be shown if a response can not be found for a
+            channel. Does nothing if output to a file was specified.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the

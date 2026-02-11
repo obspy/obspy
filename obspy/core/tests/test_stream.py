@@ -15,6 +15,7 @@ from obspy.core.inventory import Channel, Inventory, Network, Station
 from obspy.core.stream import _is_pickle, _read_pickle, _write_pickle
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile, _get_entry_points
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.core.util.testing import streams_almost_equal
 from obspy.io.xseed import Parser
@@ -2370,6 +2371,13 @@ class TestStream:
             assert streams_almost_equal(st1, st2, atol=0, rtol=1e-6)
         else:
             assert st1 == st2
+
+    def test_attach_response_deprecated(self):
+        st = read()
+        inv = read_inventory()
+        with pytest.warns(
+                ObsPyDeprecationWarning, match=r"Stream\.attach_response\(\)"):
+            st.attach_response(inv)
 
     def test_remove_sensitivity(self):
         """
