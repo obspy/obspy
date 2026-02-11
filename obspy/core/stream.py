@@ -3219,7 +3219,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         skipped_traces = []
         for tr in self.traces:
             try:
-                # Call _get_response directly to avoid double deprecation warning.
+                # Call _get_response to avoid double deprecation warning.
                 tr.stats.response = tr._get_response(inventories)
             except Exception as e:
                 if str(e) == "No matching response information found.":
