@@ -1681,6 +1681,34 @@ class UTCDateTime(object):
         from matplotlib.dates import date2num
         return date2num(self.datetime)
 
+    def __setstate__(self, state):
+        """
+        Handle unpickling of old UTCDateTime objects.
+        """
+        # Directly accept modern state.
+        if "_ns" in state:
+            self.__dict__.update(state)
+        # Older pickles used name-mangled private attributes.
+        elif "_UTCDateTime__ns" in state:
+            self._ns = state["_UTCDateTime__ns"]
+            self.precision = state.get(
+                "_UTCDateTime__precision", self.DEFAULT_PRECISION)
+            self._initialized = state.get("_initialized", True)
+        # Very old pickles stored only floating-point timestamps.
+        elif "timestamp" in state:
+            self._from_timestamp(state["timestamp"])
+            if "_UTCDateTime__precision" in state:
+                self.precision = state["_UTCDateTime__precision"]
+        else:
+            msg = "Cannot reconstruct UTCDateTime from pickle state"
+            raise ValueError(msg)
+
+        # Backfill defaults for old pickle payloads.
+        if "precision" not in self.__dict__:
+            self.precision = self.DEFAULT_PRECISION
+        if "_initialized" not in self.__dict__:
+            self._initialized = True
+
 
 def _datetime_to_ns(dt):
     """

@@ -2,9 +2,11 @@
 import copy
 import datetime
 import itertools
+import pickle
 import warnings
 from functools import partial
 from operator import ge, eq, lt, le, gt, ne
+from pathlib import Path
 
 from packaging.version import parse as parse_version
 import numpy as np
@@ -1521,3 +1523,14 @@ class TestUTCDateTime:
         # skip ISO8601 mode
         assert UTC('2019-01-01T02-02:33', iso8601=False) == \
                UTC(2019, 1, 1, 2, 2, 33)
+
+    @pytest.mark.parametrize(
+        "path",
+        (Path(__file__).parent / "data" / "utc_pickles").glob("*.pkl")
+    )
+    def test_read_old_pickles(self, path):
+        """Ensure we can read the pickle."""
+        expected = UTC("2017-09-17T16:00:00")
+        with open(path, "rb") as f:
+            utc = pickle.load(f)
+        assert utc == expected
