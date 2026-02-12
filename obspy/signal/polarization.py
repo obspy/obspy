@@ -328,13 +328,14 @@ def particle_motion_odr(stream, noise_thres=0):
     :returns: azimuth, incidence, error of azimuth, error of incidence
     """
 
-    # scipy dropping ODR in 1.19, new package not a perfect replacment
+    # ccipy removing ODR in 1.19.0, new package not a perfect replacement
     from importlib.metadata import version
-    scipy_ver = tuple(int(x) for x in version("scipy").split(".")[:2])
+    from packaging.version import Version
+    scipy_ver = Version(version("scipy"))
     use_scipy = True
-    if scipy_ver < (1, 17):
+    if scipy_ver < Version("1.17.0"):
         import scipy.odr
-    elif scipy_ver < (1, 19):
+    elif scipy_ver < Version("1.19.0"):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             import scipy.odr
