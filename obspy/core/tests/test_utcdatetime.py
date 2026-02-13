@@ -1529,8 +1529,12 @@ class TestUTCDateTime:
         (Path(__file__).parent / "data" / "utc_pickles").glob("*.pkl")
     )
     def test_read_old_pickles(self, path):
-        """Ensure we can read the pickle."""
+        """Load many old pickle files, ensure each can be unpickled."""
         expected = UTC("2017-09-17T16:00:00")
-        with open(path, "rb") as f:
-            utc = pickle.load(f)
+        with warnings.catch_warnings(record=True):
+            # We don't need to display warnings here; we know some old
+            # pickle files might trigger them.
+            warnings.simplefilter("always", ObsPyDeprecationWarning)
+            with open(path, "rb") as f:
+                utc = pickle.load(f)
         assert utc == expected
