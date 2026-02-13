@@ -847,9 +847,9 @@ class Client(object):
             instead of being parsed to an ObsPy object. Thus it will contain
             the raw data from the webservices.
         :type attach_response: bool
-        :param attach_response: Convenience option to automatically attach
-            response information to each trace in the result set. For new code
-            prefer passing metadata directly to
+        :param attach_response: Deprecated option to automatically attach
+            response information to each trace in the result trace. Will be
+            removed in a future ObsPy version. Use
             :meth:`~obspy.core.stream.Stream.remove_response` instead. A
             warning will be shown if a response can not be found for a
             channel. Does nothing if output to a file was specified.
@@ -1011,9 +1011,9 @@ class Client(object):
             instead of being parsed to an ObsPy object. Thus it will contain
             the raw data from the webservices.
         :type attach_response: bool
-        :param attach_response: Convenience option to automatically attach
-            response information to each trace in the result set. For new code
-            prefer passing metadata directly to
+        :param attach_response: Deprecated option to automatically attach
+            response information to each trace in the result trace. Will be
+            removed in a future ObsPy version. Use
             :meth:`~obspy.core.stream.Stream.remove_response` instead. A
             warning will be shown if a response can not be found for a
             channel. Does nothing if output to a file was specified.
