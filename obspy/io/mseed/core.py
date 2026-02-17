@@ -19,9 +19,8 @@ from . import (util, InternalMSEEDError, ObsPyMSEEDFilesizeTooSmallError,
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
                       VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS,
-                      Selections, SelectTime, Blkt100S,
+                      LIBMSEED_MAX, Selections, SelectTime, Blkt100S,
                       Blkt1001S, clibmseed)
-import obspy.io.mseed.headers
 
 
 def _is_mseed(file):
@@ -144,15 +143,15 @@ def __is_mseed(fp, file_size):  # NOQA
 
 def __read_header(buf, index, record_length):
     """
-        Reads the first record of the given buffer and returns
-        header information.
+    Reads the first record of the given buffer and returns
+    header information.
 
-        :param buf: :class:`numpy.array(dtype=int8)` or compatible containing
-                       raw miniseed data.
-        :param index:  position in the buffer which should be read
-        :param record_length: miniseed record length
+    :param buf: :class:`numpy.array(dtype=int8)` or compatible containing
+                   raw miniseed data.
+    :param index:  position in the buffer which should be read
+    :param record_length: miniseed record length
 
-        returns obspy.core.trace.Trace object without data
+    returns obspy.core.trace.Trace object without data
     """
 
     header = _read_mseed(buf[index:index+record_length], reclen=record_length,
@@ -162,37 +161,37 @@ def __read_header(buf, index, record_length):
 
 def __bisect_mseed(buf, timestamp, record_length, before=True):
     """
-         Quickly finds a timestamp in a miniseed stream using interpolation
-         search.
+     Quickly finds a timestamp in a miniseed stream using interpolation
+     search.
 
-         The code is a helper for _read_mseed and is written to be efficient,
-         a record size of at least 4096 is assumed. The code stops when the
-         area searched is less than ~1MB in size. This code is intended to
-         fasten up the code when trying to cut out a time window of data
-         from a large input file. Using this, the code potentially only
-         needs to actually read a very small portion of a file. Cutting
-         off at 1MB also eliminates the need of treating boundary conditions.
+     The code is a helper for _read_mseed and is written to be efficient,
+     a record size of at least 4096 is assumed. The code stops when the
+     area searched is less than ~1MB in size. This code is intended to
+     fasten up the code when trying to cut out a time window of data
+     from a large input file. Using this, the code potentially only
+     needs to actually read a very small portion of a file. Cutting
+     off at 1MB also eliminates the need of treating boundary conditions.
 
-         The algorithm used is "interplation search" as described by W.W.
-         Peterson 1957: doi:10.1147/rd.12.0130.
+     The algorithm used is "interplation search" as described by W.W.
+     Peterson 1957: doi:10.1147/rd.12.0130.
 
-         This code only works when the data is ordered (i.e. the time
-         stamps are ordered in ascending order). Otherwise the code
-         may fail, in this case, None is returned.
+     This code only works when the data is ordered (i.e. the time
+     stamps are ordered in ascending order). Otherwise the code
+     may fail, in this case, None is returned.
 
-         :param buf: :class:`numpy.array(dtype=int8)` or compatible containing
-                        raw miniseed data.
-         :param timestamp: :class:`~obspy.core.utcdatetime.UTCDateTime`
-                           timestamp to look for in buffer
-         :param recordlength: miniseed record length
-         :param before: If ``True``, return the index of the record containing
-                        the timestamp, if ``False``, return the index of the
-                        next record.
+     :param buf: :class:`numpy.array(dtype=int8)` or compatible containing
+                    raw miniseed data.
+     :param timestamp: :class:`~obspy.core.utcdatetime.UTCDateTime`
+                       timestamp to look for in buffer
+     :param recordlength: miniseed record length
+     :param before: If ``True``, return the index of the record containing
+                    the timestamp, if ``False``, return the index of the
+                    next record.
 
-         returns index of the buffer either including the timestamp or
-                 the next one or None if the time stamp cannot be found or
-                 if the header cannot be read (e.g. because of non-uniform
-                 record length).
+     returns index of the buffer either including the timestamp or
+             the next one or None if the time stamp cannot be found or
+             if the header cannot be read (e.g. because of non-uniform
+             record length).
     """
     low = 0
     high = len(buf)
@@ -262,7 +261,7 @@ def __bisect_mseed(buf, timestamp, record_length, before=True):
             guess_time = guess_header.stats.starttime
 
             # time stamps not in ascending order
-            if guess_time < starttime or guess_time > endtime:
+            if not (starttime <= guess_time <= endtime):
                 warnings.warn("The time stamps in the input stream are not \
                     in ascending order, reverting to default algorithm.")
                 return None
@@ -281,6 +280,36 @@ def __bisect_mseed(buf, timestamp, record_length, before=True):
         return low
     else:
         return high
+
+
+def _can_merge(prev, curr, details):
+    """
+     check whether two obspy.core.trace objects are
+     adjacent in time and can be merged.
+
+     :param prev: obspy.core.trace.Trace, previous object
+     :param curr: obspy.core.trace.Trace, current object
+     :param details: boolean, whether timing quality should be
+                     evaluated.
+    """
+
+    if prev.id != curr.id:
+        return False
+
+    if (
+        prev.stats.endtime + prev.stats.delta
+        < curr.stats.starttime - 0.1 * curr.stats.delta
+    ):
+        return False
+
+    # timing quality check (only if needed)
+    if not details:
+        return True
+
+    return (
+        prev.stats.mseed["blkt1001"]["timing_quality"]
+        == curr.stats.mseed["blkt1001"]["timing_quality"]
+    )
 
 
 def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
@@ -355,13 +384,13 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     1 Trace(s) in Stream:
     BW.UH3..EHZ | 2010-06-20T00:00:00.999999Z - ... | 200.0 Hz, 242 samples
 
-    Read with `details=True to read more details of the file if present.
+    Read with ``details=True`` to read more details of the file if present.
 
     >>> st = read("/path/to/timingquality.mseed", details=True)
     >>> print(st[0].stats.mseed.blkt1001.timing_quality)
     55
 
-    `False means that the necessary information could not be found in the
+    ``False`` means that the necessary information could not be found in the
     file.
 
     >>> print(st[0].stats.mseed.calibration_type)
@@ -369,7 +398,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
 
     Note that each change in timing quality from record to record may trigger a
     new Trace object to be created so the Stream object may contain many Trace
-    objects if `details=True is used.
+    objects if ``details=True`` is used.
 
     >>> print(len(st))
     101
@@ -407,13 +436,12 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     else:
         bo = None
 
-    use_bisection = 'use_bisection' in kwargs and kwargs['use_bisection']
+    use_bisection = kwargs.get('use_bisection', False)
     # If it's a file name just read it.
     if isinstance(mseed_object, str):
         # Read to NumPy array which is used as a buffer.
         # use memmap, faster than fromfile, same functionality
         bfr_np = np.memmap(mseed_object, dtype=np.int8, mode="c")
-        # bfr_np = np.fromfile(mseed_object, dtype=np.int8)
 
     elif hasattr(mseed_object, 'read'):
         bfr_np = from_buffer(mseed_object.read(), dtype=np.int8)
@@ -550,18 +578,18 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     #    - process chunk
     #    - merge it with predecessing chunck if possible
     # - Return stream object.
-    _max = obspy.io.mseed.headers.LIBMSEED_MAX
-    if bufptr_high - bufptr_low > _max - record_length:
+
+    if bufptr_high - bufptr_low > LIBMSEED_MAX - record_length:
         warnings.warn("In large file mode")
         unmerged_traces = []
         merged_traces = []
         traces = []
         currenttrace = None
-        # call _read_mseed with portions of less than 2**31
+        # call _read_mseed with portions of less than LIBMSEED_MAX
         for ptr in np.arange(bufptr_low, bufptr_high,
-                             _max - record_length):
+                             LIBMSEED_MAX - record_length):
             unmerged_traces = _read_mseed(
-                                    bfr_np[ptr:ptr + _max -
+                                    bfr_np[ptr:ptr + LIBMSEED_MAX -
                                            record_length],
                                     starttime, endtime, headonly,
                                     sourcename, record_length, details,
@@ -578,36 +606,20 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
             # data point will only be copied once and the process
             # is in O(N) instead of O(N**2).
             for trace in unmerged_traces:
-                if not currenttrace:
+                if currenttrace is None:
                     currenttrace = trace
                     traces = [currenttrace]
-                else:
-                    # if chunks are adjacent
-                    # should check timing quality if details == True
-                    if (
-                        currenttrace.stats.endtime + currenttrace.stats.delta
-                        >= trace.stats.starttime - 0.1 * trace.stats.delta
-                    ):
-                        if (
-                            not details
-                            or (
-                                details
-                                and
-                                currenttrace.stats.mseed["blkt1001"][
-                                    "timing_quality"]
-                                == trace.stats.mseed["blkt1001"][
-                                    "timing_quality"]
-                            )
-                        ):
-                            traces.append(trace)
-                            currenttrace = trace
-                            continue
-
-                    # merge all adjacent trunks and reinitialise the algorithm
-                    traces[0].data = np.concatenate([d.data for d in traces])
-                    merged_traces.append(traces[0])
-                    traces = [trace]
+                    continue
+                if _can_merge(currenttrace, trace, details):
+                    traces.append(trace)
                     currenttrace = trace
+                    continue
+
+                # merge all adjacent trunks and reinitialise the algorithm
+                traces[0].data = np.concatenate([d.data for d in traces])
+                merged_traces.append(traces[0])
+                traces = [trace]
+                currenttrace = trace
 
         # process remainder of the data after loop
         if len(traces):

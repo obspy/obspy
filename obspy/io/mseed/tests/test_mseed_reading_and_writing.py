@@ -392,8 +392,8 @@ class TestMSEEDReadingAndWriting():
             assert stream[0].data[_i] == data[_i]
 
         # Test code to read huge files (larger than 2GB)
-        with mock.patch("obspy.io.mseed.headers.LIBMSEED_MAX", 8192):
-            with pytest.warns(UserWarning, match="large file"):
+        with mock.patch("obspy.io.mseed.core.LIBMSEED_MAX", 8192):
+            with pytest.warns(UserWarning, match="In large file mode"):
                 stream = _read_mseed(testdata["CH.BALST..LHE.D.2025.314"])
             stream.verify()
             assert len(stream) == 1
