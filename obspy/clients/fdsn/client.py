@@ -1917,6 +1917,8 @@ def raise_on_error(code, data):
         raise FDSNServiceUnavailableException("Service temporarily "
                                               "unavailable",
                                               server_info)
+    elif code == 504:
+        raise FDSNTimeoutException("Timed Out")
     # Catch any non 200 codes.
     elif code != 200:
         raise FDSNException("Unknown HTTP code: %i" % code, server_info)
