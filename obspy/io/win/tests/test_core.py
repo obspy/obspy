@@ -90,7 +90,7 @@ class TestCore():
         assert st[0].stats.sampling_rate == 200.0
 
         expected_stds = {
-            "...0000": 62491.2874698,}
+            "...0000": 62491.2874698}
 
         for tr in st:
             assert round(expected_stds[tr.id], 4) == round(tr.data.std(), 4)
