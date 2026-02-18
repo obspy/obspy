@@ -161,37 +161,37 @@ def __read_header(buf, index, record_length):
 
 def __bisect_mseed(buf, timestamp, record_length, before=True):
     """
-     Quickly finds a timestamp in a miniseed stream using interpolation
-     search.
+    Quickly finds a timestamp in a miniseed stream using interpolation
+    search.
 
-     The code is a helper for _read_mseed and is written to be efficient,
-     a record size of at least 4096 is assumed. The code stops when the
-     area searched is less than ~1MB in size. This code is intended to
-     fasten up the code when trying to cut out a time window of data
-     from a large input file. Using this, the code potentially only
-     needs to actually read a very small portion of a file. Cutting
-     off at 1MB also eliminates the need of treating boundary conditions.
+    The code is a helper for _read_mseed and is written to be efficient,
+    a record size of at least 4096 is assumed. The code stops when the
+    area searched is less than ~1MB in size. This code is intended to
+    fasten up the code when trying to cut out a time window of data
+    from a large input file. Using this, the code potentially only
+    needs to actually read a very small portion of a file. Cutting
+    off at 1MB also eliminates the need of treating boundary conditions.
 
-     The algorithm used is "interplation search" as described by W.W.
-     Peterson 1957: doi:10.1147/rd.12.0130.
+    The algorithm used is "interplation search" as described by W.W.
+    Peterson 1957: doi:10.1147/rd.12.0130.
 
-     This code only works when the data is ordered (i.e. the time
-     stamps are ordered in ascending order). Otherwise the code
-     may fail, in this case, None is returned.
+    This code only works when the data is ordered (i.e. the time
+    stamps are ordered in ascending order). Otherwise the code
+    may fail, in this case, None is returned.
 
-     :param buf: :class:`numpy.array(dtype=int8)` or compatible containing
-                    raw miniseed data.
-     :param timestamp: :class:`~obspy.core.utcdatetime.UTCDateTime`
-                       timestamp to look for in buffer
-     :param recordlength: miniseed record length
-     :param before: If ``True``, return the index of the record containing
-                    the timestamp, if ``False``, return the index of the
-                    next record.
+    :param buf: :class:`numpy.array(dtype=int8)` or compatible containing
+                   raw miniseed data.
+    :param timestamp: :class:`~obspy.core.utcdatetime.UTCDateTime`
+                      timestamp to look for in buffer
+    :param recordlength: miniseed record length
+    :param before: If ``True``, return the index of the record containing
+                   the timestamp, if ``False``, return the index of the
+                   next record.
 
-     returns index of the buffer either including the timestamp or
-             the next one or None if the time stamp cannot be found or
-             if the header cannot be read (e.g. because of non-uniform
-             record length).
+    returns index of the buffer either including the timestamp or
+            the next one or None if the time stamp cannot be found or
+            if the header cannot be read (e.g. because of non-uniform
+            record length).
     """
     low = 0
     high = len(buf)
