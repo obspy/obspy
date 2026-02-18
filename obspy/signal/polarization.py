@@ -328,7 +328,7 @@ def particle_motion_odr(stream, noise_thres=0):
     :returns: azimuth, incidence, error of azimuth, error of incidence
     """
 
-    # ccipy removing ODR in 1.19.0, new package not a perfect replacement
+    # scipy removing ODR in 1.19.0, new package not a drop-in replacement
     from importlib.metadata import version
     from packaging.version import Version
     scipy_ver = Version(version("scipy"))
@@ -368,7 +368,6 @@ def particle_motion_odr(stream, noise_thres=0):
     r = np.sqrt(n ** 2 + e ** 2)
 
     def fit_func(beta, x):
-        # XXX: Eventually this is correct: return beta[0] * x + beta[1]
         return beta[0] * x
 
     if use_scipy:

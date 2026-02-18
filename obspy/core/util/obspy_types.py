@@ -349,7 +349,10 @@ class _ComplexUncertainty(complex):
             if args[0] is None:
                 cargs.append(cls._none)
             elif isinstance(cargs[0], complex):
-                # don't add imag=0 (since py3.14)
+                # skips appending a 0
+                # since python 3.14, this would raise a
+                # TypeError if already complex.
+                # no version test needed
                 pass
             else:
                 cargs.append(0)
