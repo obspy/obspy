@@ -40,6 +40,8 @@ Changes:
      replacement but might need other parameters passed in (see #3331)
    * util: fix logic bug in _generic_reader to properly catch byte objects
      (see #3643)
+   * Ensure UTCDateTime can unpickle old UTCDateTime instances by adding
+     __setstate__ method (see #3684)
  - obspy.clients.filesystem:
    * tsindex: update syntax for SQLAlchemy 2.0 compatibility (see #3269)
    * tsindex: leap second handling was deactivated as it is not needed with
