@@ -42,6 +42,8 @@ from setuptools import Extension, find_packages, setup
 
 
 # The minimum python version which can be used to run ObsPy
+# TODO: when dropping support for Python 3.9 some workarounds can be removed in
+# the entry point lookup routines, see #3333
 # XXX when dropping Python 3.9, get rid of socket.timeout and just use
 # TimeoutError, e.g. in fdsn/client.py
 MIN_PYTHON_VERSION = (3, 8)
@@ -85,11 +87,8 @@ EXTERNAL_LIBMSEED = False
 # Hard dependencies needed to install/run ObsPy.
 # Backwards compatibility hacks to be removed later:
 #  - matplotlib 3.3 (/3.4?): imaging (see #3242)
-# sqlalchemy pinned to <2.0 for now because of API changes that break
-# clients.filesystem.db. We suppress warnings in that module and also see
-# pytest.ini for some rules to ignore related warnings
 INSTALL_REQUIRES = [
-    'numpy>=1.20',
+    'numpy>=1.21',
     'scipy>=1.7',
     'matplotlib>=3.3',
     'lxml',

@@ -214,7 +214,7 @@ class Client(object):
             followed even if credentials are given.
         :type eida_token: str
         :param eida_token: Token for EIDA authentication mechanism, see
-            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php. If a
+            http://geofon.gfz.de/waveform/archive/auth/index.php. If a
             token is provided, options ``user`` and ``password`` must not be
             used. This mechanism is only available on select EIDA nodes. The
             token can be provided in form of the PGP message as a string, or
@@ -248,6 +248,12 @@ class Client(object):
             base_url = 'EARTHSCOPE'
             msg = ("IRIS is now EarthScope, please consider changing the FDSN "
                    "client short URL to 'EARTHSCOPE'.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
+
+        if base_url.upper() == 'RESIF':
+            msg = ("RESIF is now EPOSFR. Webservices and client will be "
+                   "shutdown in 2026. Please consider changing the FDSN "
+                   "client short URL to 'EPOSFR'.")
             warnings.warn(msg, ObsPyDeprecationWarning)
 
         if base_url.upper() in URL_MAPPINGS:
@@ -343,13 +349,13 @@ class Client(object):
         authenticated for potential access to restricted data.
         This only works for select EIDA nodes and relies on the auth mechanism
         described here:
-        http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php
+        http://geofon.gfz.de/waveform/archive/auth/index.php
 
         This will overwrite any previously set-up credentials/authentication.
 
         :type token: str
         :param token: Token for EIDA authentication mechanism, see
-            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php.
+            http://geofon.gfz.de/waveform/archive/auth/index.php.
             This mechanism is only available on select EIDA nodes. The token
             can be provided in form of the PGP message as a string, or the
             filename of a local file with the PGP message in it.

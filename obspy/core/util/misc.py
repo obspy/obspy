@@ -9,6 +9,7 @@ Various additional utilities for ObsPy.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import contextlib
+import importlib.metadata
 import inspect
 import io
 import itertools
@@ -22,7 +23,6 @@ from subprocess import STDOUT, CalledProcessError, check_output
 
 
 import numpy as np
-from pkg_resources import load_entry_point
 
 WIN32 = sys.platform.startswith('win32')
 
@@ -600,7 +600,37 @@ def buffered_load_entry_point(dist, group, name):
     """
     hash_str = '/'.join([dist, group, name])
     if hash_str not in _ENTRY_POINT_CACHE:
-        _ENTRY_POINT_CACHE[hash_str] = load_entry_point(dist, group, name)
+        if sys.version_info.minor < 10:
+            # compatibility workaround for Python 3.8 and 3.9
+            # on these versions, entry points don't have their distribution
+            # information attached to them, so we have to check if any matching
+            # entry point we find is listed in that distribution's entry point
+            # list
+            dist_eps = (importlib.metadata.distribution(group.split(".")[0])
+                        .entry_points)
+
+            eps = list(
+                ep for ep in
+                dist_eps if f'{group}:{name}' == f"{ep.group}:{ep.name}"
+            )
+            if not len(eps):
+                eps = list(
+                    ep for ep in
+                    dist_eps if f'{group}.{name}' == f"{ep.group}:{ep.name}"
+                )
+        else:
+            eps = list(
+                ep for ep in importlib.metadata.entry_points(
+                    group=group, name=name)
+                if ep.dist.name == dist)
+        if len(set(eps)) > 1:
+            warnings.warn(f'Multiple entry points matching:\n{eps!s}')
+        elif not len(eps):
+            # resemble the exception pkg_resources would have raised here
+            msg = f"Entry point ('{dist}', '{group}', '{name}') not found"
+            raise ImportError(msg)
+        ep = eps[0]
+        _ENTRY_POINT_CACHE[hash_str] = ep.load()
     return _ENTRY_POINT_CACHE[hash_str]
 
 

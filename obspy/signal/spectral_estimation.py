@@ -451,9 +451,16 @@ class PPSD(object):
         self._nlap = int(0.75 * self.nfft)
         # Trace length for one psd segment.
         self._len = int(self.sampling_rate * self.ppsd_length)
+
+        # slow for large sampling_rates
         # make an initial dummy psd and to get the array of periods
-        _, freq = mlab.psd(np.ones(self.len), self.nfft,
-                           self.sampling_rate, noverlap=self.nlap)
+        # _, freq = mlab.psd(np.ones(self.len), self.nfft,
+        #                    self.sampling_rate, noverlap=self.nlap)
+
+        # This code computes the frequency bins directly, see
+        # matplotlib/mlab.py
+        freq = np.fft.rfftfreq(self.nfft, d=1.0 / self.sampling_rate)
+
         # leave out first entry (offset)
         freq = freq[1:]
         self._psd_periods = 1.0 / freq[::-1]

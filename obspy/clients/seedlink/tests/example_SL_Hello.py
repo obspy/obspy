@@ -6,7 +6,7 @@ def main():
     """
     An example test for seed link
     """
-    HOST = 'geofon.gfz-potsdam.de'    # The remote host
+    HOST = 'geofon.gfz.de'    # The remote host
     PORT = 18000              # The remote port
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print('s.connect((', HOST, PORT, '))')

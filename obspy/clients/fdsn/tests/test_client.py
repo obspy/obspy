@@ -1209,7 +1209,7 @@ class TestClient():
             Client('GFZ', eida_token=token, user="foo", password="bar")
 
         # now lets test the RoutingClient with credentials..
-        credentials_ = {'geofon.gfz-potsdam.de': {'eida_token': token}}
+        credentials_ = {'geofon.gfz.de': {'eida_token': token}}
         credentials_mapping_ = {'GFZ': {'eida_token': token}}
         global_eida_credentials_ = {'EIDA_TOKEN': token}
         for credentials, should_have_credentials in zip(
@@ -1222,7 +1222,7 @@ class TestClient():
                 a dummy stream.
                 """
                 # check that we're at the expected FDSN WS server
-                assert 'https://geofon.gfz-potsdam.de' == self_.base_url
+                assert 'https://geofon.gfz.de' == self_.base_url
                 # check if credentials were used
                 # eida auth availability should be positive in all cases
                 assert self_._has_eida_auth
@@ -1717,6 +1717,17 @@ class TestClientNoNetwork():
         with CatchAndAssertWarnings(expected=[(ObsPyDeprecationWarning, msg)]):
             client = Client('IRIS', _discover_services=False)
         assert client.base_url == 'https://service.iris.edu'
+
+    def test_resif_deprecation_message(self):
+        """
+        Test that using "RESIF" short URL in FDSN client shows a warning
+        message.
+        """
+        msg = ("RESIF is now EPOSFR. Webservices and client will be "
+               "shutdown in 2026. Please consider changing the FDSN "
+               "client short URL to 'EPOSFR'.")
+        with CatchAndAssertWarnings(expected=[(ObsPyDeprecationWarning, msg)]):
+            Client('RESIF', _discover_services=False)
 
     def test_query_a_non_existent_service_exception(self):
         """

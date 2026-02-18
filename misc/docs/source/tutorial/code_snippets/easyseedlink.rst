@@ -33,7 +33,7 @@ SeedLink server URL to create a client instance:
 
 .. code-block:: python
 
-    client = create_client('geofon.gfz-potsdam.de', on_data=handle_data)
+    client = create_client('geofon.gfz.de', on_data=handle_data)
 
 The client immediately connects to the server when it is created.
 
