@@ -502,7 +502,9 @@ class UTCDateTime(object):
         :rtype: int
         :returns: POSIX timestamp as integer nanoseconds
         """
-        return self.__ns
+        if "_ns" in self.__dict__:
+            return self.__dict__["_ns"]
+        return self.__dict__["_UTCDateTime__ns"]
 
     def _set_ns(self, value):
         """
@@ -523,7 +525,9 @@ class UTCDateTime(object):
             value = value_
         if not isinstance(value, int):
             raise TypeError('nanoseconds must be set as int/long type')
-        self.__ns = value
+        # Store backing value directly to avoid recursive property setter calls
+        # when `_ns` is both property name and backing field.
+        self.__dict__["_ns"] = value
         # flag that this instance has been initialized; any changes will warn
         self._initialized = True
 
@@ -1026,7 +1030,7 @@ class UTCDateTime(object):
         86400.0
         """
         if isinstance(value, UTCDateTime):
-            return round((self._ns - value._ns) / 1e9, self.__precision)
+            return round((self._ns - value._ns) / 1e9, self._precision)
         elif isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
@@ -1536,7 +1540,9 @@ class UTCDateTime(object):
         >>> dt.precision
         6
         """
-        return self.__precision
+        if "_precision" in self.__dict__:
+            return self.__dict__["_precision"]
+        return self.__dict__["_UTCDateTime__precision"]
 
     def _set_precision(self, value=6):
         """
@@ -1564,7 +1570,7 @@ class UTCDateTime(object):
             msg = 'UTCDateTime precision above 9 is not supported, using 9'
             warnings.warn(msg)
             value = 9
-        self.__precision = int(value)
+        self._precision = int(value)
 
     precision = property(_get_precision, _set_precision)
 
@@ -1680,6 +1686,24 @@ class UTCDateTime(object):
         """
         from matplotlib.dates import date2num
         return date2num(self.datetime)
+
+    def __setstate__(self, state):
+        """
+        Handle unpickling of old UTCDateTime objects.
+        """
+        ns = state.get("_ns", state.get("_UTCDateTime__ns"))
+        if ns is None and "timestamp" in state:
+            ns = int(round(state["timestamp"] * 10**9))
+        if ns is None:
+            msg = "Cannot reconstruct UTCDateTime from pickle state"
+            raise ValueError(msg)
+
+        precision = state.get("precision", state.get(
+            "_UTCDateTime__precision", self.DEFAULT_PRECISION))
+
+        # Update the dict directly to avoid triggering warnings.
+        self.__dict__["_precision"] = int(precision)
+        self.__dict__["_ns"] = ns
 
 
 def _datetime_to_ns(dt):
