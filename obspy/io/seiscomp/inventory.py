@@ -521,8 +521,33 @@ def _read_channel(instrumentation_register, cha_element, _ns):
                 warnings.warn(msg)
                 channel.sample_rate = temp
 
+    # seiscomp allows negative azimuth or dip beyond 90, so catch & correct
+    try:
+        channel.azimuth = _read_floattype(
+            cha_element, _ns("azimuth"), Azimuth)
+    except ValueError:
+        azi_el = cha_element.find(_ns("azimuth"))
+        azi_el.text = str(float(azi_el.text) % 360)
+        channel.azimuth = _read_floattype(
+            cha_element, _ns("azimuth"), Azimuth)
+
+    try:
+        channel.dip = _read_floattype(cha_element, _ns("dip"), Dip)
+    except ValueError:
+        dip_el = cha_element.find(_ns("dip"))
+        dip = float(dip_el.text) % 360
+        if dip <= 90:
+            pass
+        elif dip <= 270:
+            dip = 180 - dip
+        else:
+            dip = dip - 360
+        dip_el.text = str(dip)
+        channel.dip = _read_floattype(cha_element, _ns("dip"), Dip)
+
     channel.azimuth = _read_floattype(cha_element, _ns("azimuth"), Azimuth)
     channel.dip = _read_floattype(cha_element, _ns("dip"), Dip)
+
     match = re.search(r'{([^}]*)}', cha_element.tag)
     if match:
         namespace = match.group(1)
