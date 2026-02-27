@@ -532,7 +532,8 @@ def _read_channel(instrumentation_register, cha_element, _ns):
             cha_element, _ns("azimuth"), Azimuth)
 
     try:
-        channel.dip = _read_floattype(cha_element, _ns("dip"), Dip)
+        channel.dip = _read_floattype(
+            cha_element, _ns("dip"), Dip)
     except ValueError:
         dip_el = cha_element.find(_ns("dip"))
         dip = float(dip_el.text) % 360
@@ -543,10 +544,8 @@ def _read_channel(instrumentation_register, cha_element, _ns):
         else:
             dip = dip - 360
         dip_el.text = str(dip)
-        channel.dip = _read_floattype(cha_element, _ns("dip"), Dip)
-
-    channel.azimuth = _read_floattype(cha_element, _ns("azimuth"), Azimuth)
-    channel.dip = _read_floattype(cha_element, _ns("dip"), Dip)
+        channel.dip = _read_floattype(
+            cha_element, _ns("dip"), Dip)
 
     match = re.search(r'{([^}]*)}', cha_element.tag)
     if match:
