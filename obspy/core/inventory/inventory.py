@@ -572,9 +572,12 @@ class Inventory(ComparingObject):
         criteria (e.g. all channels with ``channel="EHZ"``).
 
         .. warning::
-            The returned object is NOT a shallow copy of the original
+            The returned object is based on a shallow copy of the original
             object. That means that modifying any mutable child elements will
-            NOT modify the original object. Use "remove"
+            also modify the original object
+            (see https://docs.python.org/3/library/copy.html).
+            Use :meth:`copy()` afterwards to make a new copy of the data in
+            memory.
 
         .. rubric:: Example
 
@@ -701,6 +704,7 @@ class Inventory(ComparingObject):
 
             * ``"N"`` (network code only)
             * ``"N.S"`` (network and station codes)
+            * ``"N.S.L`` (network, station, location codes)
             * ``"N.S.L.C"`` (network, station, location, and channel codes)
 
             Supports wildcards (?,*) in any component.
@@ -771,7 +775,7 @@ class Inventory(ComparingObject):
         >>> # Find specific channel by SEED ID
         >>> indices = inv.where("BW.RJOB")
         >>> print(indices) # doctest: +NORMALIZE_WHITESPACE
-        [(1, 2), (1, 2), (1, 2)]
+        [(1, 2)]
         >>> channels = inv[indices[0]]
         >>> print(channels) # doctest: +NORMALIZE_WHITESPACE
         Station RJOB (Jochberg, Bavaria, BW-Net)
@@ -786,36 +790,45 @@ class Inventory(ComparingObject):
         >>> # Find all LH? channels across networks
         >>> indices = inv.where("*.*.*.LH?")
         >>> channels = inv[indices]
+        >>> print(len(channels)) # doctest: +NORMALIZE_WHITESPACE
+        6
+        >>> print(channels[3])  # doctest: +ELLIPSIS
+        Channel 'LHZ', Location ''
+            Time range: 2007-02-02T00:00:00.000000Z - --
+            Latitude: ...
+            Azimuth: 0.00 degrees from north, clockwise
+            Dip: -90.00 degrees down from horizontal
+            Channel types: TRIGGERED, GEOPHYSICAL
+            Sampling Rate: 1.00 Hz
+            Sensor (Description): Streckeisen STS-2/N seismometer (None)
+            Response information available
 
         >>> # Find all stations in BW network
-        >>> indices = inv.where("BW.*")
-        >>> stations = inv[indices]
+        >>> indices = inv.where("BW.*.*.??Z")
+        >>> channels = inv[indices]
 
-        >>> # Alternative: use select parameters
-        >>> indices = inv.where(channel="BHZ", network="BW")
+        >>> # Alternative: use 'select' parameters
+        >>> indices = inv.where(channel="??Z", network="BW")
 
         """
 
         if seed_id is not None:
             parts = seed_id.split('.')
-
-            # check filtering conflicts
             conflicts = []
             if len(parts) >= 1 and 'network' in kwargs:
                 conflicts.append('network')
             if len(parts) >= 2 and 'station' in kwargs:
                 conflicts.append('station')
-            if len(parts) >= 4:
+            if len(parts) >= 3:
                 if parts[2] and 'location' in kwargs:
                     conflicts.append('location')
+            if len(parts) == 4:
                 if 'channel' in kwargs:
                     conflicts.append('channel')
-
             if conflicts:
                 msg = (f"{', '.join(conflicts)} filter params"
                        " will be superseded by seed_id filter")
                 warnings.warn(msg)
-
             if len(parts) == 1:
                 # Network only: "BW" - allows S.L.C. kwargs
                 kwargs['network'] = parts[0]
@@ -823,6 +836,11 @@ class Inventory(ComparingObject):
                 # Network and station: "BW.RJOB" - allows L.C kwargs
                 kwargs['network'] = parts[0]
                 kwargs['station'] = parts[1]
+            elif len(parts) == 3:
+                # Network, station, location: "BW.RJOB.*"
+                kwargs['network'] = parts[0]
+                kwargs['station'] = parts[1]
+                kwargs['location'] = parts[2] if parts[2] else None
             elif len(parts) == 4:
                 # Full SEED ID: "BW.RJOB.00.BHZ" - supersedes all
                 kwargs['network'] = parts[0]
@@ -831,32 +849,33 @@ class Inventory(ComparingObject):
                 kwargs['channel'] = parts[3]
             else:
                 raise ValueError(f"Invalid SEED ID format: {seed_id}."
-                                 " Expected N, N.S, or N.S.L.C")
+                                 " Expected N, N.S, N.S.L, or N.S.L.C")
 
         filtered = self.select(**kwargs)
-
         indices = []
 
         if not filtered.networks:
             return indices
 
-        # Build a map of elements in the ORIGINAL inventory
         code_to_indices = {}
         for net_idx, net in enumerate(self.networks):
             code_to_indices[net.code] = (net_idx,)
             for sta_idx, sta in enumerate(net.stations):
-                code_to_indices[f"{net.code}.{sta.code}"] = (net_idx, sta_idx)
+                code_to_indices[f"{net.code}.{sta.code}"] = (
+                    net_idx, sta_idx
+                )
                 for chan_idx, chan in enumerate(sta.channels):
-                    code_to_indices[id(chan)] = (net_idx, sta_idx, chan_idx)
+                    code_to_indices[id(chan)] = (
+                        net_idx, sta_idx, chan_idx
+                    )
 
-        # Determine the search level based on seed_id
-        if (kwargs.get('channel') is not None or
-           kwargs.get('location') is not None):
-            search_level = 4  # channel
-        elif kwargs.get('station') is not None:
-            search_level = 2  # station
+        # Determine the search level
+        if 'channel' in kwargs or 'location' in kwargs:
+            search_level = 4
+        elif 'station' in kwargs:
+            search_level = 2
         else:
-            search_level = 1  # network
+            search_level = 1
 
         for fnet in filtered.networks:
             if search_level == 1:
@@ -864,19 +883,22 @@ class Inventory(ComparingObject):
                 if net_indices:
                     indices.append(net_indices)
                 continue
-
             for fsta in fnet.stations:
                 if search_level == 2:
                     sta_indices = code_to_indices.get(
-                        f"{fnet.code}.{fsta.code}")
+                        f"{fnet.code}.{fsta.code}"
+                    )
                     if sta_indices:
                         indices.append(sta_indices)
                     continue
-
                 for fchan in fsta.channels:
                     chan_indices = code_to_indices.get(id(fchan))
                     if chan_indices:
                         indices.append(chan_indices)
+
+        # Deduplicate for network and station level queries
+        if search_level <= 2:
+            return list(dict.fromkeys(indices))
 
         return indices
 
