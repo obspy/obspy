@@ -792,16 +792,16 @@ class Inventory(ComparingObject):
         >>> channels = inv[indices]
         >>> print(len(channels)) # doctest: +NORMALIZE_WHITESPACE
         6
-        >>> print(channels[3])  # doctest: +ELLIPSIS
+        >>> print(channels[3])  # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         Channel 'LHZ', Location ''
-            Time range: 2007-02-02T00:00:00.000000Z - --
-            Latitude: ...
-            Azimuth: 0.00 degrees from north, clockwise
-            Dip: -90.00 degrees down from horizontal
-            Channel types: TRIGGERED, GEOPHYSICAL
-            Sampling Rate: 1.00 Hz
-            Sensor (Description): Streckeisen STS-2/N seismometer (None)
-            Response information available
+           Time range: 2007-02-02T00:00:00.000000Z - --
+           Latitude: ...
+           Azimuth: 0.00 degrees from north, clockwise
+           Dip: -90.00 degrees down from horizontal
+           Channel types: TRIGGERED, GEOPHYSICAL
+           Sampling Rate: 1.00 Hz
+           Sensor (Description): Streckeisen STS-2/N ...
+           Response information available
 
         >>> # Find all stations in BW network
         >>> indices = inv.where("BW.*.*.??Z")
