@@ -8,6 +8,7 @@ Base utilities and constants for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import functools
 import glob
 import importlib
 import importlib.metadata
@@ -262,32 +263,26 @@ def get_entry_point_dist_name(entry_point):
     return entry_point.value.split('.')[0]
 
 
-# Cache all entry points at module level to avoid repeated expensive scans
-# of all installed distributions
-_CACHED_ENTRY_POINTS = None
-
-
+@functools.lru_cache(maxsize=None)
 def _get_all_entry_points():
     """
-    Get all entry points, using a module-level cache to avoid repeated
-    expensive scans of all installed python packages.
+    Get all entry points, using a cache to avoid repeated expensive
+    scans of all installed python packages.
 
     Returns a flat list of all EntryPoint objects.
     """
-    global _CACHED_ENTRY_POINTS
-    if _CACHED_ENTRY_POINTS is None:
-        eps = importlib.metadata.entry_points()
-        # In Python 3.8/3.9, entry_points() returns a dict
-        # In Python 3.10+, it returns an EntryPoints object
-        if isinstance(eps, dict):
-            # Python 3.8/3.9: flatten the dict values to a list
-            _CACHED_ENTRY_POINTS = []
-            for group_eps in eps.values():
-                _CACHED_ENTRY_POINTS.extend(group_eps)
-        else:
-            # Python 3.10+: convert to list
-            _CACHED_ENTRY_POINTS = list(eps)
-    return _CACHED_ENTRY_POINTS
+    eps = importlib.metadata.entry_points()
+    # In Python 3.8/3.9, entry_points() returns a dict
+    # In Python 3.10+, it returns an EntryPoints object
+    if isinstance(eps, dict):
+        # Python 3.8/3.9: flatten the dict values to a list
+        result = []
+        for group_eps in eps.values():
+            result.extend(group_eps)
+        return result
+    else:
+        # Python 3.10+: convert to list
+        return list(eps)
 
 
 def _get_entry_points(group, subgroup=None):
