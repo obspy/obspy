@@ -537,15 +537,23 @@ def _read_channel(instrumentation_register, cha_element, _ns):
     except ValueError:
         dip_el = cha_element.find(_ns("dip"))
         dip = float(dip_el.text) % 360
+        need_flip_azimuth = False
         if dip <= 90:
             pass
         elif dip <= 270:
             dip = 180 - dip
+            need_flip_azimuth = True
         else:
             dip = dip - 360
         dip_el.text = str(dip)
         channel.dip = _read_floattype(
             cha_element, _ns("dip"), Dip)
+
+        if need_flip_azimuth:
+            azi_el = cha_element.find(_ns("azimuth"))
+            azi_el.text = str((float(azi_el.text) + 180) % 360)
+            channel.azimuth = _read_floattype(
+                cha_element, _ns("azimuth"), Azimuth)            
 
     match = re.search(r'{([^}]*)}', cha_element.tag)
     if match:
