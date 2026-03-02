@@ -553,7 +553,7 @@ def _read_channel(instrumentation_register, cha_element, _ns):
             azi_el = cha_element.find(_ns("azimuth"))
             azi_el.text = str((float(azi_el.text) + 180) % 360)
             channel.azimuth = _read_floattype(
-                cha_element, _ns("azimuth"), Azimuth)            
+                cha_element, _ns("azimuth"), Azimuth)
 
     match = re.search(r'{([^}]*)}', cha_element.tag)
     if match:
