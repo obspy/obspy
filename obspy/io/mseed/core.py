@@ -141,7 +141,7 @@ def __is_mseed(fp, file_size):  # NOQA
     return False
 
 
-def __read_header(buf, index, record_length):
+def _read_header(buf, index, record_length):
     """
     Reads the first record of the given buffer and returns
     header information.
@@ -159,7 +159,7 @@ def __read_header(buf, index, record_length):
     return header[0]
 
 
-def __bisect_mseed(buf, timestamp, record_length, before=True):
+def _bisect_mseed(buf, timestamp, record_length, before=True):
     """
     Quickly finds a timestamp in a miniseed stream using interpolation
     search.
@@ -199,7 +199,7 @@ def __bisect_mseed(buf, timestamp, record_length, before=True):
     # cut off here, linear search will be fast enough, avoid treating
     # boundary cases
 
-    startheader = __read_header(buf, low, record_length)
+    startheader = _read_header(buf, low, record_length)
     starttime = startheader.stats.starttime
     # check for id at all places
     startid = startheader.id
@@ -217,7 +217,7 @@ def __bisect_mseed(buf, timestamp, record_length, before=True):
             return high
 
     try:
-        endheader = __read_header(buf, high-step_size, record_length)
+        endheader = _read_header(buf, high-step_size, record_length)
         if endheader.id != startid:
             warnings.warn("Found two different stream ids in input data, \
                 reverting to default algorithm.")
@@ -252,8 +252,8 @@ def __bisect_mseed(buf, timestamp, record_length, before=True):
             informed_guess = (high - low) / 2
             informed_guess = low + int(informed_guess // step_size) * step_size
         try:
-            guess_header = __read_header(buf, informed_guess,
-                                         record_length)
+            guess_header = _read_header(buf, informed_guess,
+                                        record_length)
             if guess_header.id != startid:
                 warnings.warn("Found two different stream ids in input data, \
                     reverting to default algorithm.")
@@ -284,13 +284,13 @@ def __bisect_mseed(buf, timestamp, record_length, before=True):
 
 def _can_merge(prev, curr, details):
     """
-     check whether two obspy.core.trace objects are
-     adjacent in time and can be merged.
+    check whether two obspy.core.trace objects are
+    adjacent in time and can be merged.
 
-     :param prev: obspy.core.trace.Trace, previous object
-     :param curr: obspy.core.trace.Trace, current object
-     :param details: boolean, whether timing quality should be
-                     evaluated.
+    :param prev: obspy.core.trace.Trace, previous object
+    :param curr: obspy.core.trace.Trace, current object
+    :param details: boolean, whether timing quality should be
+                    evaluated.
     """
 
     if prev.id != curr.id:
@@ -536,8 +536,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
             # bisect to the actual starttime
             # avoids parsing of the whole file
             bufptr_low = use_bisection and \
-                __bisect_mseed(bfr_np, starttime, record_length,
-                               before=True) or 0
+                _bisect_mseed(bfr_np, starttime, record_length,
+                              before=True) or 0
 
         else:
             # HPTERROR results in no starttime.
@@ -549,8 +549,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
             selections.timewindows.contents.endtime = \
                 util._convert_datetime_to_mstime(endtime)
             bufptr_high = use_bisection and \
-                __bisect_mseed(bfr_np, endtime, record_length,
-                               before=False) or buflen
+                _bisect_mseed(bfr_np, endtime, record_length,
+                              before=False) or buflen
 
         else:
             # HPTERROR results in no starttime.
