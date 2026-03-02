@@ -606,24 +606,30 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     method = "%sFormat" % method
     eps = _get_ordered_entry_points("obspy.plugin.%s" % group, method,
                                     WAVEFORM_PREFERRED_ORDER)
-    
+
     # Get all entry points once using module-level cache
     all_eps = _get_all_entry_points()
-    
+
     mod_list = []
     for name, ep in eps.items():
         if sys.version_info.minor < 10:
             # compatibility workaround for Python 3.8 and 3.9
             module_short = ":mod:`%s`" % ".".join(ep.value.split(".")[:3])
             # Filter from cached list
-            func_str = list(
-                _ep for _ep in all_eps
-                if _ep.group == f'{ep.group}.{ep.name}' and _ep.name == method)[0].value
+            func_str = [
+                _ep
+                for _ep in all_eps
+                if _ep.group == f'{ep.group}.{ep.name}' and _ep.name == method
+            ][0].value
         else:
             module_short = ":mod:`%s`" % ".".join(ep.module.split(".")[:3])
-            # Filter the pre-fetched all_eps instead of calling entry_points() again
-            matching_eps = [_ep for _ep in all_eps 
-                           if _ep.group == f'{ep.group}.{ep.name}' and _ep.name == method]
+            # Filter the pre-fetched all_eps instead of
+            # calling entry_points() again
+            matching_eps = [
+                _ep
+                for _ep in all_eps
+                if _ep.group == f'{ep.group}.{ep.name}' and _ep.name == method
+            ]
             if matching_eps:
                 func_str = matching_eps[0].value
             else:
