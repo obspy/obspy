@@ -6,6 +6,7 @@ The obspy.io.kinemetrics.core test suite.
 import io
 
 import numpy as np
+import pytest
 import warnings
 
 from obspy import read
@@ -402,5 +403,17 @@ class TestCore():
     def test_read_evt_with_nonUTF8_comment(self, testdata):
         # Reference: #3688
         filename = testdata['STNA.20020722.044649.evt.gz']
+
+        # This should work, since it's falling back to latin-1
         st = read(filename)
-        print(st)
+        assert (st[0].stats["kinemetrics_evt"]["comment"] ==
+                "St-Nicolas-crèche communale")
+
+        # Forcing UTF-8 will fail here
+        with pytest.raises(UnicodeDecodeError):
+            read(filename, encoding="utf-8")
+
+        # Forcing latin-1 will work too:
+        st = read(filename, encoding="latin-1")
+        assert (st[0].stats["kinemetrics_evt"]["comment"] ==
+                "St-Nicolas-crèche communale")

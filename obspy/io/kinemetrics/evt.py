@@ -205,6 +205,9 @@ class Evt(object):
                 'Setting "apply_calib=%s" and continuing...' % apply_calib,
                 ObsPyDeprecationWarning)
 
+        if "encoding" in kwargs:
+            self.e_header.ENCODING = kwargs["encoding"]
+
         # Support reading from filenames of file-like objects.
         if hasattr(filename_or_object, "seek") and \
                 hasattr(filename_or_object, "tell") and \
@@ -310,6 +313,7 @@ class EvtHeader(EvtVirtual):
     """
     Class to manage header of Evt file
     """
+    ENCODING = "latin-1"
     HEADER = {'id': [0, ['_strnull', '']],
               'instrument': [1, ''],
               'headerversion': [2, ''],
