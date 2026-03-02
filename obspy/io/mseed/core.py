@@ -321,16 +321,17 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        ObsPy :func:~obspy.core.stream.read function, call this instead.
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
     .. warning::
         This function uses numpy.memmap. Deleting files while they are
         being used may result in undefined behaviour on non unix-style
         systems.
-    :param mseed_object: Filename, numpy.ndarray with dtype=numpy.int8 or
-        open file like object that contains the binary Mini-SEED data or
-        anything, that can be read into np.nadarray with np.frombuffer.
-        Any object that provides a read() method will be considered to
-        be a file like object.
+    :param mseed_object: Filename, :class:`~numpy.ndarray` with
+        ``dtype=numpy.int8`` or open file like object that contains the binary
+        Mini-SEED data or anything, that can be read into
+        :class:`~numpy.ndarray` with :func:`~numpy.frombuffer`.  Any object
+        that provides a ``read()`` method will be considered to be a file like
+        object.
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param starttime: Only read data samples after or at the start time.
     :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
