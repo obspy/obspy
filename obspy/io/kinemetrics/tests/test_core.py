@@ -398,3 +398,9 @@ class TestCore():
         assert len(data) == 5750
         assert np.allclose(valuesdeb, data[:len(valuesdeb)])
         assert np.allclose(valuesend, data[-len(valuesend):])
+
+    def test_read_evt_with_nonUTF8_comment(self, testdata):
+        # Reference: #3688
+        filename = testdata['STNA.20020722.044649.evt.gz']
+        st = read(filename)
+        print(st)
