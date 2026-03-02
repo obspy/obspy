@@ -272,17 +272,11 @@ def _get_all_entry_points():
     Returns a flat list of all EntryPoint objects.
     """
     eps = importlib.metadata.entry_points()
-    # In Python 3.8/3.9, entry_points() returns a dict
-    # In Python 3.10+, it returns an EntryPoints object
-    if isinstance(eps, dict):
-        # Python 3.8/3.9: flatten the dict values to a list
-        result = []
-        for group_eps in eps.values():
-            result.extend(group_eps)
-        return result
-    else:
+    if not isinstance(eps, dict):
         # Python 3.10+: convert to list
         return list(eps)
+    # Python 3.8/3.9: flatten the dict values to a list
+    return [ep for group_eps in eps.values() for ep in group_eps]
 
 
 def _get_entry_points(group, subgroup=None):
