@@ -1753,12 +1753,9 @@ class TestTrace:
         tr.stats.location = '30'
         tr.stats.channel = 'LDO'
         tr.stats.starttime = UTC("2010-07-23T00:00:00")
-        # remove response
-        del tr.stats.response
         inv = read_inventory(
             testdata['stationxml_IU.ANTO.30.LDO.xml'], format='StationXML')
-        tr.stats.response = tr._get_response(inv)
-        tr.remove_response()
+        tr.remove_response(inventory=inv)
 
         # blockette 62, stage 1 + blockette 58, stage 2
         tr = read()[0]
@@ -1767,16 +1764,13 @@ class TestTrace:
         tr.stats.location = ''
         tr.stats.channel = 'LKS'
         tr.stats.starttime = UTC("2004-06-16T00:00:00")
-        # remove response
-        del tr.stats.response
         inv = read_inventory(
             testdata['stationxml_BK.CMB.__.LKS.xml'], format='StationXML')
-        tr.stats.response = tr._get_response(inv)
 
         # raises UserWarning: Stage gain not defined - ignoring
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always", UserWarning)
-            tr.remove_response()
+            tr.remove_response(inventory=inv)
         assert len(w) == 1
         assert w[0].category == UserWarning
 
@@ -2297,9 +2291,8 @@ class TestTrace:
         """
         tr = read("/path/to/IU_ULN_00_LH1_2015-07-18T02.mseed")[0]
         inv = read_inventory("/path/to/IU_ULN_00_LH1.xml")
-        tr.stats.response = tr._get_response(inv)
         pre_filt = [0.001, 0.005, 10, 20]
-        tr.remove_response(pre_filt=pre_filt, output="DISP",
+        tr.remove_response(inventory=inv, pre_filt=pre_filt, output="DISP",
                            water_level=60, end_stage=None, plot=image_path)
 
     def test_remove_response_default_units(self):
@@ -2308,8 +2301,7 @@ class TestTrace:
         """
         tr = read("/path/to/1T_MONN_00_EDH.mseed")[0]
         inv = read_inventory("/path/to/1T_MONN_00_EDH.xml")
-        tr.stats.response = tr._get_response(inv)
-        tr.remove_response(output='DEF')
+        tr.remove_response(inventory=inv, output='DEF')
         np.testing.assert_almost_equal(tr.max(), 54.833, decimal=3)
 
     def test_attach_response_deprecated(self):
