@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 from obspy.imaging.beachball import beach
 
 # Code to plot some reference beachballs, including non-DC component.
-# Data obtained from: https://github.com/carltape/mtbeach/tree/master/gmt/dfiles courtesy of C. Tape
+# Data (courtesy of C. Tape) obtained from:
+# https://github.com/carltape/mtbeach/tree/master/gmt/dfiles
 
 files = ['beachballs_ipts1_iref1_lune_psmeca',
          'beachballs_ipts1_iref2_lune_psmeca',

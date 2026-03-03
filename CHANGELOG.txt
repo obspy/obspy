@@ -21,6 +21,9 @@ Changes:
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235)
+   * deprecate `Trace.attach_response()` and `Stream.attach_response()` in
+     favor of passing metadata directly to response-removal methods
+     (see #2026)
    * trace: 5x quicker retrieval of seed-id with trace.id / trace.get_id()
      (see #3251)
    * inventory: additional formatting tweaks to expanded channel information
