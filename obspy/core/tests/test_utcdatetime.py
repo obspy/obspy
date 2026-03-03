@@ -1580,7 +1580,7 @@ class TestUTCDateTime:
         """_set_ns should accept NumPy integer scalar values."""
         utc = UTC(0)
         value = np.int64(123456789)
-        with warnings.catch_warnings(record=True) as w:
+        with warnings.catch_warnings(record=True):
             warnings.simplefilter('always')
             utc._set_ns(value)
         assert utc.ns == int(value)
