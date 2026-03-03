@@ -2,6 +2,14 @@ master
 ======
 
 Changes:
+ - obspy.imaging.beachball:
+   * allow isotropic component to be plotted. Ensure explosions and
+     implosions plot fully colored/uncolored, and that the correct
+     "dominant" eigenvalue is chosen. Bug fix to fully implement
+     check to see if a new segment is needed for the matplotlib patches.
+     (see #3583)
+   * add tutorial to code_snippets to showcase isotropic plotting.
+     (see #3583)
  - General
    * Fix documentation for the command line scripts (see #1208 #3569)
    * Fix code coverage reporting (see #3646)
@@ -12,7 +20,11 @@ Changes:
    * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
-     one of VEL/ACC/DISP (see #3235)
+     one of VEL/ACC/DISP (see #3235), add method for calculating the normalization
+     factor for pole–zero response stages (see #3580)
+   * deprecate `Trace.attach_response()` and `Stream.attach_response()` in
+     favor of passing metadata directly to response-removal methods
+     (see #2026)
    * trace: 5x quicker retrieval of seed-id with trace.id / trace.get_id()
      (see #3251)
    * inventory: additional formatting tweaks to expanded channel information
@@ -32,6 +44,8 @@ Changes:
      replacement but might need other parameters passed in (see #3331)
    * util: fix logic bug in _generic_reader to properly catch byte objects
      (see #3643)
+   * Ensure UTCDateTime can unpickle old UTCDateTime instances by adding
+     __setstate__ method (see #3684)
  - obspy.clients.filesystem:
    * tsindex: update syntax for SQLAlchemy 2.0 compatibility (see #3269)
    * tsindex: leap second handling was deactivated as it is not needed with
@@ -40,6 +54,8 @@ Changes:
    * Natural Resources Canada (NRCAN) added to list of known clients
    * Spanish National Geographic Institute (IGN) added to known clients
    * GFZ FDSN url updated to https://geofon.gfz.de
+   * RESIFPH5 removed (service deprecated)
+   * EPOSFR defined, will replace RESIF
    * Various FDSNWS URL mappings updated to https
    * A FDSNNoServiceException is now raised instead of a ValueError when
      querying a webservice not present in Client.services  (see #3483)
@@ -102,6 +118,7 @@ Changes:
      sensitivity input/output units (see #3572).
  - obspy.io.win:
    * Fix reading sampling rate larger than 1 bytes (see #3641)
+   * Fix reading of 24 bit data (see #3661)
  - obspy.io.xseed:
    * Improve error message when trying to read a local path to a file that does
      not exist with XSEED Parser (see #2686)
