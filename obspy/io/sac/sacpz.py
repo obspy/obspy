@@ -83,7 +83,8 @@ def _write_sacpz(inventory, file_or_file_object):
                 out.append(f"* CHANNEL     : {cha.code}")
                 out.append(f"* CREATED     : {now}")
                 out.append(f"* START       : {cha.start_date}")
-                out.append(f"* END         : {cha.end_date}")
+                end_str = cha.end_date if cha.end_date else ""
+                out.append(f"* END         : {end_str}")
                 out.append(f"* DESCRIPTION : {sta.site.name}")
                 out.append(f"* LATITUDE    : {cha.latitude or sta.latitude}")
                 out.append(f"* LONGITUDE   : {cha.longitude or sta.longitude}")
