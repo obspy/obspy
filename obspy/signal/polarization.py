@@ -329,7 +329,6 @@ def particle_motion_odr(stream, noise_thres=0):
     """
 
     # scipy removing ODR in 1.19.0, new package not a drop-in replacement
-    from packaging.version import Version
     from ..core.util.base import SCIPY_VERSION
     use_scipy = True
     if SCIPY_VERSION < (1, 17):
