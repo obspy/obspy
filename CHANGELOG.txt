@@ -95,7 +95,7 @@ Changes:
      will now by default be rounded to microseconds before taking the
      reciprocal to set the sampling rate. This can be deactivated using
      "read(..., round_sampling_interval=False)" (see #3408)
-   * fix writing SACPZ END tag when empty (open ended) (see #TODO)
+   * fix writing SACPZ END tag when empty (open ended) (see #3696)
  - obspy.io.seg2:
    * Less strict date/time parsing (#3283).
  - obspy.io.seiscomp:
