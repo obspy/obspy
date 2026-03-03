@@ -378,8 +378,8 @@ def _get_ordered_entry_points(group, subgroup=None, order_list=[]):
     """
     Gets a ordered dictionary of all available plug-ins of a group or subgroup.
     """
-    # get all available entry points
-    ep_dict = _get_entry_points(group, subgroup)
+    # Copy so pop() below does not modify the lru_cache result.
+    ep_dict = _get_entry_points(group, subgroup).copy()
     # loop through official supported waveform plug-ins and add them to
     # ordered dict of entry points
     entry_points = OrderedDict()
