@@ -91,6 +91,14 @@ Reading SEG Y files with ``unpack_trace_headers=True`` will be very slow and
 memory intensive for a large number of traces due to the huge number of objects
 created.
 
+Some times large segy files will have block(s) with a corrupt header. If the
+segy reader encounter such a block it will halt and raise an either a ValueError 
+or a SEGYError. This can be avoided either by specifying a start and end time
+which avoids these corrupt blocks or by using the ``skip_corrupt_traces=True`` 
+option, which causes the segy reader to halt at the corrupt block and return
+all of the preceding blocks which were successfully decoded.
+
+
 Reading using method 3
 ^^^^^^^^^^^^^^^^^^^^^^
 The internal reading method is much faster and less of a memory hog but does
