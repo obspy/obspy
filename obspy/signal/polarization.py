@@ -329,13 +329,12 @@ def particle_motion_odr(stream, noise_thres=0):
     """
 
     # scipy removing ODR in 1.19.0, new package not a drop-in replacement
-    from importlib.metadata import version
     from packaging.version import Version
-    scipy_ver = Version(version("scipy"))
+    from ..core.util.base import SCIPY_VERSION
     use_scipy = True
-    if scipy_ver < Version("1.17.0"):
+    if SCIPY_VERSION < (1, 17):
         import scipy.odr
-    elif scipy_ver < Version("1.19.0"):
+    elif SCIPY_VERSION < (1, 19):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             import scipy.odr
@@ -345,9 +344,10 @@ def particle_motion_odr(stream, noise_thres=0):
             use_scipy = False
         except ImportError:
             raise ImportError(
-                f"From SciPy {scipy_ver} onwards, odrpack "
-                "(https://pypi.org/project/odrpack/) required to "
-                "run signal.polarization.particle_motion_odr"
+                "From SciPy 1.19.0 onwards, scipy.odr is Deprecated."
+                "Install odrpack "
+                "(https://pypi.org/project/odrpack/) to "
+                "run signal.polarization.particle_motion_odr."
             )
 
     z = []
