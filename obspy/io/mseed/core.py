@@ -314,7 +314,8 @@ def _can_merge(prev, curr, details):
 
 def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 sourcename=None, reclen=None, details=False,
-                header_byteorder=None, verbose=None, **kwargs):
+                header_byteorder=None, verbose=None, use_bisection=False,
+                **kwargs):
     """
     Reads a Mini-SEED file and returns a Stream object.
 
@@ -363,8 +364,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
         native byte order. Used to enforce the header byte order. Useful in
         some rare cases where the automatic byte order detection fails.
-    :param kwargs: 'use_bisection' use bisection for start and end time if
-        set to ``True``. This only works for strictly ordered files containing
+    :param use_bisection: If ``True`` use bisection for start and end time.
+        This only works for strictly ordered files containing
         just one channel the code will revert to default behaviour if it
         detects that this is not the case
     .. rubric:: Example
@@ -436,7 +437,6 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     else:
         bo = None
 
-    use_bisection = kwargs.get('use_bisection', False)
     # If it's a file name just read it.
     if isinstance(mseed_object, str):
         # Read to NumPy array which is used as a buffer.
