@@ -20,7 +20,8 @@ Changes:
    * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
-     one of VEL/ACC/DISP (see #3235)
+     one of VEL/ACC/DISP (see #3235), add method for calculating the normalization
+     factor for pole–zero response stages (see #3580)
    * deprecate `Trace.attach_response()` and `Stream.attach_response()` in
      favor of passing metadata directly to response-removal methods
      (see #2026)
