@@ -279,6 +279,7 @@ def _get_all_entry_points():
     return [ep for group_eps in eps.values() for ep in group_eps]
 
 
+@functools.lru_cache(maxsize=None)
 def _get_entry_points(group, subgroup=None):
     """
     Gets a dictionary of all available plug-ins of a group or subgroup.
