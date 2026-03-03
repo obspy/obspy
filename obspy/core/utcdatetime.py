@@ -523,15 +523,16 @@ class UTCDateTime(object):
         if isinstance(value, np.integer):
             value_ = int(value)
             # ..and be paranoid and check that it's still the same value after
-            # type casting
-            if value_ != value:
-                msg = ('Numpy integer value ({!s}) changed during casting to '
-                       'Python builtin integer ({!s}).').format(value, value_)
-                raise ValueError(msg)
+            # type casting. Note an assert here since it may not be possible.
+            assert value_ == value, (
+                "Numpy int "
+                f"{value} changed during casting to python int {value_}"
+            )
             value = value_
         elif not isinstance(value, int):
             raise TypeError('nanoseconds must be set as int/long type')
-
+        # Store backing value directly to avoid recursive property setter calls
+        # when `_ns` is both property name and backing field.
         self.__ns = value
         # flag that this instance has been initialized; any changes will warn
         self._warn_on_change()
@@ -1036,7 +1037,7 @@ class UTCDateTime(object):
         86400.0
         """
         if isinstance(value, UTCDateTime):
-            return round((self.__ns - value.__ns) / 1e9, self.__precision)
+            return round((self._ns - value._ns) / 1e9, self.__precision)
         elif isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
@@ -1276,9 +1277,26 @@ class UTCDateTime(object):
         """
         Support for unpickling UTCDateTime objects.
         """
-        self._initialized = True
+        self._initialized = False
         self._has_warned = False
-        self.__ns, self.__precision = state
+        if isinstance(state, tuple):
+            self.__ns, self.__precision = state
+        elif isinstance(state, dict):
+            ns = state.get("_ns", state.get("_UTCDateTime__ns"))
+            if ns is None and "timestamp" in state:
+                ns = int(round(state["timestamp"] * 10**9))
+            if ns is None:
+                msg = "Cannot reconstruct UTCDateTime from pickle state"
+                raise ValueError(msg)
+            precision = state.get(
+                "precision",
+                state.get("_UTCDateTime__precision", self.DEFAULT_PRECISION))
+            self.__ns = int(ns)
+            self.__precision = int(precision)
+        else:
+            msg = f"Unsupported UTCDateTime pickle state type: {type(state)!r}"
+            raise TypeError(msg)
+        self._initialized = True
 
     def strftime(self, format):
         """
