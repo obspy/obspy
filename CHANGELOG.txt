@@ -50,6 +50,7 @@ Changes:
      #3513)
  - obspy.clients.fdsn.mass_downloader
    * Use the `download(threads_per_client)` value for StationXML downloads.
+     (see #3678)
  - obspy.clients.neic
    * Update the default CWB QueryServer IP address from the old IP to the
      new USGS server address (see #3592)
