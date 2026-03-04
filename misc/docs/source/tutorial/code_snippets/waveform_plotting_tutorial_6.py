@@ -54,7 +54,7 @@ plt.show()
 # Do the section plot..
 # This time with vred provided (Perform velocity reduction, in m/s.)
 fig = plt.figure()
-st.plot(type='section', vred=3000.0, plot_dx=20e3, recordlength=100,
+st.plot(type='section', vred=2500.0, plot_dx=20e3, recordlength=100,
         time_down=True, linewidth=.25, grid_linewidth=.25, show=False, fig=fig)
 
 # Plot customization: Add station labels to offset axis
