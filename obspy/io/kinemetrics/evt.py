@@ -182,7 +182,8 @@ class Evt(object):
         for i in range(self.e_header.nchannels):
             self.data[i] /= calibs[i]
 
-    def read_file(self, filename_or_object, apply_calib=False, **kwargs):
+    def read_file(self, filename_or_object, apply_calib=False,
+                  encoding=None, **kwargs):
         """
         Reads an Evt file to the internal data structure
 
@@ -205,8 +206,8 @@ class Evt(object):
                 'Setting "apply_calib=%s" and continuing...' % apply_calib,
                 ObsPyDeprecationWarning)
 
-        if "encoding" in kwargs:
-            self.e_header.ENCODING = kwargs["encoding"]
+        if encoding:
+            self.e_header.ENCODING = encoding
 
         # Support reading from filenames of file-like objects.
         if hasattr(filename_or_object, "seek") and \
