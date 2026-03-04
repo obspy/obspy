@@ -52,7 +52,7 @@ def is_evt(filename_or_object):
                 return False
 
 
-def read_evt(filename_or_object, **kwargs):
+def read_evt(filename_or_object, encoding=None, **kwargs):
     """
     Reads an Evt file and returns a Stream object.
 
@@ -67,6 +67,9 @@ def read_evt(filename_or_object, **kwargs):
 
     :type filename_or_object: str or file-like object
     :param filename_or_object: Evt file to be read
+    :type encoding: str, optional
+    :param encoding: Name of the encoding. If None and in case the UTF-8
+       decoder doesn't work, will fall back to latin-1
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: Stream object containing header and data
     """
