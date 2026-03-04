@@ -109,16 +109,18 @@ class WaveformPlotting(object):
         self.sect_vred = kwargs.get('vred', None)
         if self.sect_vred:
             if 0 < self.sect_vred <= 1:
-                msg = ("The velocity reduction factor was provided as a small"
-                       " value (0<x<=1). Until ObsPy 1.5.0, the vred was treated "
-                       "as km/s, which was not in agreement with the documentation."
-                       " Since 1.5.0, vred is treated as m/s everywhere.")
+                msg = ("The velocity reduction factor was provided "
+                       "as a small value (0<x<=1). Until ObsPy 1.5.0, "
+                       "the vred was treated as km/s, which was not in "
+                       "agreement with the documentation. Since 1.5.0, "
+                       "vred is treated as m/s everywhere.")
                 warnings.warn(msg, UserWarning)
             elif self.sect_vred < 12:
-                msg = ("The velocity reduction factor was provided as a small"
-                       " value (x<12). Until ObsPy 1.5.0, the vred was treated "
-                       "as km/s, which was not in agreement with the documentation."
-                       " Since 1.5.0, vred is treated as m/s everywhere.")
+                msg = ("The velocity reduction factor was provided "
+                       "as a small value (x<12). Until ObsPy 1.5.0, "
+                       "the vred was treated as km/s, which was not in "
+                       "agreement with the documentation. Since 1.5.0, "
+                       "vred is treated as m/s everywhere.")
                 warnings.warn(msg, UserWarning)
 
         if self.sect_vred and self.sect_dist_degree:
@@ -1250,11 +1252,6 @@ class WaveformPlotting(object):
                 (self._tr_offsets <= self._offset_max))
         self._tr_offsets = self._tr_offsets[mask]
         self.stream = [tr for m, tr in zip(mask, self.stream) if m]
-        # Use m on distance axis, if not degrees
-        # if not self.sect_dist_degree:
-            # self._tr_offsets /= 1e3
-            # self._offset_min /= 1e3
-            # self._offset_max /= 1e3
         # Number of traces
         self._tr_num = len(self._tr_offsets)
         # Arranging trace data in single list
