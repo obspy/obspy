@@ -66,7 +66,7 @@
 /obspy/io/seg2
 /obspy/io/segy
 /obspy/io/seisan
-/obspy/io/seiscomp
+/obspy/io/seiscomp       @filefolder
 /obspy/io/sh             @trichter
 /obspy/io/shapefile      @megies
 /obspy/io/stationtxt

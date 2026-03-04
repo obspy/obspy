@@ -28,6 +28,7 @@ from pathlib import PurePath
 import numpy as np
 
 from obspy.core.util.attribdict import (AttribDict)
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 
 
@@ -56,8 +57,8 @@ WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
                             'GCF', 'DMX', 'ALSEP_PSE', 'ALSEP_WTN',
                             'ALSEP_WTH', 'CYBERSHAKE']
-EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
-INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP']
+EVENT_PREFERRED_ORDER = ['QUAKEML', 'SCML', 'NLLOC_HYP']
+INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP', 'SCML']
 # waveform plugins accepting a byteorder keyword
 WAVEFORM_ACCEPT_BYTEORDER = ['MSEED', 'Q', 'SAC', 'SEGY', 'SU']
 
@@ -456,6 +457,13 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
     """
+    # SC3ML plugin deprecated with 1.5.0 remove a few main releases later
+    if format and format.upper() == 'SC3ML':
+        warnings.warn(
+            "Format 'SC3ML' is deprecated since ObsPy 1.5.0 and will be "
+            "removed in a future release. Use 'SCML' instead.",
+            category=ObsPyDeprecationWarning,
+            stacklevel=3)
     if isinstance(filename, str):
         if not Path(filename).exists():
             msg = "[Errno 2] No such file or directory: '{}'".format(
@@ -538,9 +546,11 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
     NORDIC    :mod:`obspy.io.nordic` :func:`obspy.io.nordic.core.write_select`
     QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
-    SC3ML   :mod:`...io.seiscomp` :func:`obspy.io.seiscomp.event._write_sc3ml`
+    SC3ML   :mod:`obspy.io.seiscomp`
+                             :func:`obspy.io.seiscomp.event._write_scml`
     SCARDEC   :mod:`obspy.io.scardec`
                              :func:`obspy.io.scardec.core._write_scardec`
+    SCML    :mod:`...io.seiscomp` :func:`obspy.io.seiscomp.event._write_scml`
     SHAPEFILE :mod:`obspy.io.shapefile`
                              :func:`obspy.io.shapefile.core._write_shapefile`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`
