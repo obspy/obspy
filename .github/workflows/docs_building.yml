@@ -48,25 +48,41 @@ jobs:
         shell: bash -l {0}
         run: |
           cd misc/docs
-          make html
+          make html SPHINXOPTS="-w /tmp/sphinx_warnings.txt" 2>&1 | tee /tmp/sphinx_build.log
+          # Summarize
+          echo "=== WARNING count ===" && grep -c "WARNING" /tmp/sphinx_warnings.txt || true
+          echo "=== ERROR count ===" && grep -c "ERROR" /tmp/sphinx_warnings.txt || true
+          # Fail the job if any ERRORs exist
+          ! grep -q "ERROR" /tmp/sphinx_warnings.txt  
+
+      - name: upload sphinx diagnostics
+        if: always()   # upload even if previous step failed
+        uses: actions/upload-artifact@v4
+        with:
+          name: sphinx-diagnostics
+          path: /tmp/sphinx_warnings.txt
 
       - name: compress with tar
+        if: always()   # compress even if previous step failed
         shell: bash -l {0}
         run: |
           cd misc/docs/build/html/
           tar cfJ obspydoc.tar.xz *
 
       - uses: actions/upload-artifact@v7
+        if: always()   # upload even if previous step failed
         with:
           name: obspydoc
           path: misc/docs/build/html/obspydoc.tar.xz
 
       - name: build docset
+        if: always()   # build even if previous step failed
         shell: bash -l {0}
         run: |
           cd misc/docs
           bash make_docset.sh
       - name: actions/upload-artifact@v4 for docset
+        if: always()   # upload even if previous step failed
         uses: actions/upload-artifact@v4
         with:
           name: obspydocset
