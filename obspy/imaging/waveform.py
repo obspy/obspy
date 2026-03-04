@@ -107,6 +107,20 @@ class WaveformPlotting(object):
         self.sect_norm_method = kwargs.get('norm_method', 'trace')
         self.sect_user_scale = kwargs.get('scale', 1.0)
         self.sect_vred = kwargs.get('vred', None)
+        if self.sect_vred:
+            if 0 < self.sect_vred <= 1:
+                msg = ("The velocity reduction factor was provided as a small"
+                       " value (0<x<=1). Until ObsPy 1.5.0, the vred was treated "
+                       "as km/s, which was not in agreement with the documentation."
+                       " Since 1.5.0, vred is treated as m/s everywhere.")
+                warnings.warn(msg, UserWarning)
+            elif self.sect_vred < 12:
+                msg = ("The velocity reduction factor was provided as a small"
+                       " value (x<12). Until ObsPy 1.5.0, the vred was treated "
+                       "as km/s, which was not in agreement with the documentation."
+                       " Since 1.5.0, vred is treated as m/s everywhere.")
+                warnings.warn(msg, UserWarning)
+
         if self.sect_vred and self.sect_dist_degree:
             self.sect_vred = kilometer2degrees(self.sect_vred / 1e3)
         self.sect_orientation = kwargs.get('orientation', 'vertical')
