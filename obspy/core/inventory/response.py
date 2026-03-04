@@ -203,8 +203,9 @@ class PolesZerosResponseStage(ResponseStage):
     :param zeros: All zeros of the stage.
     :type poles: list[complex]
     :param poles: All poles of the stage.
-    :type normalization_factor: float, optional
-    :param normalization_factor:
+    :type normalization_factor: float or None, optional
+    :param normalization_factor: Normalization factor. If None, it will be
+        calculated from the poles and zeros.
     """
     def __init__(self, stage_sequence_number, stage_gain,
                  stage_gain_frequency, input_units, output_units,
@@ -220,9 +221,12 @@ class PolesZerosResponseStage(ResponseStage):
         # handled by properties.
         self.pz_transfer_function_type = pz_transfer_function_type
         self.normalization_frequency = normalization_frequency
-        self.normalization_factor = float(normalization_factor)
         self.zeros = zeros
         self.poles = poles
+        # If the user sets normalization_factor to None, we calculate it
+        if normalization_factor is None:
+            normalization_factor = self.calculate_normalization_factor()
+        self.normalization_factor = float(normalization_factor)
         super(PolesZerosResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
             input_units=input_units,
@@ -347,6 +351,42 @@ class PolesZerosResponseStage(ResponseStage):
                    f"'{self.pz_transfer_function_type}' to "
                    f"'LAPLACE (RADIANS/SECOND)'")
             raise ValueError(msg)
+
+    def calculate_normalization_factor(self):
+        """
+        Calculate normalization factor from response stage poles and zeros.
+
+        This factor normalizes the pole–zero expansion to unity at the
+        normalization frequency. More reading here:
+        https://docs.fdsn.org/projects/stationxml/en/latest/response.html#poles-and-zeros
+
+        :returns: The calculated normalization factor (returns None if the
+            response stage normalization frequency is None)
+        :rtype: float or None
+
+        .. rubric:: Example
+
+        >>> from obspy import read
+        >>> paz_stage = read()[0].stats.response.response_stages[0]
+        >>> paz_stage.calculate_normalization_factor()  # doctest: +ELLIPSIS
+        59206129.7610747...
+        """
+        if not self.normalization_frequency:
+            return None
+        if self.pz_transfer_function_type == 'LAPLACE (RADIANS/SECOND)':
+            s = 2j * np.pi * self.normalization_frequency
+        elif self.pz_transfer_function_type == 'LAPLACE (HERTZ)':
+            s = 1j * self.normalization_frequency
+        else:
+            msg = (
+                'Cannot calculate normalization factor for type '
+                f'"{self.pz_transfer_function_type}"'
+            )
+            raise NotImplementedError(msg)
+        return abs(
+            (s - np.array(self.poles)).prod() /
+            (s - np.array(self.zeros)).prod()
+        )
 
 
 class CoefficientsTypeResponseStage(ResponseStage):

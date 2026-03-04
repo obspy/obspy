@@ -340,13 +340,16 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
 
 def corn_freq_2_paz(fc, damp=0.707):
     """
-    Convert corner frequency and damping to poles and zeros.
+    Convert corner frequency and damping coefficient to poles and zeros.
 
-    2 zeros at position (0j, 0j) are given as output  (m/s).
+    2 zeros at position (0j, 0j) are given as output (m/s).
 
     :param fc: Corner frequency
-    :param damping: Corner frequency
-    :return: Dictionary containing poles, zeros and gain
+    :type fc: float
+    :param damp: Damping coefficient (default: 0.707)
+    :type damp: float
+    :return: Dictionary containing poles, zeros, gain and sensitivity
+    :rtype: dict
     """
     poles = [-(damp + math.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc,
              -(damp - math.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]

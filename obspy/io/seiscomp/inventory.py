@@ -22,6 +22,7 @@ import numpy as np
 from scipy.signal import tf2zpk
 
 import obspy
+from obspy.core.util.decorator import deprecated
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (Azimuth, ClockDrift, Dip,
@@ -37,16 +38,25 @@ from obspy.io.stationxml.core import _read_floattype
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
-SCHEMA_VERSION = ['0.6', '0.7', '0.8', '0.9', '0.10', '0.11', '0.12', '0.13']
-SCHEMA_NAMESPACE_BASE = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema"
+SCHEMA_VERSION = ['0.7', '0.8', '0.9', '0.10',
+                  '0.11', '0.12', '0.13', '0.14']
+# from version 0.14 onwards "sc3ml" is officially dropped
+NEW_SCHEMA_VERSION = ['0.14']
+OLD_NAMESPACE_BASE = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema"
+SCHEMA_NAMESPACE_BASE = "http://geofon.gfz.de/ns/seiscomp-schema"
 
 
 def _get_schema_namespace(version_string):
     """
     >>> print(_get_schema_namespace('0.13'))
     http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.13
+    >>> print(_get_schema_namespace('0.14'))
+    http://geofon.gfz.de/ns/seiscomp-schema/0.14
     """
-    namespace = "%s/%s" % (SCHEMA_NAMESPACE_BASE, version_string)
+    if version_string in NEW_SCHEMA_VERSION:
+        namespace = "%s/%s" % (SCHEMA_NAMESPACE_BASE, version_string)
+    else:
+        namespace = "%s/%s" % (OLD_NAMESPACE_BASE, version_string)
     return namespace
 
 
@@ -83,7 +93,16 @@ def _parse_list_of_complex_string(complex_string):
     return numbers
 
 
-def _read_sc3ml(path_or_file_object, **kwargs):
+# deprecated with 1.5.0, remove a few main releases later
+@deprecated(
+    'Deprecated and will be removed next release, use high level '
+    'read_inventory(.., format="SCML") or if really needed _read_scml() '
+    'instead')
+def _read_sc3ml(*args, **kwargs):
+    return _read_scml(*args, **kwargs)
+
+
+def _read_scml(path_or_file_object, **kwargs):
     """
     Function for reading a SeisComp XML file.
 
@@ -91,7 +110,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
     """
     root = etree.parse(path_or_file_object).getroot()
 
-    # Code can be used for version 0.6 to 0.13 (Seiscomp 6.x)
+    # Code can be used for version 0.7 to 0.14 (Seiscomp 7.x)
     for version in SCHEMA_VERSION:
         namespace = _get_schema_namespace(version)
         if root.find("{%s}%s" % (namespace, "Inventory")) is not None:
@@ -115,7 +134,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
         sender = "ObsPy Inventory"
 
     # Set source to this script
-    source = "scxml import"
+    source = "scml import"
     module = None
     module_uri = None
 
@@ -170,7 +189,7 @@ def _read_sc3ml(path_or_file_object, **kwargs):
         "responses": responses
     }
 
-    # Collect all networks from the scxml inventory
+    # Collect all networks from the SCML inventory
     networks = []
     for net_element in inv_element.findall(_ns("network")):
         networks.append(_read_network(instrumentation_register,
@@ -275,7 +294,7 @@ def _read_station(instrumentation_register, sta_element, _ns):
 
     # There is no relevant info in the base node
     # Read the start and end date (creation, termination) from tags
-    # "Vault" and "Geology" are not defined in scxml ?
+    # "Vault" and "Geology" are not defined in SCML
     station.start_date = _tag2obj(sta_element, _ns("start"), obspy.UTCDateTime)
     station.end_date = _tag2obj(sta_element, _ns("end"), obspy.UTCDateTime)
     station.creation_date = _tag2obj(sta_element, _ns("start"),
@@ -287,7 +306,7 @@ def _read_station(instrumentation_register, sta_element, _ns):
     # true is evaluated to 'open'; false to 'closed'
     station.restricted_status = _get_restricted_status(sta_element, _ns)
 
-    # Get all the channels, scxml keeps these in <sensorLocation> tags in the
+    # Get all the channels, SCML keeps these in <sensorLocation> tags in the
     # station element. Individual channels are contained within <stream> tags
     channels = []
     for sen_loc_element in sta_element.findall(_ns("sensorLocation")):
@@ -306,7 +325,7 @@ def _read_site(sta_element, _ns):
     Reads site information from the station element tags
     and region from network element
 
-    In scxml, site information are included as
+    In SCML, site information are included as
     tags in the station_element
 
     :param sta_element: station element
@@ -379,7 +398,7 @@ def _read_sensor(equip_element, _ns):
 def _read_channel(instrumentation_register, cha_element, _ns):
 
     """
-    reads channel element from scxml format
+    reads channel element from SCML format
 
     :param instrumentation_register: register of instrumentation metadata
     :param cha_element: channel element
@@ -512,13 +531,45 @@ def _read_channel(instrumentation_register, cha_element, _ns):
                 warnings.warn(msg)
                 channel.sample_rate = temp
 
-    channel.azimuth = _read_floattype(cha_element, _ns("azimuth"), Azimuth)
-    channel.dip = _read_floattype(cha_element, _ns("dip"), Dip)
+    # seiscomp allows negative azimuth or dip beyond 90, so catch & correct
+    try:
+        channel.azimuth = _read_floattype(
+            cha_element, _ns("azimuth"), Azimuth)
+    except ValueError:
+        azi_el = cha_element.find(_ns("azimuth"))
+        azi_el.text = str(float(azi_el.text) % 360)
+        channel.azimuth = _read_floattype(
+            cha_element, _ns("azimuth"), Azimuth)
+
+    try:
+        channel.dip = _read_floattype(
+            cha_element, _ns("dip"), Dip)
+    except ValueError:
+        dip_el = cha_element.find(_ns("dip"))
+        dip = float(dip_el.text) % 360
+        need_flip_azimuth = False
+        if dip <= 90:
+            pass
+        elif dip <= 270:
+            dip = 180 - dip
+            need_flip_azimuth = True
+        else:
+            dip = dip - 360
+        dip_el.text = str(dip)
+        channel.dip = _read_floattype(
+            cha_element, _ns("dip"), Dip)
+
+        if need_flip_azimuth:
+            azi_el = cha_element.find(_ns("azimuth"))
+            azi_el.text = str((float(azi_el.text) + 180) % 360)
+            channel.azimuth = _read_floattype(
+                cha_element, _ns("azimuth"), Azimuth)
+
     match = re.search(r'{([^}]*)}', cha_element.tag)
     if match:
         namespace = match.group(1)
     else:
-        namespace = _get_schema_namespace('0.13')
+        namespace = _get_schema_namespace('0.14')
     channel.extra = {'format': {
         'value': _tag2obj(cha_element, _ns("format"), str),
         # storage format of channel not supported by StationXML1.1 anymore,
@@ -587,7 +638,7 @@ def _read_response(instrumentation_register, sen_element, resp_element,
                    cha_element, data_log_element, _ns, samp_rate, fir,
                    analogue):
     """
-    reads response from scxml format
+    reads response from SCML format
 
     :param instrumentation_register: Dictionary of dictionaries of
         instrumentation response metadata, top level keyed by response type,
@@ -639,7 +690,7 @@ def _read_response(instrumentation_register, sen_element, resp_element,
     fir_stage_rates = fir_stage_rates[::-1]
 
     # Attempt to read stages in the proper order
-    # scxml does not group stages by an ID
+    # SCML does not group stages by an ID
     # We are required to do stage counting ourselves
 
     stage = 1
@@ -822,7 +873,7 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
             _map_transfer_type(pz_transfer_function_type)
 
         # Parse string of poles and zeros
-        # paz are stored as a string in scxml
+        # paz are stored as a string in SCML
         # e.g. (-0.01234,0.01234) (-0.01234,-0.01234)
         zeros_array = stage.find(_ns("zeros"))
         poles_array = stage.find(_ns("poles"))
@@ -963,8 +1014,8 @@ def _read_response_stage(stage, _ns, rate, stage_sequence_number, input_units,
 def _tag2pole_or_zero(paz_element, count):
 
     """
-    Parses scxml paz format
-    Uncertainties on poles removed, not present in scxml.xsd?
+    Parses SCML paz format
+    Uncertainties on poles removed, not present in XSD
     Always put to None so no internal conflict
     The sanitization removes the first/last parenthesis
     and split by comma, real part is 1st, imaginary 2nd
@@ -990,8 +1041,8 @@ def _read_float_var(elem, cls, unit=False, datum=False, additional_mapping={}):
     function to read floattype to cls object (based on _read_floattype)
     normally ObsPy would read this directly from a tag, but with different
     tag names this is no longer possible; instead we just pass the value
-    and not the tag name. We always set the unit/datum/uncertainties to None
-    because they are not provided by scxml ?
+    and not the tag name. We set the unit/datum/uncertainties to None
+    because they are not present in SCML XSD.
 
     :param elem: float value to be converted
     :param cls: obspy.core.inventory class

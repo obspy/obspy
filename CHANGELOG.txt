@@ -20,7 +20,11 @@ Changes:
    * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
-     one of VEL/ACC/DISP (see #3235)
+     one of VEL/ACC/DISP (see #3235), add method for calculating the normalization
+     factor for pole–zero response stages (see #3580)
+   * deprecate `Trace.attach_response()` and `Stream.attach_response()` in
+     favor of passing metadata directly to response-removal methods
+     (see #2026)
    * trace: 5x quicker retrieval of seed-id with trace.id / trace.get_id()
      (see #3251)
    * inventory: additional formatting tweaks to expanded channel information
@@ -44,6 +48,8 @@ Changes:
      replacement but might need other parameters passed in (see #3331)
    * util: fix logic bug in _generic_reader to properly catch byte objects
      (see #3643)
+   * Ensure UTCDateTime can unpickle old UTCDateTime instances by adding
+     __setstate__ method (see #3684)
  - obspy.clients.filesystem:
    * tsindex: update syntax for SQLAlchemy 2.0 compatibility (see #3269)
    * tsindex: leap second handling was deactivated as it is not needed with
@@ -96,6 +102,16 @@ Changes:
  - obspy.io.seg2:
    * Less strict date/time parsing (#3283).
  - obspy.io.seiscomp:
+   * overhaul codebase towards "SCML" label instead of SC3ML
+     but SC3ML still works as a FORMAT kwarg (for now)
+   * add option to write different SCML catalog versions
+   * update/refresh XSL files to latest (2025)
+     Fixes origin/confidenceEllipsoid conversion. The unit for
+     'semiMajorAxisLength', 'semiMinorAxisLength' and
+     'semiIntermediateAxisLength' is already meter and does not need a
+     conversion.
+   * convert negative azimuth or |dip|>90 to 0-360/-90-90 for fdsnXML (#3689)
+   * add seiscomp  scml 0.14 support, drop 0.6
    * add seiscomp scxml 0.13 support (see #3345)
  - obspy.io.nordic:
    * Parse ID-lines (type I) into event.extra['nordic_event_id] (see #3287)
@@ -106,6 +122,16 @@ Changes:
    * Fix bug where check for nordic format version crashed on long phase names
  - obspy.io.seisan:
    * Fix parsing of files written in int16 (see #3287)
+ - obspy.io.mseed:
+   * _read_mseed can use interpolation search optionally to find start 
+     and end time in O(log(log(N))) for linearly ordered data with
+     "use_bisection=True" (see #3622)
+   * _read_mseed: 2GB limitation lifted (see #3622)
+   * _read_mseed: use of numpy.memmap to improve efficiency (see #3622)
+   * _read_mseed: Can now handle numpy.ndarray(dtype=numpy.int8), and
+     and anything that can be read into numpy.ndarray(dtype=numpy.int8) with
+     np.frombuffer to increase efficiency when data is already in memory. (see
+     #3622)
  - obspy.io.shapefile:
    * add support for pyshp v3 (see #3599)
  - obspy.io.stationxml:
@@ -113,6 +139,7 @@ Changes:
      sensitivity input/output units (see #3572).
  - obspy.io.win:
    * Fix reading sampling rate larger than 1 bytes (see #3641)
+   * Fix reading of 24 bit data (see #3661)
  - obspy.io.xseed:
    * Improve error message when trying to read a local path to a file that does
      not exist with XSEED Parser (see #2686)

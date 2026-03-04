@@ -237,9 +237,9 @@
         <maxHorizontalUncertainty>0.051773</maxHorizontalUncertainty>
         <azimuthMaxHorizontalUncertainty>88.9492</azimuthMaxHorizontalUncertainty>
         <confidenceEllipsoid>
-          <semiMajorAxisLength>0.0984908</semiMajorAxisLength>
-          <semiMinorAxisLength>0.0208133</semiMinorAxisLength>
-          <semiIntermediateAxisLength>0.0330972</semiIntermediateAxisLength>
+          <semiMajorAxisLength>98.4908</semiMajorAxisLength>
+          <semiMinorAxisLength>20.8133</semiMinorAxisLength>
+          <semiIntermediateAxisLength>33.0972</semiIntermediateAxisLength>
           <majorAxisPlunge>53.6747</majorAxisPlunge>
           <majorAxisAzimuth>88.5008</majorAxisAzimuth>
           <majorAxisRotation>349.712</majorAxisRotation>
@@ -589,9 +589,9 @@
         <maxHorizontalUncertainty>0.00708297</maxHorizontalUncertainty>
         <azimuthMaxHorizontalUncertainty>9.7885</azimuthMaxHorizontalUncertainty>
         <confidenceEllipsoid>
-          <semiMajorAxisLength>0.00882439</semiMajorAxisLength>
-          <semiMinorAxisLength>0.00587685</semiMinorAxisLength>
-          <semiIntermediateAxisLength>0.00772098</semiIntermediateAxisLength>
+          <semiMajorAxisLength>8.824389999999999</semiMajorAxisLength>
+          <semiMinorAxisLength>5.87685</semiMinorAxisLength>
+          <semiIntermediateAxisLength>7.72098</semiIntermediateAxisLength>
           <majorAxisPlunge>8.84374</majorAxisPlunge>
           <majorAxisAzimuth>13.3335</majorAxisAzimuth>
           <majorAxisRotation>109.69</majorAxisRotation>
