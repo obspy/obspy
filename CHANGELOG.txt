@@ -73,6 +73,9 @@ Changes:
      data available. Also, stations without data are now excluded from the
      results. See docs for `get_info()` for information how to see the excluded
      stations (see #2808)
+ - obspy.imaging.waveform
+   * Adapt the code to match the documentation of the section plots, make use
+     of metres everywhere instead of kilometres (see #3371)
  - obspy.io:
    * add read and write support for CSV, EVENTTXT and CSZ formats (see #3285)
  - obspy.io.ascii:
