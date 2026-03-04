@@ -365,10 +365,12 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
         native byte order. Used to enforce the header byte order. Useful in
         some rare cases where the automatic byte order detection fails.
-    :param use_bisection: If ``True`` use bisection for start and end time.
-        This only works for strictly ordered files containing
-        just one channel the code will revert to default behaviour if it
-        detects that this is not the case
+    :param use_bisection: If ``True``, use bisection to locate the start and
+        end times directly in the file, avoiding a full read. This can reduce
+        processing time by up to an order of magnitude when a time window is
+        specified, and is particularly important for large miniSEED files
+        (e.g., > 2 GB). Only applies to strictly ordered, single-channel files;
+        the code falls back to the default behavior otherwise.
     .. rubric:: Example
 
     >>> from obspy import read
