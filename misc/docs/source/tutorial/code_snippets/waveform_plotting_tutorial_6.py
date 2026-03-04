@@ -30,6 +30,8 @@ for waveform in files:
 for tr in st:
     tr.stats.distance = gps2dist_azimuth(tr.stats.sac.stla, tr.stats.sac.stlo,
                                          eq_lat, eq_lon)[0]
+    tr.stats.coordinates = {"latitude": tr.stats.sac.stla,
+                            "longitude": tr.stats.sac.stlo}
     # Setting Network name for plot title
     tr.stats.network = 'TOK'
 
@@ -49,12 +51,13 @@ transform = blended_transform_factory(ax.transData, ax.transAxes)
 for tr in st:
     ax.text(tr.stats.distance, 1.0, tr.stats.station, rotation=270,
             va="bottom", ha="center", transform=transform, zorder=10)
+plt.tight_layout()
 plt.show()
 
 # Do the section plot..
 # This time with vred provided (Perform velocity reduction, in m/s.)
 fig = plt.figure()
-st.plot(type='section', vred=2500.0, plot_dx=20e3, recordlength=100,
+st.plot(type='section', vred=3500.0, plot_dx=20e3, recordlength=100,
         time_down=True, linewidth=.25, grid_linewidth=.25, show=False, fig=fig)
 
 # Plot customization: Add station labels to offset axis
@@ -63,13 +66,15 @@ transform = blended_transform_factory(ax.transData, ax.transAxes)
 for tr in st:
     ax.text(tr.stats.distance, 1.0, tr.stats.station, rotation=270,
             va="bottom", ha="center", transform=transform, zorder=10)
+plt.tight_layout()
 plt.show()
 
 # Do the section plot..
 # This time with degree axes
 fig = plt.figure()
-st.plot(type='section', dist_degree=True, plot_dx=20e3, recordlength=100,
-        time_down=True, linewidth=.25, grid_linewidth=.25, show=False, fig=fig)
+st.plot(type='section', ev_coord=(eq_lat, eq_lon), dist_degree=True, plot_dx=1,
+        recordlength=100, time_down=True, linewidth=.25, grid_linewidth=.25,
+        show=False, fig=fig)
 
 # Plot customization: Add station labels to offset axis
 ax = fig.axes[0]
@@ -77,4 +82,5 @@ transform = blended_transform_factory(ax.transData, ax.transAxes)
 for tr in st:
     ax.text(tr.stats.distance, 1.0, tr.stats.station, rotation=270,
             va="bottom", ha="center", transform=transform, zorder=10)
+
 plt.show()

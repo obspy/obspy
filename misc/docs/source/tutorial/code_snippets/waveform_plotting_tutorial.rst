@@ -121,7 +121,7 @@ great circle distances (``dist_degree=True``) along with parameter ``ev_coord``.
 For further information please see :meth:`~obspy.core.stream.Stream.plot`.
 
 You can also apply a velocity reduction factor to align the phases, for example
-using `vred=2500` (m/s), or, if you're using data at larger distances, use the `dist_degrees=True`
+using `vred=3500` (m/s), or, if you're using data at larger distances, use the `dist_degrees=True`
 to have the distance axis in degrees:
 
 .. plot:: tutorial/code_snippets/waveform_plotting_tutorial_6.py
