@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.transforms import blended_transform_factory
 from obspy import read, Stream
-from obspy.geodetics import gps2dist_azimuth
+from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
 
 host = 'https://examples.obspy.org/'
@@ -80,7 +80,8 @@ st.plot(type='section', ev_coord=(eq_lat, eq_lon), dist_degree=True, plot_dx=1,
 ax = fig.axes[0]
 transform = blended_transform_factory(ax.transData, ax.transAxes)
 for tr in st:
-    ax.text(tr.stats.distance, 1.0, tr.stats.station, rotation=270,
+    ax.text(kilometer2degrees(tr.stats.distance /1e3), 1.0,
+            tr.stats.station, rotation=270,
             va="bottom", ha="center", transform=transform, zorder=10)
 
 plt.show()
