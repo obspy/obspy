@@ -22,6 +22,7 @@ import numpy as np
 from scipy.signal import tf2zpk
 
 import obspy
+from obspy.core.util.decorator import deprecated
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (Azimuth, ClockDrift, Dip,
@@ -90,6 +91,15 @@ def _parse_list_of_complex_string(complex_string):
                                                     numbers)
         raise ValueError(msg)
     return numbers
+
+
+# deprecated with 1.5.0, remove a few main releases later
+@deprecated(
+    'Deprecated and will be removed next release, use high level '
+    'read_inventory(.., format="SCML") or if really needed _read_scml() '
+    'instead')
+def _read_sc3ml(*args, **kwargs):
+    return _read_scml(*args, **kwargs)
 
 
 def _read_scml(path_or_file_object, **kwargs):

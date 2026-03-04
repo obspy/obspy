@@ -15,6 +15,7 @@ import re
 
 from lxml import etree
 
+from obspy.core.util.decorator import deprecated
 from obspy.io.quakeml.core import _xml_doc_from_anything
 
 
@@ -23,6 +24,13 @@ SCHEMA_VERSION = ['0.7', '0.8', '0.9', '0.10',
                   '0.11', '0.12', '0.13', '0.14']
 # from version 0.14 onwards "sc3ml" is dropped
 NEW_SCHEMA_VERSION = ['0.14']
+
+
+# deprecated with 1.5.0, remove a few main releases later
+@deprecated(
+    'Deprecated and will be removed next release, use _is_scml() instead')
+def _is_sc3ml(*args, **kwargs):
+    return _is_scml(*args, **kwargs)
 
 
 def _is_scml(path_or_file_object):

@@ -28,6 +28,7 @@ from pathlib import PurePath
 import numpy as np
 
 from obspy.core.util.attribdict import (AttribDict)
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 
 
@@ -456,6 +457,13 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
     """
+    # SC3ML plugin deprecated with 1.5.0 remove a few main releases later
+    if format and format.upper() == 'SC3ML':
+        warnings.warn(
+            "Format 'SC3ML' is deprecated since ObsPy 1.5.0 and will be "
+            "removed in a future release. Use 'SCML' instead.",
+            category=ObsPyDeprecationWarning,
+            stacklevel=3)
     if isinstance(filename, str):
         if not Path(filename).exists():
             msg = "[Errno 2] No such file or directory: '{}'".format(

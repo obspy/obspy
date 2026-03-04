@@ -16,6 +16,7 @@ import re
 
 from lxml import etree
 
+from obspy.core.util.decorator import deprecated
 from obspy.io.quakeml.core import Pickler, Unpickler, _xml_doc_from_anything
 from obspy.io.seiscomp.core import validate as validate_scml
 
@@ -32,6 +33,14 @@ SCHEMA_VERSION = ['0.7', '0.8', '0.9', '0.10',
                   '0.11', '0.12', '0.13', '0.14']
 # from version 0.14 onwards "sc3ml" is dropped
 NEW_SCHEMA_VERSION = ['0.14']
+
+
+# deprecated with 1.5.0, remove a few main releases later
+@deprecated(
+    'Deprecated and will be removed next release, use high level '
+    'read_events(.., format="SCML") or if really needed _read_scml() instead')
+def _read_sc3ml(*args, **kwargs):
+    return _read_scml(*args, **kwargs)
 
 
 def _read_scml(filename, id_prefix='smi:org.gfz.de/geofon/'):
@@ -97,6 +106,15 @@ def _read_scml(filename, id_prefix='smi:org.gfz.de/geofon/'):
                             ID_PREFIX=etree.XSLT.strparam(id_prefix))
 
     return Unpickler().load(io.BytesIO(quakeml_doc))
+
+
+# deprecated with 1.5.0, remove a few main releases later
+@deprecated(
+    'Deprecated and will be removed next release, use high level '
+    'Catalog.write(.., format="SCML") or if really needed _write_scml() '
+    'instead')
+def _write_sc3ml(*args, **kwargs):
+    return _write_scml(*args, **kwargs)
 
 
 def _write_scml(catalog, filename, validate=False, verbose=False,

@@ -322,7 +322,8 @@ ENTRY_POINTS = {
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
-        'SCML = obspy.io.seiscomp.event',        
+        'SCML = obspy.io.seiscomp.event',
+        # SC3ML deprecated with 1.5.0 remove after a few main releases
         'SC3ML = obspy.io.seiscomp.event',
         'ZMAP = obspy.io.zmap.core',
         'MCHEDR = obspy.io.pde.mchedr',
@@ -356,6 +357,7 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.seiscomp.event:_read_scml',
         'writeFormat = obspy.io.seiscomp.event:_write_scml',
         ],
+    # SC3ML deprecated with 1.5.0 remove after a few main releases
     'obspy.plugin.event.SC3ML': [
         'isFormat = obspy.io.seiscomp.core:_is_scml',
         'readFormat = obspy.io.seiscomp.event:_read_scml',
@@ -452,6 +454,7 @@ ENTRY_POINTS = {
         'STATIONXML = obspy.io.stationxml.core',
         'INVENTORYXML = obspy.io.arclink.inventory',
         'SCML = obspy.io.seiscomp.inventory',
+        # SC3ML deprecated with 1.5.0 remove after a few main releases
         'SC3ML = obspy.io.seiscomp.inventory',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
@@ -475,6 +478,7 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.seiscomp.core:_is_scml',
         'readFormat = obspy.io.seiscomp.inventory:_read_scml',
         ],
+    # SC3ML deprecated with 1.5.0 remove after a few main releases
     'obspy.plugin.inventory.SC3ML': [
         'isFormat = obspy.io.seiscomp.core:_is_scml',
         'readFormat = obspy.io.seiscomp.inventory:_read_scml',
