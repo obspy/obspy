@@ -2540,7 +2540,7 @@ class TestDownloadHelper():
     @mock.patch("logging.Logger.warning")
     def test_initialization_detailed(self, log_w, log_p, patch):
         def side_effect(self, *args, **kwargs):
-            if "iris" in self.base_url:
+            if "earthscope" in self.base_url:
                 self.services = {"dataselect": "dummy"}
             elif "gfz" in self.base_url:
                 raise socket_timeout("Random Error")
@@ -2562,7 +2562,7 @@ class TestDownloadHelper():
             logger.setLevel(_l)
 
         assert len(d._initialized_clients) > 10
-        assert "EARTHSCOPE" in d._initialized_clients
+        assert "EARTHSCOPE" not in d._initialized_clients
         assert "RESIF" not in d._initialized_clients
         assert "GFZ" not in d._initialized_clients
         assert "ORFEUS" in d._initialized_clients
