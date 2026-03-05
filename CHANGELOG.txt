@@ -17,7 +17,6 @@ Changes:
    * Github CI: pin cartopy < 0.22, pyproj < 3.5 for ubuntu 3.8
      mindepversion tests
    * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
-   * Minimum Python version: 3.11 (was 3.8) (see #3662)
  - obspy.core:
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235), add method for calculating the normalization
