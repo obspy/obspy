@@ -1,5 +1,5 @@
 NLLOC "/dev/shm/NLL/NLL.LuGxVBGQG/.20221031.050241.grid0" "LOCATED" "Location completed."
-PUBLIC_ID None
+PUBLIC_ID smi:local/test-event-v7-public-id
 SIGNATURE "sekiya   obs:/dev/shm/NLL/NLL.LuGxVBGQG/NLL.LuGxVBGQG.obs   NLLoc:v7.00.13(17Jan2022)   run:17Nov2022 15h49m52"
 COMMENT ""
 GRID  271 296 17  -407.434 -453.957 -1.5  3 3 3 PROB_DENSITY

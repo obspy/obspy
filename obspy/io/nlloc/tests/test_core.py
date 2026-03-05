@@ -345,6 +345,8 @@ class TestNLLOC():
         Tests that we are getting the positioning of items in phase lines
         right. Values for arrivals are shifted by one index to the right in hyp
         files written by newer nonlinloc versions, see #3223
+        Also tests that PUBLIC_ID line is correctly read and assigned to
+        event.resource_id
         """
         path = testdata['nlloc_v7.hyp']
         cat = read_nlloc_hyp(path)
@@ -359,6 +361,8 @@ class TestNLLOC():
         assert ellipsoid.major_axis_plunge == 42.8141
         assert ellipsoid.major_axis_azimuth == 86.61
         assert ellipsoid.major_axis_rotation == 322.815
+        # test that PUBLIC_ID is read correctly
+        assert str(cat[0].resource_id) == "smi:local/test-event-v7-public-id"
 
     def test_rejected_origin(self, testdata):
         """
