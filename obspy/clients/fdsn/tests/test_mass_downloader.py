@@ -2562,7 +2562,7 @@ class TestDownloadHelper():
             logger.setLevel(_l)
 
         assert len(d._initialized_clients) > 10
-        assert "EARTHSCOPE" not in d._initialized_clients
+        assert "EARTHSCOPE" in d._initialized_clients
         assert "RESIF" not in d._initialized_clients
         assert "GFZ" not in d._initialized_clients
         assert "ORFEUS" in d._initialized_clients
