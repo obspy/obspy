@@ -29,7 +29,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniconda-version: 'latest'
-          python-version: '3.13'
+          python-version: '3.9'
           activate-environment: obspydoc
           environment-file: .github/docs_conda_env.yml
 
