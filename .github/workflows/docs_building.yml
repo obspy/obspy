@@ -69,7 +69,7 @@ jobs:
           cd misc/docs/build/html/
           tar cfJ obspydoc.tar.xz *
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v4
         if: always()   # upload even if previous step failed
         with:
           name: obspydoc
