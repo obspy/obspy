@@ -46,7 +46,7 @@ from setuptools import Extension, find_packages, setup
 # the entry point lookup routines, see #3333
 # XXX when dropping Python 3.9, get rid of socket.timeout and just use
 # TimeoutError, e.g. in fdsn/client.py
-MIN_PYTHON_VERSION = (3, 11)
+MIN_PYTHON_VERSION = (3, 8)
 
 # Fail fast if the user is on an unsupported version of python.
 if sys.version_info < MIN_PYTHON_VERSION:
