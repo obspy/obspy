@@ -36,7 +36,10 @@ jobs:
         exclude:
           - build: cp311
             exclude-flag: true
-          # Need to repeat for 312, 313, 314?
+          - build: cp312
+            exclude-flag: true
+          - build: cp313
+            exclude-flag: true
     steps:
       - uses: actions/checkout@v6
         with:
