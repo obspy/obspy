@@ -3,7 +3,7 @@
 obspy.clients.iris - EarthScope (former IRIS) web service client for ObsPy
 ==========================================================================
 The obspy.clients.iris package contains a client for the DMC Web services
-provided by EarthScope (former IRIS) (https://service.iris.edu/irisws/).
+provided by EarthScope (former IRIS) (https://service.earthscope.org/irisws/).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -31,7 +31,7 @@ Web service Interfaces
 ----------------------
 
 Each of the following methods directly wrap a single Web service provided by
-EarthScope (https://service.iris.edu/irisws/):
+EarthScope (https://service.earthscope.org/irisws/):
 
 **Request Tools**
 
