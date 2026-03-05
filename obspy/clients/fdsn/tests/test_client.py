@@ -1392,39 +1392,42 @@ class TestClientNoNetwork():
         <space><space>"
         """
         base = "https://service.earthscope.org"
+        base_station = "https://service.earthscope.org/fdsnws/station"
 
         # requests with no specified location should be treated as a wildcard
-        params = {"network": "IU", "station": "ANMO", "starttime": "2013-01-01"}
+        params = {"network": "IU", "station": "ANMO",
+                  "starttime": "2013-01-01"}
         url = build_url(base, "station", 1, "query", params)
         assert "--" not in url
 
         # location of "  " is the same as "--"
         url = build_url(base, "station", 1, "query", {"location": "  "})
-        assert url == f"{base}/fdsnws/station/1/query?location=--"
+        assert url == f"{base_station}/1/query?location=--"
 
         # wildcard locations are valid. Will be encoded.
         url = build_url(base, "station", 1, "query", {"location": "*"})
-        assert url == f"{base}/fdsnws/station/1/query?location=%2A"
+        assert url == f"{base_station}/1/query?location=%2A"
 
         url = build_url(base, "station", 1, "query", {"location": "A?"})
-        assert url == f"{base}/fdsnws/station/1/query?location=A%3F"
+        assert url == f"{base_station}/1/query?location=A%3F"
 
-        # lists are valid, including <space><space> lists. Again encoded result
+        # lists are valid, including <space><space> lists.
+        # Again encoded result
         url = build_url(base, "station", 1, "query", {"location": "  ,1?,?0"})
-        assert url == f"{base}/fdsnws/station/1/query?location=--%2C1%3F%2C%3F0"
+        assert url == f"{base_station}/1/query?location=--%2C1%3F%2C%3F0"
 
         url = build_url(base, "station", 1, "query", {"location": "1?,--,?0"})
-        assert url == f"{base}/fdsnws/station/1/query?location=1%3F%2C--%2C%3F0"
+        assert url == f"{base_station}/1/query?location=1%3F%2C--%2C%3F0"
 
         # Test all three special cases with empty parameters into lists.
         url = build_url(base, "station", 1, "query", {"location": "  ,AA,BB"})
-        assert url == f"{base}/fdsnws/station/1/query?location=--%2CAA%2CBB"
+        assert url == f"{base_station}/1/query?location=--%2CAA%2CBB"
 
         url = build_url(base, "station", 1, "query", {"location": "AA,  ,BB"})
-        assert url == f"{base}/fdsnws/station/1/query?location=AA%2C--%2CBB"
+        assert url == f"{base_station}/1/query?location=AA%2C--%2CBB"
 
         url = build_url(base, "station", 1, "query", {"location": "AA,BB,  "})
-        assert url == f"{base}/fdsnws/station/1/query?location=AA%2CBB%2C--"
+        assert url == f"{base_station}/1/query?location=AA%2CBB%2C--"
 
         # The location parameter is also passed through the
         # _create_url_from_parameters() method and thus has to survive it!

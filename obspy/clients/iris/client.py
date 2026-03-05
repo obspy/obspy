@@ -445,7 +445,8 @@ class Client(object):
               starttime=None, endtime=None, filename=None, **kwargs):
         """
         Low-level interface for `sacpz` Web service of EarthScope
-        (https://service.earthscope.org/irisws/sacpz/) - release 1.1.1 (2012-1-9).
+        (https://service.earthscope.org/irisws/sacpz/)
+        release 1.1.1 (2012-1-9).
 
         This method provides access to instrument response information
         (per-channel) as poles and zeros in the ASCII format used by SAC and
