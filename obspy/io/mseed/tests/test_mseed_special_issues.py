@@ -5,7 +5,6 @@ import multiprocessing
 import os
 import platform
 import random
-import re
 import sys
 import warnings
 
