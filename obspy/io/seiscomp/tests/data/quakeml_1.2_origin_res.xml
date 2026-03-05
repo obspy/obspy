@@ -34,9 +34,9 @@
           <maxHorizontalUncertainty>10000</maxHorizontalUncertainty>
           <azimuthMaxHorizontalUncertainty>80.0</azimuthMaxHorizontalUncertainty>
           <confidenceEllipsoid>
-            <semiMajorAxisLength>0.123</semiMajorAxisLength>
-            <semiMinorAxisLength>1.123</semiMinorAxisLength>
-            <semiIntermediateAxisLength>2.123</semiIntermediateAxisLength>
+            <semiMajorAxisLength>123.0</semiMajorAxisLength>
+            <semiMinorAxisLength>1123.0</semiMinorAxisLength>
+            <semiIntermediateAxisLength>2123.0</semiIntermediateAxisLength>
             <majorAxisPlunge>3.123</majorAxisPlunge>
             <majorAxisAzimuth>4.123</majorAxisAzimuth>
             <majorAxisRotation>5.123</majorAxisRotation>
