@@ -99,8 +99,6 @@ class WaveformPlotting(object):
         self.ev_coord = kwargs.get('ev_coord', None)
         self.alpha = kwargs.get('alpha', 0.5)
         self.sect_plot_dx = kwargs.get('plot_dx', None)
-        # if self.sect_plot_dx is not None and not self.sect_dist_degree:
-        #     self.sect_plot_dx /= 1e3
         self.sect_timedown = kwargs.get('time_down', False)
         self.sect_recordstart = kwargs.get('recordstart', None)
         self.sect_recordlength = kwargs.get('recordlength', None)
@@ -110,17 +108,10 @@ class WaveformPlotting(object):
         if self.sect_vred:
             if 0 < self.sect_vred <= 1:
                 msg = ("The velocity reduction factor was provided "
-                       "as a small value (0<x<=1). Until ObsPy 1.5.0, "
-                       "the vred was treated as km/s, which was not in "
-                       "agreement with the documentation. Since 1.5.0, "
-                       "vred is treated as m/s everywhere.")
-                warnings.warn(msg, UserWarning)
-            elif self.sect_vred < 12:
-                msg = ("The velocity reduction factor was provided "
-                       "as a small value (x<12). Until ObsPy 1.5.0, "
-                       "the vred was treated as km/s, which was not in "
-                       "agreement with the documentation. Since 1.5.0, "
-                       "vred is treated as m/s everywhere.")
+                       "as a small value (0<vred<=1). Until ObsPy"
+                       " 1.5.0, the vred was treated as km/s, which was"
+                       " not in agreement with the documentation. Since"
+                       " 1.5.0, vred is treated as m/s everywhere.")
                 warnings.warn(msg, UserWarning)
 
         if self.sect_vred and self.sect_dist_degree:
