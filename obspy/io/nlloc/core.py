@@ -494,12 +494,8 @@ def write_nlloc_obs(catalog, filename, **kwargs):
             lines = [public_id_line] + lines
         info = "\n".join(lines + [""])
     else:
-        if public_id_line is not None:
-            info = public_id_line + "\n"
-        else:
-            msg = "No pick information, writing empty NLLOC OBS file."
-            warnings.warn(msg)
-            info = ""
+        msg = "No pick information, writing empty NLLOC OBS file."
+        warnings.warn(msg)
     fh.write(info.encode())
 
     # Close if a file has been opened by this function.
