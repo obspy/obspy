@@ -56,10 +56,10 @@ def read_evt(filename_or_object, encoding=None, **kwargs):
     """
     Reads an Evt file and returns a Stream object.
 
-    A custom encoding can be passed as a keyword argument, e.g.
-    kwargs = {'encoding': 'utf-8'}, or within the top-level
+    A custom encoding can be passed as a keyword argument,
+    or within the top-level
     :func:`~obspy.core.stream.read` method
-    read(filename_or_object, encoding="latin-1")
+    ``read(filename_or_object, encoding="latin-1")``
 
     .. warning::
         This function should NOT be called directly, it registers via the
