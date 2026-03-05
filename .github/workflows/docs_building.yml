@@ -52,15 +52,16 @@ jobs:
           # Summarize
           echo "=== WARNING count ===" && grep -c "WARNING" /tmp/sphinx_warnings.txt || true
           echo "=== ERROR count ===" && grep -c "ERROR" /tmp/sphinx_warnings.txt || true
-          # Fail the job if any ERRORs exist
-          ! grep -q "ERROR" /tmp/sphinx_warnings.txt
+          # IN THE FUTURE we should Fail the job if any ERRORs exist, but not now, otherwise the
+          # docs deployment code will never see it (deploy_docs.py checks for /success state).
+          # ! grep -q "ERROR" /tmp/sphinx_warnings.txt
 
-      - name: upload sphinx diagnostics
-        if: always()   # upload even if previous step failed
-        uses: actions/upload-artifact@v4
-        with:
-          name: sphinx-diagnostics
-          path: /tmp/sphinx_warnings.txt
+#      - name: upload sphinx diagnostics (not now, the deploy_doc expects only 2 artifacts)
+#        if: always()   # upload even if previous step failed
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: sphinx-diagnostics
+#          path: /tmp/sphinx_warnings.txt
 
       - name: compress with tar
         if: always()   # compress even if previous step failed
@@ -81,9 +82,15 @@ jobs:
         run: |
           cd misc/docs
           bash make_docset.sh
+
       - name: actions/upload-artifact@v4 for docset
         if: always()   # upload even if previous step failed
         uses: actions/upload-artifact@v4
         with:
           name: obspydocset
           path: misc/docs/build/obspy-*.docset.tgz
+
+      - name: Report Warnings
+        if: always()
+        run: |
+          cat /tmp/sphinx_warnings.txt
