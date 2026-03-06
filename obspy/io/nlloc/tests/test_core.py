@@ -348,9 +348,6 @@ class TestNLLOC():
         Also tests that PUBLIC_ID line is correctly read and assigned to
         event.resource_id. Tests both literal "None" and actual IDs.
         """
-        import tempfile
-        import os
-
         path = testdata['nlloc_v7.hyp']
 
         # Test 1: Read file with PUBLIC_ID None (literal string)
@@ -381,17 +378,12 @@ class TestNLLOC():
             'PUBLIC_ID smi:local/test-event-v7-public-id'
         )
         # Write to temporary file and read
-        with tempfile.NamedTemporaryFile(
-                mode='w', delete=False, suffix='.hyp') as tmp:
-            tmp.write(modified_content)
-            tmp_path = tmp.name
-        try:
-            cat2 = read_nlloc_hyp(tmp_path)
-            # test that real PUBLIC_ID is read and set correctly
-            assert str(cat2[0].resource_id) ==\
-                "smi:local/test-event-v7-public-id"
-        finally:
-            os.unlink(tmp_path)
+        with io.BytesIO() as tmp:
+            tmp.write(modified_content.encode())
+            tmp.seek(0)
+            cat2 = read_nlloc_hyp(tmp)
+        # test that real PUBLIC_ID is read and set correctly
+        assert str(cat2[0].resource_id) == "smi:local/test-event-v7-public-id"
 
     def test_rejected_origin(self, testdata):
         """
