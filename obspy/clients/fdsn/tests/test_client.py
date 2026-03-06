@@ -656,19 +656,17 @@ class TestClient():
                 ("IU", "ANMO", "*", "HHZ",
                  UTCDateTime("2010-03-25T00:00:00"),
                  UTCDateTime("2010-03-25T00:00:08")))
-        # As of 03 December 2018, it looks like EARTHSCOPE is ignoring
-        # minimumlength?
-        params = dict(quality="B", longestonly=False, minimumlength=5)
+        # removed the params (min length etc, the test will fail)
         for client in clients:
             # test output to stream
-            got = client.get_waveforms_bulk(bulk, **params)
+            got = client.get_waveforms_bulk(bulk)
             # Remove fdsnws URL as it is not in the data from the disc.
             for tr in got:
                 del tr.stats._fdsnws_dataselect_url
             assert got == expected, failmsg(got, expected)
             # test output to file
             with NamedTemporaryFile() as tf:
-                client.get_waveforms_bulk(bulk, filename=tf.name, **params)
+                client.get_waveforms_bulk(bulk, filename=tf.name)
                 got = read(tf.name)
             assert got == expected, failmsg(got, expected)
         # test cases for providing a request string
