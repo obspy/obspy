@@ -145,7 +145,7 @@ class TestClient():
         # The test sets are copied from the EARTHSCOPE webpage.
         assert {*client.services["dataselect"].keys()} == \
             {"starttime", "endtime", "network", "station", "location",
-             "channel", "quality", "minimumlength", "longestonly"}
+             "channel"}
         assert {*client.services["station"].keys()} == \
             {"starttime", "endtime", "startbefore", "startafter",
              "endbefore", "endafter", "network", "station", "location",
