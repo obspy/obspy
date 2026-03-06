@@ -19,10 +19,10 @@ Various Routines Related to Spectral Estimation
 """
 import bisect
 import glob
-from io import BytesIO
 import math
-from pathlib import Path
 import warnings
+from io import BytesIO
+from pathlib import Path
 
 import numpy as np
 from matplotlib import mlab
@@ -30,15 +30,14 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.patheffects import withStroke
 
-from obspy import Stream, Trace, UTCDateTime, __version__
-from obspy import read_inventory
+from obspy import Stream, Trace, UTCDateTime, __version__, read_inventory
 from obspy.core import Stats
-from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory, Response
 from obspy.core.util import AttribDict
 from obspy.core.util.base import MATPLOTLIB_VERSION
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.imaging.cm import obspy_sequential
+from obspy.imaging.scripts.scan import compress_start_end
 from obspy.imaging.util import _set_xaxis_obspy_dates
 from obspy.io.xseed import Parser
 from obspy.signal.invsim import cosine_taper
