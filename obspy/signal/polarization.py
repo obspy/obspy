@@ -12,7 +12,6 @@ import math
 import warnings
 
 import numpy as np
-import scipy.odr
 from scipy import signal
 from scipy.optimize import fminbound
 
@@ -328,6 +327,26 @@ def particle_motion_odr(stream, noise_thres=0):
     :type noise_thres: float
     :returns: azimuth, incidence, error of azimuth, error of incidence
     """
+    from ..core.util.base import SCIPY_VERSION
+    use_scipy = True
+    if SCIPY_VERSION < [1, 17]:
+        import scipy.odr
+    elif SCIPY_VERSION < [1, 19]:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            import scipy.odr
+    else:
+        try:
+            import odrpack
+            use_scipy = False
+        except ImportError:
+            raise ImportError(
+                "From SciPy 1.19.0 onwards, scipy.odr is Deprecated."
+                "Install odrpack "
+                "(https://pypi.org/project/odrpack/) to "
+                "run signal.polarization.particle_motion_odr."
+            )
+
     z = []
     n = []
     e = []
@@ -340,28 +359,45 @@ def particle_motion_odr(stream, noise_thres=0):
             n.append(stream[1][i])
             e.append(stream[2][i])
 
-    def fit_func(beta, x):
-        # XXX: Eventually this is correct: return beta[0] * x + beta[1]
-        return beta[0] * x
-
-    data = scipy.odr.Data(e, n)
-    model = scipy.odr.Model(fit_func)
-    odr = scipy.odr.ODR(data, model, beta0=[1.])
-    out = odr.run()
-    az_slope = out.beta[0]
-    az_error = out.sd_beta[0]
-
     n = np.asarray(n)
     e = np.asarray(e)
     z = np.asarray(z)
     r = np.sqrt(n ** 2 + e ** 2)
 
-    data = scipy.odr.Data(r, abs(z))
-    model = scipy.odr.Model(fit_func)
-    odr = scipy.odr.ODR(data, model, beta0=[1.0])
-    out = odr.run()
-    in_slope = out.beta[0]
-    in_error = out.sd_beta[0]
+    def fit_func(beta, x):
+        return beta[0] * x
+
+    if use_scipy:
+        data = scipy.odr.Data(e, n)
+        model = scipy.odr.Model(fit_func)
+        odr = scipy.odr.ODR(data, model, beta0=[1.])
+        out = odr.run()
+        az_slope = out.beta[0]
+        az_error = out.sd_beta[0]
+
+        data = scipy.odr.Data(r, np.abs(z))
+        model = scipy.odr.Model(fit_func)
+        odr = scipy.odr.ODR(data, model, beta0=[1.0])
+        out = odr.run()
+        in_slope = out.beta[0]
+        in_error = out.sd_beta[0]
+    else:
+        # use odrpack which expects f(x, beta)
+        # instead of scipy's f(beta, x)
+        def odr_fit_func(x, beta):
+            return fit_func(beta, x)
+
+        out = odrpack.odr_fit(
+            odr_fit_func, e, n, beta0=np.array([1.0])
+        )
+        az_slope = out.beta[0]
+        az_error = out.sd_beta[0]
+
+        out = odrpack.odr_fit(
+            odr_fit_func, r, np.abs(z), beta0=np.array([1.0])
+        )
+        in_slope = out.beta[0]
+        in_error = out.sd_beta[0]
 
     azimuth = math.atan2(1.0, az_slope)
     incidence = math.atan2(1.0, in_slope)

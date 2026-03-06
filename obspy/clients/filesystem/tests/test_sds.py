@@ -185,7 +185,7 @@ class TestSDS():
             with open(file_png, 'rb') as fh:
                 assert fh.read(8) == b'\x89PNG\r\n\x1a\n'
             # check content of stream info / data quality file
-            expected_lines = [
+            expected_lines = sorted([
                 b"AB,XYZ,,BHE,831[0-9].[0-9]*?,0.007292,2",
                 b"AB,XYZ,,HHZ,831[0-9].[0-9]*?,0.007292,2",
                 b"AB,XYZ,00,HHZ,831[0-9].[0-9]*?,0.007292,2",
@@ -194,7 +194,7 @@ class TestSDS():
                 b"CD,XYZ,,HHZ,831[0-9].[0-9]*?,0.007292,2",
                 b"CD,XYZ,00,HHZ,831[0-9].[0-9]*?,0.007292,2",
                 b"CD,ZZZ3,,HHZ,831[0-9].[0-9]*?,0.007292,2",
-                b"CD,ZZZ3,00,HHZ,831[0-9].[0-9]*?,0.007292,2"]
+                b"CD,ZZZ3,00,HHZ,831[0-9].[0-9]*?,0.007292,2"])
             with open(file_txt, "rb") as fh:
                 got_lines = fh.readlines()
             for expected_line, got_line in zip(expected_lines, got_lines):

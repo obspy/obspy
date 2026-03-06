@@ -127,7 +127,7 @@ def attach_paz(tr, paz_file):
 
     # remove zero at 0,0j to undo integration in GSE PAZ
     for i, zero in enumerate(list(zeros)):
-        if zero == complex(0, 0j):
+        if zero == complex(0, 0):
             zeros.pop(i)
             break
     else:
