@@ -4,7 +4,7 @@
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
- <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?station=05&amp;network=XM&amp;level=response</ModuleURI>
+ <ModuleURI>https://service.iris.edu/fdsnws/station/1/query?station=05&amp;network=XM&amp;level=response</ModuleURI>
  <Created>2013-12-02T08:27:18</Created>
  <Network code="XM" startDate="2004-01-01T00:00:00" endDate="2004-12-12T23:59:59" restrictedStatus="open">
   <Description>Vestmanna04 (SeiFaBa Project)</Description>

@@ -8,8 +8,10 @@ Base utilities and constants for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import functools
 import glob
 import importlib
+import importlib.metadata
 import inspect
 import io
 import os
@@ -25,9 +27,9 @@ from collections import OrderedDict
 from pathlib import PurePath
 
 import numpy as np
-import pkg_resources
-from pkg_resources import get_entry_info, iter_entry_points
 
+from obspy.core.util.attribdict import (AttribDict)
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.misc import to_int_or_zero, buffered_load_entry_point
 
 
@@ -56,8 +58,8 @@ WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
                             'GCF', 'DMX', 'ALSEP_PSE', 'ALSEP_WTN',
                             'ALSEP_WTH', 'CYBERSHAKE']
-EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
-INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP']
+EVENT_PREFERRED_ORDER = ['QUAKEML', 'SCML', 'NLLOC_HYP']
+INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP', 'SCML']
 # waveform plugins accepting a byteorder keyword
 WAVEFORM_ACCEPT_BYTEORDER = ['MSEED', 'Q', 'SAC', 'SEGY', 'SU']
 
@@ -223,6 +225,62 @@ def get_example_file(filename):
     raise OSError(msg)
 
 
+def get_entry_point_dist_name(entry_point):
+    """
+    Gets the distribution name from an entry point regardless of whether
+    it comes from pkg_resources or importlib.metadata.
+
+    :param entry_point: An EntryPoint object from pkg_resources
+     or importlib.metadata
+    :return: The distribution name as a string
+    """
+    # Check for pkg_resources style EntryPoint
+    if hasattr(entry_point, 'dist') and hasattr(entry_point.dist, 'name'):
+        return entry_point.dist.name
+
+    # Check for importlib.metadata style EntryPoint
+    if hasattr(entry_point, 'dist'):
+        # Python 3.10+ approach where ep.dist might be the distribution name
+        try:
+            from importlib.metadata import distribution
+            dist = distribution(entry_point.dist)
+            return dist.metadata['Name']
+        except KeyError:
+            return str(entry_point.dist)
+
+    # Fallback for older importlib.metadata versions
+    import os
+    import re
+
+    if hasattr(entry_point, 'origin') and entry_point.origin:
+        # Extract distribution name from the path
+        path = entry_point.origin
+        dist_info_dir = os.path.basename(os.path.dirname(path))
+        match = re.match(r'(.+?)(?:-\d+.*)?.dist-info', dist_info_dir)
+        if match:
+            return match.group(1)
+
+    # Last resort
+    return entry_point.value.split('.')[0]
+
+
+@functools.lru_cache(maxsize=None)
+def _get_all_entry_points():
+    """
+    Get all entry points, using a cache to avoid repeated expensive
+    scans of all installed python packages.
+
+    Returns a flat list of all EntryPoint objects.
+    """
+    eps = importlib.metadata.entry_points()
+    if not isinstance(eps, dict):
+        # Python 3.10+: convert to list
+        return list(eps)
+    # Python 3.8/3.9: flatten the dict values to a list
+    return [ep for group_eps in eps.values() for ep in group_eps]
+
+
+@functools.lru_cache(maxsize=None)
 def _get_entry_points(group, subgroup=None):
     """
     Gets a dictionary of all available plug-ins of a group or subgroup.
@@ -236,16 +294,84 @@ def _get_entry_points(group, subgroup=None):
 
     .. rubric:: Example
 
-    >>> _get_entry_points('obspy.plugin.waveform')  # doctest: +ELLIPSIS
-    {...'SLIST': EntryPoint.parse('SLIST = obspy.io.ascii.core')...}
+    >>> _get_entry_points(
+    ...     'obspy.plugin.waveform') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    {...'SLIST': EntryPoint(name='SLIST', value='obspy.io.ascii.core',
+                            group='obspy.plugin.waveform')...}
     """
-    features = {}
-    for ep in iter_entry_points(group):
+    if sys.version_info.minor < 10:
+        # compatibility workaround for Python 3.8 and 3.9
+        eps_all = _get_all_entry_points()
+
+        # Build a dict grouped by group name for Python 3.8/3.9 compatibility
+        eps_by_group = {}
+        for ep in eps_all:
+            if ep.group not in eps_by_group:
+                eps_by_group[ep.group] = []
+            eps_by_group[ep.group].append(ep)
+
+        eps = eps_by_group.get(group, [])
+
         if subgroup:
-            if list(iter_entry_points(group + '.' + ep.name, subgroup)):
-                features[ep.name] = ep
+            features = {}
+            for ep in eps:
+                # workaround to get the dist dict populated here
+                if hasattr(ep, "dist"):
+                    if not hasattr(ep.dist, "name"):
+                        ep.dist.name = get_entry_point_dist_name(ep)
+                else:
+                    ep.dist = AttribDict({"name":
+                                          get_entry_point_dist_name(ep)})
+                subgroup_eps = eps_by_group.get(f'{group}.{ep.name}', [])
+                for sub_ep in subgroup_eps:
+                    if sub_ep.name == subgroup:
+                        features[ep.name] = ep
+                        break
         else:
-            features[ep.name] = ep
+            features = {}
+            for ep in eps:
+                # workaround to get the dist dict populated here
+                if hasattr(ep, "dist"):
+                    if not hasattr(ep.dist, "name"):
+                        ep.dist.name = get_entry_point_dist_name(ep)
+                else:
+                    ep.dist = AttribDict({"name":
+                                          get_entry_point_dist_name(ep)})
+                features[ep.name] = ep
+    else:
+        # Efficient implementation: get all entry points once and filter in
+        # memory instead of making multiple .select() calls which scan all
+        # distributions and is very slow in Python 3.10+
+        eps_all = _get_all_entry_points()
+
+        # Filter to entries for the target group
+        eps_for_group = [ep for ep in eps_all if ep.group == group]
+
+        if subgroup:
+            # Build a map of parent plugins in each subgroup
+            # subgroups[parent_name] = [subgroup entries for that parent]
+            subgroups = {}
+            for ep in eps_all:
+                # Check if this is a subgroup entry for our target group
+                if ep.group.startswith(f'{group}.'):
+                    parent_name = ep.group[len(group)+1:]  # e.g. "MSEED"
+                    if parent_name not in subgroups:
+                        subgroups[parent_name] = []
+                    subgroups[parent_name].append(ep)
+
+            # Only include parent plugins that have the matching subgroup
+            features = {}
+            for ep in eps_for_group:
+                if (
+                    ep.name in subgroups
+                    and any(
+                        sub_ep.name == subgroup
+                        for sub_ep in subgroups[ep.name]
+                    )
+                ):
+                    features[ep.name] = ep
+        else:
+            features = {ep.name: ep for ep in eps_for_group}
     return features
 
 
@@ -253,8 +379,8 @@ def _get_ordered_entry_points(group, subgroup=None, order_list=[]):
     """
     Gets a ordered dictionary of all available plug-ins of a group or subgroup.
     """
-    # get all available entry points
-    ep_dict = _get_entry_points(group, subgroup)
+    # Copy so pop() below does not modify the lru_cache result.
+    ep_dict = _get_entry_points(group, subgroup).copy()
     # loop through official supported waveform plug-ins and add them to
     # ordered dict of entry points
     entry_points = OrderedDict()
@@ -331,7 +457,7 @@ def _get_function_from_entry_point(group, type):
     # import function point
     # any issue during import of entry point should be raised, so the user has
     # a chance to correct the problem
-    func = buffered_load_entry_point(entry_point.dist.key,
+    func = buffered_load_entry_point(entry_point.dist.name,
                                      'obspy.plugin.%s' % (group),
                                      entry_point.name)
     return func
@@ -353,8 +479,8 @@ def get_dependency_version(package_name, raw_string=False):
         0.
     """
     try:
-        version_string = pkg_resources.get_distribution(package_name).version
-    except pkg_resources.DistributionNotFound:
+        version_string = importlib.metadata.version(package_name)
+    except importlib.metadata.PackageNotFoundError:
         return []
     if raw_string:
         return version_string
@@ -373,6 +499,13 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
     """
+    # SC3ML plugin deprecated with 1.5.0 remove a few main releases later
+    if format and format.upper() == 'SC3ML':
+        warnings.warn(
+            "Format 'SC3ML' is deprecated since ObsPy 1.5.0 and will be "
+            "removed in a future release. Use 'SCML' instead.",
+            category=ObsPyDeprecationWarning,
+            stacklevel=3)
     if isinstance(filename, str):
         if not Path(filename).exists():
             msg = "[Errno 2] No such file or directory: '{}'".format(
@@ -386,7 +519,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
         for format_ep in eps.values():
             # search isFormat for given entry point
             is_format = buffered_load_entry_point(
-                format_ep.dist.key,
+                format_ep.dist.name,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
             # If it is a file-like object, store the position and restore it
@@ -416,7 +549,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     try:
         # search readFormat for given entry point
         read_format = buffered_load_entry_point(
-            format_ep.dist.key,
+            format_ep.dist.name,
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
             'readFormat')
     except ImportError:
@@ -455,9 +588,11 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
     NORDIC    :mod:`obspy.io.nordic` :func:`obspy.io.nordic.core.write_select`
     QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
-    SC3ML   :mod:`...io.seiscomp` :func:`obspy.io.seiscomp.event._write_sc3ml`
+    SC3ML   :mod:`obspy.io.seiscomp`
+                             :func:`obspy.io.seiscomp.event._write_scml`
     SCARDEC   :mod:`obspy.io.scardec`
                              :func:`obspy.io.scardec.core._write_scardec`
+    SCML    :mod:`...io.seiscomp` :func:`obspy.io.seiscomp.event._write_scml`
     SHAPEFILE :mod:`obspy.io.shapefile`
                              :func:`obspy.io.shapefile.core._write_shapefile`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`
@@ -482,12 +617,37 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     method = "%sFormat" % method
     eps = _get_ordered_entry_points("obspy.plugin.%s" % group, method,
                                     WAVEFORM_PREFERRED_ORDER)
+
+    # Get all entry points once using module-level cache
+    all_eps = _get_all_entry_points()
+
     mod_list = []
     for name, ep in eps.items():
-        module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
-        ep_list = [ep.dist.key, "obspy.plugin.%s.%s" % (group, name), method]
-        entry_info = str(get_entry_info(*ep_list))
-        func_str = ':func:`%s`' % entry_info.split(' = ')[1].replace(':', '.')
+        if sys.version_info.minor < 10:
+            # compatibility workaround for Python 3.8 and 3.9
+            module_short = ":mod:`%s`" % ".".join(ep.value.split(".")[:3])
+            # Filter from cached list
+            func_str = [
+                _ep
+                for _ep in all_eps
+                if _ep.group == f'{ep.group}.{ep.name}' and _ep.name == method
+            ][0].value
+        else:
+            module_short = ":mod:`%s`" % ".".join(ep.module.split(".")[:3])
+            # Filter the pre-fetched all_eps instead of
+            # calling entry_points() again
+            matching_eps = [
+                _ep
+                for _ep in all_eps
+                if _ep.group == f'{ep.group}.{ep.name}' and _ep.name == method
+            ]
+            if matching_eps:
+                func_str = matching_eps[0].value
+            else:
+                # Fallback (shouldn't happen in normal operation)
+                func_str = ep.value
+        func_str = func_str.replace(':', '.')
+        func_str = f':func:`{func_str}`'
         mod_list.append((name, module_short, func_str))
 
     mod_list = sorted(mod_list)
@@ -621,12 +781,23 @@ def _generic_reader(pathname_or_url=None, callback_func=None,
     if isinstance(pathname_or_url, PurePath):
         pathname_or_url = str(pathname_or_url)
     if not isinstance(pathname_or_url, str):
-        # not a string - we assume a file-like object
-        return callback_func(pathname_or_url, **kwargs)
-    elif isinstance(pathname_or_url, bytes) and \
-            pathname_or_url.strip().startswith(b'<'):
-        # XML string
-        return callback_func(io.BytesIO(pathname_or_url), **kwargs)
+        # first check if bytes
+        if isinstance(pathname_or_url, bytes) and \
+                pathname_or_url.strip().startswith(b'<'):
+            # XML string
+            return callback_func(io.BytesIO(pathname_or_url), **kwargs)
+        # not a string OR bytes- we assume a file-like object
+        try:
+            # first try reading directly
+            generic = callback_func(pathname_or_url, **kwargs)
+        except TypeError:
+            # if this fails, create a temporary file which is read directly
+            # from the file system
+            pathname_or_url.seek(0)
+            with NamedTemporaryFile() as fh:
+                fh.write(pathname_or_url.read())
+                generic = callback_func(fh.name, **kwargs)
+        return generic
     elif "://" in pathname_or_url[:10]:
         # URL
         # extract extension if any

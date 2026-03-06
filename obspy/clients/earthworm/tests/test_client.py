@@ -24,7 +24,7 @@ class TestEWClient:
         """Try to get the stream with either '' or '--' location codes. """
         # I am not sure why, but sometimes the location code needs to be --
         # and other times '' in order to get a stream of nonzero length.
-        # Just try both.
+        # Just try both. Update: As of 11/2025 '' should work fine.
         st = client.get_waveforms(
             location='', starttime=self.start, endtime=self.end, **kwargs
         )
@@ -101,6 +101,7 @@ class TestEWClient:
         assert trace.stats.channel == 'BHE'
 
     @skip_on_network_error
+    @pytest.mark.skip(reason='Example data AV.AKV..BHE no longer valid')
     def test_get_waveform_no_cleanup(self, ew_client, ew_stream_no_cleanup):
         """
         Tests get_waveforms method again, 1 channel no cleanup.

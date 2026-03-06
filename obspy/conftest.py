@@ -2,6 +2,7 @@
 Obspy's testing configuration file.
 """
 import argparse
+import importlib.metadata
 import inspect
 import os
 import platform
@@ -237,17 +238,26 @@ def pytest_json_modifyreport(json_report):
 
 def get_dependency_info():
     """Add version info about ObsPy's dependencies."""
-    import pkg_resources
-    distribution = pkg_resources.get_distribution('obspy')
     version_info = {'obspy': obspy.__version__}
-    for req in distribution.requires():
-        name = req.name
-        version = pkg_resources.get_distribution(name).version
+    for req in importlib.metadata.requires("obspy"):
+        # can not find proper documentation for how exactly these requirement
+        # strings are defined, but it looks like a semicolon is used as a
+        # separator for additional definitions like "extra" in optional
+        # dependencies and old pkg_resources ignored those, so skip them with
+        # importlib too
+        if ';' in req:
+            continue
+        name = req.split()[0]
+        # requirements can be of the form "numpy>=1.20", so split on everything
+        # that can be a version number indicator
+        for sep in '><=':
+            name = name.split(sep)[0]
+        version = importlib.metadata.version(name)
         version_info[name] = version
     for name in REPORT_DEPENDENCIES:
         try:
-            version = pkg_resources.get_distribution(name).version
-        except pkg_resources.DistributionNotFound:
+            version = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
             version = '---'
         version_info[name] = version
     return version_info

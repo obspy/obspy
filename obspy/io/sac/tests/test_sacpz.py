@@ -21,7 +21,7 @@ class TestSACPZ:
     @pytest.fixture(autouse=True, scope="function")
     def setup(self, testdata):
         # these files were checked against data given by IRIS SACPZ web service
-        # http://service.iris.edu/irisws/sacpz/1/
+        # https://service.iris.edu/irisws/sacpz/1/
         #                                query?net=IU&loc=*&cha=BH?&sta=ANMO
         # DIP seems to be systematically different in SACPZ output compared to
         # StationXML served by IRIS...

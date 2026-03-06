@@ -42,6 +42,8 @@ from setuptools import Extension, find_packages, setup
 
 
 # The minimum python version which can be used to run ObsPy
+# TODO: when dropping support for Python 3.9 some workarounds can be removed in
+# the entry point lookup routines, see #3333
 # XXX when dropping Python 3.9, get rid of socket.timeout and just use
 # TimeoutError, e.g. in fdsn/client.py
 MIN_PYTHON_VERSION = (3, 8)
@@ -85,11 +87,8 @@ EXTERNAL_LIBMSEED = False
 # Hard dependencies needed to install/run ObsPy.
 # Backwards compatibility hacks to be removed later:
 #  - matplotlib 3.3 (/3.4?): imaging (see #3242)
-# sqlalchemy pinned to <2.0 for now because of API changes that break
-# clients.filesystem.db. We suppress warnings in that module and also see
-# pytest.ini for some rules to ignore related warnings
 INSTALL_REQUIRES = [
-    'numpy>=1.20',
+    'numpy>=1.21',
     'scipy>=1.7',
     'matplotlib>=3.3',
     'lxml',
@@ -127,12 +126,12 @@ KEYWORDS = [
     'NonLinLoc', 'NLLOC', 'Nordic', 'NRL', 'observatory', 'ORFEUS', 'PDAS',
     'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
     'REFTEK130', 'RG-1.6', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
-    'SAGE', 'scardec', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
-    'SEISAN', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
-    'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
-    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
-    'WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston', 'XML-SEED',
-    'XSEED']
+    'SAGE', 'scardec', 'scml', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2',
+    'SEG Y','SEISAN', 'Seismic Handler', 'seismology', 'seismogram',
+    'seismograms','shapefile', 'signal', 'slink', 'spectrogram', 'StationXML',
+    'taper','taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
+    'WaveServer','WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston',
+    'XML-SEED','XSEED']
 
 ENTRY_POINTS = {
     'console_scripts': [
@@ -323,6 +322,8 @@ ENTRY_POINTS = {
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
+        'SCML = obspy.io.seiscomp.event',
+        # SC3ML deprecated with 1.5.0 remove after a few main releases
         'SC3ML = obspy.io.seiscomp.event',
         'ZMAP = obspy.io.zmap.core',
         'MCHEDR = obspy.io.pde.mchedr',
@@ -351,10 +352,16 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.quakeml.core:_read_quakeml',
         'writeFormat = obspy.io.quakeml.core:_write_quakeml',
         ],
+    'obspy.plugin.event.SCML': [
+        'isFormat = obspy.io.seiscomp.core:_is_scml',
+        'readFormat = obspy.io.seiscomp.event:_read_scml',
+        'writeFormat = obspy.io.seiscomp.event:_write_scml',
+        ],
+    # SC3ML deprecated with 1.5.0 remove after a few main releases
     'obspy.plugin.event.SC3ML': [
-        'isFormat = obspy.io.seiscomp.core:_is_sc3ml',
-        'readFormat = obspy.io.seiscomp.event:_read_sc3ml',
-        'writeFormat = obspy.io.seiscomp.event:_write_sc3ml',
+        'isFormat = obspy.io.seiscomp.core:_is_scml',
+        'readFormat = obspy.io.seiscomp.event:_read_scml',
+        'writeFormat = obspy.io.seiscomp.event:_write_scml',
         ],
     'obspy.plugin.event.MCHEDR': [
         'isFormat = obspy.io.pde.mchedr:_is_mchedr',
@@ -446,6 +453,8 @@ ENTRY_POINTS = {
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
         'INVENTORYXML = obspy.io.arclink.inventory',
+        'SCML = obspy.io.seiscomp.inventory',
+        # SC3ML deprecated with 1.5.0 remove after a few main releases
         'SC3ML = obspy.io.seiscomp.inventory',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
@@ -465,9 +474,14 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.arclink.inventory:_is_inventory_xml',
         'readFormat = obspy.io.arclink.inventory:_read_inventory_xml',
         ],
+    'obspy.plugin.inventory.SCML': [
+        'isFormat = obspy.io.seiscomp.core:_is_scml',
+        'readFormat = obspy.io.seiscomp.inventory:_read_scml',
+        ],
+    # SC3ML deprecated with 1.5.0 remove after a few main releases
     'obspy.plugin.inventory.SC3ML': [
-        'isFormat = obspy.io.seiscomp.core:_is_sc3ml',
-        'readFormat = obspy.io.seiscomp.inventory:_read_sc3ml',
+        'isFormat = obspy.io.seiscomp.core:_is_scml',
+        'readFormat = obspy.io.seiscomp.inventory:_read_scml',
         ],
     'obspy.plugin.inventory.SACPZ': [
         'writeFormat = obspy.io.sac.sacpz:_write_sacpz',

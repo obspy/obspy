@@ -492,13 +492,31 @@ class Catalog(object):
         %s
         """
         format = format.upper()
+
+        DEPRECATED_FORMATS = {
+            'SC3ML': ('SCML', '1.5.0')
+        }
+
+        if format and format in DEPRECATED_FORMATS:
+            from obspy.core.util.deprecation_helpers import \
+                ObsPyDeprecationWarning
+            new_format, deprecated_version = DEPRECATED_FORMATS[format]
+            warnings.warn(
+                f"Format '{format}' is deprecated since ObsPy "
+                f"{deprecated_version} and will be removed in a future"
+                f" release. Use '{new_format}' instead.",
+                category=ObsPyDeprecationWarning,
+                stacklevel=3
+            )
+            format = new_format
+
         try:
             # get format specific entry point
             format_ep = EVENT_ENTRY_POINTS_WRITE[format]
             # search writeFormat method for given entry point
             write_format = buffered_load_entry_point(
-                format_ep.dist.key, 'obspy.plugin.event.%s' % (format_ep.name),
-                'writeFormat')
+                format_ep.dist.name,
+                'obspy.plugin.event.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
             msg = "Writing format \"%s\" is not supported. Supported types: %s"
             raise ValueError(msg % (format,

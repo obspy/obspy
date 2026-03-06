@@ -4,7 +4,7 @@
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
- <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?station=MEEK&amp;network=AU&amp;level=response</ModuleURI>
+ <ModuleURI>https://service.iris.edu/fdsnws/station/1/query?station=MEEK&amp;network=AU&amp;level=response</ModuleURI>
  <Created>2013-11-30T21:14:52</Created>
  <Network code="AU" startDate="1994-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
   <Description>Geoscience Australia</Description>

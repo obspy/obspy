@@ -3,7 +3,7 @@
   <Source>IRIS-DMC</Source>
   <Sender>IRIS-DMC</Sender>
   <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.47</Module>
-  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?starttime=2020-10-31T00%3A00%3A00.000000&amp;endtime=2020-10-31T02%3A00%3A00.000000&amp;network=IM&amp;station=I59H1&amp;location=%2A&amp;channel=BDF&amp;level=response</ModuleURI>
+  <ModuleURI>https://service.iris.edu/fdsnws/station/1/query?starttime=2020-10-31T00%3A00%3A00.000000&amp;endtime=2020-10-31T02%3A00%3A00.000000&amp;network=IM&amp;station=I59H1&amp;location=%2A&amp;channel=BDF&amp;level=response</ModuleURI>
   <Created>2020-11-02T19:16:45.000000Z</Created>
   <Network code="IM" startDate="1965-01-01T00:00:00.000000Z" restrictedStatus="open">
     <Description>International Miscellaneous Stations (IMS)</Description>

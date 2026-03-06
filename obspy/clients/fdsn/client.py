@@ -163,7 +163,7 @@ class Client(object):
 
         >>> client = Client("EARTHSCOPE")
         >>> print(client)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-        FDSN Webservice Client (base url: http://service.iris.edu)
+        FDSN Webservice Client (base url: https://service.iris.edu)
         Available Services: 'dataselect' (v...), 'event' (v...),
         'station' (v...), 'available_event_catalogs',
         'available_event_contributors'
@@ -174,7 +174,7 @@ class Client(object):
 
         :type base_url: str
         :param base_url: Base URL of FDSN web service compatible server
-            (e.g. "http://service.iris.edu") or key string for recognized
+            (e.g. "https://service.iris.edu") or key string for recognized
             server (one of %s).
         :type major_versions: dict
         :param major_versions: Allows to specify custom major version numbers
@@ -215,7 +215,7 @@ class Client(object):
             followed even if credentials are given.
         :type eida_token: str
         :param eida_token: Token for EIDA authentication mechanism, see
-            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php. If a
+            http://geofon.gfz.de/waveform/archive/auth/index.php. If a
             token is provided, options ``user`` and ``password`` must not be
             used. This mechanism is only available on select EIDA nodes. The
             token can be provided in form of the PGP message as a string, or
@@ -249,6 +249,12 @@ class Client(object):
             base_url = 'EARTHSCOPE'
             msg = ("IRIS is now EarthScope, please consider changing the FDSN "
                    "client short URL to 'EARTHSCOPE'.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
+
+        if base_url.upper() == 'RESIF':
+            msg = ("RESIF is now EPOSFR. Webservices and client will be "
+                   "shutdown in 2026. Please consider changing the FDSN "
+                   "client short URL to 'EPOSFR'.")
             warnings.warn(msg, ObsPyDeprecationWarning)
 
         if base_url.upper() in URL_MAPPINGS:
@@ -344,13 +350,13 @@ class Client(object):
         authenticated for potential access to restricted data.
         This only works for select EIDA nodes and relies on the auth mechanism
         described here:
-        http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php
+        http://geofon.gfz.de/waveform/archive/auth/index.php
 
         This will overwrite any previously set-up credentials/authentication.
 
         :type token: str
         :param token: Token for EIDA authentication mechanism, see
-            http://geofon.gfz-potsdam.de/waveform/archive/auth/index.php.
+            http://geofon.gfz.de/waveform/archive/auth/index.php.
             This mechanism is only available on select EIDA nodes. The token
             can be provided in form of the PGP message as a string, or the
             filename of a local file with the PGP message in it.
@@ -934,28 +940,6 @@ class Client(object):
         IU.AFI.10.LHZ  | 2010-02-27T06:30:00.069538Z - ... | 1.0 Hz, 5 samples
         IU.ANMO.10.LHZ | 2010-02-27T06:30:00.069538Z - ... | 1.0 Hz, 5 samples
 
-        Use ``attach_response=True`` to automatically add response information
-        to each trace. This can be used to remove response using
-        :meth:`~obspy.core.stream.Stream.remove_response`.
-
-        >>> t = UTCDateTime("2012-12-14T10:36:01.6Z")
-        >>> st = client.get_waveforms("TA", "E42A", "*", "BH?", t+300, t+400,
-        ...                           attach_response=True)
-        >>> st.remove_response(output="VEL") # doctest: +ELLIPSIS
-        <obspy.core.stream.Stream object at ...>
-        >>> st.plot()  # doctest: +SKIP
-
-        .. plot::
-
-            from obspy import UTCDateTime
-            from obspy.clients.fdsn import Client
-            client = Client("EARTHSCOPE")
-            t = UTCDateTime("2012-12-14T10:36:01.6Z")
-            st = client.get_waveforms("TA", "E42A", "*", "BH?", t+300, t+400,
-                                      attach_response=True)
-            st.remove_response(output="VEL")
-            st.plot()
-
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
             codes or data center defined codes. Multiple codes are
@@ -990,11 +974,12 @@ class Client(object):
             instead of being parsed to an ObsPy object. Thus it will contain
             the raw data from the webservices.
         :type attach_response: bool
-        :param attach_response: Specify whether the station web service should
-            be used to automatically attach response information to each trace
-            in the result set. A warning will be shown if a response can not be
-            found for a channel. Does nothing if output to a file was
-            specified.
+        :param attach_response: Deprecated option to automatically attach
+            response information to each trace in the result trace. Will be
+            removed in a future ObsPy version. Use
+            :meth:`~obspy.core.stream.Stream.remove_response` instead. A
+            warning will be shown if a response can not be found for a
+            channel. Does nothing if output to a file was specified.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the
@@ -1005,6 +990,12 @@ class Client(object):
         if "dataselect" not in self.services:
             msg = "The current client does not have a dataselect service."
             raise FDSNNoServiceException(msg)
+
+        if attach_response:
+            msg = ("attach_response is deprecated and will be removed in "
+                   "a future release. Use remove_response() instead."
+                   )
+            warnings.warn(msg, ObsPyDeprecationWarning, stacklevel=2)
 
         locs = locals()
         setup_query_dict('dataselect', locs, kwargs)
@@ -1056,7 +1047,14 @@ class Client(object):
                     starttime=starttime, endtime=endtime, level="response"))
             except Exception as e:
                 warnings.warn(str(e))
-        st.attach_response(inventories)
+        for tr in st:
+            try:
+                tr.stats.response = tr._get_response(inventories)
+            except Exception as e:
+                if str(e) == "No matching response information found.":
+                    warnings.warn(str(e))
+                else:
+                    raise
 
     def get_waveforms_bulk(self, bulk, quality=None, minimumlength=None,
                            longestonly=None, filename=None,
@@ -1121,38 +1119,6 @@ class Client(object):
         GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
-        >>> t = UTCDateTime("2012-12-14T10:36:01.6Z")
-        >>> t1 = t + 300
-        >>> t2 = t + 400
-        >>> bulk = [("TA", "S42A", "*", "BHZ", t1, t2),
-        ...         ("TA", "W42A", "*", "BHZ", t1, t2),
-        ...         ("TA", "Z42A", "*", "BHZ", t1, t2)]
-        >>> st = client.get_waveforms_bulk(bulk, attach_response=True)
-        >>> st.remove_response(output="VEL") # doctest: +ELLIPSIS
-        <obspy.core.stream.Stream object at ...>
-        >>> st.plot()  # doctest: +SKIP
-
-        .. plot::
-
-            from obspy import UTCDateTime
-            from obspy.clients.fdsn import Client
-            client = Client("EARTHSCOPE")
-            t = UTCDateTime("2012-12-14T10:36:01.6Z")
-            t1 = t + 300
-            t2 = t + 400
-            bulk = [("TA", "S42A", "*", "BHZ", t1, t2),
-                    ("TA", "W42A", "*", "BHZ", t1, t2),
-                    ("TA", "Z42A", "*", "BHZ", t1, t2)]
-            st = client.get_waveforms_bulk(bulk, attach_response=True)
-            st.remove_response(output="VEL")
-            st.plot()
-
-        .. note::
-
-            Use `attach_response=True` to automatically add response
-            information to each trace. This can be used to remove response
-            using :meth:`~obspy.core.stream.Stream.remove_response`.
-
         :type bulk: str, file or list[list]
         :param bulk: Information about the requested data. See above for
             details.
@@ -1172,11 +1138,12 @@ class Client(object):
             instead of being parsed to an ObsPy object. Thus it will contain
             the raw data from the webservices.
         :type attach_response: bool
-        :param attach_response: Specify whether the station web service should
-            be used to automatically attach response information to each trace
-            in the result set. A warning will be shown if a response can not be
-            found for a channel. Does nothing if output to a file was
-            specified.
+        :param attach_response: Deprecated option to automatically attach
+            response information to each trace in the result trace. Will be
+            removed in a future ObsPy version. Use
+            :meth:`~obspy.core.stream.Stream.remove_response` instead. A
+            warning will be shown if a response can not be found for a
+            channel. Does nothing if output to a file was specified.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the
@@ -1905,13 +1872,13 @@ def build_url(base_url, service, major_version, resource_type,
 
     Built as a separate function to enhance testability.
 
-    >>> print(build_url("http://service.iris.edu", "dataselect", 1, \
+    >>> print(build_url("https://service.iris.edu", "dataselect", 1, \
                         "application.wadl"))
-    http://service.iris.edu/fdsnws/dataselect/1/application.wadl
+    https://service.iris.edu/fdsnws/dataselect/1/application.wadl
 
-    >>> print(build_url("http://service.iris.edu", "dataselect", 1, \
+    >>> print(build_url("https://service.iris.edu", "dataselect", 1, \
                         "query", {"cha": "EHE"}))
-    http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE
+    https://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE
     """
     # Avoid mutable kwargs.
     if parameters is None:

@@ -28,6 +28,8 @@ def _filter(data, freqs, df, rp=None, rs=None, btype='band', ftype='butter',
             corners=4, zerophase=False, axis=-1, **kwargs):
     fe = 0.5 * df
     normalized_freqs = [f/fe for f in freqs]
+    if len(normalized_freqs) == 1:
+        normalized_freqs = normalized_freqs[0]
     sos = iirfilter(corners, normalized_freqs, rp=rp, rs=rs, btype=btype,
                     ftype=ftype, output='sos')
     if zerophase:

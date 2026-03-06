@@ -75,3 +75,22 @@ class TestCore():
             UTCDateTime('2017-01-26T00:03:00.000000Z')
         assert st[2].stats.endtime == \
             UTCDateTime('2017-01-26T00:03:59.990000Z')
+
+    def test_read_1kHz_data(self, testdata):
+        """ Reads a file with 1kHz sampling rate
+        Was an issue with header parsing, see #3641"""
+        filename = testdata['25112616_ch0000.10']
+        st = _read_win(filename)
+        assert st[0].stats.sampling_rate == 1000.0
+
+    def test_read_24bit_data(self, testdata):
+        """ Reads a file with 24bit data """
+        filename = testdata['25112618_ch0000.24bits']
+        st = read(filename)
+        assert st[0].stats.sampling_rate == 200.0
+
+        expected_stds = {
+            "...0000": 62491.2874698}
+
+        for tr in st:
+            assert round(expected_stds[tr.id], 4) == round(tr.data.std(), 4)

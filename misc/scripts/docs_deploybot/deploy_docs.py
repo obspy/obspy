@@ -107,7 +107,8 @@ def deploy_artifact(run, other_path=None, other_docset_path=None,
     if len(arts) not in (1, 2):
         raise DeployError(f'Found {len(arts)} artifact')
     log.info('Download obspydoc artifact')
-    url = arts[0]['archive_download_url']
+    art = next(a for a in arts if a['name'] == 'obspydoc')
+    url = art['archive_download_url']
     r = requests.get(url, **RKW)
     # the artifact is a zipped tar file
     with ZipFile(BytesIO(r.content)) as z1:
@@ -132,7 +133,8 @@ def deploy_artifact(run, other_path=None, other_docset_path=None,
 
     log.info(f'Deploy obspydocset to {pathd}')
     log.info('Download obspydocset artifact')
-    url = arts[1]['archive_download_url']
+    art = next(a for a in arts if a['name'] == 'obspydocset')
+    url = art['archive_download_url']
     r = requests.get(url, **RKW)
     # the artifact is a zipped tar file
     with ZipFile(BytesIO(r.content)) as z1:

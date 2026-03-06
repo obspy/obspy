@@ -1,4 +1,4 @@
-Parameter description for the 'event' service (v1.1.0) of 'http://service.iris.edu':
+Parameter description for the 'event' service (v1.1.0) of 'https://service.iris.edu':
 The service offers the following optional standard parameters:
     latitude (float)
         Specify the central latitude point for a radial search

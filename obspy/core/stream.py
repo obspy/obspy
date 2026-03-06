@@ -28,6 +28,7 @@ from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
                                   _read_from_plugin, _generic_reader)
 from obspy.core.util.decorator import (map_example_filename,
                                        raise_if_masked, uncompress_file)
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.misc import (
     get_window_times, buffered_load_entry_point, ptp)
 from obspy.core.util.obspy_types import ObsPyException
@@ -298,7 +299,14 @@ def _create_example_stream(headonly=False):
             st.append(Trace(header=header))
     from obspy import read_inventory
     inv = read_inventory(data_dir / "BW_RJOB.xml")
-    st.attach_response(inv)
+    for tr in st:
+        try:
+            tr.stats.response = tr._get_response(inv)
+        except Exception as e:
+            if str(e) == "No matching response information found.":
+                warnings.warn(str(e))
+            else:
+                raise
     return st
 
 
@@ -1452,7 +1460,7 @@ class Stream(object):
             format_ep = ENTRY_POINTS['waveform_write'][format]
             # search writeFormat method for given entry point
             write_format = buffered_load_entry_point(
-                format_ep.dist.key,
+                format_ep.dist.name,
                 'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
             msg = "Writing format \"%s\" is not supported. Supported types: %s"
@@ -3177,6 +3185,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @map_example_filename("inventories")
     def attach_response(self, inventories):
         """
+        This method is deprecated and will be removed in a future release.
+        Pass metadata via the ``inventory`` argument of
+        :meth:`obspy.core.stream.Stream.remove_response` instead.
+
         Search for and attach channel response to each trace as
         trace.stats.response. Does not raise an exception but shows a warning
         if response information can not be found for all traces. Returns a
@@ -3191,23 +3203,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             is done right at the time when it is used, e.g.
             ``stream.remove_response(inventory=inv, ...)``
 
-        >>> from obspy import read, read_inventory
-        >>> st = read()
-        >>> inv = read_inventory()
-        >>> st.attach_response(inv)
-        []
-        >>> tr = st[0]
-        >>> print(tr.stats.response)  \
-                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-        Channel Response
-           From M/S (Velocity in Meters per Second) to COUNTS (Digital Counts)
-           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
-           4 stages:
-              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
-              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
-              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
-
         :type inventories: :class:`~obspy.core.inventory.inventory.Inventory`
             or :class:`~obspy.core.inventory.network.Network` or a list
             containing objects of these types.
@@ -3217,10 +3212,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :returns: list of traces for which no response information could be
             found.
         """
+        msg = ("Stream.attach_response() is deprecated and will be removed in "
+               "a future release. Pass metadata via the `inventory` argument "
+               "of remove_response() instead.")
+        warnings.warn(msg, ObsPyDeprecationWarning, stacklevel=2)
         skipped_traces = []
         for tr in self.traces:
             try:
-                tr.attach_response(inventories)
+                # Call _get_response to avoid double deprecation warning.
+                tr.stats.response = tr._get_response(inventories)
             except Exception as e:
                 if str(e) == "No matching response information found.":
                     warnings.warn(str(e))

@@ -131,7 +131,7 @@ intersphinx_mapping = {
     'sqlalchemy': ('https://docs.sqlalchemy.org/en/latest/', None),
     'pip': ('https://pip.pypa.io/en/stable/', None),
     'lxml': ('https://lxml.de/apidoc/', None),
-    'cartopy': ('https://scitools.org.uk/cartopy/docs/latest/', None),
+    'cartopy': ('https://cartopy.readthedocs.io/stable/', None),
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
     'sqlalchemy': ('https://docs.sqlalchemy.org/en/latest/', None),
     'requests': ('https://docs.python-requests.org/en/latest/', None)

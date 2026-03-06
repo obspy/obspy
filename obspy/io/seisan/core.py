@@ -222,7 +222,23 @@ def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
             stream.append(Trace(header=header))
         else:
             # fetch data
-            data = from_buffer(_readline(fh), dtype=dtype)
+            line = _readline(fh)
+            # Check if the number of bytes matches a Seisan file that is
+            # written with int16 / int32 / int64:
+            n_bytes = len(line)
+            expected_n_bytes = header['npts'] * dlen
+            byte_ratio = expected_n_bytes / n_bytes
+            # In case the number of expected bytes is exactly double the actual
+            # number of bytes, we should read the file with shorter integers
+            # (e.g., int16 instead of int32)
+            if byte_ratio in [0.5, 2, 4, 8]:
+                n_bytes_per_int = int(dlen / byte_ratio)
+                trace_dtype = np.dtype(byteorder + 'i' + str(n_bytes_per_int))
+            else:
+                # ok, as many bytes as expected or some other weird case where
+                # samples are missing.
+                trace_dtype = dtype
+            data = from_buffer(line, dtype=trace_dtype)
             # convert to system byte order
             data = np.require(data, stype)
             if header['npts'] != len(data):

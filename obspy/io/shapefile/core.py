@@ -324,7 +324,15 @@ def _add_field(writer, name, type_, width, precision):
     elif type_ == 'L':
         width = 1
         precision = 0
-    kwargs = dict(fieldType=type_, size=width, decimal=precision)
+    # We need to check the pyshp version and the signature
+    # of the write.field() method (see #3599)
+    #  Added a pyshp version check of the writer.field() method to check for a
+    #  signature change (fieldType -> field_type) (see #3600)
+    if PYSHP_VERSION[0] < 3:
+        kwargs = dict(fieldType=type_, size=width, decimal=precision)
+    else:
+        # subtle arg name change in pyshp >= 3
+        kwargs = dict(field_type=type_, size=width, decimal=precision)
     # remove None's because shapefile.Writer.field() doesn't use None as
     # placeholder but the default values directly
     for key in list(kwargs.keys()):

@@ -105,7 +105,11 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
                 chanum = '%02x' % ord(buff[1:2])
                 chanum = "%02s%02s" % (flag, chanum)
                 datawide = int('%x' % (ord(buff[2:3]) >> 4))
-                srate = ord(buff[3:4])
+
+                # FIX: Combine lower 4 bits of 3rd byte with 4th byte to get
+                # 12-bit srate, see #3641
+                srate = ((ord(buff[2:3]) & 0x0F) << 8) | ord(buff[3:4])
+
                 xlen = (srate - 1) * datawide
                 if datawide == 0:
                     xlen = srate // 2
@@ -154,9 +158,9 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
                         output[chanum].append(idata2)
                 elif datawide == 3:
                     for i in range((xlen // datawide)):
-                        idata2 = output[chanum][-1] +\
-                            from_buffer(sdata[3 * i:3 * (i + 1)] + b' ',
-                                        '>i')[0] >> 8
+                        idata2 = output[chanum][-1] + \
+                                 (from_buffer(sdata[3 * i:3 * (i + 1)] + b' ',
+                                              '>i')[0] >> 8)
                         output[chanum].append(idata2)
                 elif datawide == 4:
                     for i in range((xlen // datawide)):

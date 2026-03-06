@@ -328,12 +328,15 @@ class TestPsd:
         inv = read_inventory(testdata['IUANMO.xml'])
 
         # load expected results, for both only PAZ and full response
-        filename_paz = testdata['IUANMO_ppsd_paz.npz']
-        results_paz = PPSD.load_npz(filename_paz, metadata=None,
-                                    allow_pickle=True)
-        filename_full = testdata['IUANMO_ppsd_fullresponse.npz']
-        results_full = PPSD.load_npz(filename_full, metadata=None,
-                                     allow_pickle=True)
+        # we need to catch numpy 2.4.0 warnings (#3668)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            filename_paz = testdata['IUANMO_ppsd_paz.npz']
+            results_paz = PPSD.load_npz(filename_paz, metadata=None,
+                                        allow_pickle=True)
+            filename_full = testdata['IUANMO_ppsd_fullresponse.npz']
+            results_full = PPSD.load_npz(filename_full, metadata=None,
+                                         allow_pickle=True)
 
         # Calculate the PPSDs and test against expected results
         # first: only PAZ
@@ -595,7 +598,12 @@ class TestPsd:
         Some tests that make sure checking if a new PSD slice to be addded to
         existing PPSD has an invalid overlap or not works as expected.
         """
-        ppsd = PPSD(Stats(), Response())
+        # Calling PPSD with an empty Response object will emit a warning
+        # that it's impossible to compute evalresp (in _preload_responses)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            ppsd = PPSD(Stats(), Response())
+            assert len(w) == 1
         one_second = 1000000000
         t0 = 946684800000000000  # 2000-01-01T00:00:00
         time_diffs = [
@@ -718,7 +726,11 @@ class TestPsd:
         """
         Test plot of several period bins over time
         """
-        ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
+        # we need to catch numpy 2.4.0 warnings (#3668)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'],
+                                 allow_pickle=True)
 
         restrictions = {'starttime': UTCDateTime(2011, 2, 6, 1, 1),
                         'endtime': UTCDateTime(2011, 2, 7, 21, 12),
@@ -757,7 +769,11 @@ class TestPsd:
         """
         Test spectrogram type plot of PPSD
         """
-        ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
+        # we need to catch numpy 2.4.0 warnings (#3668)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'],
+                                 allow_pickle=True)
 
         # add some gaps in the middle
         for i in sorted(list(range(30, 40)) + list(range(8, 18)) + [4])[::-1]:
@@ -808,11 +824,17 @@ class TestPsd:
                "ObsPy version (current 'ppsd_version' is {!s}). Please "
                "consider updating your ObsPy installation.".format(
                    PPSD(stats=Stats(), metadata=None).ppsd_version))
-        # 1 - loading a npz
-        data = np.load(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
+        # we need to catch numpy 2.4.0 warnings (#3668)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            # 1 - loading a npz
+            data = np.load(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
         # we have to load, modify 'ppsd_version' and save the npz file for the
         # test..
-        items = {key: data[key] for key in data.files}
+            # we need to catch numpy 2.4.0 warnings (#3668)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            items = {key: data[key] for key in data.files}
         # deliberately set a higher ppsd_version number
         items['ppsd_version'] = items['ppsd_version'].copy()
         items['ppsd_version'].fill(100)
@@ -823,7 +845,11 @@ class TestPsd:
             with pytest.raises(ObsPyException, match=re.escape(msg)):
                 PPSD.load_npz(filename)
         # 2 - adding a npz
-        ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
+        # we need to catch numpy 2.4.0 warnings (#3668)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'],
+                                 allow_pickle=True)
         for method in (ppsd.add_npz, ppsd._add_npz):
             with NamedTemporaryFile() as tf:
                 filename = tf.name
@@ -854,8 +880,12 @@ class TestPsd:
         allow np.load the use of pickle, or that a helpful error message is
         raised if allow_pickle is required. See #2409.
         """
-        # Init a test PPSD and empty byte stream.
-        ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'], allow_pickle=True)
+        # we need to catch numpy 2.4.0 warnings (#3668)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            # Init a test PPSD and empty byte stream.
+            ppsd = PPSD.load_npz(testdata['ppsd_kw1_ehz.npz'],
+                                 allow_pickle=True)
         byte_me = io.BytesIO()
         # Save PPSD to byte stream and rewind to 0.
         ppsd.save_npz(byte_me)
@@ -891,7 +921,10 @@ class TestPsd:
             temp_path = ntemp.name
             self._save_npz_require_pickle(temp_path, ppsd)
             # We should be able to load the files when allowing pickle.
-            ppsd.add_npz(temp_path, allow_pickle=True)
+            # we need to catch numpy 2.4.0 warnings (#3668)
+            with warnings.catch_warnings(record=True):
+                warnings.simplefilter('always')
+                ppsd.add_npz(temp_path, allow_pickle=True)
             # If not allow_pickle,  a helpful error msg should be raised.
             with pytest.raises(ValueError, match='Loading PPSD results'):
                 ppsd.add_npz(temp_path)
