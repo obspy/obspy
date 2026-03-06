@@ -11,13 +11,13 @@ SeedLink request client for ObsPy.
 import fnmatch
 import warnings
 
+import numpy as np
 from lxml import etree
 
 from obspy import Stream
 from .slclient import SLClient, SLPacket
 from .client.seedlinkconnection import SeedLinkConnection
 from obspy.io.mseed.core import _read_mseed
-import numpy as np
 
 
 class Client(object):
