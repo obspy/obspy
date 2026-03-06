@@ -37,7 +37,7 @@ available providers are:
 AUSPASS     https://auspass.edu.au
 BGR         https://eida.bgr.de
 BGS         https://eida.bgs.ac.uk
-EARTHSCOPE  https://service.iris.edu
+EARTHSCOPE  https://service.earthscope.org
 EIDA        http://eida-federator.ethz.ch
 EMSC        https://www.seismicportal.eu
 EPOSFR      https://seisdata.epos-france.fr
@@ -50,9 +50,9 @@ IESDMC      http://batsws.earth.sinica.edu.tw
 IGN         http://fdsnws.sismologia.ign.es
 INGV        https://webservices.ingv.it
 IPGP        https://ws.ipgp.fr
-IRIS        https://service.iris.edu
-IRISDMC     https://service.iris.edu
-IRISPH5     https://service.iris.edu
+IRIS        https://service.earthscope.org
+IRISDMC     https://service.earthscope.org
+IRISPH5     https://service.earthscope.org
 ISC         https://www.isc.ac.uk
 KAGSR       http://sdis.emsd.ru
 KNMI        https://rdsa.knmi.nl
@@ -166,7 +166,7 @@ only support the ``dataselect`` and the ``station`` FDSNWS services.
 ObsPy has support for two routing services:
 
 (i) The `EarthScope (former IRIS) Federator
-    <https://service.iris.edu/irisws/fedcatalog/1/>`_.
+    <https://service.earthscope.org/irisws/fedcatalog/1/>`_.
 (ii) The `EIDAWS Routing Service
      <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_.
 

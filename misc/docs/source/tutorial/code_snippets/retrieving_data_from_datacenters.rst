@@ -52,7 +52,7 @@ FDSN Routing Web Services
 If you don't know which data center has what data, use one of the routing
 services. ObsPy has support for two of them:
 
-(i) The `IRIS Federator  <https://service.iris.edu/irisws/fedcatalog/1/>`_.
+(i) The `IRIS Federator  <https://service.earthscope.org/irisws/fedcatalog/1/>`_.
 (ii) The `EIDAWS Routing Service
      <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_.
 

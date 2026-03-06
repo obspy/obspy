@@ -226,7 +226,8 @@ class TestClient():
         """
         Tests resp Web service interface.
 
-        Examples are inspired by https://service.iris.edu/irisws/resp/1/.
+        Examples are inspired by
+        https://service.earthscope.org/irisws/resp/1/.
         """
         client = Client()
         # 1
@@ -256,7 +257,8 @@ class TestClient():
         """
         Tests timeseries Web service interface.
 
-        Examples are inspired by https://service.iris.edu/irisws/timeseries/1/.
+        Examples are inspired by
+        https://service.earthscope.org/irisws/timeseries/1/.
         """
         client = Client()
         # 1
