@@ -40,6 +40,8 @@ class WADLParser(object):
             self._wadl_type = "station"
         elif "event" in url:
             self._wadl_type = "event"
+        elif "availability" in url:
+            self._wadl_type = "availability"
         else:
             raise NotImplementedError
         self._default_parameters = DEFAULT_PARAMETERS[self._wadl_type]
