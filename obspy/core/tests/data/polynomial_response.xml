@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.2">
+  <Source>GeoNet</Source>
+  <Sender>WEL(GNS)</Sender>
+  <Module>Delta</Module>
+  <ModuleURI/>
+  <Created>2026-03-06T03:23:54.000000Z</Created>
+  <Network code="NZ" startDate="1884-02-01T00:00:00.000000Z" restrictedStatus="open">
+    <Description>New Zealand National Seismograph Network</Description>
+    <TotalNumberStations>2165</TotalNumberStations>
+    <SelectedNumberStations>1</SelectedNumberStations>
+    <Station code="CHIT" startDate="2007-12-15T12:00:00.000000Z" restrictedStatus="open">
+      <Description>National tsunami gauge network</Description>
+      <Comment id="1">
+        <Value>Location is given in WGS84</Value>
+      </Comment>
+      <Latitude datum="WGS84" unit="DEGREES">-44.024042464</Latitude>
+      <Longitude datum="WGS84" unit="DEGREES">-176.36747635</Longitude>
+      <Elevation>2.0</Elevation>
+      <Site>
+        <Name>Chatham Island</Name>
+        <Description>788 km south-east of Wellington</Description>
+      </Site>
+      <CreationDate>2007-12-15T12:00:00.000000Z</CreationDate>
+      <TotalNumberChannels>36</TotalNumberChannels>
+      <SelectedNumberChannels>18</SelectedNumberChannels>
+      <Channel code="LTZ" startDate="2021-11-24T21:30:00.000000Z" restrictedStatus="open" locationCode="41">
+        <Comment id="1">
+          <Value>Location estimated from external GPS measurement</Value>
+        </Comment>
+        <Comment id="2">
+          <Value>Location is given in WGS84</Value>
+        </Comment>
+        <Comment id="3">
+          <Value>Sensor orientation not known</Value>
+        </Comment>
+        <Latitude datum="WGS84" unit="DEGREES">-44.0240</Latitude>
+        <Longitude datum="WGS84" unit="DEGREES">-176.3674</Longitude>
+        <Elevation>2.0</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <SampleRateRatio>
+          <NumberSamples>1</NumberSamples>
+          <NumberSeconds>1</NumberSeconds>
+        </SampleRateRatio>
+        <Sensor resourceId="Sensor#Druck PTX-1830:2933712">
+          <Type>Pressure Sensor</Type>
+          <Description>General Electric Druck Pressure Sensor</Description>
+          <Manufacturer>General Electric</Manufacturer>
+          <Model>Druck PTX-1830</Model>
+          <SerialNumber>2933712</SerialNumber>
+          <InstallationDate>2010-02-19T00:00:00.000000Z</InstallationDate>
+        </Sensor>
+        <DataLogger resourceId="Datalogger#Centaur CTR4-6S:7970">
+          <Type>Datalogger</Type>
+          <Description>Nanometrics Centaur Datalogger</Description>
+          <Manufacturer>Nanometrics</Manufacturer>
+          <Model>Centaur CTR4-6S</Model>
+          <SerialNumber>7970</SerialNumber>
+          <InstallationDate>2021-11-24T21:30:00.000000Z</InstallationDate>
+        </DataLogger>
+        <Response>
+          <InstrumentPolynomial name="CHIT.41.LTZ.2021.328" resourceId="InstrumentPolynomial#Druck PTX-1830:2933712">
+            <Description>None</Description>
+            <InputUnits>
+              <Name>m</Name>
+            </InputUnits>
+            <OutputUnits>
+              <Name>count</Name>
+            </OutputUnits>
+            <ApproximationType>MACLAURIN</ApproximationType>
+            <FrequencyLowerBound unit="HERTZ">0.0</FrequencyLowerBound>
+            <FrequencyUpperBound unit="HERTZ">0.0</FrequencyUpperBound>
+            <ApproximationLowerBound>0.0</ApproximationLowerBound>
+            <ApproximationUpperBound>20.0</ApproximationUpperBound>
+            <MaximumError>0.0</MaximumError>
+            <Coefficient>-4.8543689320388355</Coefficient>
+            <Coefficient>1.2135922330097088e-05</Coefficient>
+          </InstrumentPolynomial>
+          <Stage number="1">
+            <Polynomial name="CHIT.41.LTZ.2021.328.stage_1" resourceId="Polynomial#Druck PTX-1830">
+              <InputUnits>
+                <Name>m</Name>
+              </InputUnits>
+              <OutputUnits>
+                <Name>V</Name>
+              </OutputUnits>
+              <ApproximationType>MACLAURIN</ApproximationType>
+              <FrequencyLowerBound unit="HERTZ">0.0</FrequencyLowerBound>
+              <FrequencyUpperBound unit="HERTZ">0.0</FrequencyUpperBound>
+              <ApproximationLowerBound>0.0</ApproximationLowerBound>
+              <ApproximationUpperBound>20.0</ApproximationUpperBound>
+              <MaximumError>0.0</MaximumError>
+              <Coefficient>-4.8543689320388355</Coefficient>
+              <Coefficient>4.8543689320388355</Coefficient>
+            </Polynomial>
+          </Stage>
+          <Stage number="2">
+            <Coefficients name="CHIT.41.LTZ.2021.328.stage_2" resourceId="Coefficients#CENTAUR-1-LP">
+              <InputUnits>
+                <Name>V</Name>
+              </InputUnits>
+              <OutputUnits>
+                <Name>count</Name>
+              </OutputUnits>
+              <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+            </Coefficients>
+            <Decimation>
+              <InputSampleRate unit="HERTZ">30000.0</InputSampleRate>
+              <Factor>1</Factor>
+              <Offset>0</Offset>
+              <Delay>0.0</Delay>
+              <Correction>0.0</Correction>
+            </Decimation>
+            <StageGain>
+              <Value>400000.0</Value>
+              <Frequency>0.1</Frequency>
+            </StageGain>
+          </Stage>
+        </Response>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>
