@@ -346,9 +346,15 @@ class TestNLLOC():
         right. Values for arrivals are shifted by one index to the right in hyp
         files written by newer nonlinloc versions, see #3223
         Also tests that PUBLIC_ID line is correctly read and assigned to
-        event.resource_id
+        event.resource_id. Tests both literal "None" and actual IDs.
         """
+        import tempfile
+        import os
+
         path = testdata['nlloc_v7.hyp']
+
+        # Test 1: Read file with PUBLIC_ID None (literal string)
+        # The literal "None" should not set resource_id, so it gets auto-generated
         cat = read_nlloc_hyp(path)
         assert cat[0].origins[0].arrivals[0].azimuth == 107.42
         # compare test_rejected_origin test case
@@ -361,8 +367,32 @@ class TestNLLOC():
         assert ellipsoid.major_axis_plunge == 42.8141
         assert ellipsoid.major_axis_azimuth == 86.61
         assert ellipsoid.major_axis_rotation == 322.815
-        # test that PUBLIC_ID is read correctly
-        assert str(cat[0].resource_id) == "smi:local/test-event-v7-public-id"
+        # test that literal "None" leaves resource_id auto-generated
+        # (it will be a valid ResourceIdentifier but not our test value)
+        auto_generated_id_1 = str(cat[0].resource_id)
+        assert auto_generated_id_1.startswith('smi:local/')
+        assert auto_generated_id_1 != 'smi:local/test-event-v7-public-id'
+
+        # Test 2: Dynamically modify PUBLIC_ID to a real value and test
+        with open(path, 'rb') as fh:
+            content = fh.read().decode()
+        # Replace the PUBLIC_ID None line with a real ID
+        modified_content = content.replace(
+            'PUBLIC_ID None',
+            'PUBLIC_ID smi:local/test-event-v7-public-id'
+        )
+        # Write to temporary file and read
+        with tempfile.NamedTemporaryFile(
+                mode='w', delete=False, suffix='.hyp') as tmp:
+            tmp.write(modified_content)
+            tmp_path = tmp.name
+        try:
+            cat2 = read_nlloc_hyp(tmp_path)
+            # test that real PUBLIC_ID is read and set correctly
+            assert str(cat2[0].resource_id) ==\
+                "smi:local/test-event-v7-public-id"
+        finally:
+            os.unlink(tmp_path)
 
     def test_rejected_origin(self, testdata):
         """

@@ -417,7 +417,8 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
         arrival.pick_id = pick.resource_id
 
     public_id = lines.get("PUBLIC_ID")
-    if public_id is not None:
+    # PUBLIC_ID may be missing (None) or the literal string "None"
+    if str(public_id).lower() != "none":
         event.resource_id = public_id.strip()
     event.scope_resource_ids()
 
