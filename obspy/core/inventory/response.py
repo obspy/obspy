@@ -1118,7 +1118,7 @@ class Response(ComparingObject):
                 sampling_rate = None
 
             if sampling_rate:
-                # if sensor's normalization frequency is above 0.5 * nyquist,
+                # if sensor normalization frequency is above 0.5 * nyquist,
                 # use that instead (e.g. to avoid computing an overall
                 # sensitivity above nyquist)
                 nyquist = sampling_rate / 2.0
@@ -1142,23 +1142,22 @@ class Response(ComparingObject):
         elif has_polynomial:
             if len(self.instrument_polynomial.coefficients) > 2:
                 msg = ("Cannot recalculate sensitivity for polynomial with"
-                       " more than 2 coefficients "
-                       "(has {len(self.instrument_polynomial.coefficients)})")
+                       " more than 2 coefficients (has "
+                       f"{len(self.instrument_polynomial.coefficients)})")
                 raise ValueError(msg)
 
-            if not has_sensitivity:
-                self.instrument_sensitivity = InstrumentSensitivity(
-                    value=gain,
-                    frequency=freq,
-                    input_units=self.instrument_polynomial.input_units,
-                    output_units=self.instrument_polynomial.output_units,
-                    input_units_description=(
-                        self.instrument_polynomial.input_units_description
-                    ),
-                    output_units_description=(
-                        self.instrument_polynomial.output_units_description
-                    )
+            self.instrument_sensitivity = InstrumentSensitivity(
+                value=gain,
+                frequency=freq,
+                input_units=self.instrument_polynomial.input_units,
+                output_units=self.instrument_polynomial.output_units,
+                input_units_description=(
+                    self.instrument_polynomial.input_units_description
+                ),
+                output_units_description=(
+                    self.instrument_polynomial.output_units_description
                 )
+            )
 
     def _get_overall_sensitivity_and_gain(
             self, frequency=None, output='VEL'):
@@ -1616,8 +1615,7 @@ class Response(ComparingObject):
                         warnings.warn(msg)
                 else:
                     msg = (f"PolynomialResponseStage for {num_poly_coeffs} "
-                           "coefficients not yet implemented. "
-                           "ObsPy still using evalresp!")
+                           "coefficients not yet implemented.")
                     raise NotImplementedError(msg)
 
             else:
