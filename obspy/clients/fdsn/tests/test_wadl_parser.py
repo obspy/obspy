@@ -119,30 +119,30 @@ class TestWADLParser():
             "(case insensitive)"
         assert params["magnitudetype"]["doc"] == "Examples: Ml,Ms,mb,Mw\""
 
-    def test_availability_wadl_parsing(self):
+    def test_availability_wadl_parsing(self, testdata):
         """
         Tests the parsing of an availability wadl.
         """
         parser, w = self._parse_wadl_file(testdata["availability.wadl"])
         params = parser.parameters
-        
-        self.assertIn("starttime", params)
-        self.assertIn("endtime", params)
-        self.assertIn("network", params)
-        self.assertIn("station", params)
-        self.assertIn("location", params)
-        self.assertIn("channel", params)
-        self.assertIn("quality", params)
-        self.assertIn("merge", params)
-        self.assertIn("orderby", params)
-        self.assertIn("limit", params)
-        self.assertIn("includerestricted", params)
-        self.assertIn("mergegaps", params)
-        self.assertIn("show", params)
-        self.assertIn("format", params)
-        
+
+        assert "starttime" in params
+        assert "endtime" in params
+        assert "network" in params
+        assert "station" in params
+        assert "location" in params
+        assert "channel" in params
+        assert "quality" in params
+        assert "merge" in params
+        assert "orderby" in params
+        assert "limit" in params
+        assert "includerestricted" in params
+        assert "mergegaps" in params
+        assert "show" in params
+        assert "format" in params
+
         # The nodata attribute should not be parsed.
-        self.assertFalse("nodata" in params)
+        assert not ("nodata" in params)
 
     def test_station_wadl_parsing(self, testdata):
         """
