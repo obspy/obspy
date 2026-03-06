@@ -653,9 +653,9 @@ class PPSD(object):
                 inv = read_inventory(BytesIO(self.metadata.get_seed()))
             else:
                 inv = self.metadata
-            for network in inv.networks:
-                for station in network.stations:
-                    for channel in station.channels:
+            for network in inv:
+                for station in network:
+                    for channel in station:
                         seed_id = (f"{network.code}.{station.code}."
                                    f"{channel.location_code}.{channel.code}")
                         if seed_id != self.id:
