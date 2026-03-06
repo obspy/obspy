@@ -707,7 +707,7 @@ class TestResponse:
         inv = read_inventory(testdata['polynomial_response.xml'],
                              format="STATIONXML")
         resp = inv[0][0][0].response
-        msg = ("PolynomialResponseStage \(stage 1\) has a DC "
+        msg = (r"PolynomialResponseStage \(stage 1\) has a DC "
                "offset of -4.854369 which is ignored in "
                "frequency domain calculations.")
         with pytest.warns(UserWarning, match=msg):
