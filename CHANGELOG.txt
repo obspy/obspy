@@ -165,7 +165,6 @@ Changes:
  - obspy.signal.spectral_estimation.PPSD:
    * performance improvement in __init__: faster frequency array calculation
      (see #3644)
- - obspy.signal.spectral_estimation.PPSD:
    * Changed the moment instrument responses are calculated by evalresp: they
      are now preloaded at PPSD instantiation time, and no longer calculated
      for each time window! (see #3589)
