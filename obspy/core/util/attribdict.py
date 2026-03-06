@@ -64,7 +64,7 @@ class AttribDict(collections.abc.MutableMapping):
     network station
     """
     defaults = {}
-    readonly = {}
+    readonly = set()
     warn_on_non_default_key = False
     do_not_warn_on = []
     _types = {}
