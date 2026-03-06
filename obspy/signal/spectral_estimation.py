@@ -49,6 +49,9 @@ dtiny = np.finfo(0.0).tiny
 
 NOISE_MODEL_FILE = Path(__file__).parent / "data" / "noise_models.npz"
 
+# timestamps before/after any valid start/end for simple comparison
+UTCDATETIME_OPEN_START = UTCDateTime("1900-01-01")
+UTCDATETIME_OPEN_END = UTCDateTime("2099-01-01")
 
 # Noise models for special_handling="infrasound"
 NOISE_MODEL_FILE_INF = Path(__file__).parent / "data" / "idc_noise_models.npz"
@@ -666,9 +669,9 @@ class PPSD(object):
                             result.append({
                                 "seed_id": seed_id,
                                 "start_time": channel.start_date or
-                                UTCDateTime("1900-01-01"),
+                                UTCDATETIME_OPEN_START,
                                 "end_time": channel.end_date or
-                                UTCDateTime("2099-01-01"),
+                                UTCDATETIME_OPEN_END,
                                 "response": resp.get_evalresp_response(
                                     t_samp=self.delta, nfft=self.nfft,
                                     output="VEL")[0]
@@ -684,8 +687,8 @@ class PPSD(object):
             paz = self.metadata
             result = []
             result.append({"seed_id": self.id,
-                           "start_time": UTCDateTime("1900-01-01"),
-                           "end_time": UTCDateTime("2099-01-01"),
+                           "start_time": UTCDATETIME_OPEN_START,
+                           "end_time": UTCDATETIME_OPEN_END,
                            "response": paz_to_freq_resp(paz['poles'],
                                                         paz['zeros'],
                                                         paz['gain'] *
@@ -706,8 +709,8 @@ class PPSD(object):
                 warnings.warn(msg)
                 response = None
             result.append({"seed_id": self.id,
-                           "start_time": UTCDateTime("1900-01-01"),
-                           "end_time": UTCDateTime("2099-01-01"),
+                           "start_time": UTCDATETIME_OPEN_START,
+                           "end_time": UTCDATETIME_OPEN_END,
                            "response": response})
 
         else:
