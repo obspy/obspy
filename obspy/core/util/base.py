@@ -8,6 +8,7 @@ Base utilities and constants for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+import functools
 import glob
 import importlib
 import importlib.metadata
@@ -263,6 +264,23 @@ def get_entry_point_dist_name(entry_point):
     return entry_point.value.split('.')[0]
 
 
+@functools.lru_cache(maxsize=None)
+def _get_all_entry_points():
+    """
+    Get all entry points, using a cache to avoid repeated expensive
+    scans of all installed python packages.
+
+    Returns a flat list of all EntryPoint objects.
+    """
+    eps = importlib.metadata.entry_points()
+    if not isinstance(eps, dict):
+        # Python 3.10+: convert to list
+        return list(eps)
+    # Python 3.8/3.9: flatten the dict values to a list
+    return [ep for group_eps in eps.values() for ep in group_eps]
+
+
+@functools.lru_cache(maxsize=None)
 def _get_entry_points(group, subgroup=None):
     """
     Gets a dictionary of all available plug-ins of a group or subgroup.
@@ -283,15 +301,16 @@ def _get_entry_points(group, subgroup=None):
     """
     if sys.version_info.minor < 10:
         # compatibility workaround for Python 3.8 and 3.9
-        eps_all = importlib.metadata.entry_points()
+        eps_all = _get_all_entry_points()
 
-        try:
-            eps = eps_all[group]
-        except KeyError:
-            eps = {}
-            for key, ep in eps.items():
-                if group in key:
-                    eps[key] = ep
+        # Build a dict grouped by group name for Python 3.8/3.9 compatibility
+        eps_by_group = {}
+        for ep in eps_all:
+            if ep.group not in eps_by_group:
+                eps_by_group[ep.group] = []
+            eps_by_group[ep.group].append(ep)
+
+        eps = eps_by_group.get(group, [])
 
         if subgroup:
             features = {}
@@ -303,7 +322,8 @@ def _get_entry_points(group, subgroup=None):
                 else:
                     ep.dist = AttribDict({"name":
                                           get_entry_point_dist_name(ep)})
-                for sub_ep in eps_all[f'{group}.{ep.name}']:
+                subgroup_eps = eps_by_group.get(f'{group}.{ep.name}', [])
+                for sub_ep in subgroup_eps:
                     if sub_ep.name == subgroup:
                         features[ep.name] = ep
                         break
@@ -319,17 +339,39 @@ def _get_entry_points(group, subgroup=None):
                                           get_entry_point_dist_name(ep)})
                 features[ep.name] = ep
     else:
-        eps = importlib.metadata.entry_points(group=group)
+        # Efficient implementation: get all entry points once and filter in
+        # memory instead of making multiple .select() calls which scan all
+        # distributions and is very slow in Python 3.10+
+        eps_all = _get_all_entry_points()
+
+        # Filter to entries for the target group
+        eps_for_group = [ep for ep in eps_all if ep.group == group]
+
         if subgroup:
+            # Build a map of parent plugins in each subgroup
+            # subgroups[parent_name] = [subgroup entries for that parent]
+            subgroups = {}
+            for ep in eps_all:
+                # Check if this is a subgroup entry for our target group
+                if ep.group.startswith(f'{group}.'):
+                    parent_name = ep.group[len(group)+1:]  # e.g. "MSEED"
+                    if parent_name not in subgroups:
+                        subgroups[parent_name] = []
+                    subgroups[parent_name].append(ep)
+
+            # Only include parent plugins that have the matching subgroup
             features = {}
-            for ep in eps:
-                sub_eps = tuple(importlib.metadata.entry_points(
-                    group=f'{group}.{ep.name}', name=subgroup))
-                if not sub_eps:
-                    continue
-                features[ep.name] = ep
+            for ep in eps_for_group:
+                if (
+                    ep.name in subgroups
+                    and any(
+                        sub_ep.name == subgroup
+                        for sub_ep in subgroups[ep.name]
+                    )
+                ):
+                    features[ep.name] = ep
         else:
-            features = {ep.name: ep for ep in eps}
+            features = {ep.name: ep for ep in eps_for_group}
     return features
 
 
@@ -337,8 +379,8 @@ def _get_ordered_entry_points(group, subgroup=None, order_list=[]):
     """
     Gets a ordered dictionary of all available plug-ins of a group or subgroup.
     """
-    # get all available entry points
-    ep_dict = _get_entry_points(group, subgroup)
+    # Copy so pop() below does not modify the lru_cache result.
+    ep_dict = _get_entry_points(group, subgroup).copy()
     # loop through official supported waveform plug-ins and add them to
     # ordered dict of entry points
     entry_points = OrderedDict()
@@ -575,19 +617,35 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     method = "%sFormat" % method
     eps = _get_ordered_entry_points("obspy.plugin.%s" % group, method,
                                     WAVEFORM_PREFERRED_ORDER)
+
+    # Get all entry points once using module-level cache
+    all_eps = _get_all_entry_points()
+
     mod_list = []
     for name, ep in eps.items():
         if sys.version_info.minor < 10:
             # compatibility workaround for Python 3.8 and 3.9
             module_short = ":mod:`%s`" % ".".join(ep.value.split(".")[:3])
-            func_str = list(
-                _ep for _ep in
-                importlib.metadata.entry_points()[f'{ep.group}.{ep.name}'] if
-                _ep.name == method)[0].value
+            # Filter from cached list
+            func_str = [
+                _ep
+                for _ep in all_eps
+                if _ep.group == f'{ep.group}.{ep.name}' and _ep.name == method
+            ][0].value
         else:
             module_short = ":mod:`%s`" % ".".join(ep.module.split(".")[:3])
-            func_str = tuple(importlib.metadata.entry_points(
-                group=f'{ep.group}.{ep.name}', name=method))[0].value
+            # Filter the pre-fetched all_eps instead of
+            # calling entry_points() again
+            matching_eps = [
+                _ep
+                for _ep in all_eps
+                if _ep.group == f'{ep.group}.{ep.name}' and _ep.name == method
+            ]
+            if matching_eps:
+                func_str = matching_eps[0].value
+            else:
+                # Fallback (shouldn't happen in normal operation)
+                func_str = ep.value
         func_str = func_str.replace(':', '.')
         func_str = f':func:`{func_str}`'
         mod_list.append((name, module_short, func_str))

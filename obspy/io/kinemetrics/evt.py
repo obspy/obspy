@@ -182,7 +182,8 @@ class Evt(object):
         for i in range(self.e_header.nchannels):
             self.data[i] /= calibs[i]
 
-    def read_file(self, filename_or_object, apply_calib=False, **kwargs):
+    def read_file(self, filename_or_object, apply_calib=False,
+                  encoding=None, **kwargs):
         """
         Reads an Evt file to the internal data structure
 
@@ -204,6 +205,9 @@ class Evt(object):
                 '"raw=True" becomes "apply_calib=False, which is default now. '
                 'Setting "apply_calib=%s" and continuing...' % apply_calib,
                 ObsPyDeprecationWarning)
+
+        if encoding:
+            self.e_header.ENCODING = encoding
 
         # Support reading from filenames of file-like objects.
         if hasattr(filename_or_object, "seek") and \
@@ -310,6 +314,7 @@ class EvtHeader(EvtVirtual):
     """
     Class to manage header of Evt file
     """
+    ENCODING = "latin-1"
     HEADER = {'id': [0, ['_strnull', '']],
               'instrument': [1, ''],
               'headerversion': [2, ''],

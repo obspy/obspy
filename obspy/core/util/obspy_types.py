@@ -348,6 +348,12 @@ class _ComplexUncertainty(complex):
         if len(args) < 2:
             if args[0] is None:
                 cargs.append(cls._none)
+            elif isinstance(cargs[0], complex):
+                # skips appending a 0
+                # since python 3.14, this would raise a
+                # TypeError if already complex.
+                # no version test needed
+                pass
             else:
                 cargs.append(0)
         return super(_ComplexUncertainty, cls).__new__(cls, *cargs)

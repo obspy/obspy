@@ -10,14 +10,14 @@ dependencies:
   # matplotlib.cbook, seems it was deprecated in mpl 3.4 and removed in 3.6,
   # see
   # https://github.com/matplotlib/matplotlib/blob/v3.5.0/lib/matplotlib/cbook/__init__.py#L37
-  - matplotlib < 3.6
+  - matplotlib
   - numpy
   - scipy
   - requests  
   # see pypa/setuptools#4480
-  - setuptools !=71.0.1
+  - setuptools
   # see #3258
-  - sqlalchemy < 2.0
+  - sqlalchemy
   # docs
   - cartopy>=0.20
   - pip

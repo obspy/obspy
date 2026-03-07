@@ -19,7 +19,8 @@ from .routing_client import (
 
 
 class FederatorRoutingClient(BaseRoutingClient):
-    def __init__(self, url="https://service.iris.edu/irisws/fedcatalog/1",
+    def __init__(self,
+                 url="https://service.earthscope.org/irisws/fedcatalog/1",
                  include_providers=None, exclude_providers=None,
                  debug=False, timeout=120, **kwargs):
         """
@@ -64,7 +65,7 @@ class FederatorRoutingClient(BaseRoutingClient):
 
         This can route on a number of different parameters, please see the
         web site of the `EarthScope (former IRIS) Federator
-        <https://service.iris.edu/irisws/fedcatalog/1/>`_ for details.
+        <https://service.earthscope.org/irisws/fedcatalog/1/>`_ for details.
         """
         bulk_params = ["network", "station", "location", "channel",
                        "starttime", "endtime"]
@@ -99,7 +100,7 @@ class FederatorRoutingClient(BaseRoutingClient):
 
         This can route on a number of different parameters, please see the
         web site of the `EarthScope (former IRIS) Federator
-        <https://service.iris.edu/irisws/fedcatalog/1/>`_ for details.
+        <https://service.earthscope.org/irisws/fedcatalog/1/>`_ for details.
         """
         return super(FederatorRoutingClient, self).get_stations(**kwargs)
 
@@ -117,7 +118,7 @@ class FederatorRoutingClient(BaseRoutingClient):
 
         This can route on a number of different parameters, please see the
         web site of the `EarthScope (former IRIS) Federator
-        <https://service.iris.edu/irisws/fedcatalog/1/>`_ for details.
+        <https://service.earthscope.org/irisws/fedcatalog/1/>`_ for details.
         """
         bulk_params = ["network", "station", "location", "channel",
                        "starttime", "endtime"]

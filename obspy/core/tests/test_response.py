@@ -698,3 +698,20 @@ class TestResponse:
         assert np.isclose(
             resp.instrument_sensitivity.value, 133579131859239.3, atol=0,
             rtol=1e-5)
+
+    def test_polynomial_response(self, testdata):
+        """
+        Test interpretation of 2nd order polynomial response
+        (modified from NZ.CHIT.41.LTZ)
+        """
+        inv = read_inventory(testdata['polynomial_response.xml'],
+                             format="STATIONXML")
+        resp = inv[0][0][0].response
+        msg = (r"PolynomialResponseStage \(stage 1\) has a DC "
+               "offset of -4.854369 which is ignored in "
+               "frequency domain calculations.")
+        with pytest.warns(UserWarning, match=msg):
+            resp.recalculate_overall_sensitivity()
+        assert np.isclose(
+            resp.instrument_sensitivity.value, 82400.0, atol=0,
+            rtol=1e-5)

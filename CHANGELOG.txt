@@ -13,18 +13,21 @@ Changes:
  - General
    * Fix documentation for the command line scripts (see #1208 #3569)
    * Fix code coverage reporting (see #3646)
-   * Github CI: update min numpy version to 1.21 and symlink libtiff.so.5
-     for ubuntu 3.8 tests (see #3639)
+   * Github CI: update min numpy version to 1.21 (see #3639)
    * Github CI: pin cartopy < 0.22, pyproj < 3.5 for ubuntu 3.8
      mindepversion tests
    * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
  - obspy.core:
+   * response: tweaks to allow sane processing of PolynomialResponseStage 
+     responses if they have 2 coefficients or less (see #3632)
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235), add method for calculating the normalization
      factor for pole–zero response stages (see #3580)
    * deprecate `Trace.attach_response()` and `Stream.attach_response()` in
      favor of passing metadata directly to response-removal methods
      (see #2026)
+   * trace: additional catch to remove_response for PolynomialResponseStage
+     responses with 2 coefficients (see #3632)
    * trace: 5x quicker retrieval of seed-id with trace.id / trace.get_id()
      (see #3251)
    * inventory: additional formatting tweaks to expanded channel information
@@ -46,6 +49,8 @@ Changes:
    * window 'slepian' was removed in Trace/Stream.taper() as it was removed
      from scipy with version 1.6, add new window 'dpss' that scipy promotes as
      replacement but might need other parameters passed in (see #3331)
+   * UTCDateTime: Using `__slots__`, faster comparisons and initialisation (see #3653)
+   * Trace: faster initialisation and stats updates (see #3653)
    * util: fix logic bug in _generic_reader to properly catch byte objects
      (see #3643)
    * Ensure UTCDateTime can unpickle old UTCDateTime instances by adding
@@ -58,6 +63,7 @@ Changes:
    * Natural Resources Canada (NRCAN) added to list of known clients
    * Spanish National Geographic Institute (IGN) added to known clients
    * GFZ FDSN url updated to https://geofon.gfz.de
+   * EARTHSCOPE & IRIS updated to https://service.earthscope.org (#3700)
    * RESIFPH5 removed (service deprecated)
    * EPOSFR defined, will replace RESIF
    * Various FDSNWS URL mappings updated to https
@@ -68,6 +74,9 @@ Changes:
      getting raised as an FDSNException but some low-level exceptions like
      AttributeError, which in turn caused problems in Mass Downloader (see
      #3513)
+ - obspy.clients.fdsn.mass_downloader
+   * Use the `download(threads_per_client)` value for StationXML downloads.
+     (see #3678)
  - obspy.clients.neic
    * Update the default CWB QueryServer IP address from the old IP to the
      new USGS server address (see #3592)
@@ -77,14 +86,20 @@ Changes:
      data available. Also, stations without data are now excluded from the
      results. See docs for `get_info()` for information how to see the excluded
      stations (see #2808)
+ - obspy.imaging.waveform
+   * Adapt the code to match the documentation of the section plots, make use
+     of metres everywhere instead of kilometres (see #3371)
  - obspy.io:
    * add read and write support for CSV, EVENTTXT and CSZ formats (see #3285)
  - obspy.io.ascii:
    * add support for more dtypes (INT32, INT64, FLOAT32 etc) (see #3611)
  - obspy.io.cybershake:
    * add read support for CyberShake seismogram format (see #3370)
+ - obspy.io.iaspei:
+   * read the origin-specific data from the ISF phase block (see #3515)
  - obspy.io.kinemetrics:
    * extract all headers from EVT files (see #3606)
+   * fix reading non-UTF8 character in the comment (see #3688)
  - obspy.io.mseed.spread_time_over_file:
    * new routine to spread a time interval progressively across all mseed
      blockettes in a file (see #3271)
@@ -93,12 +108,15 @@ Changes:
      location run as "ABORTED", "IGNORED" or "REJECTED" (see #3230)
    * store "NLLOC" info header line in event and origin comments (see #3230)
    * add reading of confidence ellipsoids (see #3350)
+   * add support for reading and writing "PUBLIC_ID" line in NonLinLoc
+     hypocenter and observation files (see #3701)
  - obspy.io.sac:
    * fix floating point accuracy issues in sampling rate when reading some SAC
      files. when reading SAC files, the sample spacing interval read from file
      will now by default be rounded to microseconds before taking the
      reciprocal to set the sampling rate. This can be deactivated using
      "read(..., round_sampling_interval=False)" (see #3408)
+   * fix writing SACPZ END tag when empty (open ended) (see #3696)
  - obspy.io.seg2:
    * Less strict date/time parsing (#3283).
  - obspy.io.seiscomp:
@@ -159,10 +177,14 @@ Changes:
      numpy 2.4.0 deprecation expiration. (see #3668)
    * Add warnings.catch_warnings for spectral_estimation tests, linked to
      a new numpy 2.4.0 deprecation. (see #3668)
+   * Prep SciPy dropping ODR for polarization.partical_motion_odr, prompt user
+     to install odrpack if they have SciPy >= 1.19.0 (see #3676, #3662)
  - obspy.signal.spectral_estimation.PPSD:
    * performance improvement in __init__: faster frequency array calculation
      (see #3644)
-
+   * Changed the moment instrument responses are calculated by evalresp: they
+     are now preloaded at PPSD instantiation time, and no longer calculated
+     for each time window! (see #3589)
 
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.transforms import blended_transform_factory
 from obspy import read, Stream
-from obspy.geodetics import gps2dist_azimuth
+from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
 
 host = 'https://examples.obspy.org/'
@@ -30,6 +30,8 @@ for waveform in files:
 for tr in st:
     tr.stats.distance = gps2dist_azimuth(tr.stats.sac.stla, tr.stats.sac.stlo,
                                          eq_lat, eq_lon)[0]
+    tr.stats.coordinates = {"latitude": tr.stats.sac.stla,
+                            "longitude": tr.stats.sac.stlo}
     # Setting Network name for plot title
     tr.stats.network = 'TOK'
 
@@ -47,6 +49,39 @@ st.plot(type='section', plot_dx=20e3, recordlength=100,
 ax = fig.axes[0]
 transform = blended_transform_factory(ax.transData, ax.transAxes)
 for tr in st:
-    ax.text(tr.stats.distance / 1e3, 1.0, tr.stats.station, rotation=270,
+    ax.text(tr.stats.distance, 1.0, tr.stats.station, rotation=270,
             va="bottom", ha="center", transform=transform, zorder=10)
+plt.tight_layout()
+plt.show()
+
+# Do the section plot..
+# This time with vred provided (Perform velocity reduction, in m/s.)
+fig = plt.figure()
+st.plot(type='section', vred=3500.0, plot_dx=20e3, recordlength=100,
+        time_down=True, linewidth=.25, grid_linewidth=.25, show=False, fig=fig)
+
+# Plot customization: Add station labels to offset axis
+ax = fig.axes[0]
+transform = blended_transform_factory(ax.transData, ax.transAxes)
+for tr in st:
+    ax.text(tr.stats.distance, 1.0, tr.stats.station, rotation=270,
+            va="bottom", ha="center", transform=transform, zorder=10)
+plt.tight_layout()
+plt.show()
+
+# Do the section plot..
+# This time with degree axes
+fig = plt.figure()
+st.plot(type='section', ev_coord=(eq_lat, eq_lon), dist_degree=True, plot_dx=1,
+        recordlength=100, time_down=True, linewidth=.25, grid_linewidth=.25,
+        show=False, fig=fig)
+
+# Plot customization: Add station labels to offset axis
+ax = fig.axes[0]
+transform = blended_transform_factory(ax.transData, ax.transAxes)
+for tr in st:
+    ax.text(kilometer2degrees(tr.stats.distance /1e3), 1.0,
+            tr.stats.station, rotation=270,
+            va="bottom", ha="center", transform=transform, zorder=10)
+
 plt.show()

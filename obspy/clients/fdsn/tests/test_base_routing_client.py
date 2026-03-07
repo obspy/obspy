@@ -62,7 +62,7 @@ class TestBaseRoutingClient():
         c = self._cls_object(
             include_providers=["EARTHSCOPE", "http://example.com"],
             exclude_providers=["BGR", "http://example2.com"])
-        assert c.include_providers == ["service.iris.edu", "example.com"]
+        assert c.include_providers == ["service.earthscope.org", "example.com"]
         assert c.exclude_providers == ["eida.bgr.de", "example2.com"]
 
         # None are set.
@@ -73,7 +73,7 @@ class TestBaseRoutingClient():
         # Single strings.
         c = self._cls_object(include_providers="EARTHSCOPE",
                              exclude_providers="BGR")
-        assert c.include_providers == ["service.iris.edu"]
+        assert c.include_providers == ["service.earthscope.org"]
         assert c.exclude_providers == ["eida.bgr.de"]
 
         c = self._cls_object(include_providers="http://example.com/path",
@@ -87,14 +87,14 @@ class TestBaseRoutingClient():
             "https://example.com": "1234",
             "http://example2.com": "1234",
             "http://example3.com": "1234",
-            "https://service.iris.edu": "1234"
+            "https://service.earthscope.org": "1234"
         }
 
         c = self._cls_object(include_providers=["EARTHSCOPE",
                                                 "http://example.com"])
         assert c._filter_requests(split) == {
             "https://example.com": "1234",
-            "https://service.iris.edu": "1234"
+            "https://service.earthscope.org": "1234"
         }
 
         c = self._cls_object(exclude_providers=["EARTHSCOPE",
@@ -116,7 +116,7 @@ class TestBaseRoutingClient():
             "https://example.com": "1234",
             "http://example2.com": "1234",
             "http://example3.com": "1234",
-            "https://service.iris.edu": "1234"
+            "https://service.earthscope.org": "1234"
         }
         with mock.patch("obspy.clients.fdsn.client.Client") as p:
             mock_instance = p.return_value
@@ -166,7 +166,7 @@ class TestBaseRoutingClient():
             "https://example.com": "1234",
             "http://example2.com": "1234",
             "http://example3.com": "1234",
-            "https://service.iris.edu": "1234"
+            "https://service.earthscope.org": "1234"
         }
         with mock.patch("obspy.clients.fdsn.client.Client") as p:
             mock_instance = p.return_value

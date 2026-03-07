@@ -177,7 +177,7 @@ class BaseRoutingClient(HTTPClient):
             username/password or EIDA token, e.g.
             ``credentials={
             'geofon.gfz.de': {'eida_token': 'my_token_file.txt'},
-            'service.iris.edu': {'user': 'me', 'password': 'my_pass'}
+            'service.earthscope.org': {'user': 'me', 'password': 'my_pass'}
             'EIDA_TOKEN': '/path/to/token.txt'
             }``
             The root level ``'EIDA_TOKEN'`` will be applied to all data centers
@@ -365,7 +365,7 @@ class BaseRoutingClient(HTTPClient):
 
         This can route on a number of different parameters, please see the
         web sites of the `EarthScope (former IRIS) Federator
-        <https://service.iris.edu/irisws/fedcatalog/1/>`_ and of the
+        <https://service.earthscope.org/irisws/fedcatalog/1/>`_ and of the
         `EIDAWS Routing Service
         <http://www.orfeus-eu.org/data/eida/webservices/routing/>`_ for
         details.

@@ -99,14 +99,21 @@ class WaveformPlotting(object):
         self.ev_coord = kwargs.get('ev_coord', None)
         self.alpha = kwargs.get('alpha', 0.5)
         self.sect_plot_dx = kwargs.get('plot_dx', None)
-        if self.sect_plot_dx is not None and not self.sect_dist_degree:
-            self.sect_plot_dx /= 1e3
         self.sect_timedown = kwargs.get('time_down', False)
         self.sect_recordstart = kwargs.get('recordstart', None)
         self.sect_recordlength = kwargs.get('recordlength', None)
         self.sect_norm_method = kwargs.get('norm_method', 'trace')
         self.sect_user_scale = kwargs.get('scale', 1.0)
         self.sect_vred = kwargs.get('vred', None)
+        if self.sect_vred:
+            if 0 < self.sect_vred <= 1:
+                msg = ("The velocity reduction factor was provided "
+                       "as a small value (0<vred<=1). Until ObsPy"
+                       " 1.5.0, the vred was treated as km/s, which was"
+                       " not in agreement with the documentation. Since"
+                       " 1.5.0, vred is treated as m/s everywhere.")
+                warnings.warn(msg, UserWarning)
+
         if self.sect_vred and self.sect_dist_degree:
             self.sect_vred = kilometer2degrees(self.sect_vred / 1e3)
         self.sect_orientation = kwargs.get('orientation', 'vertical')
@@ -1159,7 +1166,7 @@ class WaveformPlotting(object):
         # Setting up tick labels
         self.set_time_label('Time [s]')
         if not self.sect_dist_degree:
-            self.set_offset_label('Offset [km]')
+            self.set_offset_label('Offset [m]')
         else:
             self.set_offset_label(u'Offset [°]')
         if ticks is not None:
@@ -1193,7 +1200,7 @@ class WaveformPlotting(object):
         # or from st.[].stats.coordinates.latitude...
         self._tr_offsets = np.empty(len(self.stream))
         if not self.sect_dist_degree:
-            # Define offset in km from tr.stats.distance
+            # Define offset in m from tr.stats.distance
             try:
                 for _i, tr in enumerate(self.stream):
                     self._tr_offsets[_i] = tr.stats.distance
@@ -1236,11 +1243,6 @@ class WaveformPlotting(object):
                 (self._tr_offsets <= self._offset_max))
         self._tr_offsets = self._tr_offsets[mask]
         self.stream = [tr for m, tr in zip(mask, self.stream) if m]
-        # Use km on distance axis, if not degrees
-        if not self.sect_dist_degree:
-            self._tr_offsets /= 1e3
-            self._offset_min /= 1e3
-            self._offset_max /= 1e3
         # Number of traces
         self._tr_num = len(self._tr_offsets)
         # Arranging trace data in single list

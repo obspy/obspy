@@ -20,6 +20,10 @@ https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model
 
 *Please fill in (link relevant issues with "see #123456", mark issues that get resolved with "fixes #12345")*
 
+### Use of A.I. tools?
+
+*Were AI tools used for this PR? How?*
+
 ### PR Checklist
 - [ ] Correct base branch selected? `master` for new features, `maintenance_...` for bug fixes
 - [ ] This PR is not directly related to an existing issue (which has no PR yet).

@@ -3,9 +3,9 @@ channels:
   - conda-forge
 dependencies:
   # obspy
-  - numpy=1.21
-  - scipy=1.7
-  - matplotlib=3.3
+  - numpy=1.25
+  - scipy=1.11
+  - matplotlib=3.8
   - decorator
   - lxml
   - requests
@@ -14,7 +14,7 @@ dependencies:
   # see #3258
   - sqlalchemy < 2.0
   # soft dependencies
-  - cartopy < 0.22
+  - cartopy
   - geographiclib
   # pinning != 3.0.0 - see #3600
   - pyshp != 3.0.0

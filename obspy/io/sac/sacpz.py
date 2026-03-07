@@ -83,7 +83,8 @@ def _write_sacpz(inventory, file_or_file_object):
                 out.append(f"* CHANNEL     : {cha.code}")
                 out.append(f"* CREATED     : {now}")
                 out.append(f"* START       : {cha.start_date}")
-                out.append(f"* END         : {cha.end_date}")
+                end_str = cha.end_date if cha.end_date else ""
+                out.append(f"* END         : {end_str}")
                 out.append(f"* DESCRIPTION : {sta.site.name}")
                 out.append(f"* LATITUDE    : {cha.latitude or sta.latitude}")
                 out.append(f"* LONGITUDE   : {cha.longitude or sta.longitude}")
@@ -199,7 +200,7 @@ seisuk_instrument_resp_removal.pdf
                        line.find('CONSTANT') != -1 or \
                        line.startswith('*') or not line:
                         while len(zeros) < noz:
-                            zeros.append(complex(0, 0j))
+                            zeros.append(complex(0, 0))
                         break
                     else:
                         zeros.append(complex(float(a[0]), float(a[1])))
@@ -214,7 +215,7 @@ seisuk_instrument_resp_removal.pdf
                        line.find('ZEROS') != -1 or \
                        line.startswith('*') or not line:
                         while len(poles) < nop:
-                            poles.append(complex(0, 0j))
+                            poles.append(complex(0, 0))
                         break
                     else:
                         poles.append(complex(float(a[0]), float(a[1])))
@@ -231,14 +232,14 @@ seisuk_instrument_resp_removal.pdf
     # multiplication with jw is used. This is equivalent to one more
     # zero in the pole-zero representation
     if todisp:
-        zeros.append(complex(0, 0j))
+        zeros.append(complex(0, 0))
 
     # To convert the displacement response to the velocity response,
     # division with jw is used. This is equivalent to one less zero
     # in the pole-zero representation
     if tovel:
         for i, zero in enumerate(list(zeros)):
-            if zero == complex(0, 0j):
+            if zero == complex(0, 0):
                 zeros.pop(i)
                 break
         else:
@@ -372,14 +373,14 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
         poles = tmp
 
     if todisp:
-        zeros.append(complex(0, 0j))
+        zeros.append(complex(0, 0))
 
     # To convert the displacement response to the velocity response,
     # division with jw is used. This is equivalent to one less zero
     # in the pole-zero representation
     if tovel:
         for i, zero in enumerate(list(zeros)):
-            if zero == complex(0, 0j):
+            if zero == complex(0, 0):
                 zeros.pop(i)
                 break
         else:

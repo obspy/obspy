@@ -416,6 +416,10 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks,
         event.picks.append(pick)
         arrival.pick_id = pick.resource_id
 
+    public_id = lines.get("PUBLIC_ID")
+    # PUBLIC_ID may be missing (None) or the literal string "None"
+    if str(public_id).lower() != "none":
+        event.resource_id = public_id.strip()
     event.scope_resource_ids()
 
     return event
@@ -452,8 +456,13 @@ def write_nlloc_obs(catalog, filename, **kwargs):
                "and provide an output file name for each event).")
         raise ValueError(msg)
 
+    ev = catalog[0]
+    public_id_line = None
+    if ev.resource_id is not None:
+        public_id_line = "PUBLIC_ID %s" % str(ev.resource_id)
+
     fmt = '%s %s %s %s %s %s %s %s %7.4f GAU %9.2e %9.2e %9.2e %9.2e'
-    for pick in catalog[0].picks:
+    for pick in ev.picks:
         wid = pick.waveform_id
         station = wid.station_code or "?"
         component = wid.channel_code or "?"
@@ -481,7 +490,10 @@ def write_nlloc_obs(catalog, filename, **kwargs):
         info.append(info_)
 
     if info:
-        info = "\n".join(sorted(info) + [""])
+        lines = sorted(info)
+        if public_id_line is not None:
+            lines = [public_id_line] + lines
+        info = "\n".join(lines + [""])
     else:
         msg = "No pick information, writing empty NLLOC OBS file."
         warnings.warn(msg)
