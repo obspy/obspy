@@ -514,7 +514,8 @@ class Client(object):
         else:
             return False
 
-    def get_all_nslc(self, sds_type=None, datetime=None):
+    def get_all_nslc(self, sds_type=None, datetime=None, network=None,
+                     station=None, location=None, channel=None):
         """
         Return information on what streams are included in archive.
 
@@ -530,6 +531,14 @@ class Client(object):
             time (checks if file exists that should have the data, i.e. streams
             might be returned that have data on the same day but not at exactly
             this point in time).
+        :type network: str
+        :param network: Restrict query to given network code.
+        :type station: str
+        :param station: Restrict query to given station code.
+        :type location: str
+        :param location: Restrict query to given location code.
+        :type channel: str
+        :param channel: Restrict query to given channel code.
         :rtype: list
         :returns: List of (network, station, location, channel) 4-tuples of all
             available streams in archive.
@@ -538,13 +547,36 @@ class Client(object):
         result = set()
         # wildcarded pattern to match all files of interest
         if datetime is None:
+            no_wildcard = {'sds_type': sds_type}
+            if network is not None:
+                no_wildcard['network'] = network
+            if station is not None:
+                no_wildcard['station'] = station
+            if location is not None:
+                no_wildcard['location'] = location
+            if channel is not None:
+                no_wildcard['channel'] = channel
             pattern = re.sub(
                 FORMAT_STR_PLACEHOLDER_REGEX,
-                _wildcarded_except(["sds_type"]),
-                self.FMTSTR).format(sds_type=sds_type)
+                _wildcarded_except(no_wildcard.keys()),
+                self.FMTSTR)
+            pattern = pattern.format(**no_wildcard)
             pattern = os.path.join(self.sds_root, pattern)
         else:
-            pattern = self._get_filename("*", "*", "*", "*", datetime)
+            network_ = network
+            if network_ is None:
+                network_ = '*'
+            station_ = station
+            if station_ is None:
+                station_ = '*'
+            location_ = location
+            if location_ is None:
+                location_ = '*'
+            channel_ = channel
+            if channel_ is None:
+                channel_ = '*'
+            pattern = self._get_filename(
+                network_, station_, location_, channel_, datetime)
         all_files = glob.glob(pattern)
         # set up inverse regex to extract kwargs/values from full paths
         pattern_ = os.path.join(self.sds_root, self.FMTSTR)
