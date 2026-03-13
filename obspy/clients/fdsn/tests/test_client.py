@@ -961,17 +961,17 @@ class TestClient():
         everything if not authentication is used.
 
         EARTHSCOPE runs three services to test it:
-            https://ds.earthscope.org/files/redirect/307/station/1
-            https://ds.earthscope.org/files/redirect/307/dataselect/1
-            https://ds.earthscope.org/files/redirect/307/event/1
+            https://ds.iris.edu/files/redirect/307/station/1
+            https://ds.iris.edu/files/redirect/307/dataselect/1
+            https://ds.iris.edu/files/redirect/307/event/1
         """
         c = Client("EARTHSCOPE", service_mappings={
             "station":
-                "https://ds.earthscope.org/files/redirect/307/station/1",
+                "https://ds.iris.edu/files/redirect/307/station/1",
             "dataselect":
-                "https://ds.earthscope.org/files/redirect/307/dataselect/1",
+                "https://ds.iris.edu/files/redirect/307/dataselect/1",
             "event":
-                "https://ds.earthscope.org/files/redirect/307/event/1"},
+                "https://ds.iris.edu/files/redirect/307/event/1"},
             user_agent=USER_AGENT)
 
         st = c.get_waveforms(
@@ -1028,12 +1028,12 @@ class TestClient():
         # cases.
         service_mappings = {
             "station": (
-                "https://ds.earthscope.org/files/redirect/307/station/1"
+                "https://ds.iris.edu/files/redirect/307/station/1"
             ),
             "dataselect": (
-                "https://ds.earthscope.org/files/redirect/307/dataselect/1"
+                "https://ds.iris.edu/files/redirect/307/dataselect/1"
             ),
-            "event": "https://ds.earthscope.org/files/redirect/307/event/1"}
+            "event": "https://ds.iris.edu/files/redirect/307/event/1"}
         with warnings.catch_warnings():
             # ignore warnings about unclosed sockets
             # These occur when rasing the FDSNRedirectException, but
