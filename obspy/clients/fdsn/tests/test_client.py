@@ -638,12 +638,17 @@ class TestClient():
         expected = normalize_version_number(expected)
         assert got == expected, failmsg(got, expected)
 
-    def test_dataselect_bulk(self, testdata):
+    @pytest.mark.parametrize('auth', (True, False))
+    def test_dataselect_bulk(self, testdata, auth):
         """
         Test bulk dataselect requests, POSTing data to server. Also tests
         authenticated bulk request.
         """
-        clients = [self.client, self.client_auth]
+        if auth:
+            client = self.client_auth
+        else:
+            client = self.client
+
         expected = read(testdata["bulk.mseed"])
         # test cases for providing lists of lists
         # Deliberately requesting data that overlap the end-time of a channel.
@@ -658,18 +663,17 @@ class TestClient():
                  UTCDateTime("2010-03-25T00:00:00"),
                  UTCDateTime("2010-03-25T00:00:08")))
         # removed the params (min length etc, the test will fail)
-        for client in clients:
-            # test output to stream
-            got = client.get_waveforms_bulk(bulk)
-            # Remove fdsnws URL as it is not in the data from the disc.
-            for tr in got:
-                del tr.stats._fdsnws_dataselect_url
-            assert got == expected, failmsg(got, expected)
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_waveforms_bulk(bulk, filename=tf.name)
-                got = read(tf.name)
-            assert got == expected, failmsg(got, expected)
+        # test output to stream
+        got = client.get_waveforms_bulk(bulk)
+        # Remove fdsnws URL as it is not in the data from the disc.
+        for tr in got:
+            del tr.stats._fdsnws_dataselect_url
+        assert got == expected, failmsg(got, expected)
+        # test output to file
+        with NamedTemporaryFile() as tf:
+            client.get_waveforms_bulk(bulk, filename=tf.name)
+            got = read(tf.name)
+        assert got == expected, failmsg(got, expected)
         # test cases for providing a request string
         bulk = ("quality=B\n"
                 "longestonly=false\n"
@@ -677,43 +681,40 @@ class TestClient():
                 "TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
                 "TA A25A -- BHE 2010-03-25T00:00:00 2010-03-25T00:00:06\n"
                 "IU ANMO * HHZ 2010-03-25T00:00:00 2010-03-25T00:00:08\n")
-        for client in clients:
-            # test output to stream
-            got = client.get_waveforms_bulk(bulk)
-            # Assert that the meta-information about the provider is stored.
-            for tr in got:
-                if client.user:
-                    assert tr.stats._fdsnws_dataselect_url == \
-                        client.base_url + "/fdsnws/dataselect/1/queryauth"
-                else:
-                    assert tr.stats._fdsnws_dataselect_url == \
-                        client.base_url + "/fdsnws/dataselect/1/query"
-            # Remove fdsnws URL as it is not in the data from the disc.
-            for tr in got:
-                del tr.stats._fdsnws_dataselect_url
-            assert got == expected, failmsg(got, expected)
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_waveforms_bulk(bulk, filename=tf.name)
-                got = read(tf.name)
-            assert got == expected, failmsg(got, expected)
+        # test output to stream
+        got = client.get_waveforms_bulk(bulk)
+        # Assert that the meta-information about the provider is stored.
+        for tr in got:
+            if client.user:
+                assert tr.stats._fdsnws_dataselect_url == \
+                    client.base_url + "/fdsnws/dataselect/1/queryauth"
+            else:
+                assert tr.stats._fdsnws_dataselect_url == \
+                    client.base_url + "/fdsnws/dataselect/1/query"
+        # Remove fdsnws URL as it is not in the data from the disc.
+        for tr in got:
+            del tr.stats._fdsnws_dataselect_url
+        assert got == expected, failmsg(got, expected)
+        # test output to file
+        with NamedTemporaryFile() as tf:
+            client.get_waveforms_bulk(bulk, filename=tf.name)
+            got = read(tf.name)
+        assert got == expected, failmsg(got, expected)
         # test cases for providing a file name
-        for client in clients:
-            with NamedTemporaryFile() as tf:
-                with open(tf.name, "wt") as fh:
-                    fh.write(bulk)
-                got = client.get_waveforms_bulk(bulk)
-            # Remove fdsnws URL as it is not in the data from the disc.
-            for tr in got:
-                del tr.stats._fdsnws_dataselect_url
-            assert got == expected, failmsg(got, expected)
+        with NamedTemporaryFile() as tf:
+            with open(tf.name, "wt") as fh:
+                fh.write(bulk)
+            got = client.get_waveforms_bulk(bulk)
+        # Remove fdsnws URL as it is not in the data from the disc.
+        for tr in got:
+            del tr.stats._fdsnws_dataselect_url
+        assert got == expected, failmsg(got, expected)
         # test cases for providing a file-like object
-        for client in clients:
-            got = client.get_waveforms_bulk(io.StringIO(bulk))
-            # Remove fdsnws URL as it is not in the data from the disc.
-            for tr in got:
-                del tr.stats._fdsnws_dataselect_url
-            assert got == expected, failmsg(got, expected)
+        got = client.get_waveforms_bulk(io.StringIO(bulk))
+        # Remove fdsnws URL as it is not in the data from the disc.
+        for tr in got:
+            del tr.stats._fdsnws_dataselect_url
+        assert got == expected, failmsg(got, expected)
 
     def test_station_bulk(self):
         """
