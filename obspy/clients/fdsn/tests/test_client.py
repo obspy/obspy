@@ -681,7 +681,7 @@ class TestClient():
         bulk = ("quality=B\n"
                 "longestonly=false\n"
                 "minimumlength=5\n"
-                "TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
+                "TA A25A -- BHZ 2011-07-22T14:50:23 2011-07-22T14:50:29\n"
                 "TA A25A -- BHE 2010-03-25T00:00:00 2010-03-25T00:00:06\n"
                 "IU ANMO * HHZ 2010-03-25T00:00:00 2010-03-25T00:00:08\n")
         # test output to stream
