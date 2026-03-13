@@ -1,2 +1,2 @@
-Parameter description for the 'dataselect' service (v1.1.1) of 'https://service.iris.edu':
+Parameter description for the 'dataselect' service (v1.1.1) of 'https://service.earthscope.org':
 No derivations from standard detected
