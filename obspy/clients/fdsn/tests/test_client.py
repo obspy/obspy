@@ -112,7 +112,7 @@ class TestClient():
         cls.client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT)
         cls.client_auth = \
             Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
-                   user="nobody@earthscope.org", password="anonymous")
+                   user="nobody@iris.edu", password="anonymous")
 
     # @pytest.mark.skip(reason='data no longer available')
     def test_trim_stream_after_get_waveform(self):
