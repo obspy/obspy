@@ -555,7 +555,7 @@ class TestClient():
             assert got == expected, \
                 "Dataselect failed for query %s" % repr(query)
 
-    def test_help_function_with_iris(self, testdata):
+    def test_help_function_with_earthscope(self, testdata):
         """
         Tests the help function with the EARTHSCOPE example.
 
