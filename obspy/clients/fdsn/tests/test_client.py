@@ -675,6 +675,9 @@ class TestClient():
             got = read(tf.name)
         assert got == expected, failmsg(got, expected)
         # test cases for providing a request string
+        # note that Earthscope now ignores all those three parameters we used
+        # to send along for testing, all of "quality", "longestonly" and
+        # "minimumlength" gets ignored now
         bulk = ("quality=B\n"
                 "longestonly=false\n"
                 "minimumlength=5\n"
