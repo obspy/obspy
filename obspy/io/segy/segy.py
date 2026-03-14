@@ -232,7 +232,7 @@ class SEGYFile(object):
         bfh = SEGYBinaryFileHeader(binary_file_header, self.endian)
         self.binary_file_header = bfh
         self.data_encoding = self.binary_file_header.data_sample_format_code
-        # If bytes 3506-3506 are not zero, an extended textual header follows
+        # If bytes 3505-3506 are not zero, an extended textual header follows
         # which is not supported so far.
         if bfh.number_of_3200_byte_ext_file_header_records_following != 0:
             msg = 'Extended textual headers are not yet supported. ' + \
@@ -409,13 +409,19 @@ class SEGYFile(object):
             self.file.seek(pos, 0)
         else:
             filesize = os.fstat(self.file.fileno())[6]
+        # Check to see if we are reading a revision 2.x SEG-Y file. If so try to read the extended number of samples per data trace. If the extended number of samples is zero pass None to SEGYTrace and the rev1 number of samples per data trace will be read from the Trace headers.
+        if self.binary_file_header.seg_y_format_revision_number == 2 and self.binary_file_header.extended_number_of_samples_per_data_trace != 0:
+            number_of_samples = self.binary_file_header.extended_number_of_samples_per_data_trace
+        else:
+            number_of_samples = None
         # Big loop to read all data traces.
         while True:
             # Read and as soon as the trace header is too small abort.
             try:
                 trace = SEGYTrace(self.file, self.data_encoding, self.endian,
-                                  unpack_headers=unpack_headers,
-                                  filesize=filesize, headonly=headonly)
+                                      unpack_headers=unpack_headers,
+                                      filesize=filesize, headonly=headonly,
+                                      samples=number_of_samples)
                 if yield_each_trace:
                     yield trace
                 else:
@@ -455,7 +461,21 @@ class SEGYBinaryFileHeader(object):
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
-                format = ('%si' % self.endian).encode('ascii', 'strict')
+                # Some of the blocks in SEG-Y rev2 are encoded as 4-byte signed integers. The names corresponding to these blocks in the header.py list BINARY_FILE_HEADER_FORMAT have been front-appended with 'signedint_' to indicate how the values should be unpacked.
+                if name.startswith('signedint_'):
+                    format = ('%sl' % self.endian).encode('ascii', 'strict')
+                else:
+                    format = ('%si' % self.endian).encode('ascii', 'strict')
+                # Set the class attribute.
+                setattr(self, name, unpack(format, string)[0])
+            # SEG-Y rev2 has some 8-byte blocks. Some of these are floats and some are ints. The names corresponding to 8-byte blocks in the header.py list BINARY_FILE_HEADER_FORMAT have been front-appended with 'double_' or 'unsignedint_' to indicate how the values should be unpacked.
+            elif length == 8:
+                if name.startswith('double_'):
+                    format = ('%sd' % self.endian).encode('ascii', 'strict')
+                elif name.startswith('unsignedint_'):
+                    format = ('%sQ' % self.endian).encode('ascii', 'strict')
+                else:
+                    format = ('%sq' % self.endian).encode('ascii', 'strict')
                 # Set the class attribute.
                 setattr(self, name, unpack(format, string)[0])
             # The other value are the unassigned values. As it is unclear how
@@ -528,7 +548,7 @@ class SEGYTrace(object):
     Convenience class that internally handles a single SEG Y trace.
     """
     def __init__(self, file=None, data_encoding=4, endian='>',
-                 unpack_headers=False, filesize=None, headonly=False):
+                 unpack_headers=False, filesize=None, headonly=False, **kwargs):
         """
         Convenience class that internally handles a single SEG Y trace.
 
@@ -545,11 +565,27 @@ class SEGYTrace(object):
             3:
                 2 byte Integer, two's complement
             4:
-                4 byte Fixed point with gain
+                4 byte Fixed point with gain (obsolete)
             5:
                 4 byte IEEE floating point
+            6:
+                8-byte IEEE floating-point
+            7:
+                3-byte Integer, two's compliment
             8:
                 1 byte Integer, two's complement
+            9:
+                8-byte Integer, two's compliment
+            10:
+                4-byte unsigned integer
+            11:
+                2-byte unsigned integer
+            12:
+                8-byte unsigned integer
+            15:
+                3-byte unsigned integer
+            16:
+                1-byte unsigned integer
 
             Defaults to 4.
         :type big_endian: bool
@@ -569,6 +605,8 @@ class SEGYTrace(object):
             will not be unpackable on-the-fly after reading the file.
             Defaults to False.
         """
+        # Take an optional argument for the number of samples in the data trace when instantiating a SEGYTrace object.
+        self.samples = kwargs.get('samples', None)
         self.endian = endian
         self.data_encoding = data_encoding
         # If None just return empty structure.
@@ -615,7 +653,10 @@ class SEGYTrace(object):
                                       endian=self.endian,
                                       unpack_headers=unpack_headers)
         # The number of samples in the current trace.
-        npts = self.header.number_of_samples_in_this_trace
+        if self.samples is None:
+            npts = self.header.number_of_samples_in_this_trace
+        else:
+            npts = self.samples
         self.npts = npts
         # Do a sanity check if there is enough data left.
         pos = self.file.tell()
