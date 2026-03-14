@@ -141,7 +141,6 @@ class TestClient():
         assert {*client.services.keys()} == \
             {"dataselect", "event", "station", "available_event_contributors",
              "available_event_catalogs"}
-
         # The test sets are copied from the EARTHSCOPE webpage.
         assert {*client.services["dataselect"].keys()} == \
             {"starttime", "endtime", "network", "station", "location",
@@ -163,6 +162,10 @@ class TestClient():
              "updatedafter", "includeallorigins", "includeallmagnitudes",
              "includearrivals", "eventid",
              "originid"}  # XXX: This is currently just specified in the WADL
+        assert {*client.services["availability"].keys()} == \
+            {'starttime', 'endtime', 'network', 'station', 'location',
+             'channel', 'merge', 'show', 'format', 'mergegaps', 'orderby',
+             'location', 'limit', 'includerestricted', 'quality'}
 
         # Also check an exemplary value in more detail.
         minradius = client.services["event"]["minradius"]
@@ -255,6 +258,125 @@ class TestClient():
         cat = client.get_events(catalog='8A')
         assert len(cat) == 19
         assert cat[0].event_type == 'controlled explosion'
+
+    def test_get_availability_unbounded_query_auth(self):
+        """
+        Extent information for all network IU, station ANMO channel BHZ
+        http://service.iris.edu/fdsnws/availability/1/query?network=IU&station=ANMO&channel=BHZ
+        """
+        client = self.client_auth
+
+        avail = client.get_availability('IU', 'ANMO', '', 'BHZ')
+
+        # check that we have a list
+        assert isinstance(avail, list)
+        assert len(avail) >= 1
+
+        # check that the structure of the list is as we expect
+        assert all([isinstance(list_item, tuple) for list_item in avail])
+        assert all([len(list_item) == 6 for list_item in avail])
+        assert all([[type(x) for x in list_item] == [
+            str, str, str, str, UTCDateTime, UTCDateTime]
+            for list_item in avail])
+
+        # check that the network and station are as we expect
+        assert all([list_item[0] == 'IU' for list_item in avail])
+        assert all([list_item[1] == 'ANMO' for list_item in avail])
+
+    def test_get_availability_unbounded_query(self):
+        """
+        Extent information for all network IU, station ANMO channel BHZ
+        http://service.iris.edu/fdsnws/availability/1/query?network=IU&station=ANMO&channel=BHZ
+        """
+
+        client = self.client
+
+        avail = client.get_availability('IU', 'ANMO', '', 'BHZ')
+
+        # check that we have a list
+        assert isinstance(avail, list)
+        assert len(avail) >= 1
+
+        # check that the structure of the list is as we expect
+        assert all([isinstance(list_item, tuple) for list_item in avail])
+        assert all([len(list_item) == 6 for list_item in avail])
+        assert all([[type(x) for x in list_item] == [
+            str, str, str, str, UTCDateTime, UTCDateTime]
+            for list_item in avail])
+
+        # check that the network and station are as we expect
+        assert all([list_item[0] == 'IU' for list_item in avail])
+        assert all([list_item[1] == 'ANMO' for list_item in avail])
+
+    def test_get_availability_bounded_query_auth(self):
+        """
+        Tests a bounded (in time) example query
+        Available Data from network IU, station ANMO,
+        channel BHZ for a given time interval
+        http://service.iris.edu/fdsnws/availability/1/query?network=IU&station
+        =ANMO&channel=BHZ&start=2000-03-23T00:00:00&end=2001-03-23T00:00:00
+        """
+        client = self.client_auth
+        starttime = UTCDateTime('2000-03-23T00:00:00')
+        endtime = UTCDateTime('2001-03-23T00:00:00')
+        avail = client.get_availability(
+            network='IU', station='ANMO', channel="BHZ",
+            starttime=starttime, endtime=endtime)
+
+        # check that we have a list
+        assert isinstance(avail, list)
+        assert len(avail) >= 1
+
+        # check that the structure of the list is as we expect
+        assert all([isinstance(list_item, tuple) for list_item in avail])
+        assert all([len(list_item) == 6 for list_item in avail])
+        assert all([[type(x) for x in list_item] == [
+            str, str, str, str, UTCDateTime, UTCDateTime]
+            for list_item in avail])
+
+        # check that the network, station, and channel are as we expect
+        assert all([list_item[0] == 'IU' for list_item in avail])
+        assert all([list_item[1] == 'ANMO' for list_item in avail])
+        assert all([list_item[3] == 'BHZ' for list_item in avail])
+
+        # check that all returned data are within bounds
+        assert all([list_item[4] >= starttime for list_item in avail])
+        assert all([list_item[5] <= endtime for list_item in avail])
+
+    def test_get_availability_bounded_query(self):
+        """
+        Tests a bounded (in time) example query
+        Available Data from network IU, station ANMO,
+        channel BHZ for a given time interval
+        http://service.iris.edu/fdsnws/availability/1/query?network=IU&station
+        =ANMO&channel=BHZ&start=2000-03-23T00:00:00&end=2001-03-23T00:00:00
+        """
+        client = self.client
+        starttime = UTCDateTime('2000-03-23T00:00:00')
+        endtime = UTCDateTime('2001-03-23T00:00:00')
+        avail = client.get_availability(
+            network='IU', station='ANMO', channel="BHZ",
+            starttime=starttime, endtime=endtime)
+
+        # check that we have a list
+        assert isinstance(avail, list)
+        assert len(avail) >= 1
+
+        # check that the structure of the list is as we expect
+        assert all([isinstance(list_item, tuple) for list_item in avail])
+        assert all([len(list_item) == 6 for list_item in avail])
+        assert all([[type(x) for x in list_item] == [
+            str, str, str, str, UTCDateTime, UTCDateTime]
+            for list_item in avail])
+
+        # check that the network, station, and channel are as we expect
+        assert all([list_item[0] == 'IU' for list_item in avail])
+        assert all([list_item[1] == 'ANMO' for list_item in avail])
+        assert all([list_item[3] == 'BHZ' for list_item in avail])
+
+        # check that all returned data are within bounds
+        assert all([list_item[4] >= starttime for list_item in avail])
+        assert all([list_item[5] <= endtime for list_item in avail])
 
     def test_iris_example_queries_station(self):
         """
@@ -628,7 +750,7 @@ class TestClient():
             "FDSN Webservice Client "
             "(base url: https://service.earthscope.org)\n"
             "Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6), "
-            "'station' (v1.0.7), 'available_event_catalogs', "
+            "'station' (v1.0.7), 'availability', 'available_event_catalogs', "
             "'available_event_contributors'\n\n"
             "Use e.g. client.help('dataselect') for the\n"
             "parameter description of the individual services\n"
@@ -817,6 +939,7 @@ class TestClient():
             "%s/fdsnws/event/1/application.wadl" % base_url,
             "%s/fdsnws/station/1/application.wadl" % base_url,
             "%s/fdsnws/dataselect/1/application.wadl" % base_url,
+            "%s/fdsnws/availability/1/application.wadl" % base_url,
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
@@ -844,6 +967,7 @@ class TestClient():
             "%s/fdsnws/event/1/application.wadl" % base_url,
             "%s/fdsnws/station/1/application.wadl" % base_url,
             "%s/fdsnws/dataselect/1/application.wadl" % base_url,
+            "%s/fdsnws/availability/1/application.wadl" % base_url,
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
@@ -852,7 +976,8 @@ class TestClient():
         # Replace all
         download_url_mock.reset_mock()
         download_url_mock.return_value = (404, None)
-        major_versions = {"event": 7, "station": 8, "dataselect": 9}
+        major_versions = {"event": 7, "station": 8,
+                          "dataselect": 9, "availability": 10}
         # An exception will be raised if not actual WADLs are returned.
         try:
             Client(base_url=base_url, major_versions=major_versions)
@@ -864,6 +989,7 @@ class TestClient():
             "%s/fdsnws/event/7/application.wadl" % base_url,
             "%s/fdsnws/station/8/application.wadl" % base_url,
             "%s/fdsnws/dataselect/9/application.wadl" % base_url,
+            "%s/fdsnws/availability/10/application.wadl" % base_url,
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
@@ -884,6 +1010,7 @@ class TestClient():
             "%s/fdsnws/event/7/application.wadl" % base_url,
             "%s/fdsnws/station/8/application.wadl" % base_url,
             "%s/fdsnws/dataselect/1/application.wadl" % base_url,
+            "%s/fdsnws/availability/1/application.wadl" % base_url,
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
@@ -902,12 +1029,14 @@ class TestClient():
         base_url_event = "http://other_url.com/beta/event_service/11"
         base_url_station = "http://some_url.com/beta2/stat_serv/7"
         base_url_ds = "http://new.com/beta3/waveforms/8"
+        base_url_avail = "http://something.org/beta4/availability/9"
         # An exception will be raised if not actual WADLs are returned.
         try:
             Client(base_url=base_url, service_mappings={
                 "event": base_url_event,
                 "station": base_url_station,
                 "dataselect": base_url_ds,
+                "availability": base_url_avail,
             })
         except FDSNException:
             pass
@@ -917,6 +1046,7 @@ class TestClient():
             "%s/application.wadl" % base_url_event,
             "%s/application.wadl" % base_url_station,
             "%s/application.wadl" % base_url_ds,
+            "%s/application.wadl" % base_url_avail,
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
@@ -942,6 +1072,7 @@ class TestClient():
             "%s/fdsnws/event/1/application.wadl" % base_url,
             "%s/application.wadl" % base_url_station,
             "%s/application.wadl" % base_url_ds,
+            "%s/fdsnws/availability/1/application.wadl" % base_url,
         ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
@@ -953,7 +1084,13 @@ class TestClient():
         """
         client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
                         service_mappings={"event": None})
-        assert sorted(client.services.keys()) == ['dataselect', 'station']
+        assert sorted(client.services.keys()) == [
+            'availability', 'dataselect', 'station']
+        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+                        service_mappings={"availability": None})
+        assert sorted(client.services.keys()) == [
+            'available_event_catalogs', 'available_event_contributors',
+            'dataselect', 'event', 'station']
 
     def test_redirection(self):
         """
@@ -1034,6 +1171,8 @@ class TestClient():
                 "https://ds.iris.edu/files/redirect/307/dataselect/1"
             ),
             "event": "https://ds.iris.edu/files/redirect/307/event/1"}
+            "availability":
+                "https://ds.iris.edu/files/redirect/307/availability/1"}
         with warnings.catch_warnings():
             # ignore warnings about unclosed sockets
             # These occur when rasing the FDSNRedirectException, but
@@ -1048,6 +1187,7 @@ class TestClient():
                             user="nobody@earthscope.org",
                             password="anonymous",
                             user_agent=USER_AGENT, force_redirect=True)
+
         st = c_auth.get_waveforms(
             network="IU", station="ANMO", location="00", channel="BHZ",
             starttime=UTCDateTime("2010-02-27T06:30:00.000"),
@@ -1577,6 +1717,9 @@ class TestClientNoNetwork():
                 with open(testdata["2014-01-07_iris_dataselect.wadl"],
                           "rb") as fh:
                     return 200, fh.read()
+            elif "availability" in args[0]:
+                with open(testdata["availability.wadl"], "rb") as fh:
+                    return 200, fh.read()
             return 404, None
 
         download_url_mock.side_effect = custom_side_effects
@@ -1585,6 +1728,7 @@ class TestClientNoNetwork():
         base_url_event = "http://example.com/beta/event_service/11"
         base_url_station = "http://example.org/beta2/station/7"
         base_url_ds = "http://example.edu/beta3/dataselect/8"
+        base_url_avail = "http://example.edu/beta3/availability/5"
 
         # An exception will be raised if not actual WADLs are returned.
         # Catch warnings to avoid them being raised for the tests.
@@ -1594,6 +1738,7 @@ class TestClientNoNetwork():
                 "event": base_url_event,
                 "station": base_url_station,
                 "dataselect": base_url_ds,
+                "availability": base_url_avail,
             })
         for warning in w:
             assert "Could not parse" in str(warning) or \
@@ -1629,6 +1774,16 @@ class TestClientNoNetwork():
         except Exception:
             pass
         assert base_url_event in download_url_mock.call_args_list[0][0][0]
+
+        # Test the availability downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_availability()
+        except Exception:
+            pass
+        assert base_url_avail in download_url_mock.call_args_list[0][0][0]
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_no_data_exception(self, download_url_mock):
