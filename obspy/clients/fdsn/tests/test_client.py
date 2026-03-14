@@ -112,7 +112,7 @@ class TestClient():
         cls.client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT)
         cls.client_auth = \
             Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
-                   user="nobody@earthscope.org", password="anonymous")
+                   user="nobody@iris.edu", password="anonymous")
 
     # @pytest.mark.skip(reason='data no longer available')
     def test_trim_stream_after_get_waveform(self):
@@ -555,7 +555,7 @@ class TestClient():
             assert got == expected, \
                 "Dataselect failed for query %s" % repr(query)
 
-    def test_help_function_with_iris(self, testdata):
+    def test_help_function_with_earthscope(self, testdata):
         """
         Tests the help function with the EARTHSCOPE example.
 
@@ -638,12 +638,17 @@ class TestClient():
         expected = normalize_version_number(expected)
         assert got == expected, failmsg(got, expected)
 
-    def test_dataselect_bulk(self, testdata):
+    @pytest.mark.parametrize('auth', (True, False))
+    def test_dataselect_bulk(self, testdata, auth):
         """
         Test bulk dataselect requests, POSTing data to server. Also tests
         authenticated bulk request.
         """
-        clients = [self.client, self.client_auth]
+        if auth:
+            client = self.client_auth
+        else:
+            client = self.client
+
         expected = read(testdata["bulk.mseed"])
         # test cases for providing lists of lists
         # Deliberately requesting data that overlap the end-time of a channel.
@@ -658,62 +663,61 @@ class TestClient():
                  UTCDateTime("2010-03-25T00:00:00"),
                  UTCDateTime("2010-03-25T00:00:08")))
         # removed the params (min length etc, the test will fail)
-        for client in clients:
-            # test output to stream
-            got = client.get_waveforms_bulk(bulk)
-            # Remove fdsnws URL as it is not in the data from the disc.
-            for tr in got:
-                del tr.stats._fdsnws_dataselect_url
-            assert got == expected, failmsg(got, expected)
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_waveforms_bulk(bulk, filename=tf.name)
-                got = read(tf.name)
-            assert got == expected, failmsg(got, expected)
+        # test output to stream
+        got = client.get_waveforms_bulk(bulk)
+        # Remove fdsnws URL as it is not in the data from the disc.
+        for tr in got:
+            del tr.stats._fdsnws_dataselect_url
+        assert got == expected, failmsg(got, expected)
+        # test output to file
+        with NamedTemporaryFile() as tf:
+            client.get_waveforms_bulk(bulk, filename=tf.name)
+            got = read(tf.name)
+        assert got == expected, failmsg(got, expected)
         # test cases for providing a request string
+        # note that Earthscope now ignores all those three parameters we used
+        # to send along for testing, all of "quality", "longestonly" and
+        # "minimumlength" gets ignored now
         bulk = ("quality=B\n"
                 "longestonly=false\n"
                 "minimumlength=5\n"
-                "TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
+                "TA A25A -- BHZ 2011-07-22T14:50:23 2011-07-22T14:50:29\n"
                 "TA A25A -- BHE 2010-03-25T00:00:00 2010-03-25T00:00:06\n"
                 "IU ANMO * HHZ 2010-03-25T00:00:00 2010-03-25T00:00:08\n")
-        for client in clients:
-            # test output to stream
-            got = client.get_waveforms_bulk(bulk)
-            # Assert that the meta-information about the provider is stored.
-            for tr in got:
-                if client.user:
-                    assert tr.stats._fdsnws_dataselect_url == \
-                        client.base_url + "/fdsnws/dataselect/1/queryauth"
-                else:
-                    assert tr.stats._fdsnws_dataselect_url == \
-                        client.base_url + "/fdsnws/dataselect/1/query"
-            # Remove fdsnws URL as it is not in the data from the disc.
-            for tr in got:
-                del tr.stats._fdsnws_dataselect_url
-            assert got == expected, failmsg(got, expected)
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_waveforms_bulk(bulk, filename=tf.name)
-                got = read(tf.name)
-            assert got == expected, failmsg(got, expected)
+        # test output to stream
+        got = client.get_waveforms_bulk(bulk)
+        # Assert that the meta-information about the provider is stored.
+        for tr in got:
+            if client.user:
+                assert tr.stats._fdsnws_dataselect_url == \
+                    client.base_url + "/fdsnws/dataselect/1/queryauth"
+            else:
+                assert tr.stats._fdsnws_dataselect_url == \
+                    client.base_url + "/fdsnws/dataselect/1/query"
+        # Remove fdsnws URL as it is not in the data from the disc.
+        for tr in got:
+            del tr.stats._fdsnws_dataselect_url
+        assert got == expected, failmsg(got, expected)
+        # test output to file
+        with NamedTemporaryFile() as tf:
+            client.get_waveforms_bulk(bulk, filename=tf.name)
+            got = read(tf.name)
+        assert got == expected, failmsg(got, expected)
         # test cases for providing a file name
-        for client in clients:
-            with NamedTemporaryFile() as tf:
-                with open(tf.name, "wt") as fh:
-                    fh.write(bulk)
-                got = client.get_waveforms_bulk(bulk)
-            # Remove fdsnws URL as it is not in the data from the disc.
-            for tr in got:
-                del tr.stats._fdsnws_dataselect_url
-            assert got == expected, failmsg(got, expected)
+        with NamedTemporaryFile() as tf:
+            with open(tf.name, "wt") as fh:
+                fh.write(bulk)
+            got = client.get_waveforms_bulk(bulk)
+        # Remove fdsnws URL as it is not in the data from the disc.
+        for tr in got:
+            del tr.stats._fdsnws_dataselect_url
+        assert got == expected, failmsg(got, expected)
         # test cases for providing a file-like object
-        for client in clients:
-            got = client.get_waveforms_bulk(io.StringIO(bulk))
-            # Remove fdsnws URL as it is not in the data from the disc.
-            for tr in got:
-                del tr.stats._fdsnws_dataselect_url
-            assert got == expected, failmsg(got, expected)
+        got = client.get_waveforms_bulk(io.StringIO(bulk))
+        # Remove fdsnws URL as it is not in the data from the disc.
+        for tr in got:
+            del tr.stats._fdsnws_dataselect_url
+        assert got == expected, failmsg(got, expected)
 
     def test_station_bulk(self):
         """
@@ -957,17 +961,17 @@ class TestClient():
         everything if not authentication is used.
 
         EARTHSCOPE runs three services to test it:
-            https://ds.earthscope.org/files/redirect/307/station/1
-            https://ds.earthscope.org/files/redirect/307/dataselect/1
-            https://ds.earthscope.org/files/redirect/307/event/1
+            https://ds.iris.edu/files/redirect/307/station/1
+            https://ds.iris.edu/files/redirect/307/dataselect/1
+            https://ds.iris.edu/files/redirect/307/event/1
         """
         c = Client("EARTHSCOPE", service_mappings={
             "station":
-                "https://ds.earthscope.org/files/redirect/307/station/1",
+                "https://ds.iris.edu/files/redirect/307/station/1",
             "dataselect":
-                "https://ds.earthscope.org/files/redirect/307/dataselect/1",
+                "https://ds.iris.edu/files/redirect/307/dataselect/1",
             "event":
-                "https://ds.earthscope.org/files/redirect/307/event/1"},
+                "https://ds.iris.edu/files/redirect/307/event/1"},
             user_agent=USER_AGENT)
 
         st = c.get_waveforms(
@@ -1024,12 +1028,12 @@ class TestClient():
         # cases.
         service_mappings = {
             "station": (
-                "https://ds.earthscope.org/files/redirect/307/station/1"
+                "https://ds.iris.edu/files/redirect/307/station/1"
             ),
             "dataselect": (
-                "https://ds.earthscope.org/files/redirect/307/dataselect/1"
+                "https://ds.iris.edu/files/redirect/307/dataselect/1"
             ),
-            "event": "https://ds.earthscope.org/files/redirect/307/event/1"}
+            "event": "https://ds.iris.edu/files/redirect/307/event/1"}
         with warnings.catch_warnings():
             # ignore warnings about unclosed sockets
             # These occur when rasing the FDSNRedirectException, but

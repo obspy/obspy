@@ -1,15 +1,7 @@
-master
-======
+1.5.0 (doi: 10.5281/zenodo.19005357)
+====================================
 
 Changes:
- - obspy.imaging.beachball:
-   * allow isotropic component to be plotted. Ensure explosions and
-     implosions plot fully colored/uncolored, and that the correct
-     "dominant" eigenvalue is chosen. Bug fix to fully implement
-     check to see if a new segment is needed for the matplotlib patches.
-     (see #3583)
-   * add tutorial to code_snippets to showcase isotropic plotting.
-     (see #3583)
  - General
    * Fix documentation for the command line scripts (see #1208 #3569)
    * Fix code coverage reporting (see #3646)
@@ -55,10 +47,6 @@ Changes:
      (see #3643)
    * Ensure UTCDateTime can unpickle old UTCDateTime instances by adding
      __setstate__ method (see #3684)
- - obspy.clients.filesystem:
-   * tsindex: update syntax for SQLAlchemy 2.0 compatibility (see #3269)
-   * tsindex: leap second handling was deactivated as it is not needed with
-     current msindex (see #3403)
  - obspy.clients.fdsn
    * Natural Resources Canada (NRCAN) added to list of known clients
    * Spanish National Geographic Institute (IGN) added to known clients
@@ -74,9 +62,12 @@ Changes:
      getting raised as an FDSNException but some low-level exceptions like
      AttributeError, which in turn caused problems in Mass Downloader (see
      #3513)
- - obspy.clients.fdsn.mass_downloader
-   * Use the `download(threads_per_client)` value for StationXML downloads.
-     (see #3678)
+   * mass downloader: Use the `download(threads_per_client)` value for
+     StationXML downloads.  (see #3678)
+ - obspy.clients.filesystem:
+   * tsindex: update syntax for SQLAlchemy 2.0 compatibility (see #3269)
+   * tsindex: leap second handling was deactivated as it is not needed with
+     current msindex (see #3403)
  - obspy.clients.neic
    * Update the default CWB QueryServer IP address from the old IP to the
      new USGS server address (see #3592)
@@ -86,6 +77,14 @@ Changes:
      data available. Also, stations without data are now excluded from the
      results. See docs for `get_info()` for information how to see the excluded
      stations (see #2808)
+ - obspy.imaging.beachball:
+   * allow isotropic component to be plotted. Ensure explosions and
+     implosions plot fully colored/uncolored, and that the correct
+     "dominant" eigenvalue is chosen. Bug fix to fully implement
+     check to see if a new segment is needed for the matplotlib patches.
+     (see #3583)
+   * add tutorial to code_snippets to showcase isotropic plotting.
+     (see #3583)
  - obspy.imaging.waveform
    * Adapt the code to match the documentation of the section plots, make use
      of metres everywhere instead of kilometres (see #3371)
@@ -100,7 +99,16 @@ Changes:
  - obspy.io.kinemetrics:
    * extract all headers from EVT files (see #3606)
    * fix reading non-UTF8 character in the comment (see #3688)
- - obspy.io.mseed.spread_time_over_file:
+ - obspy.io.mseed:
+   * _read_mseed can use interpolation search optionally to find start
+     and end time in O(log(log(N))) for linearly ordered data with
+     "use_bisection=True" (see #3622)
+   * _read_mseed: 2GB limitation lifted (see #3622)
+   * _read_mseed: use of numpy.memmap to improve efficiency (see #3622)
+   * _read_mseed: Can now handle numpy.ndarray(dtype=numpy.int8), and
+     and anything that can be read into numpy.ndarray(dtype=numpy.int8) with
+     np.frombuffer to increase efficiency when data is already in memory. (see
+     #3622)
    * new routine to spread a time interval progressively across all mseed
      blockettes in a file (see #3271)
  - obspy.io.nlloc:
@@ -110,6 +118,13 @@ Changes:
    * add reading of confidence ellipsoids (see #3350)
    * add support for reading and writing "PUBLIC_ID" line in NonLinLoc
      hypocenter and observation files (see #3701)
+ - obspy.io.nordic:
+   * Parse ID-lines (type I) into event.extra['nordic_event_id] (see #3287)
+   * Support reading of compact Nordic files (only containing header lines)
+   * Write amplitude with highest possible precision
+   * Fix writing / reading of high-frequency IAMLHF amplitudes
+   * Fix parsing of BAZ when they precede the associated phase pick in file
+   * Fix bug where check for nordic format version crashed on long phase names
  - obspy.io.sac:
    * fix floating point accuracy issues in sampling rate when reading some SAC
      files. when reading SAC files, the sample spacing interval read from file
@@ -119,6 +134,8 @@ Changes:
    * fix writing SACPZ END tag when empty (open ended) (see #3696)
  - obspy.io.seg2:
    * Less strict date/time parsing (#3283).
+ - obspy.io.seisan:
+   * Fix parsing of files written in int16 (see #3287)
  - obspy.io.seiscomp:
    * overhaul codebase towards "SCML" label instead of SC3ML
      but SC3ML still works as a FORMAT kwarg (for now)
@@ -131,25 +148,6 @@ Changes:
    * convert negative azimuth or |dip|>90 to 0-360/-90-90 for fdsnXML (#3689)
    * add seiscomp  scml 0.14 support, drop 0.6
    * add seiscomp scxml 0.13 support (see #3345)
- - obspy.io.nordic:
-   * Parse ID-lines (type I) into event.extra['nordic_event_id] (see #3287)
-   * Support reading of compact Nordic files (only containing header lines)
-   * Write amplitude with highest possible precision
-   * Fix writing / reading of high-frequency IAMLHF amplitudes
-   * Fix parsing of BAZ when they precede the associated phase pick in file
-   * Fix bug where check for nordic format version crashed on long phase names
- - obspy.io.seisan:
-   * Fix parsing of files written in int16 (see #3287)
- - obspy.io.mseed:
-   * _read_mseed can use interpolation search optionally to find start 
-     and end time in O(log(log(N))) for linearly ordered data with
-     "use_bisection=True" (see #3622)
-   * _read_mseed: 2GB limitation lifted (see #3622)
-   * _read_mseed: use of numpy.memmap to improve efficiency (see #3622)
-   * _read_mseed: Can now handle numpy.ndarray(dtype=numpy.int8), and
-     and anything that can be read into numpy.ndarray(dtype=numpy.int8) with
-     np.frombuffer to increase efficiency when data is already in memory. (see
-     #3622)
  - obspy.io.shapefile:
    * add support for pyshp v3 (see #3599)
  - obspy.io.stationxml:
@@ -162,6 +160,11 @@ Changes:
    * Improve error message when trying to read a local path to a file that does
      not exist with XSEED Parser (see #2686)
  - obspy.signal:
+   * PPSD: performance improvement in __init__: faster frequency array
+     calculation (see #3644)
+   * PPSD: Changed the moment instrument responses are calculated by evalresp:
+     they are now preloaded at PPSD instantiation time, and no longer
+     calculated for each time window (see #3589)
    * all butterworth filters: correct zero-phase filtering of 2-d arrays and
      filtering along non-default axis of 2-d arrays (see #3291)
    * fix naming of input args in function "rotate_rt_ne()" (see #3383)
@@ -179,12 +182,6 @@ Changes:
      a new numpy 2.4.0 deprecation. (see #3668)
    * Prep SciPy dropping ODR for polarization.partical_motion_odr, prompt user
      to install odrpack if they have SciPy >= 1.19.0 (see #3676, #3662)
- - obspy.signal.spectral_estimation.PPSD:
-   * performance improvement in __init__: faster frequency array calculation
-     (see #3644)
-   * Changed the moment instrument responses are calculated by evalresp: they
-     are now preloaded at PPSD instantiation time, and no longer calculated
-     for each time window! (see #3589)
 
 1.4.2 (doi: 10.5281/zenodo.15309143)
 ====================================
