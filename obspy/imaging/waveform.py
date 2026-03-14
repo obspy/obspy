@@ -717,6 +717,14 @@ class WaveformPlotting(object):
                             date2num(trace.stats.starttime.datetime))
             ax.plot(x_values, trace.data, color=self.color,
                     linewidth=self.linewidth, linestyle=self.linestyle)
+            
+            ymin = np.min(trace.data)
+            if ymin == np.max(trace.data):
+                if ymin == 0.0:
+                    ax.set_ylim([-1e-200, 1e-200])
+                else:
+                    ax.set_ylim((1 + np.array([-1e-15, 1e-15])) * ymin)
+            
         # Write to self.ids
         trace = st[0]
         if trace.stats.get('preview'):
@@ -791,6 +799,14 @@ class WaveformPlotting(object):
             x_values = np.repeat(x_values, 2)
             y_values = extreme_values.flatten()
             ax.plot(x_values, y_values, color=self.color)
+
+            ymin = np.min(y_values)
+            if ymin == np.max(y_values):
+                if ymin == 0.0:
+                    ax.set_ylim([-1e-200, 1e-200])
+                else:
+                    ax.set_ylim((1 + np.array([-1e-15, 1e-15])) * ymin)
+
         # remember xlim state and add callback to warn when zooming in
         self._initial_xrange = (self._time_to_xvalue(self.endtime) -
                                 self._time_to_xvalue(self.starttime))
