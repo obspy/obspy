@@ -10,7 +10,7 @@
 [![LGPLv3](https://www.gnu.org/graphics/lgplv3-88x31.png)](https://www.gnu.org/licenses/lgpl.html)
 
 [![PyPI Version](https://img.shields.io/pypi/v/obspy.svg)](https://pypi.python.org/pypi/obspy)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15309143.svg)](https://doi.org/10.5281/zenodo.15309143)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19005357.svg)](https://doi.org/10.5281/zenodo.19005357)
 [![Conda](https://img.shields.io/conda/dn/conda-forge/obspy?label=conda%20downloads)](https://anaconda.org/conda-forge/obspy)
 
 [![Discourse status](https://img.shields.io/discourse/status?server=https%3A%2F%2Fdiscourse.obspy.org)](https://discourse.obspy.org)
@@ -65,7 +65,7 @@ Please see details on how to contribute to the project [here](CONTRIBUTING.md).
   * Tobias Megies, Moritz Beyreuther, Robert Barsch, Lion Krischer, Joachim Wassermann (2011), [ObsPy – What can it do for data centers and observatories?](http://www.annalsofgeophysics.eu/index.php/annals/article/view/4838) _Annals Of Geophysics_, 54(1), 47-58, doi:`10.4401/ag-4838`.
   * Lion Krischer, Tobias Megies, Robert Barsch, Moritz Beyreuther, Thomas Lecocq, Corentin Caudron and Joachim Wassermann (2015), [ObsPy: a bridge for seismology into the scientific Python ecosystem](http://iopscience.iop.org/1749-4699/8/1/014003/), _Computational Science & Discovery_, 8(1), 014003, doi:`10.1088/1749-4699/8/1/014003`
   * [concept DOI, that always resolves to latest ObsPy versions: `10.5281/zenodo.1040769`](https://doi.org/10.5281/zenodo.1040769) (see [Zenodo FAQ](http://help.zenodo.org/#versioning))
-  * [specific version DOIs for all released ObsPy versions](https://zenodo.org/search?ln=en&p=obspy&action_search=)
+  * [specific version DOIs for all released ObsPy versions](https://zenodo.org/search?q=parent.id%3A6645831&f=allversions%3Atrue&l=list&p=1&s=10&sort=version) (search "obspy" on zenodo for older versions)
 
 ### Impact
 
