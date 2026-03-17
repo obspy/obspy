@@ -444,7 +444,12 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     if isinstance(mseed_object, str):
         # Read to NumPy array which is used as a buffer.
         # use memmap, faster than fromfile, same functionality
-        bfr_np = np.memmap(mseed_object, dtype=np.int8, mode="c")
+
+        # handling for emtpy files
+        if os.path.getsize(mseed_object) == 0:
+            bfr_np = np.array([], dtype=np.int8)
+        else:
+            bfr_np = np.memmap(mseed_object, dtype=np.int8, mode="c")
 
     elif hasattr(mseed_object, 'read'):
         bfr_np = from_buffer(mseed_object.read(), dtype=np.int8)
