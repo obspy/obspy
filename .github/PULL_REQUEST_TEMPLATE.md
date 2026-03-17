@@ -1,11 +1,6 @@
 <!--
-Please check that you select the **correct base branch** (details see below link)
-
 Before submitting a PR, please review the pull request guidelines:
 https://github.com/obspy/obspy/blob/master/CONTRIBUTING.md#submitting-a-pull-request
-
-Also, please make sure you are following the ObsPy branching model:
-https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model
 -->
 
 ### What does this PR do?
@@ -16,26 +11,26 @@ https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model
 
 *Please link any relevant issues with "see #123456", mark issues that get resolved with "fixes #12345"*
 
-### AI disclosure
+### AI used?
 
 *If AI tools were used in creating the PR please indicate here how they were used*
 
 ### PR Checklist
 
-- [ ] Correct base branch selected? `master` for new features, `maintenance_...` for bug fixes
-- [ ] Tests: Added new tests for any new features or fixed regressions
-- [ ] Changelog: Added a short note in `CHANGELOG.txt` (not applicable only if PR affects changes that are not in a released version)
-- [ ] Add the yellow `ready for review` label when you are ready for the PR to be reviewed.
+- [ ] Correct **base branch** selected? [`master` for new features, `maintenance_?.?.x` for bug fixes](https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model)
+- [ ] **Tests**: Added new tests for any new features or fixed regressions
+- [ ] **Changelog**: Added a short note in `CHANGELOG.txt` (only obsolete if fixing a bug introduced *after* the last release)
+- [ ] Add the yellow `ready for review` label when you the PR is **ready to be reviewed**
 
-Optionally:
+Rare actions items:
 
 - [ ] First time contributors: Feel free to add your name to `CONTRIBUTORS.txt`
 - [ ] New modules: add the module to `CODEOWNERS` with your github handle
 
 ### Issue labels
 
-The PR can be flagged with the following "issue labels":
-- "no_ci": skip CI builds while work-in-progress
-- "build_docs": if needed, trigger automatic docs build to [see how docs render for the PR](https://docs.obspy.org/pr/)
-- "test_network": if any tests marked as "network" are touched by the PR, add this to run them in CI
-- "upload_images": if PR adds/changes any plots, this will attach plot output as artifacts in CI
+The PR can be flagged with the following "issue labels" to alter CI runs:
+- `no_ci` to skip CI builds while work-in-progress
+- `build_docs` to trigger automatic docs build to [see how docs render for the PR](https://docs.obspy.org/pr/)
+- `test_network` to include "networked" tests if the PR touches any tests marked as "network"
+- `upload_images` to attach plots generated in tests as artifacts to the CI run
