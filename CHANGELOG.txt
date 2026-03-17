@@ -2,7 +2,11 @@ maintenance_1.5.x
 =================
 
 Changes:
- - ...
+ - obspy.io.mseed:
+   * fix the type of exception raised when trying to read an empty file
+     (see #3709)
+ - obspy.clients:
+   * SDS client: fix handling of empty files (see #3709)
 
 1.5.0 (doi: 10.5281/zenodo.19005357)
 ====================================
