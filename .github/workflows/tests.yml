@@ -12,6 +12,7 @@ on:
   push:
     branches:
       - master
+      - 'maintenance_*.*.x'
     tags-ignore:
       - '**'
 
