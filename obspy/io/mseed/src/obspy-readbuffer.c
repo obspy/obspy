@@ -365,6 +365,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         // Skip empty or noise records.
         if (OBSPY_ISVALIDBLANK(mseed + offset)) {
             offset += MINRECLEN;
+            msr_free(&msr);
             continue;
         }
 
