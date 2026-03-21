@@ -80,7 +80,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
-        #assert st[0].stats.calib == 1.1694431304931641e-06
+        # assert st[0].stats.calib == 1.1694431304931641e-06
         assert st[0].stats.calib == 1.0
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
@@ -113,7 +113,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
-        #assert st[0].stats.calib == 1.170754369670621e-06
+        # assert st[0].stats.calib == 1.170754369670621e-06
         assert st[0].stats.calib == 1.0
 
     def test_read_via_obspy_and_bytesio1(self, testdata):
@@ -138,7 +138,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MEMA'
-        #assert st[0].stats.calib == 1.1694431304931641e-06
+        # assert st[0].stats.calib == 1.1694431304931641e-06
         assert st[0].stats.calib == 1.0
 
         self.verify_stats_evt(st[0].stats.kinemetrics_evt)
@@ -175,7 +175,7 @@ class TestCore():
         assert round(abs(st[0].stats.sampling_rate-250.0), 7) == 0
         assert st[0].stats.channel == '0'
         assert st[0].stats.station == 'MOLA'
-        #assert st[0].stats.calib == 1.170754369670621e-06
+        # assert st[0].stats.calib == 1.170754369670621e-06
         assert st[0].stats.calib == 1.0
 
     def test_read_via_module1(self, testdata):
