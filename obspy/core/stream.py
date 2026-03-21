@@ -244,6 +244,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     if apply_calib:
         for tr in st:
             tr.data = tr.data * tr.stats.calib
+            tr.stats.calib = 1.0
     return st
 
 
