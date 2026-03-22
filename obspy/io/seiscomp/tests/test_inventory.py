@@ -109,7 +109,7 @@ class TestSCML():
         # scml lacks
         for scml, stationxml in zip(scml_arr, stationxml_arr):
             if scml != stationxml:
-                tag = str(stationxml).split(">")[0][1:].split()[0]
+                tag = str(stationxml).split(">")[0][1:]
                 assert tag in excluded_tags
 
     def test_empty_depth(self, testdata):
