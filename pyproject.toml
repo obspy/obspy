@@ -5,3 +5,12 @@ requires = [
     'setuptools'
     ]
 build-backend = "setuptools.build_meta"
+
+# this is needed to fix a Py3.14/Cartopy issue with
+# SQLite databases not being closed
+# should review after next major Cartopy update
+# 22 march 2026
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:unclosed database:ResourceWarning",
+]
