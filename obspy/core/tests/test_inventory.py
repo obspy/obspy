@@ -696,6 +696,13 @@ class TestInventoryCartopy:
         Tests the inventory location preview plot, ortho projection, some
         non-default parameters, using Cartopy.
         """
+        # temporarily skip ubuntu 3.14 tests until Cartopy fixed
+        # as of 22 march 2026
+        import sys
+        if sys.version_info >= (3, 14):
+            pytest.skip("Skipping due to unclosed SQLite "
+                        "connections in Cartopy "
+                        "not yet fixed for Python 3.14")
         inv = read_inventory()
         inv.plot(method='cartopy', projection='ortho', resolution='c',
                  continent_fill_color='0.3', marker='d', label=False,
