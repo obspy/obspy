@@ -4,7 +4,7 @@ master
 Changes:
  - General
  - obspy.io.seiscomp:
-   * Add publicID to station.extra for select (see #3193 #3194)
+   * Add publicID to station.extra for select (see #3718 #3193 #3194)
 
 maintenance_1.5.x
 =================
