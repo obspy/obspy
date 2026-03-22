@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz.de/ns/seiscomp-schema/0.14" version="0.14">
+  <Inventory>
+    <sensor publicID="Sensor/20260322032606.102854.7" name="4K.FIS02.DPN.2024.268.05.48.34" response="ResponsePAZ/20260322032606.102885.8">
+      <description>DT-SOLO 16HR-3C 5Hz node (SP)</description>
+      <model>DTCC SmartSolo 16HR-3C 5 Hz 76.6 V/m/s</model>
+      <unit>M/S</unit>
+      <remark>{"unit":"Velocity in Meters per Second"}</remark>
+    </sensor>
+    <sensor publicID="Sensor/20260322032606.103224.11" name="4K.FIS02.DPZ.2024.268.05.48.34" response="ResponsePAZ/20260322032606.102885.8">
+      <description>DT-SOLO 16HR-3C 5Hz node (SP)</description>
+      <model>DTCC SmartSolo 16HR-3C 5 Hz 76.6 V/m/s</model>
+      <unit>M/S</unit>
+      <remark>{"unit":"Velocity in Meters per Second"}</remark>
+    </sensor>
+    <sensor publicID="Sensor/20260322032606.103567.17" name="4K.FIS03.DPN.2024.268.21.57.34" response="ResponsePAZ/20260322032606.102885.8">
+      <description>DT-SOLO 16HR-3C 5Hz node (SP)</description>
+      <model>DTCC SmartSolo 16HR-3C 5 Hz 76.6 V/m/s</model>
+      <unit>M/S</unit>
+      <remark>{"unit":"Velocity in Meters per Second"}</remark>
+    </sensor>
+    <sensor publicID="Sensor/20260322032606.103758.21" name="4K.FIS03.DPZ.2024.268.21.57.34" response="ResponsePAZ/20260322032606.102885.8">
+      <description>DT-SOLO 16HR-3C 5Hz node (SP)</description>
+      <model>DTCC SmartSolo 16HR-3C 5 Hz 76.6 V/m/s</model>
+      <unit>M/S</unit>
+      <remark>{"unit":"Velocity in Meters per Second"}</remark>
+    </sensor>
+    <datalogger publicID="Datalogger/20260322032606.102761.6" name="4K.FIS02.DPN.2024.268.05.48.34">
+      <digitizerModel>16HR-3C 5Hz (built-in)</digitizerModel>
+      <gain>3355500</gain>
+      <decimation sampleRateNumerator="250" sampleRateDenominator="1"/>
+    </datalogger>
+    <datalogger publicID="Datalogger/20260322032606.103187.10" name="4K.FIS02.DPZ.2024.268.05.48.34">
+      <digitizerModel>16HR-3C 5Hz (built-in)</digitizerModel>
+      <gain>3355500</gain>
+      <decimation sampleRateNumerator="250" sampleRateDenominator="1"/>
+    </datalogger>
+    <datalogger publicID="Datalogger/20260322032606.103532.16" name="4K.FIS03.DPN.2024.268.21.57.34">
+      <digitizerModel>16HR-3C 5Hz (built-in)</digitizerModel>
+      <gain>3355500</gain>
+      <decimation sampleRateNumerator="250" sampleRateDenominator="1"/>
+    </datalogger>
+    <datalogger publicID="Datalogger/20260322032606.103726.20" name="4K.FIS03.DPZ.2024.268.21.57.34">
+      <digitizerModel>16HR-3C 5Hz (built-in)</digitizerModel>
+      <gain>3355500</gain>
+      <decimation sampleRateNumerator="250" sampleRateDenominator="1"/>
+    </datalogger>
+    <responsePAZ publicID="ResponsePAZ/20260322032606.102885.8" name="ResponsePAZ/20260322032606.102885.8">
+      <type>A</type>
+      <gain>76.6</gain>
+      <gainFrequency>50</gainFrequency>
+      <normalizationFactor>1</normalizationFactor>
+      <normalizationFrequency>50</normalizationFrequency>
+      <numberOfZeros>2</numberOfZeros>
+      <numberOfPoles>2</numberOfPoles>
+      <zeros>(0,0) (0,0)</zeros>
+      <poles>(-22.211059,22.217768) (-22.211059,-22.217768)</poles>
+    </responsePAZ>
+    <network publicID="NET/4K/20260322032606.102091.205" code="4K">
+      <start>2024-09-24T04:55:50.0000Z</start>
+      <end>2024-10-25T00:50:18.0000Z</end>
+      <description>Fiordland Seismological Sending of Landslides and Earthquakes (FISSLE)</description>
+      <restricted>false</restricted>
+      <shared>true</shared>
+      <station publicID="STA/4K/FIS02/20260322032606.102384.208" code="FIS02">
+        <start>2024-09-24T05:48:34.0000Z</start>
+        <end>2024-10-23T17:22:10.0000Z</end>
+        <description>Lodge Road</description>
+        <latitude>-44.677106</latitude>
+        <longitude>167.940306</longitude>
+        <elevation>16</elevation>
+        <place>Milford Sound</place>
+        <country>NZ</country>
+        <restricted>false</restricted>
+        <shared>true</shared>
+        <sensorLocation publicID="LOC/4K/FIS02//20260322032606.102506.209" code="">
+          <start>2024-09-24T05:48:34.0000Z</start>
+          <end>2024-10-23T17:22:10.0000Z</end>
+          <latitude>-44.677106</latitude>
+          <longitude>167.940306</longitude>
+          <elevation>16</elevation>
+          <stream publicID="Stream/20260322032606.102639.5" code="DPN" datalogger="Datalogger/20260322032606.102761.6" sensor="Sensor/20260322032606.102854.7">
+            <start>2024-09-24T05:48:34.0000Z</start>
+            <end>2024-10-23T17:22:10.0000Z</end>
+            <dataloggerSerialNumber>453022016</dataloggerSerialNumber>
+            <dataloggerChannel>1</dataloggerChannel>
+            <sensorSerialNumber>453022016</sensorSerialNumber>
+            <sensorChannel>1</sensorChannel>
+            <sampleRateNumerator>250</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <dip>0</dip>
+            <gain>257019225.5510831</gain>
+            <gainFrequency>50</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <comment>
+              <text>{"type":"SP","description":"DT-SOLO 16HR-3C 5Hz node (SP)","model":"DTCC SmartSolo 16HR-3C 5 Hz 76.6 V/m/s","serialNumber":"453022016"}</text>
+              <id>FDSNXML:Sensor</id>
+            </comment>
+            <comment>
+              <text>{"model":"16HR-3C 5Hz (built-in)","serialNumber":"453022016"}</text>
+              <id>FDSNXML:DataLogger</id>
+            </comment>
+          </stream>
+          <stream publicID="Stream/20260322032606.103104.9" code="DPZ" datalogger="Datalogger/20260322032606.103187.10" sensor="Sensor/20260322032606.103224.11">
+            <start>2024-09-24T05:48:34.0000Z</start>
+            <end>2024-10-23T17:22:10.0000Z</end>
+            <dataloggerSerialNumber>453022016</dataloggerSerialNumber>
+            <dataloggerChannel>0</dataloggerChannel>
+            <sensorSerialNumber>453022016</sensorSerialNumber>
+            <sensorChannel>0</sensorChannel>
+            <sampleRateNumerator>250</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <dip>-90</dip>
+            <gain>257019225.5510831</gain>
+            <gainFrequency>50</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <comment>
+              <text>{"type":"SP","description":"DT-SOLO 16HR-3C 5Hz node (SP)","model":"DTCC SmartSolo 16HR-3C 5 Hz 76.6 V/m/s","serialNumber":"453022016"}</text>
+              <id>FDSNXML:Sensor</id>
+            </comment>
+            <comment>
+              <text>{"model":"16HR-3C 5Hz (built-in)","serialNumber":"453022016"}</text>
+              <id>FDSNXML:DataLogger</id>
+            </comment>
+          </stream>
+        </sensorLocation>
+      </station>
+      <station publicID="STA/4K/FIS03/20260322032606.103369.227" code="FIS03">
+        <start>2024-09-24T21:57:34.0000Z</start>
+        <end>2024-10-25T00:50:18.0000Z</end>
+        <description>Helicopter Pad</description>
+        <latitude>-44.764044</latitude>
+        <longitude>167.994378</longitude>
+        <elevation>885</elevation>
+        <place>Homer Tunnel</place>
+        <country>NZ</country>
+        <restricted>false</restricted>
+        <shared>true</shared>
+        <sensorLocation publicID="LOC/4K/FIS03//20260322032606.103419.228" code="">
+          <start>2024-09-24T21:57:34.0000Z</start>
+          <end>2024-10-25T00:50:18.0000Z</end>
+          <latitude>-44.764044</latitude>
+          <longitude>167.994378</longitude>
+          <elevation>885</elevation>
+          <stream publicID="Stream/20260322032606.103454.15" code="DPN" datalogger="Datalogger/20260322032606.103532.16" sensor="Sensor/20260322032606.103567.17">
+            <start>2024-09-24T21:57:34.0000Z</start>
+            <end>2024-10-25T00:50:18.0000Z</end>
+            <dataloggerSerialNumber>453021945</dataloggerSerialNumber>
+            <dataloggerChannel>1</dataloggerChannel>
+            <sensorSerialNumber>453021945</sensorSerialNumber>
+            <sensorChannel>1</sensorChannel>
+            <sampleRateNumerator>250</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <dip>0</dip>
+            <gain>257019225.5510831</gain>
+            <gainFrequency>50</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <comment>
+              <text>{"type":"SP","description":"DT-SOLO 16HR-3C 5Hz node (SP)","model":"DTCC SmartSolo 16HR-3C 5 Hz 76.6 V/m/s","serialNumber":"453021945"}</text>
+              <id>FDSNXML:Sensor</id>
+            </comment>
+            <comment>
+              <text>{"model":"16HR-3C 5Hz (built-in)","serialNumber":"453021945"}</text>
+              <id>FDSNXML:DataLogger</id>
+            </comment>
+          </stream>
+          <stream publicID="Stream/20260322032606.103645.19" code="DPZ" datalogger="Datalogger/20260322032606.103726.20" sensor="Sensor/20260322032606.103758.21">
+            <start>2024-09-24T21:57:34.0000Z</start>
+            <end>2024-10-25T00:50:18.0000Z</end>
+            <dataloggerSerialNumber>453021945</dataloggerSerialNumber>
+            <dataloggerChannel>0</dataloggerChannel>
+            <sensorSerialNumber>453021945</sensorSerialNumber>
+            <sensorChannel>0</sensorChannel>
+            <sampleRateNumerator>250</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <dip>-90</dip>
+            <gain>257019225.5510831</gain>
+            <gainFrequency>50</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+            <comment>
+              <text>{"type":"SP","description":"DT-SOLO 16HR-3C 5Hz node (SP)","model":"DTCC SmartSolo 16HR-3C 5 Hz 76.6 V/m/s","serialNumber":"453021945"}</text>
+              <id>FDSNXML:Sensor</id>
+            </comment>
+            <comment>
+              <text>{"model":"16HR-3C 5Hz (built-in)","serialNumber":"453021945"}</text>
+              <id>FDSNXML:DataLogger</id>
+            </comment>
+          </stream>
+        </sensorLocation>
+      </station>
+    </network>
+  </Inventory>
+</seiscomp>
