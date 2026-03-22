@@ -11,7 +11,6 @@ import copy
 import gc
 import io
 import itertools
-import multiprocessing.pool
 import pickle
 import sys
 import warnings
