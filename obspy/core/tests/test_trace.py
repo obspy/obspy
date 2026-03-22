@@ -1774,6 +1774,40 @@ class TestTrace:
         assert len(w) == 1
         assert w[0].category == UserWarning
 
+    def test_stats_calib_reset_after_data_unit_conversion(self):
+        """
+        Test that the stats.calib is reset to 1.0 after a data unit conversion
+        via remove_sensitivity() or remove_response().
+
+        See #3717
+        """
+        inv = read_inventory()
+        tr = read()[0]   # raw data in [count]
+        response = inv.get_response(tr.id, tr.stats.starttime)
+        # raw data scaling factor calib in [(nm/s)/count] is the inverse
+        # of the instrument sensitivity in [count/(nm/s)]
+        calib = 1.0e+9/response.instrument_sensitivity.value
+        tr.stats.calib = calib
+        # tr1 - apply the scaling factor stats.calib to the data
+        tr1 = tr.copy()
+        tr1.data = tr.data * tr.stats.calib   # [nm/s]
+        # tr2 - remove the sensitivity from the trace data
+        tr2 = tr.copy()
+        assert tr2.stats.calib == calib
+        tr2.remove_sensitivity(inventory=inv)   # [m/s]
+        # after remove_sensitivity() the stats.calib should be reset to 1.0
+        assert tr2.stats.calib == 1.0
+        # check that the data of tr1 after scaling by the calib factor
+        # is the same as the data of tr2 after removing the sensitivity
+        # and scaling by 1.0e+9 to convert from [m/s] to [nm/s]
+        assert np.allclose(tr1.data, tr2.data*1.0e+9)
+        # tr3 - remove response from the trace data
+        tr3 = tr.copy()
+        assert tr3.stats.calib == calib
+        tr3.remove_response(inventory=inv)
+        # after remove_response() the stats.calib should be reset to 1.0
+        assert tr3.stats.calib == 1.0
+
     def test_processing_info_remove_response_and_sensitivity(self):
         """
         Tests adding processing info for remove_response() and
