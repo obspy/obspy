@@ -15,7 +15,9 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 import decorator
 import io
+import logging
 import sys
+import time
 import traceback
 import warnings
 from urllib.parse import urlparse
@@ -27,6 +29,9 @@ from ...base import HTTPClient
 from .. import client
 from ..client import raise_on_error
 from ..header import FDSNException, URL_MAPPINGS, FDSNNoDataException
+
+
+logger = logging.getLogger(__name__)
 
 
 def RoutingClient(routing_type, *args, **kwargs):  # NOQA
@@ -160,7 +165,8 @@ def _strip_protocol(url):
 # get_events() but also others).
 class BaseRoutingClient(HTTPClient):
     def __init__(self, debug=False, timeout=120, include_providers=None,
-                 exclude_providers=None, credentials=None):
+                 exclude_providers=None, credentials=None,
+                 max_bulk_lines=100):
         """
         :type routing_type: str
         :param routing_type: The type of
@@ -185,10 +191,15 @@ class BaseRoutingClient(HTTPClient):
             center specific credentials.
             You can also use a URL mapping as for the normal FDSN client
             instead of the URL.
+        :type max_bulk_lines: int
+        :param max_bulk_lines: If the bulk request is larger than this number
+            of lines, it will be split into multiple requests. Defaults to
+            100 to match `fdsnws_fetch`.
         """
         HTTPClient.__init__(self, debug=debug, timeout=timeout)
         self.include_providers = include_providers
         self.exclude_providers = exclude_providers
+        self.max_bulk_lines = max_bulk_lines
 
         # Parse credentials.
         self.credentials = {}
@@ -275,6 +286,24 @@ class BaseRoutingClient(HTTPClient):
                 "data_type": data_type,
                 "kwargs": kwargs,
                 "credentials": self.credentials})
+
+        # Split requests if necessary.
+        if self.max_bulk_lines:
+            new_dl_requests = []
+            for req in dl_requests:
+                lines = req["bulk_str"].strip().splitlines()
+                if len(lines) <= self.max_bulk_lines:
+                    new_dl_requests.append(req)
+                    continue
+                # Split!
+                for i in range(0, len(lines), self.max_bulk_lines):
+                    new_req = req.copy()
+                    new_req["bulk_str"] = "\n".join(
+                        lines[i:i + self.max_bulk_lines])
+                    new_dl_requests.append(new_req)
+            dl_requests = new_dl_requests
+
+        t0 = time.time()
         pool = ThreadPool(processes=len(dl_requests))
         results = pool.map(_try_download_bulk, dl_requests)
 
@@ -296,6 +325,15 @@ class BaseRoutingClient(HTTPClient):
         # Explitly close the thread pool as somehow this does not work
         # automatically under linux. See #2342.
         pool.close()
+
+        t1 = time.time()
+        failed_count = len([r for r in results if r is None])
+        status = "INCOMPLETE" if failed_count > 0 else "COMPLETE"
+        logger.info("RoutingClient: Download completed in %.2f seconds. "
+                    "Total chunks: %i, Success: %i, Failed: %i (%s)",
+                    t1 - t0, len(dl_requests),
+                    len([r for r in results if r is not None]),
+                    failed_count, status)
 
         return collection
 
