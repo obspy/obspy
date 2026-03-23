@@ -15,9 +15,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 import decorator
 import io
-import logging
 import sys
-import time
 import traceback
 import warnings
 from urllib.parse import urlparse
@@ -29,9 +27,6 @@ from ...base import HTTPClient
 from .. import client
 from ..client import raise_on_error
 from ..header import FDSNException, URL_MAPPINGS, FDSNNoDataException
-
-
-logger = logging.getLogger(__name__)
 
 
 def RoutingClient(routing_type, *args, **kwargs):  # NOQA
@@ -303,7 +298,6 @@ class BaseRoutingClient(HTTPClient):
                     new_dl_requests.append(new_req)
             dl_requests = new_dl_requests
 
-        t0 = time.time()
         pool = ThreadPool(processes=len(dl_requests))
         results = pool.map(_try_download_bulk, dl_requests)
 
@@ -325,15 +319,6 @@ class BaseRoutingClient(HTTPClient):
         # Explitly close the thread pool as somehow this does not work
         # automatically under linux. See #2342.
         pool.close()
-
-        t1 = time.time()
-        failed_count = len([r for r in results if r is None])
-        status = "INCOMPLETE" if failed_count > 0 else "COMPLETE"
-        logger.info("RoutingClient: Download completed in %.2f seconds. "
-                    "Total chunks: %i, Success: %i, Failed: %i (%s)",
-                    t1 - t0, len(dl_requests),
-                    len([r for r in results if r is not None]),
-                    failed_count, status)
 
         return collection
 
