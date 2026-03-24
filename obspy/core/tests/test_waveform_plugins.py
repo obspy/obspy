@@ -435,16 +435,16 @@ class TestWaveformPlugins:
         st2 = read(ascii_path / 'slist.ascii')
         assert st1 == st2
 
-    def test_raise_on_empty_file(self):
+    def test_raise_on_unknown_format(self):
         """
-        Test reading an empty file.
+        Writes and reads a small non-empty file.
         """
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
-            # create empty file
-            open(tmpfile, 'wb').close()
+            # create small non-empty file
+            open(tmpfile, 'wb').write(b'\x82\x00\x00')
             # using format keyword
-            with pytest.raises(ValueError, match="File is empty"):
+            with pytest.raises(TypeError):
                 read(tmpfile)
 
     def test_deepcopy(self):
