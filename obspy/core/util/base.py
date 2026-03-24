@@ -536,6 +536,9 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
             if is_format:
                 break
         else:
+            if isinstance(filename, str) and \
+                    Path(filename).stat().st_size == 0:
+                raise ValueError("File is empty: {}".format(filename))
             raise TypeError('Unknown format for file %s' % filename)
     else:
         # format given via argument

@@ -607,9 +607,6 @@ def _get_record_information(file_object, offset=0, endian=None):
         try:
             _t = file_object.read(120).decode().strip()
         except UnicodeDecodeError:
-            file_object.seek(0, 2)
-            if file_object.tell() == 0:
-                raise ValueError("MiniSEED file is empty.")
             raise ValueError("Invalid MiniSEED file: "
                              "unable to decode header bytes.")
         if not _t:
