@@ -2281,7 +2281,7 @@ class TestStream:
         assert "filter" in pr[4] and "lowpass" in pr[4]
         assert "differentiate" in pr[5]
         assert "integrate" in pr[6]
-        assert "trim" in pr[7]
+        assert "slice" in pr[7]
         assert "detrend" in pr[8]
         assert "taper" in pr[9]
         assert "normalize" in pr[10]

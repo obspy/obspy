@@ -7,6 +7,8 @@ Changes:
      (see #3709)
  - obspy.clients:
    * SDS client: fix handling of empty files (see #3709)
+ - obpsy.core.trace: 
+   * slice now works on references instead of making a copy of the trace
 
 1.5.0 (doi: 10.5281/zenodo.19005357)
 ====================================

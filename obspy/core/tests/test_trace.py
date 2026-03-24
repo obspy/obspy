@@ -602,7 +602,7 @@ class TestTrace:
         tr2 = tr.slice(tr.stats.starttime)
         assert "processing" not in tr.stats
         assert "processing" in tr2.stats
-        assert "trim" in tr2.stats.processing[0]
+        assert "slice" in tr2.stats.processing[0]
 
     def test_slice_no_starttime_or_endtime(self):
         """
@@ -620,7 +620,10 @@ class TestTrace:
         # test 1: only removing data at left side
         tr_trim = tr_orig.copy()
         tr_trim.trim(starttime=t2)
-        assert tr_trim == tr.slice(starttime=t2)
+        tr_slice = tr.slice(starttime=t2)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr_slice)
+        assert tr_trim == tr_slice
         tr2 = tr.slice(starttime=t2, endtime=t4)
         self.__remove_processing(tr_trim)
         self.__remove_processing(tr2)
@@ -629,10 +632,14 @@ class TestTrace:
         # test 2: only removing data at right side
         tr_trim = tr_orig.copy()
         tr_trim.trim(endtime=t3)
-        assert tr_trim == tr.slice(endtime=t3)
+        tr_slice = tr.slice(endtime=t3)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr_slice)
+        assert tr_trim == tr_slice
         tr2 = tr.slice(starttime=t1, endtime=t3)
         self.__remove_processing(tr_trim)
         self.__remove_processing(tr2)
+        print(tr_trim.stats, tr2.stats)
         assert tr_trim == tr2
 
         # test 3: not removing data at all
@@ -680,8 +687,13 @@ class TestTrace:
         # test 4: removing data at left and right side
         tr_trim = tr_orig.copy()
         tr_trim.trim(starttime=t2, endtime=t3)
-        assert tr_trim == tr.slice(t2, t3)
-        assert tr_trim == tr.slice(starttime=t2, endtime=t3)
+        tr_slice = tr.slice(t2, t3)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr_slice)
+        assert tr_trim == tr_slice
+        tr_slice = tr.slice(starttime=t2, endtime=t3)
+        self.__remove_processing(tr_slice)
+        assert tr_trim == tr_slice
 
         # test 5: no data left after operation
         tr_trim = tr_orig.copy()
