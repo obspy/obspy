@@ -1778,19 +1778,20 @@ class TestTrace:
         """
         Test that the stats.calib is reset to 1.0 after a data unit conversion
         via remove_sensitivity() or remove_response().
-
-        See #3717
         """
+        # see #3717
         inv = read_inventory()
         tr = read()[0]   # raw data in [count]
         response = inv.get_response(tr.id, tr.stats.starttime)
+        # edit as if the read seismic record contained the calib value
         # raw data scaling factor calib in [(nm/s)/count] is the inverse
         # of the instrument sensitivity in [count/(nm/s)]
         calib = 1.0e+9/response.instrument_sensitivity.value
         tr.stats.calib = calib
-        # tr1 - apply the scaling factor stats.calib to the data
+        # tr1 - manually apply the scaling factor stats.calib to the data
         tr1 = tr.copy()
         tr1.data = tr.data * tr.stats.calib   # [nm/s]
+        tr1.stats.calib = 1.0  # just for the record
         # tr2 - remove the sensitivity from the trace data
         tr2 = tr.copy()
         assert tr2.stats.calib == calib

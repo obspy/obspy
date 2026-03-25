@@ -1944,6 +1944,38 @@ class TestStream:
                 read('/path/to/slist_float.ascii',
                      headonly=True, starttime=0, endtime=1)
 
+    def test_read_apply_calib(self):
+        """
+        Test read function with apply_calib argument.
+        """
+        # see #3717
+        st = read()
+        # edit as if the read seismic record contained the calib value
+        # raw data scaling factor calib in [(nm/s)/count] is the inverse
+        # of the instrument sensitivity in [count/(nm/s)]
+        calib = 1.0e+9/st[0].stats.response.instrument_sensitivity.value
+        for tr in st:
+            tr.stats.calib = calib
+        # write in a format that stores the calibration and reads it back
+        bio = io.BytesIO()
+        st.write(bio, format='pickle')
+        bio.seek(0)
+        # read with apply_calib=True should apply calib
+        # and should set calib value in stats to 1.0
+        st_calib = read(bio, format='pickle', apply_calib=True)
+        for tr, tr_calib in zip(st, st_calib):
+            np.testing.assert_array_almost_equal(tr.data * tr.stats.calib,
+                                                 tr_calib.data)
+            # tr_calib.stats.calib should be 1.0 after applying calib
+            assert tr_calib.stats.calib == 1.0
+        # read with apply_calib=False should not apply calib
+        # and should keep the calib value in stats
+        bio.seek(0)
+        st_no_calib = read(bio, format='pickle') # apply_calib=False by default
+        for tr, tr_no_calib in zip(st, st_no_calib):
+            np.testing.assert_array_almost_equal(tr.data, tr_no_calib.data)
+            assert tr_no_calib.stats.calib == tr.stats.calib
+
     @pytest.mark.network
     def test_read_url_via_network(self):
         """
