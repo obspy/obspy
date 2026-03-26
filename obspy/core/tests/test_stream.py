@@ -1971,7 +1971,8 @@ class TestStream:
         # read with apply_calib=False should not apply calib
         # and should keep the calib value in stats
         bio.seek(0)
-        st_no_calib = read(bio, format='pickle') # apply_calib=False by default
+        st_no_calib = read(bio, format='pickle')
+        # read() argument apply_calib=False was set by default
         for tr, tr_no_calib in zip(st, st_no_calib):
             np.testing.assert_array_almost_equal(tr.data, tr_no_calib.data)
             assert tr_no_calib.stats.calib == tr.stats.calib

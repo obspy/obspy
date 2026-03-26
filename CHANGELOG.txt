@@ -2,6 +2,7 @@ master
 ======
 
 Changes:
+ - ...
  - obspy.core:
    * trace: reset stats.calib after applying calibration (see #3717)
 
