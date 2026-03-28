@@ -153,7 +153,7 @@ def carl_sta_trig(a, nsta, nlta, ratio, quiet):
     # shifted by one sample
     lta = _rolling_sum(sta, nlta) / nlta
     lta = np.concatenate(([0.0], lta[:-1]))
-    # # compute star, average of abs diff between trace and lta
+    # compute star, average of abs diff between trace and lta
     star = _rolling_sum(np.abs(a - lta), nsta) / nsta
     # LTAR: rolling mean of star over nlta samples
     ltar = _rolling_sum(star, nlta) / nlta
