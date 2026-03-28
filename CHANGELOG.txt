@@ -2,7 +2,10 @@ master
 ======
 
 Changes:
- - ...
+ - obspy.signal:
+   * trigger: vectorize carl_sta_trig() using cumulative sums, replacing
+     O(m*(nsta+nlta)) loop+concatenate with O(m) computation. ~100-500x
+     speedup for typical parameters. Add unit tests for carl_sta_trig.
 
 maintenance_1.5.x
 =================
