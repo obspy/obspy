@@ -118,14 +118,12 @@ def _rolling_sum(a, n):
     :param n: Window length (must be >= 1 and <= len(a)).
     :rtype: NumPy :class:`~numpy.ndarray`
     """
-    if n < 1 or n > len(a):
-        raise ValueError(
-            f"Window length n={n} out of range for array of length {len(a)}")
-    cs = np.cumsum(a, dtype=np.float64)
-    out = np.zeros(len(a), dtype=np.float64)
-    out[n] = cs[n - 1]
-    if len(a) > n + 1:
-        out[n + 1:] = cs[n:-1] - cs[:len(a) - n - 1]
+    m = len(a)
+    if n < 1 or n > m:
+        raise ValueError(f"Window n={n} out of range for array of length {m}")
+    cs = np.concatenate(([0.0], np.cumsum(a, dtype=np.float64)))
+    out = np.zeros(m, dtype=np.float64)
+    out[n:] = cs[n:m] - cs[:m - n]
     return out
 
 
@@ -155,7 +153,7 @@ def carl_sta_trig(a, nsta, nlta, ratio, quiet):
     # shifted by one sample
     lta = _rolling_sum(sta, nlta) / nlta
     lta = np.concatenate(([0.0], lta[:-1]))
-    # STAR: rolling mean of |a - lta| over nsta samples
+    # # compute star, average of abs diff between trace and lta
     star = _rolling_sum(np.abs(a - lta), nsta) / nsta
     # LTAR: rolling mean of star over nlta samples
     ltar = _rolling_sum(star, nlta) / nlta
