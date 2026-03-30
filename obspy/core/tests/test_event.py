@@ -6,6 +6,8 @@ import warnings
 
 import numpy as np
 import pytest
+import gc
+import matplotlib.pyplot as plt
 
 from obspy import UTCDateTime, read_events
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event,
@@ -117,6 +119,8 @@ class TestEvent:
         ev = read_events("/path/to/CMTSOLUTION", format="CMTSOLUTION")[0]
         ev.plot(kind=[['global'], ['ortho', 'beachball'],
                       ['p_sphere', 's_sphere']], outfile=image_path)
+        plt.close('all')
+        gc.collect()
 
     def test_farfield_2xn_input(self):
         """
@@ -507,6 +511,8 @@ class CatalogCartopyTestCase:
         """
         cat = read_events()
         cat.plot(method='cartopy', outfile=image_path)
+        plt.close('all')
+        gc.collect()
 
     def test_catalog_plot_ortho(self, image_path):
         """
@@ -517,6 +523,8 @@ class CatalogCartopyTestCase:
         cat.plot(method='cartopy', outfile=image_path, projection='ortho',
                  resolution='c', water_fill_color='#98b7e2', label=None,
                  color='date')
+        plt.close('all')
+        gc.collect()
 
     def test_catalog_plot_ortho_longitude_wrap(self, image_path):
         """
@@ -528,6 +536,8 @@ class CatalogCartopyTestCase:
         cat.plot(method='cartopy', outfile=image_path, projection='ortho',
                  resolution='c', label=None, title='', colorbar=False,
                  water_fill_color='b')
+        plt.close('all')
+        gc.collect()
 
     def test_catalog_plot_local(self, image_path):
         """
@@ -538,6 +548,8 @@ class CatalogCartopyTestCase:
         cat.plot(method='cartopy', outfile=image_path, projection='local',
                  resolution='50m', continent_fill_color='0.3',
                  color='date', colormap='gist_heat')
+        plt.close('all')
+        gc.collect()
 
     def test_plot_catalog_before_1900(self):
         """
@@ -553,7 +565,8 @@ class CatalogCartopyTestCase:
             # also test with just a single event
             cat.events = [cat[1]]
             cat.plot(outfile=io.BytesIO())
-
+        plt.close('all')
+        gc.collect()
 
 class TestWaveformStreamID:
     """
