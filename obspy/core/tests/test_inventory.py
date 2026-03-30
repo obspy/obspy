@@ -692,8 +692,6 @@ class TestInventoryCartopy:
         """
         inv = read_inventory()
         inv.plot(method='cartopy', outfile=image_path)
-        plt.close('all')
-        gc.collect()
 
     def test_location_plot_ortho(self, image_path):
         """
@@ -716,8 +714,6 @@ class TestInventoryCartopy:
         inv.plot(method='cartopy', projection='local', resolution='50m',
                  size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                  outfile=image_path)
-        plt.close('all')
-        gc.collect()
 
     def test_combined_station_event_plot(self, image_path):
         """
@@ -728,5 +724,3 @@ class TestInventoryCartopy:
         cat = read_events()
         fig = inv.plot(show=False)
         cat.plot(outfile=image_path, fig=fig)
-        plt.close('all')
-        gc.collect()

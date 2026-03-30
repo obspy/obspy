@@ -6,8 +6,6 @@ import warnings
 
 import numpy as np
 import pytest
-import gc
-import matplotlib.pyplot as plt
 
 from obspy import UTCDateTime, read_events
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event,
@@ -119,7 +117,6 @@ class TestEvent:
         ev = read_events("/path/to/CMTSOLUTION", format="CMTSOLUTION")[0]
         ev.plot(kind=[['global'], ['ortho', 'beachball'],
                       ['p_sphere', 's_sphere']], outfile=image_path)
-        plt.close('all')
 
     def test_farfield_2xn_input(self):
         """
