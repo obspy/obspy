@@ -2,6 +2,7 @@
 Obspy's testing configuration file.
 """
 import argparse
+import gc
 import importlib.metadata
 import inspect
 import os
@@ -138,6 +139,7 @@ def image_path(request, save_image_directory):
     # finally close all figs created by this test
     from matplotlib.pyplot import close
     close('all')
+    gc.collect()
 
 
 # --- Pytest configuration

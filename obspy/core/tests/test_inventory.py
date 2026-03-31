@@ -17,8 +17,6 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-import gc
-import matplotlib.pyplot as plt
 
 import obspy
 from obspy import UTCDateTime, read_inventory, read_events
@@ -702,8 +700,6 @@ class TestInventoryCartopy:
         inv.plot(method='cartopy', projection='ortho', resolution='c',
                  continent_fill_color='0.3', marker='d', label=False,
                  colormap='Set3', color_per_network=True, outfile=image_path)
-        plt.close('all')
-        gc.collect()
 
     def test_location_plot_local(self, image_path):
         """
