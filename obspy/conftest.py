@@ -136,6 +136,7 @@ def image_path(request, save_image_directory):
     new_path = save_image_directory / (node_name + f'.{suffix}')
     yield new_path
     # finally close all figs created by this test
+    import gc
     import warnings
     from matplotlib.pyplot import close
     close('all')
@@ -143,6 +144,7 @@ def image_path(request, save_image_directory):
     # which python 3.14 no longer tolerates
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", ResourceWarning)
+        gc.collect()
 
 
 # --- Pytest configuration
