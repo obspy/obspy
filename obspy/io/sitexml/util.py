@@ -16,6 +16,30 @@ from obspy.core.util.base import ComparingObject
 
 from collections.abc import Iterable
 
+
+class SiteXMLError(Exception):
+    """
+    Base class for SiteXML-specific exceptions.
+    """
+
+
+class SiteXMLValidationError(SiteXMLError, ValueError):
+    """
+    Raised when SiteXML content fails schema or structural validation.
+    """
+
+
+class SiteXMLImportError(SiteXMLError, ValueError):
+    """
+    Raised when SiteXML metadata imports cannot be completed.
+    """
+
+
+class SiteXMLIOError(SiteXMLError, OSError):
+    """
+    Raised when SiteXML-related input paths or files cannot be accessed.
+    """
+
 class BaseNode(ComparingObject):
     """
     The parent class for SERASite, SiteDescription, Analysis etc classes.

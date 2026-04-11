@@ -23,8 +23,8 @@ from .core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
                    EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency,
                    VelocityS30, VelocityProfile, VelocityProfileData,
                    VelocityProfileSurvey, LiteratureSource, ValueWithUncertainty)
-from .exceptions import SiteXMLIOError, SiteXMLImportError
-from .write import write_sitexml
+from .sitexml import write_sitexml
+from .util import SiteXMLIOError, SiteXMLImportError
 
 def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     """
