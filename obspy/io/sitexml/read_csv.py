@@ -86,7 +86,7 @@ def csv_to_sera_site(site_owner_csv,
     """
     # This is probably not needed as these two arguments are mandatory.
     #
-    if not site_owner_csv or not site_description_csv:
+    if site_owner_csv is None or site_description_csv is None:
         raise SiteXMLImportError(
             "The site owner and site description metadata are mandatory."
         )
@@ -94,6 +94,11 @@ def csv_to_sera_site(site_owner_csv,
     try:
         df_site_owner = pd.read_csv(site_owner_csv, sep=delim)
         df_site_description = pd.read_csv(site_description_csv, sep=delim)
+    except OSError as e:
+        raise SiteXMLIOError(
+            "Could not access the required site owner or site description CSV "
+            "metadata."
+        ) from e
     except Exception as e:
         raise SiteXMLImportError(
             "Could not read the required site owner or site description CSV "
@@ -106,11 +111,14 @@ def csv_to_sera_site(site_owner_csv,
         try:
             df_analysis = pd.read_csv(analysis_csv, sep=delim)
             exists_analysis = True
+        except OSError as e:
+            raise SiteXMLIOError(
+                f"Could not access analysis CSV metadata: {analysis_csv}"
+            ) from e
         except Exception as e:
-            warnings.warn(
-                f"Analysis metadata could not be read and will be skipped: {e}",
-                UserWarning)
-            exists_analysis = False
+            raise SiteXMLImportError(
+                f"Could not read analysis CSV metadata: {analysis_csv}"
+            ) from e
     else:
         exists_analysis = False
 
@@ -124,7 +132,13 @@ def csv_to_sera_site(site_owner_csv,
     site_description_dict = _read_site_description(df_site_description)
 
     if exists_analysis:
-        analysis_dict = _read_analysis(df_analysis, df_vp_dict)
+        try:
+            analysis_dict = _read_analysis(
+                df_analysis, df_vp_dict, skip_invalid_rows=False)
+        except Exception as e:
+            raise SiteXMLImportError(
+                "Could not build analysis metadata from the provided CSV input."
+            ) from e
         
     # All dictionaries use the unique SiteID for key.
     #
@@ -163,9 +177,9 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     """
     try:
         xls = pd.ExcelFile(path_or_file_object)
-    except FileNotFoundError as e:
+    except OSError as e:
         raise SiteXMLIOError(
-            f"Site metadata Excel file does not exist: {path_or_file_object}"
+            f"Could not access Site metadata Excel file: {path_or_file_object}"
         ) from e
     
     try:
@@ -198,7 +212,13 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     #
     if 'analysis' in df_dict:
         exists_analysis = True
-        analysis_dict = _read_analysis(df_dict['analysis'], df_vp_dict)
+        try:
+            analysis_dict = _read_analysis(
+                df_dict['analysis'], df_vp_dict, skip_invalid_rows=False)
+        except Exception as e:
+            raise SiteXMLImportError(
+                "Could not build analysis metadata from the provided Excel input."
+            ) from e
     else:
         warnings.warn("Missing analysis metadata.", UserWarning)
         exists_analysis = False
@@ -274,7 +294,7 @@ def _read_site_description(df_site_description):
 
     return site_description_dict
 
-def _read_analysis(df_analysis, df_vp_dict=None):
+def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
     """
     Return a dictionary of Analysis objects for all sites.
     Dictionary key is the siteID.
@@ -329,10 +349,15 @@ def _read_analysis(df_analysis, df_vp_dict=None):
             analysis_dict[siteID].append(analysis_obj)
                                        
         else:
-            warnings.warn("Missing siteID, analysisID or siteDescriptionID "
-                          "value. Processing of analysis element will be "
-                          "skipped.", UserWarning)
-            continue
+            if skip_invalid_rows:
+                warnings.warn("Missing siteID, analysisID or siteDescriptionID "
+                              "value. Processing of analysis element will be "
+                              "skipped.", UserWarning)
+                continue
+            raise SiteXMLImportError(
+                "Analysis metadata is missing required siteID, analysisID or "
+                "siteDescriptionID values. Abording further processing."
+            )
     
     return analysis_dict
 
@@ -437,92 +462,85 @@ def _read_site_indicator(df_row, cls, indicator):
     return obj
 
 def _csv_import_velocity_profiles(path, delim='\t'):
-    
+    return _import_velocity_profiles(
+        path=path,
+        allowed_extensions=(".csv",),
+        read_file=lambda file_path: _read_velocity_profile_csv_file(
+            file_path, delim=delim),
+        kind_name="CSV")
+
+def _excel_import_velocity_profiles(path):
+    return _import_velocity_profiles(
+        path=path,
+        allowed_extensions=(".xls", ".xlsx", ".xlsm", ".xlsb"),
+        read_file=_read_velocity_profile_excel_file,
+        kind_name="Excel")
+
+
+def _import_velocity_profiles(path, allowed_extensions, read_file, kind_name):
     if not path:
         return None
 
     df = pd.DataFrame()
 
-    # Case 1: path is a directory → loop through CSV files
     if os.path.isdir(path):
         for filename in os.listdir(path):
-            if filename.lower().endswith(".csv"):
-                file_path = os.path.join(path, filename)
-                try:
-                    df = pd.concat([df, pd.read_csv(file_path, sep=delim)], ignore_index=True)
-                except Exception as e:
-                    raise SiteXMLImportError(
-                        f"Could not read velocity-profile CSV file: {file_path}"
-                    ) from e
-
-    # Case 2: path is a file → read only that file
-    elif os.path.isfile(path):
-        if path.lower().endswith(".csv"):
-            try:
-                df = pd.read_csv(path, sep=delim)
-            except Exception as e:
+            file_path = os.path.join(path, filename)
+            if not filename.lower().endswith(allowed_extensions):
                 raise SiteXMLImportError(
-                    f"Could not read velocity-profile CSV file: {path}"
-                ) from e
-        else:
-            raise SiteXMLImportError(
-                f"Velocity-profile input is not a CSV file: {path}"
-            )
-
-    # Case 3: path is invalid
-    else:
-        raise SiteXMLIOError(f"Velocity-profile path does not exist: {path}")
-
-    if not df.empty:
-        df_dict = {site_id: group for site_id, group in df.groupby("siteID")}
-        return df_dict 
-    else:
-        return None
-
-def _excel_import_velocity_profiles(path):
-    
-    df = pd.DataFrame()
-
-    def _read_excel_file(file_path):
-        nonlocal df
-        try:
-            df_dict = pd.read_excel(file_path, None)
-        except Exception as e:
-            raise SiteXMLImportError(
-                f"Could not read velocity-profile Excel file: {file_path}"
-            ) from e
-        
-        for sheet_name, sheet_df in df_dict.items():
-            if sheet_df is None or sheet_df.empty:
-                continue
-            if "siteID" not in sheet_df.columns:
-                raise SiteXMLImportError(
-                    f"Missing required 'siteID' column in sheet {sheet_name} "
-                    f"of {file_path}."
+                    f"Velocity-profile input is not a {kind_name} file: {file_path}"
                 )
-            df = pd.concat([df, sheet_df], ignore_index=True)
-
-    if os.path.isdir(path):
-        for filename in os.listdir(path):
-            if filename.lower().endswith((".xls", ".xlsx", ".xlsm", ".xlsb")):
-                _read_excel_file(os.path.join(path, filename))
-
+            df = pd.concat([df, read_file(file_path)], ignore_index=True)
     elif os.path.isfile(path):
-        if path.lower().endswith((".xls", ".xlsx", ".xlsm", ".xlsb")):
-            _read_excel_file(path)
-        else:
+        if not path.lower().endswith(allowed_extensions):
             raise SiteXMLImportError(
-                f"Velocity-profile input is not an Excel file: {path}"
+                f"Velocity-profile input is not a {kind_name} file: {path}"
             )
-
+        df = read_file(path)
     else:
         raise SiteXMLIOError(f"Velocity-profile path does not exist: {path}")
 
     if not df.empty:
-        df_dict = {site_id: group for site_id, group in df.groupby("siteID")}
-        return df_dict
-
+        return {site_id: group for site_id, group in df.groupby("siteID")}
     return None
+
+
+def _read_velocity_profile_csv_file(file_path, delim='\t'):
+    try:
+        return pd.read_csv(file_path, sep=delim)
+    except OSError as e:
+        raise SiteXMLIOError(
+            f"Could not access velocity-profile CSV file: {file_path}"
+        ) from e
+    except Exception as e:
+        raise SiteXMLImportError(
+            f"Could not read velocity-profile CSV file: {file_path}"
+        ) from e
+
+
+def _read_velocity_profile_excel_file(file_path):
+    try:
+        df_dict = pd.read_excel(file_path, None)
+    except OSError as e:
+        raise SiteXMLIOError(
+            f"Could not access velocity-profile Excel file: {file_path}"
+        ) from e
+    except Exception as e:
+        raise SiteXMLImportError(
+            f"Could not read velocity-profile Excel file: {file_path}"
+        ) from e
+
+    df = pd.DataFrame()
+    for sheet_name, sheet_df in df_dict.items():
+        if sheet_df is None or sheet_df.empty:
+            continue
+        if "siteID" not in sheet_df.columns:
+            raise SiteXMLImportError(
+                f"Missing required 'siteID' column in sheet {sheet_name} "
+                f"of {file_path}."
+            )
+        df = pd.concat([df, sheet_df], ignore_index=True)
+    return df
 
 def _read_reference(df_row, indicator):
 
