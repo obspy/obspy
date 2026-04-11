@@ -24,6 +24,7 @@ from .core import (SERASite, SERASiteOwner, SiteDescription, Analysis,
                    EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency, 
                    VelocityProfileSurvey, VelocityProfile, VelocityProfileData, 
                    VelocityS30, ValueWithUncertainty, LiteratureSource)
+from .exceptions import SiteXMLValidationError
 
 # Define some constants for writing SiteXML files.
 SCHEMA_VERSION = "1.3"
@@ -98,32 +99,44 @@ def validate_sitexml(path_or_object):
     :param path_or_object: File name or file like object. Can also be an etree
         element.
     """
-    if isinstance(path_or_object, etree._Element):
-        xmldoc = path_or_object
+    if hasattr(path_or_object, "tell") and hasattr(path_or_object, "seek"):
+        current_position = path_or_object.tell()
     else:
-        try:
-            xmldoc = etree.parse(path_or_object)
-        except etree.XMLSyntaxError:
-            return (False, ("Not a XML file.",))
-    version = _get_version_from_xmldoc(xmldoc)
+        current_position = None
 
-    # Get the schema location.
-    schema_location = Path(inspect.getfile(inspect.currentframe())).parent
-    schema_location = schema_location / "data"
-    schema_location = str(schema_location / ("QuakeML-SERA-%s.xsd" % version))
-    
-    if not Path(schema_location).exists():
-        msg = "No schema file found to validate SiteXML version '%s'"
-        raise ValueError(msg % version)
+    try:
+        if isinstance(path_or_object, etree._Element):
+            xmldoc = path_or_object
+        else:
+            try:
+                xmldoc = etree.parse(path_or_object)
+            except etree.XMLSyntaxError:
+                return (False, ("Not a XML file.",))
+        version = _get_version_from_xmldoc(xmldoc)
 
-    xmlschema = etree.XMLSchema(etree.parse(schema_location))
+        # Get the schema location.
+        schema_location = Path(inspect.getfile(inspect.currentframe())).parent
+        schema_location = schema_location / "data"
+        schema_location = str(schema_location / ("QuakeML-SERA-%s.xsd" % version))
+        
+        if not Path(schema_location).exists():
+            msg = "No schema file found to validate SiteXML version '%s'"
+            raise SiteXMLValidationError(msg % version)
 
-    valid = xmlschema.validate(xmldoc)
+        xmlschema = etree.XMLSchema(etree.parse(schema_location))
 
-    # Pretty error printing if the validation fails.
-    if valid is not True:
-        return (False, xmlschema.error_log)
-    return (True, ())
+        valid = xmlschema.validate(xmldoc)
+
+        # Pretty error printing if the validation fails.
+        if valid is not True:
+            return (False, xmlschema.error_log)
+        return (True, ())
+    finally:
+        if current_position is not None:
+            try:
+                path_or_object.seek(current_position, 0)
+            except Exception:
+                pass
 
 def read_sitexml(path_or_file_object):
     """
@@ -136,10 +149,10 @@ def read_sitexml(path_or_file_object):
     At least site owner and site description metadata should be present in XMl file 
     in order to create the SERASite object.
 
-    .. rubric:: Example
+    Example
 
-        >>> from obspy.io.sitexml.sitexml import read_sitexml
-        >>> site = read_sitexml("site.xml")
+    >>> from obspy.io.sitexml.sitexml import read_sitexml
+    >>> site = read_sitexml("site.xml")
 
     """
     validates, errors = validate_sitexml(path_or_file_object)
@@ -147,7 +160,7 @@ def read_sitexml(path_or_file_object):
         msg = "The provided SiteXML file fails to validate against the schema.\n"
         for err in errors:
             msg += "\t%s\n" % err
-        raise Exception(msg)
+        raise SiteXMLValidationError(msg)
         
     root = etree.parse(path_or_file_object).getroot()
     
@@ -173,8 +186,9 @@ def read_sitexml(path_or_file_object):
                          resource_id = siteID,
                          created = created)
     else:
-        print("Error: Missing site owner and/or site description in provided siteXML file")
-        return None
+        raise SiteXMLValidationError(
+            "Missing site owner and/or site description in provided SiteXML file."
+        )
     
     # Analysis element is optional
     #

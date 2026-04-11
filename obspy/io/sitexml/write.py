@@ -18,8 +18,9 @@ import obspy
 from lxml import etree
 
 from obspy.core.inventory.util import ExternalReference
-from obspy.io.sitexml.core import ValueWithUncertainty
-from obspy.io.sitexml.sitexml import validate_sitexml
+from .core import ValueWithUncertainty
+from .exceptions import SiteXMLError, SiteXMLValidationError
+from .sitexml import validate_sitexml
 
 # Define some constants for writing SiteXML files.
 SCHEMA_VERSION = "1.3"
@@ -47,7 +48,7 @@ def write_sitexml(sera_site, file_or_file_object, validate=True,
 		msg = ("Custom namespace mappings do not allow redefinition of "
 			   "default SiteXML namespace (key `None`). "
 			   "Use other namespace abbreviations for custom namespace tags.")
-		raise ValueError(msg)
+		raise SiteXMLError(msg)
 
 	nsmap[None] = NAMESPACE
 	attribs = {"schemaVersion": SCHEMA_VERSION}
@@ -87,7 +88,7 @@ def write_sitexml(sera_site, file_or_file_object, validate=True,
 			msg = "The created file fails to validate.\n"
 			for err in errors:
 				msg += "\t%s\n" % err
-			raise Exception(msg)
+			raise SiteXMLValidationError(msg)
 	
 	# Register all namespaces with the tree. This allows for
 	# additional namespaces to be added to an inventory that

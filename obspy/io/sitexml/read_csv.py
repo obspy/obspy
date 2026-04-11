@@ -12,7 +12,6 @@ Functions dealing with import SiteXML metadata from excel files.
 from pathlib import Path
 import os
 import warnings
-import sys
 import re
 
 import pandas as pd
@@ -20,11 +19,12 @@ from collections import defaultdict
 
 import obspy
 from obspy.core.inventory.util import ExternalReference
-from obspy.io.sitexml.core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
-                                   EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency, 
-                                   VelocityS30, VelocityProfile, VelocityProfileData, 
-                                   VelocityProfileSurvey, LiteratureSource, ValueWithUncertainty)
-from obspy.io.sitexml.write import write_sitexml
+from .core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
+                   EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency,
+                   VelocityS30, VelocityProfile, VelocityProfileData,
+                   VelocityProfileSurvey, LiteratureSource, ValueWithUncertainty)
+from .exceptions import SiteXMLIOError, SiteXMLImportError
+from .write import write_sitexml
 
 def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     """
@@ -42,10 +42,8 @@ def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     """
     for sera_site in sera_site_dict.values():
         if sera_site.site_description.station_code:
-            print("Creating SiteXMl for station: ", sera_site.site_description.station_code)
             output_file = output_folder + "/" + sera_site.site_description.station_code + ".xml"
         else:
-            print("Creating SiteXMl for site: ", sera_site.resource_id.id)
             filename = re.sub(r"[^A-Za-z0-9]+", "_", sera_site.resource_id.id).strip("_")
             output_file = output_folder + "/" + filename + ".xml"
         write_sitexml(sera_site, output_file, validate=True)
@@ -79,33 +77,41 @@ def csv_to_sera_site(site_owner_csv,
     :param delim: CSV file delimiter. Default tab delimeted.
     :rtype: dictionary of :class:`~obspy.io.sitexml.core.SERASite`
 
-    .. rubric:: Example
+    Example
 
-        >>> from obspy.io.sitexml.csv import csv_to_sera_site
-        >>> sera_site_dict = csv_to_sera_site("site_owner.csv", 
-                            "site_description.csv", "analysis.csv",
-                            "velocity_profiles_dir", ';')
+    >>> from obspy.io.sitexml.read_csv import csv_to_sera_site
+    >>> sera_site_dict = csv_to_sera_site("site_owner.csv",
+    ...                     "site_description.csv", "analysis.csv",
+    ...                     "velocity_profiles_dir", ';')
     """
     # This is probably not needed as these two arguments are mandatory.
     #
     if not site_owner_csv or not site_description_csv:
-        print("Error: The site owner and site description metadata are madatory. Aborting")
-        return None
+        raise SiteXMLImportError(
+            "The site owner and site description metadata are mandatory."
+        )
     
     try:
         df_site_owner = pd.read_csv(site_owner_csv, sep=delim)
         df_site_description = pd.read_csv(site_description_csv, sep=delim)
     except Exception as e:
-        print(f"Error reading site_owner or site_description CSV files: {e}")
-        sys.exit(1)
+        raise SiteXMLImportError(
+            "Could not read the required site owner or site description CSV "
+            "metadata."
+        ) from e
     
     # Try to read the analysis metadata if a csv is provided.
     #
-    try:
-        df_analysis = pd.read_csv(analysis_csv, sep=delim)
-        exists_analysis = True
-    except Exception as e:
-        print(f"Warning: Missing analysis metadata. {e}")
+    if analysis_csv:
+        try:
+            df_analysis = pd.read_csv(analysis_csv, sep=delim)
+            exists_analysis = True
+        except Exception as e:
+            warnings.warn(
+                f"Analysis metadata could not be read and will be skipped: {e}",
+                UserWarning)
+            exists_analysis = False
+    else:
         exists_analysis = False
 
     # Read the velocity profiles and store them
@@ -149,17 +155,18 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     :param velocity_profiles: Excel file or path to a folder with velocity profile metadata.
     :rtype: dictionary of :class:`~obspy.io.sitexml.core.SERASite`
     
-    .. rubric:: Example
+    Example
 
-        >>> from obspy.io.sitexml.csv import excel_to_sera_site
-        >>> sera_site_dict = excel_to_sera_site("InputExcel.xlsx", 
-                                velocity_profiles="vp.xlsx")
+    >>> from obspy.io.sitexml.read_csv import excel_to_sera_site
+    >>> sera_site_dict = excel_to_sera_site("InputExcel.xlsx",
+    ...                         velocity_profiles="vp.xlsx")
     """
     try:
         xls = pd.ExcelFile(path_or_file_object)
-    except FileNotFoundError:
-        print(f"Error: File not found: {path_or_file_object}")
-        return {}
+    except FileNotFoundError as e:
+        raise SiteXMLIOError(
+            f"Site metadata Excel file does not exist: {path_or_file_object}"
+        ) from e
     
     try:
         conv_dict = {'velocityS30_year': int, 'velocityProfile_year': int,
@@ -168,12 +175,14 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
                      'geologicalUnit_year': int}
         df_dict = pd.read_excel(xls, None, converters=conv_dict)
     except Exception as e:
-        print(f"Error reading input excel file with site metadata: {e}")
-        sys.exit(1)
+        raise SiteXMLImportError(
+            "Could not read the Excel file with site metadata."
+        ) from e
 
     if not all(k in df_dict for k in ("siteOwner", "siteDescription")):
-        print("Error: The site owner and site description metadata are madatory. Aborting")
-        return None
+        raise SiteXMLImportError(
+            "The site owner and site description sheets are mandatory."
+        )
     
     # Read the velocity profiles and store them
     # in a dictionary of dataframes with key the siteID
@@ -191,7 +200,7 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
         exists_analysis = True
         analysis_dict = _read_analysis(df_dict['analysis'], df_vp_dict)
     else:
-        print("Warning: Missing analysis metadata.")
+        warnings.warn("Missing analysis metadata.", UserWarning)
         exists_analysis = False
         
     # All dictionaries use the unique SiteID for key.
@@ -220,7 +229,7 @@ def _read_site_description(df_site_description):
             warnings.warn("Missing siteID, latitude or longitude value. " \
                         "Processing of site description element " \
                         "will be skipped.", UserWarning)
-            return None
+            continue
         
         # TODOs What if they don't provide the IDs in the csv file??
         #
@@ -283,9 +292,9 @@ def _read_analysis(df_analysis, df_vp_dict=None):
 
         # TODOs What if they don't provide the IDs in the csv file??
         #
-        siteID = row[1]['siteID']
-        analysisID = row[1]['analysisID']
-        site_descriptionID = row[1]['siteDescriptionID']
+        siteID = _read_cell(row[1], "siteID")
+        analysisID = _read_cell(row[1], "analysisID")
+        site_descriptionID = _read_cell(row[1], "siteDescriptionID")
         #station = row[1]['station']
         if siteID and analysisID and site_descriptionID:
             analysis_obj = Analysis(resource_id = analysisID,
@@ -320,7 +329,10 @@ def _read_analysis(df_analysis, df_vp_dict=None):
             analysis_dict[siteID].append(analysis_obj)
                                        
         else:
-            return None
+            warnings.warn("Missing siteID, analysisID or siteDescriptionID "
+                          "value. Processing of analysis element will be "
+                          "skipped.", UserWarning)
+            continue
     
     return analysis_dict
 
@@ -388,12 +400,13 @@ def _read_velocity_profile(rows):
 def _read_site_indicator(df_row, cls, indicator):
     
     if indicator != "velocityProfile":
-        if _empty_value(df_row[indicator+'_value']):
+        value_column = indicator + '_value'
+        if value_column not in df_row or _empty_value(df_row[value_column]):
             return None
         
-        obj = cls(value=df_row[indicator+'_value'])
+        obj = cls(value=df_row[value_column])
         
-        if _read_cell(df_row, indicator+'_uncertainty'):
+        if _read_cell(df_row, indicator+'_uncertainty') is not None:
             obj.value.uncertainty = df_row[indicator+'_uncertainty']
 
         if _read_cell(df_row, indicator+'Method1'):
@@ -402,8 +415,14 @@ def _read_site_indicator(df_row, cls, indicator):
             obj.methods.append(df_row[indicator+'Method2'])
         
         if indicator == "velocityS30":
-            obj.method_combined_quality_index = _read_cell(df_row, 'velocityS30MethodCombIndex')
-            obj.manual_quality_index = _read_cell(df_row, 'velocityS30ManualIndex')
+            method_combined_qindex = _read_cell(df_row, 'velocityS30MethodCombIndex')
+            manual_qindex = _read_cell(df_row, 'velocityS30ManualIndex')
+            obj.method_combined_qindex = (
+                None if method_combined_qindex is None else str(method_combined_qindex)
+            )
+            obj.manual_qindex = (
+                None if manual_qindex is None else str(manual_qindex)
+            )
         
         if indicator == "geologicalUnit":
             obj.value = obj.value[0:255]
@@ -419,6 +438,9 @@ def _read_site_indicator(df_row, cls, indicator):
 
 def _csv_import_velocity_profiles(path, delim='\t'):
     
+    if not path:
+        return None
+
     df = pd.DataFrame()
 
     # Case 1: path is a directory → loop through CSV files
@@ -429,7 +451,9 @@ def _csv_import_velocity_profiles(path, delim='\t'):
                 try:
                     df = pd.concat([df, pd.read_csv(file_path, sep=delim)], ignore_index=True)
                 except Exception as e:
-                    print(f"Error reading file {file_path}: {e}")
+                    raise SiteXMLImportError(
+                        f"Could not read velocity-profile CSV file: {file_path}"
+                    ) from e
 
     # Case 2: path is a file → read only that file
     elif os.path.isfile(path):
@@ -437,13 +461,17 @@ def _csv_import_velocity_profiles(path, delim='\t'):
             try:
                 df = pd.read_csv(path, sep=delim)
             except Exception as e:
-                print(f"Error reading file {path}: {e}")
+                raise SiteXMLImportError(
+                    f"Could not read velocity-profile CSV file: {path}"
+                ) from e
         else:
-            print(f"File is not a CSV: {path}")
+            raise SiteXMLImportError(
+                f"Velocity-profile input is not a CSV file: {path}"
+            )
 
     # Case 3: path is invalid
     else:
-        print(f"Invalid path: {path}")
+        raise SiteXMLIOError(f"Velocity-profile path does not exist: {path}")
 
     if not df.empty:
         df_dict = {site_id: group for site_id, group in df.groupby("siteID")}
@@ -460,36 +488,35 @@ def _excel_import_velocity_profiles(path):
         try:
             df_dict = pd.read_excel(file_path, None)
         except Exception as e:
-            print(f"Error reading excel file {file_path}: {e}")
-            return
+            raise SiteXMLImportError(
+                f"Could not read velocity-profile Excel file: {file_path}"
+            ) from e
         
         for sheet_name, sheet_df in df_dict.items():
             if sheet_df is None or sheet_df.empty:
                 continue
             if "siteID" not in sheet_df.columns:
-                print(f"Error: Missing 'siteID' column in sheet {sheet_name} of {file_path}")
-                raise ValueError("Missing required 'siteID' column.")
+                raise SiteXMLImportError(
+                    f"Missing required 'siteID' column in sheet {sheet_name} "
+                    f"of {file_path}."
+                )
             df = pd.concat([df, sheet_df], ignore_index=True)
 
     if os.path.isdir(path):
         for filename in os.listdir(path):
             if filename.lower().endswith((".xls", ".xlsx", ".xlsm", ".xlsb")):
-                try:
-                    _read_excel_file(os.path.join(path, filename))
-                except ValueError:
-                    return None
+                _read_excel_file(os.path.join(path, filename))
 
     elif os.path.isfile(path):
         if path.lower().endswith((".xls", ".xlsx", ".xlsm", ".xlsb")):
-            try:
-                _read_excel_file(path)
-            except ValueError:
-                return None
+            _read_excel_file(path)
         else:
-            print(f"File is not an Excel file: {path}")
+            raise SiteXMLImportError(
+                f"Velocity-profile input is not an Excel file: {path}"
+            )
 
     else:
-        print(f"Invalid path: {path}")
+        raise SiteXMLIOError(f"Velocity-profile path does not exist: {path}")
 
     if not df.empty:
         df_dict = {site_id: group for site_id, group in df.groupby("siteID")}
@@ -546,7 +573,9 @@ def _read_site_owner(df):
                 try:
                     setattr(obj, pub_attr, row[pub_attr])
                 except Exception as e:
-                    print(f"Warning: Could not set attribute '{pub_attr}' on SiteOwner: {e}")
+                    warnings.warn(
+                        f"Could not set attribute '{pub_attr}' on SiteOwner: {e}",
+                        UserWarning)
     return obj
 
 def _read_cell(df_row, argument, indicator=None):
