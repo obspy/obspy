@@ -304,12 +304,15 @@ class VelocityS30(SiteIndicator):
             literature_source=literature_source, 
             file_resource=file_resource)
 
-        def __str__(self):
-            output=[]
-            output.append(super().__str__())
-            output.append("Method Combined Qindex : " + str(method_combined_qindex) + "\n")
-            output.append("Manual Qindex : " + str(manual_qindex) + "\n")
-            return "\n".join(output) 
+    def __str__(self):
+        output = [super().__str__()]
+        output.append(
+            "\tMethod Combined Qindex : " + str(self.method_combined_qindex)
+        )
+        output.append(
+            "\tManual Qindex : " + str(self.manual_qindex)
+        )
+        return "\n".join(output)
         
 class VelocityProfileSurvey(SiteIndicator):
     
