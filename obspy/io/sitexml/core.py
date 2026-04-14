@@ -71,7 +71,6 @@ class ValueWithUncertainty(BaseNode):
             return f"{self.value:.2f}"
 
 class LiteratureSource(BaseNode):
-    year = wrapped_property("year", int)
     def __init__(self, title, first_author=None, secondary_authors=None, 
                  year=None, booktitle=None, language=None, doi=None):
         self.title = title
@@ -84,6 +83,20 @@ class LiteratureSource(BaseNode):
    
     def __str__(self):
         return _pretty_str(self)
+
+    @property
+    def year(self):
+        return self._year
+
+    @year.setter
+    def year(self, value):
+        if value is None:
+            self._year = None
+            return
+        try:
+            self._year = int(value)
+        except (TypeError, ValueError) as exc:
+            raise TypeError(f"Could not convert {value} to int: {exc}")
 
 class SiteIndicator(BaseNode):
     literature_source = wrapped_property("literature_source", LiteratureSource)
@@ -290,6 +303,13 @@ class VelocityS30(SiteIndicator):
             methods=methods, 
             literature_source=literature_source, 
             file_resource=file_resource)
+
+        def __str__(self):
+            output=[]
+            output.append(super().__str__())
+            output.append("Method Combined Qindex : " + str(method_combined_qindex) + "\n")
+            output.append("Manual Qindex : " + str(manual_qindex) + "\n")
+            return "\n".join(output) 
         
 class VelocityProfileSurvey(SiteIndicator):
     
@@ -374,10 +394,15 @@ class VelocityProfile(BaseNode):
 
     @layer_count.setter
     def layer_count(self, value):
-        if value is not None and value > 0:
-            self._layer_count = value
-        else:
-            raise ValueError("layer_count must be a positive value.")
+        if value is None:
+            raise ValueError("layer_count is required.")
+        try:
+            value = int(value)
+        except (TypeError, ValueError) as exc:
+            raise TypeError(f"Could not convert {value} to int: {exc}")
+        if value <= 0:
+            raise ValueError("layer_count must be a positive integer.")
+        self._layer_count = value
     
     def __str__(self):
         def format_vwu(obj):
@@ -482,7 +507,6 @@ class SiteDescription(BaseNode):
     altitude = wrapped_property("altitude", Distance)
     min_distance_from_station = wrapped_property("min_distance_from_station", Distance)
     max_distance_from_station = wrapped_property("max_distance_from_station", Distance)
-    station_code = wrapped_property("station_code", str)
     bedrock_depth = wrapped_property("bedrock_depth", BedrockDepth)
     h800 = wrapped_property("h800", H800)
     ec8 = wrapped_property("ec8", EC8)
@@ -595,17 +619,25 @@ class SiteDescription(BaseNode):
             vp_id = self.preferred_velocity_profileID)
         return ret
 
+    # TODOs: Check station_code against rules
+    #
+    @property
+    def station_code(self):
+        return self._station_code
+
+    @station_code.setter
+    def station_code(self, value):
+        if value is None:
+            self._station_code = None
+            return
+        if not isinstance(value, str):
+            raise TypeError("station_code must be a string or None")
+        self._station_code = value
+
 class Analysis(BaseNode):
     resonance_frequency = wrapped_property("resonance_frequency", ResonanceFrequency)
     velocity_s30 = wrapped_property("velocity_s30", VelocityS30)
     velocity_profile_survey = wrapped_property("velocity_profile_survey", VelocityProfileSurvey)
-    velocity_profile_count = wrapped_property("velocity_profile_count", int)
-    spt_logs_count = wrapped_property("spt_logs_count", int)
-    cpt_logs_count = wrapped_property("cpt_logs_count", int)
-    borehole_logs_count = wrapped_property("borehole_logs_count", int)
-
-    # TODOS
-    # Check counter type if value > 0 (like layer count)
 
     def __init__(self, resource_id=None, site_descriptionID=None, creation_date=None, 
                  resonance_frequency=None, velocity_s30=None, 
@@ -625,14 +657,14 @@ class Analysis(BaseNode):
         :type velocity_profile_survey: :class:`~obspy.io.sitexml.core.VelocityProfileSurvey`, optional.
         :param velocity_profile_survey: Velocity Profile Survey.
             Parent object for Velocity Profiles. 
-        :type velocity_profile_count: int, optional.
+        :type velocity_profile_count: Non-negative int, optional.
         :param velocity_profile_count: Number of available velocity profiles. If this analysis 
             includes velocity profiles, you should use this field to provide the number of VPs.
-        :type spt_logs_count: int, optional.
+        :type spt_logs_count: Non-negative int, optional.
         :param spt_logs_count: Number of available SPT profile(s). 
-        :type cpt_logs_count: int, optional.
+        :type cpt_logs_count: Non-negative int, optional.
         :param cpt_logs_count: Number of available CPT profile(s). 
-        :type borehole_logs_count: int, optional.
+        :type borehole_logs_count: Non-negative int, optional.
         :param borehole_logs_count: Number of available borehole log profile(s). 
        """
         self.resource_id = resource_id        
@@ -668,6 +700,54 @@ class Analysis(BaseNode):
             cpt_logs_count = self.cpt_logs_count, 
             bh_logs_count = self.borehole_logs_count)
         return ret
+
+    @staticmethod
+    def _coerce_non_negative_int(attr_name, value):
+        if value is None:
+            return None
+        try:
+            coerced = int(value)
+        except (TypeError, ValueError) as exc:
+            raise TypeError(f"Could not convert {value} to int: {exc}")
+        if coerced < 0:
+            raise ValueError(f"{attr_name} must be non-negative")
+        return coerced
+
+    @property
+    def velocity_profile_count(self):
+        return self._velocity_profile_count
+
+    @velocity_profile_count.setter
+    def velocity_profile_count(self, value):
+        self._velocity_profile_count = self._coerce_non_negative_int(
+            "velocity_profile_count", value)
+
+    @property
+    def spt_logs_count(self):
+        return self._spt_logs_count
+
+    @spt_logs_count.setter
+    def spt_logs_count(self, value):
+        self._spt_logs_count = self._coerce_non_negative_int(
+            "spt_logs_count", value)
+
+    @property
+    def cpt_logs_count(self):
+        return self._cpt_logs_count
+
+    @cpt_logs_count.setter
+    def cpt_logs_count(self, value):
+        self._cpt_logs_count = self._coerce_non_negative_int(
+            "cpt_logs_count", value)
+
+    @property
+    def borehole_logs_count(self):
+        return self._borehole_logs_count
+
+    @borehole_logs_count.setter
+    def borehole_logs_count(self, value):
+        self._borehole_logs_count = self._coerce_non_negative_int(
+            "borehole_logs_count", value)
      
 class SERASite(BaseNode):
     """
