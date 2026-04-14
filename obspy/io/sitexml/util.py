@@ -284,7 +284,7 @@ def enum_property(attr_name, enum_type):
             setattr(self, private_name, value)
         else:
             valid_values = [e for e in enum_type]
-            raise ValueError(
+            raise SiteXMLValidationError(
                 f"\nInvalid value for '{attr_name}'. \
                     Expected one of {valid_values}, but got '{value}'."
             )
@@ -309,12 +309,14 @@ def enum_list_property(attr_name, enum_type, allow_none=True):
 
     def _eval_enum(x):
         if not isinstance(x, str):
-            raise TypeError(f"{attr_name} items must be strings, got {type(x).__name__}")
+            raise SiteXMLValidationError(
+                f"{attr_name} items must be strings, got {type(x).__name__}"
+            )
         try:
             # Enum.get() lowercases internally and returns canonical string
             return enum_type.get(x)
         except KeyError:
-            raise ValueError(
+            raise SiteXMLValidationError(
                 f"Invalid {attr_name} entry {x!r}. Allowed: {enum_type.values()}"
             )
 
@@ -323,10 +325,12 @@ def enum_list_property(attr_name, enum_type, allow_none=True):
             if allow_none:
                 setattr(self, private_name, None)
                 return
-            raise TypeError(f"{attr_name} cannot be None")
+            raise SiteXMLValidationError(f"{attr_name} cannot be None")
 
         if not isinstance(values, Iterable) or isinstance(values, (str, bytes)):
-            raise TypeError(f"{attr_name} must be an iterable of strings")
+            raise SiteXMLValidationError(
+                f"{attr_name} must be an iterable of strings"
+            )
 
         normalized = [_eval_enum(v) for v in values]
 
@@ -356,8 +360,10 @@ def wrapped_property(attr_name, wrapper_type):
             try:
                 setattr(self, private_name, wrapper_type(value))
             except Exception as e:
-                raise TypeError(f"Could not convert {value} \
-                                to {wrapper_type.__name__}: {e}")
+                raise SiteXMLValidationError(
+                    f"Could not convert {value} "
+                    f"to {wrapper_type.__name__}: {e}"
+                )
 
     return property(getter, setter)
 
@@ -379,10 +385,10 @@ def wrapped_list_property(attr_name, wrapper_type, allow_none=True):
             if allow_none:
                 setattr(self, private_name, None)
                 return
-            raise TypeError(f"{attr_name} cannot be None")
+            raise SiteXMLValidationError(f"{attr_name} cannot be None")
 
         if not isinstance(values, Iterable) or isinstance(values, (str, bytes)):
-            raise TypeError(f"{attr_name} must be an iterable")
+            raise SiteXMLValidationError(f"{attr_name} must be an iterable")
 
         wrapped_items = []
         for v in values:
@@ -392,7 +398,7 @@ def wrapped_list_property(attr_name, wrapper_type, allow_none=True):
                 try:
                     wrapped_items.append(wrapper_type(v))
                 except Exception as e:
-                    raise TypeError(
+                    raise SiteXMLValidationError(
                         f"Could not convert element {v} to {wrapper_type.__name__}: {e}"
                     )
 

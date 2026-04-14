@@ -12,7 +12,8 @@ Provides the SERASite class.
 from obspy.core.event import ResourceIdentifier
 from obspy.core.inventory.util import (Latitude, Longitude, Distance, 
                                        ExternalReference)
-from .util import (BaseNode, TopographySchemaA, TopographySchemaB, EC8Class, 
+from .util import (BaseNode, SiteXMLValidationError,
+                    TopographySchemaA, TopographySchemaB, EC8Class, 
                     ResonanceFrequencyMethod, VelocityS30Method,
                     Vs30MethodCombined, Vs30ManualIndex,
                     _pretty_str, wrapped_property, enum_property, 
@@ -40,7 +41,9 @@ class ValueWithUncertainty(BaseNode):
         try:
             val = self.valid_type(val)
         except (ValueError, TypeError):
-            raise ValueError(f"Value must be convertible to {self.valid_type.__name__}")
+            raise SiteXMLValidationError(
+                f"Value must be convertible to {self.valid_type.__name__}"
+            )
         #if val <= 0:
         #    raise ValueError(f"Value of {self.indicator_name} must be positive.")
         self._value = val
@@ -57,7 +60,10 @@ class ValueWithUncertainty(BaseNode):
         try:
             val = self.valid_type(val)
         except (ValueError, TypeError):
-            raise ValueError(f"Uncertainty must be convertible to {self.valid_type.__name__} or None")
+            raise SiteXMLValidationError(
+                f"Uncertainty must be convertible to "
+                f"{self.valid_type.__name__} or None"
+            )
         #if val <= 0:
         #    raise ValueError(f"Uncertainty of {self.indicator_name} must be positive.")
         self._uncertainty = val
@@ -96,7 +102,9 @@ class LiteratureSource(BaseNode):
         try:
             self._year = int(value)
         except (TypeError, ValueError) as exc:
-            raise TypeError(f"Could not convert {value} to int: {exc}")
+            raise SiteXMLValidationError(
+                f"Could not convert {value} to int: {exc}"
+            )
 
 class SiteIndicator(BaseNode):
     literature_source = wrapped_property("literature_source", LiteratureSource)
@@ -398,13 +406,17 @@ class VelocityProfile(BaseNode):
     @layer_count.setter
     def layer_count(self, value):
         if value is None:
-            raise ValueError("layer_count is required.")
+            raise SiteXMLValidationError("layer_count is required.")
         try:
             value = int(value)
         except (TypeError, ValueError) as exc:
-            raise TypeError(f"Could not convert {value} to int: {exc}")
+            raise SiteXMLValidationError(
+                f"Could not convert {value} to int: {exc}"
+            )
         if value <= 0:
-            raise ValueError("layer_count must be a positive integer.")
+            raise SiteXMLValidationError(
+                "layer_count must be a positive integer."
+            )
         self._layer_count = value
     
     def __str__(self):
@@ -634,7 +646,9 @@ class SiteDescription(BaseNode):
             self._station_code = None
             return
         if not isinstance(value, str):
-            raise TypeError("station_code must be a string or None")
+            raise SiteXMLValidationError(
+                "station_code must be a string or None"
+            )
         self._station_code = value
 
 class Analysis(BaseNode):
@@ -711,9 +725,13 @@ class Analysis(BaseNode):
         try:
             coerced = int(value)
         except (TypeError, ValueError) as exc:
-            raise TypeError(f"Could not convert {value} to int: {exc}")
+            raise SiteXMLValidationError(
+                f"Could not convert {value} to int: {exc}"
+            )
         if coerced < 0:
-            raise ValueError(f"{attr_name} must be non-negative")
+            raise SiteXMLValidationError(
+                f"{attr_name} must be non-negative"
+            )
         return coerced
 
     @property
