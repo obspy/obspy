@@ -20,7 +20,7 @@
                 <homepage>https://www.domain.ab/person</homepage>
             </person>
             <affiliation>
-                <institution publicID="quakeml:domain.ab/institution/1001">
+                <institution publicID="quakeml:domain.ab/institution/001">
                     <name>INSTITUTION_ABBR</name>
                     <mbox>info@domain.ab</mbox>
                     <phone>+30 123 456789</phone>
