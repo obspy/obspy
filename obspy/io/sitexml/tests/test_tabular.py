@@ -14,42 +14,33 @@ from obspy.io.sitexml.read_csv import csv_to_sera_site, excel_to_sera_site
 
 
 class TestSiteXMLCSVImport():
-    def _analysis_csv_with_matching_site_ids(self, datapath, tmp_path):
-        source = (datapath / "site_analysis.csv").read_text(encoding="utf-8")
-        normalized = source.replace("quakeml:domain.ab/", "quakeml:isterre.fr/")
-        analysis_csv = tmp_path / "site_analysis_normalized.csv"
-        analysis_csv.write_text(normalized, encoding="utf-8")
-        return analysis_csv
-
     def test_csv_to_sera_site_imports_sites_analysis_and_velocity_profiles(
-            self, datapath, tmp_path):
-        analysis_csv = self._analysis_csv_with_matching_site_ids(datapath, tmp_path)
-
+            self, datapath):
         sera_site_dict = csv_to_sera_site(
             site_owner_csv=datapath / "site_owner.csv",
             site_description_csv=datapath / "site_description.csv",
-            analysis_csv=analysis_csv,
-            velocity_profiles_csv=datapath / "vp_csv",
+            analysis_csv=datapath / "site_analysis.csv",
+            velocity_profiles_csv=datapath / "velocity_profiles",
             delim=";")
 
         assert set(sera_site_dict) == {
-            "quakeml:isterre.fr/site/001",
-            "quakeml:isterre.fr/site/002",
+            "quakeml:domain.ab/site/001",
+            "quakeml:domain.ab/site/002",
         }
 
-        site_001 = sera_site_dict["quakeml:isterre.fr/site/001"]
-        assert site_001.site_owner.owner_codename == "ISTERRE"
+        site_001 = sera_site_dict["quakeml:domain.ab/site/001"]
+        assert site_001.site_owner.owner_codename == "SITEOWNER"
         assert site_001.site_description.resource_id == (
-            "quakeml:isterre.fr/site_description/001")
-        assert site_001.site_description.station_code is None
+            "quakeml:domain.ab/site_description/001")
+        assert site_001.site_description.station_code == "ABCD"
         assert site_001.site_description.preferred_site_analysisID == (
-            "quakeml:isterre.fr/analysis/001")
+            "quakeml:domain.ab/analysis/001")
         assert len(site_001.analysis) == 3
 
         analysis_001 = site_001.analysis[0]
-        assert analysis_001.resource_id == "quakeml:isterre.fr/analysis/001"
+        assert analysis_001.resource_id == "quakeml:domain.ab/analysis/001"
         assert analysis_001.site_descriptionID == (
-            "quakeml:isterre.fr/site_description/001")
+            "quakeml:domain.ab/site_description/001")
         assert analysis_001.resonance_frequency.value.value == 0.7
         assert analysis_001.velocity_s30.value.value == 620.0
         assert analysis_001.velocity_s30.value.uncertainty == 18.0
@@ -59,7 +50,7 @@ class TestSiteXMLCSVImport():
 
         first_profile = analysis_001.velocity_profile_survey.velocity_profiles[0]
         assert first_profile.resource_id == (
-            "quakeml:isterre.fr/velocity_profile/001")
+            "quakeml:domain.ab/velocity_profile/001")
         assert first_profile.layer_count == 8
         assert len(first_profile.velocity_profile_data) == 8
         assert first_profile.velocity_profile_data[0].velocityS.value == 118.08
@@ -67,31 +58,29 @@ class TestSiteXMLCSVImport():
         assert first_profile.velocity_profile_data[0].top_depth.value == 0.0
         assert first_profile.velocity_profile_data[0].bottom_depth.value == 0.19
 
-        site_002 = sera_site_dict["quakeml:isterre.fr/site/002"]
+        site_002 = sera_site_dict["quakeml:domain.ab/site/002"]
         assert site_002.site_description.resource_id == (
-            "quakeml:isterre.fr/site_description/002")
+            "quakeml:domain.ab/site_description/002")
         assert len(site_002.analysis) == 1
 
         analysis_002 = site_002.analysis[0]
-        assert analysis_002.resource_id == "quakeml:isterre.fr/analysis/003"
+        assert analysis_002.resource_id == "quakeml:domain.ab/analysis/004"
         assert analysis_002.resonance_frequency.value.value == 0.3
         assert analysis_002.velocity_s30.value.value == 497.0
         assert analysis_002.velocity_s30.methods == ["S-REFL"]
         assert analysis_002.velocity_profile_survey is not None
         assert len(analysis_002.velocity_profile_survey.velocity_profiles) == 3
 
-    def test_csv_to_sera_site_imports_vs30_quality_indexes(self, datapath, tmp_path):
-        analysis_csv = self._analysis_csv_with_matching_site_ids(datapath, tmp_path)
-
+    def test_csv_to_sera_site_imports_vs30_quality_indexes(self, datapath):
         sera_site_dict = csv_to_sera_site(
             site_owner_csv=datapath / "site_owner.csv",
             site_description_csv=datapath / "site_description.csv",
-            analysis_csv=analysis_csv,
-            velocity_profiles_csv=datapath / "vp_csv",
+            analysis_csv=datapath / "site_analysis.csv",
+            velocity_profiles_csv=datapath / "velocity_profiles",
             delim=";")
 
         analysis_001 = (
-            sera_site_dict["quakeml:isterre.fr/site/001"].analysis[0]
+            sera_site_dict["quakeml:domain.ab/site/001"].analysis[0]
         )
 
         assert analysis_001.velocity_s30.method_combined_qindex == "1.2"
@@ -162,7 +151,7 @@ class TestSiteXMLCSVImport():
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             sera_site_dict = excel_to_sera_site(
-                path_or_file_object=datapath / "sera_site_no_ananlysis.xlsx",
+                path_or_file_object=datapath / "sera_site_no_analysis.xlsx",
                 velocity_profiles=datapath / "velocity_profiles.xlsx")
 
         assert set(sera_site_dict) == {

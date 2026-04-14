@@ -14,8 +14,10 @@ import re
 import warnings
 
 import obspy
+import pytest
+from obspy.io.sitexml.util import SiteXMLValidationError
 from obspy.io.sitexml.sitexml import (_is_sitexml, read_sitexml)
-from obspy.io.sitexml.write import write_sitexml
+from obspy.io.sitexml.sitexml import write_sitexml
 
 class TestSiteXML():
     """
@@ -107,6 +109,24 @@ class TestSiteXML():
 
         # Write it again. Also validate it to get more confidence.
         self._write_and_compare(filename, sera_site)
+
+    def test_read_sitexml_accepts_seekable_file_like_objects(self, testdata):
+        filename = testdata["minimal_sitexml.xml"]
+
+        with open(filename, "rb") as fh:
+            xml_buffer = io.BytesIO(fh.read())
+
+        sera_site = read_sitexml(xml_buffer)
+
+        assert sera_site is not None
+        assert sera_site.site_owner is not None
+        assert sera_site.site_description is not None
+
+    def test_read_sitexml_raises_sitexml_validation_error_for_invalid_xml(self):
+        xml_buffer = io.BytesIO(b"<not-sitexml />")
+
+        with pytest.raises(SiteXMLValidationError):
+            read_sitexml(xml_buffer)
         
     def test_read_and_write_full_file(self, testdata):
         """
