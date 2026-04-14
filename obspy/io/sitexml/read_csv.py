@@ -481,24 +481,25 @@ def _import_velocity_profiles(path, allowed_extensions, read_file, kind_name):
     if not path:
         return None
 
+    path_str = os.fspath(path)
     df = pd.DataFrame()
 
-    if os.path.isdir(path):
-        for filename in os.listdir(path):
-            file_path = os.path.join(path, filename)
+    if os.path.isdir(path_str):
+        for filename in os.listdir(path_str):
+            file_path = os.path.join(path_str, filename)
             if not filename.lower().endswith(allowed_extensions):
                 raise SiteXMLImportError(
                     f"Velocity-profile input is not a {kind_name} file: {file_path}"
                 )
             df = pd.concat([df, read_file(file_path)], ignore_index=True)
-    elif os.path.isfile(path):
-        if not path.lower().endswith(allowed_extensions):
+    elif os.path.isfile(path_str):
+        if not path_str.lower().endswith(allowed_extensions):
             raise SiteXMLImportError(
-                f"Velocity-profile input is not a {kind_name} file: {path}"
+                f"Velocity-profile input is not a {kind_name} file: {path_str}"
             )
-        df = read_file(path)
+        df = read_file(path_str)
     else:
-        raise SiteXMLIOError(f"Velocity-profile path does not exist: {path}")
+        raise SiteXMLIOError(f"Velocity-profile path does not exist: {path_str}")
 
     if not df.empty:
         return {site_id: group for site_id, group in df.groupby("siteID")}
