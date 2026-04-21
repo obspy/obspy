@@ -7,12 +7,13 @@
 	Schema versions:
 	1.2: Created in the context of the SERA Project (Tasks 7.1-7.4)
 		Author: Cecile Cornou (cecile.cornou@univ-grenoble-alpes.fr)
-	1.3: Updated in the context of an ORFEUS grand for the implementation of a software
+	1.3: Updated in the context of an ORFEUS grand regarding a software implementation
 		for handling site characterization metadata. 
 		Author: Kiriaki Konstantinidou (kiriaki@itsak.gr)	
 -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.orfeus-eu.org/xml/site/1" 
-	targetNamespace="http://www.orfeus-eu.org/xml/site/1" elementFormDefault="qualified" 
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.orfeus-eu.org/xml/site/1"
+	xmlns:tns="http://www.orfeus-eu.org/xml/site/1"
+	targetNamespace="http://www.orfeus-eu.org/xml/site/1" elementFormDefault="qualified"
 	attributeFormDefault="unqualified" version="1.3">
 	
 	<xs:element name="SERA_quakeml" type="RootType">
@@ -29,6 +30,30 @@
 			<xs:selector xpath=".//*"/>
 			<xs:field xpath="@publicID"/>
 		</xs:unique>
+		<xs:key name="siteDescriptionPublicIDKey">
+			<xs:selector xpath="tns:siteDescription"/>
+			<xs:field xpath="@publicID"/>
+		</xs:key>
+		<xs:key name="analysisPublicIDKey">
+			<xs:selector xpath="tns:analysis"/>
+			<xs:field xpath="@publicID"/>
+		</xs:key>
+		<xs:key name="velocityProfilePublicIDKey">
+			<xs:selector xpath="tns:analysis/tns:velocityProfile"/>
+			<xs:field xpath="@publicID"/>
+		</xs:key>
+		<xs:keyref name="analysisSiteDescriptionRef" refer="tns:siteDescriptionPublicIDKey">
+			<xs:selector xpath="tns:analysis"/>
+			<xs:field xpath="tns:siteDescriptionID"/>
+		</xs:keyref>
+		<xs:keyref name="preferredAnalysisRef" refer="tns:analysisPublicIDKey">
+			<xs:selector xpath="tns:siteDescription"/>
+			<xs:field xpath="tns:preferredSiteAnalysisID"/>
+		</xs:keyref>
+		<xs:keyref name="preferredVelocityProfileRef" refer="tns:velocityProfilePublicIDKey">
+			<xs:selector xpath="tns:siteDescription"/>
+			<xs:field xpath="tns:preferredVelocityProfileID"/>
+		</xs:keyref>
 	</xs:element>
 
 	<xs:complexType name="RootType">
@@ -310,23 +335,23 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="latitude" type="RealQuantity">
+			<xs:element name="latitude" type="LatitudeType">
 				<xs:annotation>
 					<xs:documentation>Geographic latitude (+/- for northern/southern hemisphere, 
-						respectively). Unit (degress).<br/>
+						respectively). Value range (-90, 90). Unit (degress).<br/>
 						<strong>Example:</strong> 34.1567
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="longitude" type="RealQuantity">
+			<xs:element name="longitude" type="LongitudeType">
 				<xs:annotation>
 					<xs:documentation>Geographic longitude from Greenwich (+/- for eastern/western 
-						longitude, respectively). Unit (degress).<br/>
+						longitude, respectively). Value range (-180, 180). Unit (degress).<br/>
 						<strong>Example:</strong> 28.1567
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="altitude" type="RealQuantity" minOccurs="0" maxOccurs="1">
+			<xs:element name="altitude" type="xs:double" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Elevation of ground with respect to sea level (+/- for above/below sea level, 
 						respectively). Unit (m).<br/>
@@ -334,7 +359,7 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="minDistanceFromStation" type="RealQuantity" minOccurs="0" maxOccurs="1">
+			<xs:element name="minDistanceFromStation" type="NonNegativeDouble" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Minimum distance between the permanent seismological station and 
             			the site characterization measurement. Should be used only when representative 
@@ -344,7 +369,7 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="maxDistanceFromStation" type="RealQuantity" minOccurs="0" maxOccurs="1">
+			<xs:element name="maxDistanceFromStation" type="NonNegativeDouble" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Maximum distance between the permanent seismological station and 
             			the site characterization measurement. Should be used only when representative 
@@ -696,10 +721,10 @@
 			</xs:documentation>
 		</xs:annotation>
 		<xs:choice>
-		<xs:sequence>
+			<xs:sequence>
 				<xs:element name="literatureSource" type="LiteratureSourceType"/>
-			<xs:element name="fileResource" type="FileResourceType" minOccurs="0" maxOccurs="1"/>
-		</xs:sequence>
+				<xs:element name="fileResource" type="FileResourceType" minOccurs="0" maxOccurs="1"/>
+			</xs:sequence>
 			<xs:element name="fileResource" type="FileResourceType"/>
 		</xs:choice>
 	</xs:complexType>
@@ -818,6 +843,30 @@
 			<xs:element name="uncertainty" type="NonNegativeDouble" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 	</xs:complexType>
+
+	<xs:simpleType name="LatitudeType">
+		<xs:annotation>
+			<xs:documentation>
+				Latitude expressed in decimal degrees.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:minInclusive value="-90"/>
+			<xs:maxInclusive value="90"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="LongitudeType">
+		<xs:annotation>
+			<xs:documentation>
+				Longitude expressed in decimal degrees.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:minInclusive value="-180"/>
+			<xs:maxInclusive value="180"/>
+		</xs:restriction>
+	</xs:simpleType>
 
 	<xs:complexType name="QIndexType">
 		<xs:annotation>
@@ -1070,12 +1119,15 @@
 			<xs:documentation>
 				An identifier that serves to uniquely identify a resource. 
 				This identifier can be interpreted differently depending on the datacenter/software 
-				that generated the document. It should follow the QuakML Resource ID convention:<br/>
+				that generated the document. It should follow the QuakeML Resource ID convention:<br/>
 				<em>authority:domain/resource-type/local-id</em><br/>
 				<strong>Example: </strong>quakeml:domain.ab/analysis/001
+				<strong>Example: </strong>quakeml:domain.ab/person/002
 			</xs:documentation>
 		</xs:annotation>
-		<xs:restriction base="xs:anyURI"/> 
+		<xs:restriction base="xs:anyURI">
+      		<xs:pattern value="^(smi|quakeml):[\w][\w.\-*()~']{2,}/[\w.\-*()~'][\w.\-*()+?_~'=,;#/&amp;]*$"/>
+    	</xs:restriction>
 	</xs:simpleType>
 	
 </xs:schema>
