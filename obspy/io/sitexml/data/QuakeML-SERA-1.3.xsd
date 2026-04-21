@@ -613,27 +613,33 @@
 				</xs:annotation>
 			</xs:element>
 			<!--  **************** OTHER PARAMETERS REQUESTED BY EGD ******* -->
-			<xs:element name="velocityProfileCount" type="CounterType" minOccurs="0" maxOccurs="1">
-				<xs:annotation>
-					<xs:documentation>Number of Velocity profile(s) that are available for this site.
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
+			<!-- <xs:element name="velocityProfileCount" type="CounterType" minOccurs="0" maxOccurs="1">
+			Removed because it can be calculated -->
+			
 			<xs:element name="sptLogsCount" type="CounterType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Number of SPT log profile(s) that are available for this site.
+						This counter is retained temporarily, but its exact meaning is ambiguous
+						because SiteXML does not currently include the corresponding log objects.
+						This element should be reviewed before the schema is distributed.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
 			<xs:element name="cptLogsCount" type="CounterType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Number of CPT log profile(s) that are available for this site.
+						This counter is retained temporarily, but its exact meaning is ambiguous
+						because SiteXML does not currently include the corresponding log objects.
+						This element should be reviewed before the schema is distributed.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
 			<xs:element name="boreholeLogsCount" type="CounterType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Number of borehole log profile(s) that are available for this site.
+						This counter is retained temporarily, but its exact meaning is ambiguous
+						because SiteXML does not currently include the corresponding log objects.
+						This element should be reviewed before the schema is distributed.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
@@ -1115,9 +1121,7 @@
 				<strong>Example: </strong>quakeml:domain.ab/person/002
 			</xs:documentation>
 		</xs:annotation>
-		<xs:restriction base="xs:anyURI">
-      		<xs:pattern value="^(smi|quakeml):[\w][\w.\-*()~']{2,}/[\w.\-*()~'][\w.\-*()+?_~'=,;#/&amp;]*$"/>
-    	</xs:restriction>
+		<xs:restriction base="xs:anyURI"/>
 	</xs:simpleType>
 	
 </xs:schema>

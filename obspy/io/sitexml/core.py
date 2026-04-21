@@ -657,8 +657,8 @@ class Analysis(BaseNode):
 
     def __init__(self, resource_id=None, site_descriptionID=None, creation_date=None, 
                  resonance_frequency=None, velocity_s30=None, 
-                 velocity_profile_survey=None, velocity_profile_count=None, 
-                 spt_logs_count=None, cpt_logs_count=None, borehole_logs_count=None):
+                 velocity_profile_survey=None, spt_logs_count=None,
+                 cpt_logs_count=None, borehole_logs_count=None):
         """
         :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required.
         :param resource_id: Analysis resource ID. 
@@ -673,9 +673,6 @@ class Analysis(BaseNode):
         :type velocity_profile_survey: :class:`~obspy.io.sitexml.core.VelocityProfileSurvey`, optional.
         :param velocity_profile_survey: Velocity Profile Survey.
             Parent object for Velocity Profiles. 
-        :type velocity_profile_count: Non-negative int, optional.
-        :param velocity_profile_count: Number of available velocity profiles. If this analysis 
-            includes velocity profiles, you should use this field to provide the number of VPs.
         :type spt_logs_count: Non-negative int, optional.
         :param spt_logs_count: Number of available SPT profile(s). 
         :type cpt_logs_count: Non-negative int, optional.
@@ -688,7 +685,6 @@ class Analysis(BaseNode):
         self.creation_date = creation_date
         self.resonance_frequency = resonance_frequency
         self.velocity_s30 = velocity_s30
-        self.velocity_profile_count = velocity_profile_count
         self.spt_logs_count = spt_logs_count
         self.cpt_logs_count = cpt_logs_count
         self.borehole_logs_count = borehole_logs_count
@@ -701,7 +697,6 @@ class Analysis(BaseNode):
                "\tCreation Date: {dt},\n"
                "\tResonance Frequency: {rfreq},\n"
                "\tVelocity S30: {vs30},\n"
-               "\tVelocity Profiles count: {vp_count},\n"
                "\tSPT Logs count: {spt_logs_count},\n"
                "\tCPT Logs count: {cpt_logs_count},\n"
                "\tBorehole Logs count: {bh_logs_count} \n")
@@ -711,7 +706,6 @@ class Analysis(BaseNode):
             dt = self.creation_date,
             rfreq = self.resonance_frequency.value if self.resonance_frequency else "None",
             vs30 = self.velocity_s30.value if self.velocity_s30 else "None",
-            vp_count = self.velocity_profile_count, 
             spt_logs_count = self.spt_logs_count, 
             cpt_logs_count = self.cpt_logs_count, 
             bh_logs_count = self.borehole_logs_count)
@@ -732,15 +726,6 @@ class Analysis(BaseNode):
                 f"{attr_name} must be non-negative"
             )
         return coerced
-
-    @property
-    def velocity_profile_count(self):
-        return self._velocity_profile_count
-
-    @velocity_profile_count.setter
-    def velocity_profile_count(self, value):
-        self._velocity_profile_count = self._coerce_non_negative_int(
-            "velocity_profile_count", value)
 
     @property
     def spt_logs_count(self):

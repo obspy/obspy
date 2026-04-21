@@ -461,7 +461,6 @@ def _read_analysis(analysis_element):
         - resonanceFrequencyReference, resonanceFrequencyMethod
         - velocityS30, velocityS30Qindex1, velocityS30Reference, 
         - velocityS30Method, velocityS30ManualIndex, velocityS30MethodCombIndex
-        - velocityProfileCount
         - sptLogsCount
         - cptLogsCount
         - boreholeLogsCount
@@ -526,8 +525,6 @@ def _read_analysis(analysis_element):
                 literature_source = vs30_literature_source,
                 external_reference = vs30_external_reference)
 
-    analysis_obj.velocity_profile_count = \
-        _tag2obj(analysis_element, _ns("velocityProfileCount"), int)
     analysis_obj.spt_logs_count = \
         _tag2obj(analysis_element, _ns("sptLogsCount"), int)
     analysis_obj.cpt_logs_count = \
@@ -570,11 +567,6 @@ def _read_velocity_profile(analysis_element, analysis_obj):
                             literature_source = vp_literature_source,
                             external_reference = vp_external_reference)
 
-    if analysis_obj.velocity_profile_count is None \
-        or analysis_obj.velocity_profile_count != len(vp_element_list):
-            warnings.warn("Number of Velocity Profiles in SiteXML " \
-                    "doesn't much the <velocityProfileCount> value", UserWarning)
-    
     # Go through the list of Velocity Profiles. 
     # For each velocityProfile tree element create a VelocityProfile object.
     #
@@ -583,10 +575,11 @@ def _read_velocity_profile(analysis_element, analysis_obj):
         layer_count = _tag2obj(vp_element, _ns("layerCount"), int)
         vp_data_element_list = vp_element.findall(_ns("velocityProfileData"))
 
-        if layer_count is None \
-            or layer_count != len(vp_data_element_list):
-                warnings.warn("Number of <velocityProfileData> elements in SiteXML " \
-                        "doesn't much the <layerCount> value", UserWarning)
+        if layer_count != len(vp_data_element_list):
+            raise SiteXMLValidationError(
+                "Number of <velocityProfileData> elements in SiteXML "
+                "does not match the <layerCount> value."
+            )
 
         vp = VelocityProfile(layer_count = layer_count,
                             resource_id = resource_id,
@@ -1079,7 +1072,6 @@ def _write_analysis(parent, analysis_list):
         _write_site_indicator(analysis_elem, "resonanceFrequency",
                               analysis.resonance_frequency)
         _write_site_indicator(analysis_elem, "velocityS30", analysis.velocity_s30)
-        _obj2tag(analysis_elem, "velocityProfileCount", analysis.velocity_profile_count)
         _obj2tag(analysis_elem, "sptLogsCount", analysis.spt_logs_count)
         _obj2tag(analysis_elem, "cptLogsCount", analysis.cpt_logs_count)
         _obj2tag(analysis_elem, "boreholeLogsCount", analysis.borehole_logs_count)
@@ -1096,6 +1088,11 @@ def _write_velocity_profile(parent, velocity_profile_survey):
 
                 attribs = {"publicID": vp.resource_id} if vp.resource_id else None
                 vp_elem = etree.SubElement(parent, "velocityProfile", attribs)
+                if vp.layer_count != len(vp.velocity_profile_data):
+                    raise SiteXMLValidationError(
+                        "Number of velocity profile data layers does not "
+                        "match the layer_count value."
+                    )
                 _obj2tag(vp_elem, "layerCount", vp.layer_count)
 
                 for vp_data in vp.velocity_profile_data:

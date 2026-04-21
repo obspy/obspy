@@ -329,8 +329,6 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
             analysis_obj.velocity_profile_survey = \
                 _read_site_indicator(row[1], VelocityProfileSurvey, 'velocityProfile')
             
-            analysis_obj.velocity_profile_count = \
-                _read_cell(row[1], "velocityProfileCount")
             analysis_obj.spt_logs_count = \
                 _read_cell(row[1], "sptLogsCount")
             analysis_obj.cpt_logs_count = \
