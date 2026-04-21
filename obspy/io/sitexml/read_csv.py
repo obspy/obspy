@@ -120,6 +120,7 @@ def csv_to_sera_site(site_owner_csv,
                 f"Could not read analysis CSV metadata: {analysis_csv}"
             ) from e
     else:
+        warnings.warn("Analysis metadata not provided.", UserWarning)
         exists_analysis = False
 
     # Read the velocity profiles and store them
@@ -220,7 +221,7 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
                 "Could not build analysis metadata from the provided Excel input."
             ) from e
     else:
-        warnings.warn("Missing analysis metadata.", UserWarning)
+        warnings.warn("Analysis metadata not provided.", UserWarning)
         exists_analysis = False
         
     # All dictionaries use the unique SiteID for key.
@@ -456,7 +457,7 @@ def _read_site_indicator(df_row, cls, indicator):
     else:
         obj = cls()
 
-    [obj.literature_source, obj.file_resource] = _read_reference(df_row, indicator)
+    [obj.literature_source, obj.external_reference] = _read_reference(df_row, indicator)
     obj.quality_index = _read_cell(df_row, indicator+'Qindex1')
     
     return obj
@@ -559,15 +560,15 @@ def _read_reference(df_row, indicator):
     else:
         literature_source = None
     
-    uri = _read_cell(df_row, 'url', indicator)
+    uri = _read_cell(df_row, 'uri', indicator)
     description = _read_cell(df_row, 'description', indicator)
     if uri:
-        file_resource = ExternalReference(uri = uri,
+        external_reference = ExternalReference(uri = uri,
                                           description = description)
     else:
-        file_resource = None
+        external_reference = None
 
-    return literature_source, file_resource
+    return literature_source, external_reference
 
 def _read_value_with_uncertainty(row, name):
 

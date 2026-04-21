@@ -387,13 +387,13 @@ def _read_morphology(morphology_element, site_description_obj):
     if ec8_value is not None: 
         value = _read_value(morphology_element, "siteClassEC8Qindex1", float)
         ec8_qindex = value if value is not None else 0
-        [ec8_literature_source, ec8_file_resource] = _read_reference(
+        [ec8_literature_source, ec8_external_reference] = _read_reference(
             morphology_element, "siteClassEC8Reference")
         site_description_obj.ec8 = EC8(
                 value = ec8_value,
                 quality_index = ec8_qindex,
                 literature_source = ec8_literature_source, 
-                file_resource = ec8_file_resource)
+                external_reference = ec8_external_reference)
 
     # Bedrock Depth
     bdepth_value = _read_value_with_uncertainty(
@@ -401,13 +401,13 @@ def _read_morphology(morphology_element, site_description_obj):
     if bdepth_value is not None: 
         value = _read_value(morphology_element, "bedrockDepthQindex1", float)
         bdepth_qindex = value if value is not None else 0
-        [bdepth_literature_source, bdepth_file_resource] = _read_reference(
+        [bdepth_literature_source, bdepth_external_reference] = _read_reference(
             morphology_element, "bedrockDepthReference")
         site_description_obj.bedrock_depth = BedrockDepth(
                 value = bdepth_value,
                 quality_index = bdepth_qindex,
                 literature_source = bdepth_literature_source,
-                file_resource = bdepth_file_resource)
+                external_reference = bdepth_external_reference)
     
     # H800
     h800_value = _read_value_with_uncertainty(
@@ -415,13 +415,13 @@ def _read_morphology(morphology_element, site_description_obj):
     if h800_value is not None: 
         value = _read_value(morphology_element, "h800Qindex1", float)
         h800_qindex = value if value is not None else 0
-        [h800_literature_source, h800_file_resource] = _read_reference(
+        [h800_literature_source, h800_external_reference] = _read_reference(
             morphology_element, "h800Reference")
         site_description_obj.h800 = H800(
                 value = h800_value,
                 quality_index = h800_qindex,
                 literature_source = h800_literature_source, 
-                file_resource = h800_file_resource)
+                external_reference = h800_external_reference)
         
     # Geological Unit
     gunit_value = _tag2obj(morphology_element, _ns("geologicalUnit"), str)
@@ -430,7 +430,7 @@ def _read_morphology(morphology_element, site_description_obj):
         gunit_qindex = value if value is not None else 0
         gunit_map_scale = _tag2obj(morphology_element, _ns("geologicalMapScale"), str)
         gunit_oge = _tag2obj(morphology_element, _ns("geologicalUnitOGE"), str)
-        [gunit_literature_source, gunit_file_resource] = _read_reference(
+        [gunit_literature_source, gunit_external_reference] = _read_reference(
             morphology_element, "geologicalUnitReference")
         site_description_obj.geological_unit = GeologicalUnit(
                 value = gunit_value, 
@@ -438,7 +438,7 @@ def _read_morphology(morphology_element, site_description_obj):
                 geological_map_scale = gunit_map_scale,
                 geological_unit_OGE = gunit_oge,
                 literature_source = gunit_literature_source,
-                file_resource = gunit_file_resource)
+                external_reference = gunit_external_reference)
     
 def _read_analysis(analysis_element):
     """
@@ -495,7 +495,7 @@ def _read_analysis(analysis_element):
         value = _read_value(analysis_element, "resonanceFrequencyQindex1", float)
         rfreq_qindex = value if value is not None else 0
         rfreq_methods = _tags2obj(analysis_element, _ns("resonanceFrequencyMethod"), str)
-        [rfreq_literature_source, rfreq_file_resource] = \
+        [rfreq_literature_source, rfreq_external_reference] = \
             _read_reference(analysis_element, "resonanceFrequencyReference")
 
         analysis_obj.resonance_frequency = ResonanceFrequency(
@@ -503,7 +503,7 @@ def _read_analysis(analysis_element):
                 quality_index = rfreq_qindex,
                 methods = rfreq_methods,
                 literature_source = rfreq_literature_source,
-                file_resource = rfreq_file_resource)
+                external_reference = rfreq_external_reference)
 
     # Velocity S30
     vs30_value = _read_value_with_uncertainty(
@@ -514,7 +514,7 @@ def _read_analysis(analysis_element):
         vs30_methods = _tags2obj(analysis_element, _ns("velocityS30Method"), str)
         vs30_methods_index = _tag2obj(analysis_element, _ns("velocityS30MethodCombIndex"), str)
         vs30_manual_index = _tag2obj(analysis_element, _ns("velocityS30ManualIndex"), str)
-        [vs30_literature_source, vs30_file_resource] = \
+        [vs30_literature_source, vs30_external_reference] = \
             _read_reference(analysis_element, "velocityS30Reference")
 
         analysis_obj.velocity_s30 = VelocityS30(
@@ -524,7 +524,7 @@ def _read_analysis(analysis_element):
                 method_combined_qindex = vs30_methods_index,
                 manual_qindex = vs30_manual_index,
                 literature_source = vs30_literature_source,
-                file_resource = vs30_file_resource)
+                external_reference = vs30_external_reference)
 
     analysis_obj.velocity_profile_count = \
         _tag2obj(analysis_element, _ns("velocityProfileCount"), int)
@@ -554,21 +554,21 @@ def _read_velocity_profile(analysis_element, analysis_obj):
     vp_element_list=analysis_element.findall(_ns("velocityProfile"))
     value = _read_value(analysis_element, "velocityProfileQindex1", float)
     vp_qindex = value if value is not None else 0
-    [vp_literature_source, vp_file_resource] = \
+    [vp_literature_source, vp_external_reference] = \
             _read_reference(analysis_element, "velocityProfileReference")
 
     # At least one velocityProfile or a velocityProfileReference 
     # should be present in SiteXML in order to create the VelocityProfileSurvey object
     if len(vp_element_list) == 0 \
             and vp_literature_source is None \
-            and vp_file_resource is None:
+            and vp_external_reference is None:
         return None
 
     analysis_obj.velocity_profile_survey = \
             VelocityProfileSurvey(velocity_profiles = [],    # We will fill this later
                             quality_index = vp_qindex,
                             literature_source = vp_literature_source,
-                            file_resource = vp_file_resource)
+                            external_reference = vp_external_reference)
 
     if analysis_obj.velocity_profile_count is None \
         or analysis_obj.velocity_profile_count != len(vp_element_list):
@@ -1149,9 +1149,9 @@ def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
 
 def _write_reference(parent, site_indicator_obj):
     literature_obj = site_indicator_obj.literature_source
-    file_obj = site_indicator_obj.file_resource
+    external_reference_obj = site_indicator_obj.external_reference
 
-    if literature_obj or file_obj:
+    if literature_obj or external_reference_obj:
         reference_elem = etree.SubElement(
             parent, site_indicator_obj.name + "Reference")
     else:
@@ -1168,8 +1168,8 @@ def _write_reference(parent, site_indicator_obj):
         _obj2tag(literature_elem, "doi", literature_obj.doi)
         _obj2tag(literature_elem, "languageCode", literature_obj.language)
 
-    if file_obj:
-        _write_external_reference(reference_elem, file_obj)
+    if external_reference_obj:
+        _write_external_reference(reference_elem, external_reference_obj)
 
 
 def _write_methods(parent, site_indicator_name, site_indicator_obj):

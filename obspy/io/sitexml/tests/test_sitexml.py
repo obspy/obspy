@@ -156,7 +156,7 @@ class TestSiteXML():
         assert sera_site.site_owner.person_mbox == "someemail@domain.ab"
         assert sera_site.site_owner.person_homepage == "https://www.domain.ab/person"
 
-        assert sera_site.site_owner.institutionID == "quakeml:domain.ab/institution/1001"
+        assert sera_site.site_owner.institutionID == "quakeml:domain.ab/institution/001"
         assert sera_site.site_owner.institution_name == "INSTITUTION_ABBR"
         assert sera_site.site_owner.institution_mbox == "info@domain.ab"
         assert sera_site.site_owner.institution_phone == "+30 123 456789"
@@ -210,10 +210,10 @@ class TestSiteXML():
         assert ls.doi == "10.1007/s10518-017-0135-5"
         assert ls.language == "en"
 
-        assert sera_site.site_description.ec8.file_resource is not None
-        fr = sera_site.site_description.ec8.file_resource
-        assert fr.uri == "https://doi.org/10.1007/s10518-017-0135-5/"
-        assert fr.description == "paper"
+        assert sera_site.site_description.ec8.external_reference is not None
+        external_ref = sera_site.site_description.ec8.external_reference
+        assert external_ref.uri == "https://doi.org/10.1007/s10518-017-0135-5/"
+        assert external_ref.description == "paper"
 
         assert sera_site.site_description.bedrock_depth is not None
         assert sera_site.site_description.bedrock_depth.value.value == 774.6218
@@ -275,10 +275,10 @@ class TestSiteXML():
         assert ls.doi == "10.1007/s10518-017-0135-5"
         assert ls.language == "en"
 
-        assert f0.file_resource is not None
-        fr = f0.file_resource
-        assert fr.uri == "https://doi.org/10.1007/s10518-017-0135-5/"
-        assert fr.description == "paper"
+        assert f0.external_reference is not None
+        external_ref = f0.external_reference
+        assert external_ref.uri == "https://doi.org/10.1007/s10518-017-0135-5/"
+        assert external_ref.description == "paper"
 
         # Test VelocityS30 specific tags
         assert analysis.velocity_s30 is not None
