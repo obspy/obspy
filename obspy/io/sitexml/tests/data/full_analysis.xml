@@ -20,12 +20,8 @@
     </siteOwner>
     <siteDescription publicID="quakeml:domain.ab/site_description/001">
         <station>ABCD</station>
-        <latitude>
-            <value>45.137174</value>
-        </latitude>
-        <longitude>
-            <value>5.998905</value>
-        </longitude>
+        <latitude>45.137174</latitude>
+        <longitude>5.998905</longitude>
         <preferredSiteAnalysisID>quakeml:domain.ab/analysis/001</preferredSiteAnalysisID>
         <preferredVelocityProfileID>quakeml:domain.ab/velocity_profile/001</preferredVelocityProfileID>
     </siteDescription>
