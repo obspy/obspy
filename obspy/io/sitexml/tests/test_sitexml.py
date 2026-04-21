@@ -253,7 +253,6 @@ class TestSiteXML():
         assert analysis.spt_logs_count == 2
         assert analysis.cpt_logs_count == 0
         assert analysis.borehole_logs_count == 0
-        assert analysis.velocity_profile_count == 2
 
         # Test Resonance Frequency specific tags
         assert analysis.resonance_frequency is not None
@@ -303,7 +302,6 @@ class TestSiteXML():
         sera_site = read_sitexml(filename)
 
         assert sera_site.analysis[0] is not None
-        assert sera_site.analysis[0].velocity_profile_count == 2
         assert sera_site.analysis[0].velocity_profile_survey is not None
 
         vps = sera_site.analysis[0].velocity_profile_survey
@@ -346,6 +344,23 @@ class TestSiteXML():
 
         # Write it again and compare to the original file.
         self._write_and_compare(filename, sera_site)
+
+    def test_reading_velocity_profile_validates_layer_count(
+            self, testdata, tmp_path):
+        """
+        Tests that layerCount matches the number of velocityProfileData items.
+        """
+        filename = testdata["full_analysis.xml"]
+        invalid_xml = tmp_path / "invalid_layer_count.xml"
+        invalid_xml.write_text(
+            filename.read_text().replace(
+                "<layerCount>8</layerCount>",
+                "<layerCount>7</layerCount>",
+                1),
+            encoding="utf-8")
+
+        with pytest.raises(SiteXMLValidationError, match="layerCount"):
+            read_sitexml(invalid_xml)
 
     def test_reading_twice_raises_no_warning(self, testdata):
         """
