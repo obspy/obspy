@@ -325,8 +325,8 @@ def _read_site_description(site_description_element):
     resource_id = _attr2obj(site_description_element, "publicID", str) 
     station_code = _tag2obj(site_description_element, _ns("station"), str)
     
-    latitude = _read_value(site_description_element, "latitude", float)
-    longitude = _read_value(site_description_element, "longitude", float)
+    latitude = _tag2obj(site_description_element, _ns("latitude"), float)
+    longitude = _tag2obj(site_description_element, _ns("longitude"), float)
     if latitude is None or longitude is None:
         warnings.warn("Missing latitude or longitude value. " \
                     "Processing of site description element " \
@@ -338,11 +338,11 @@ def _read_site_description(site_description_element):
                                        latitude=latitude, 
                                        longitude=longitude)
     
-    site_description.altitude = _read_value(site_description_element, "altitude", float)
-    site_description.min_distance_from_station = _read_value(site_description_element, 
-                                            "minDistanceFromStation", float)
-    site_description.max_distance_from_station = _read_value(site_description_element, 
-                                            "maxDistanceFromStation", float)
+    site_description.altitude = _tag2obj(site_description_element, _ns("altitude"), float)
+    site_description.min_distance_from_station = _tag2obj(
+        site_description_element, _ns("minDistanceFromStation"), float)
+    site_description.max_distance_from_station = _tag2obj(
+        site_description_element, _ns("maxDistanceFromStation"), float)
     
     # Topography
     topography_element = site_description_element.find(_ns("siteTopography"))
@@ -1052,13 +1052,13 @@ def _write_site_description(parent, site_description):
     site_description_elem = etree.SubElement(parent, "siteDescription", attribs)
 
     _obj2tag(site_description_elem, "station", site_description.station_code)
-    _write_value(site_description_elem, "latitude", site_description.latitude)
-    _write_value(site_description_elem, "longitude", site_description.longitude)
-    _write_value(site_description_elem, "altitude", site_description.altitude)
-    _write_value(site_description_elem, "minDistanceFromStation",
-                 site_description.min_distance_from_station)
-    _write_value(site_description_elem, "maxDistanceFromStation",
-                 site_description.max_distance_from_station)
+    _obj2tag(site_description_elem, "latitude", site_description.latitude)
+    _obj2tag(site_description_elem, "longitude", site_description.longitude)
+    _obj2tag(site_description_elem, "altitude", site_description.altitude)
+    _obj2tag(site_description_elem, "minDistanceFromStation",
+             site_description.min_distance_from_station)
+    _obj2tag(site_description_elem, "maxDistanceFromStation",
+             site_description.max_distance_from_station)
 
     if site_description.topographyA or site_description.topographyB:
         site_topography_elem = etree.SubElement(site_description_elem, "siteTopography")
