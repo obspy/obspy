@@ -695,10 +695,13 @@
 				This type is used to provide reference information for site indicators. 
 			</xs:documentation>
 		</xs:annotation>
+		<xs:choice>
 		<xs:sequence>
-			<xs:element name="literatureSource" type="LiteratureSourceType" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="literatureSource" type="LiteratureSourceType"/>
 			<xs:element name="fileResource" type="FileResourceType" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
+			<xs:element name="fileResource" type="FileResourceType"/>
+		</xs:choice>
 	</xs:complexType>
 
 	<xs:complexType name="LiteratureSourceType">
