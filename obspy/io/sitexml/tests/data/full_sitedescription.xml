@@ -45,10 +45,10 @@
 					<doi>10.1007/s10518-017-0135-5</doi>
                     <languageCode>en</languageCode>
 				</literatureSource>
-				<fileResource>
-					<description>paper</description>
-					<url>https://doi.org/10.1007/s10518-017-0135-5/</url>
-				</fileResource>
+                <externalReference>
+                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                    <description>paper</description>
+                </externalReference>
             </siteClassEC8Reference>
             <bedrockDepth>
                 <value>774.6218</value>
@@ -67,10 +67,10 @@
 					<doi>10.1007/s10518-017-0135-5</doi>
                     <languageCode>en</languageCode>
 				</literatureSource>
-				<fileResource>
-					<description>paper</description>
-					<url>https://doi.org/10.1007/s10518-017-0135-5/</url>
-				</fileResource>
+                <externalReference>
+                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                    <description>paper</description>
+                </externalReference>
             </bedrockDepthReference>
             <h800>
                 <value>94.0736</value>
@@ -89,10 +89,10 @@
 					<doi>10.1007/s10518-017-0135-5</doi>
                     <languageCode>en</languageCode>
 				</literatureSource>
-				<fileResource>
-					<description>paper</description>
-					<url>https://doi.org/10.1007/s10518-017-0135-5/</url>
-				</fileResource>
+                <externalReference>
+                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                    <description>paper</description>
+                </externalReference>
             </h800Reference>		
 			<geologicalUnit>Some geology</geologicalUnit>
 			<geologicalUnitQindex1>
@@ -110,10 +110,10 @@
 					<doi>10.1007/s10518-017-0135-5</doi>
                     <languageCode>en</languageCode>
 				</literatureSource>
-				<fileResource>
-					<description>paper</description>
-					<url>https://doi.org/10.1007/s10518-017-0135-5/</url>
-				</fileResource>
+                <externalReference>
+                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                    <description>paper</description>
+                </externalReference>
             </geologicalUnitReference>
 		</siteMorphology>
         <overallQindex>

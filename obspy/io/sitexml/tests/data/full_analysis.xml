@@ -47,10 +47,10 @@
                 <doi>10.1007/s10518-017-0135-5</doi>
                 <languageCode>en</languageCode>
             </literatureSource>
-            <fileResource>
+            <externalReference>
+                <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
                 <description>paper</description>
-                <url>https://doi.org/10.1007/s10518-017-0135-5/</url>
-            </fileResource>
+            </externalReference>
         </resonanceFrequencyReference>
         <velocityS30>
             <value>221.5954</value>
@@ -73,10 +73,10 @@
                 <doi>10.1007/s10518-017-0135-5</doi>
                 <languageCode>en</languageCode>
             </literatureSource>
-            <fileResource>
+            <externalReference>
+                <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
                 <description>paper</description>
-                <url>https://doi.org/10.1007/s10518-017-0135-5/</url>
-            </fileResource>
+            </externalReference>
         </velocityS30Reference>
         <velocityProfileCount>2</velocityProfileCount>
         <sptLogsCount>2</sptLogsCount>
@@ -306,10 +306,10 @@
                 <doi>10.1007/s10518-017-0135-5</doi>
                 <languageCode>en</languageCode>
             </literatureSource>
-            <fileResource>
+            <externalReference>
+                <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
                 <description>paper</description>
-                <url>https://doi.org/10.1007/s10518-017-0135-5/</url>
-            </fileResource>
+            </externalReference>
         </velocityProfileReference>
     </analysis>
 </SERA_quakeml>

@@ -632,14 +632,14 @@ def _read_reference(parent, tag):
         else None
     )
 
-    file_resource_element = reference_element.find(_ns("fileResource"))
-    file_resource = (
-        _read_file_resource(file_resource_element)
-        if file_resource_element is not None
+    external_reference_element = reference_element.find(_ns("externalReference"))
+    external_reference = (
+        _read_external_reference(external_reference_element)
+        if external_reference_element is not None
         else None
     )
 
-    return literature_source, file_resource
+    return literature_source, external_reference
 
 def _read_literature_source(literature_source_element):
     """
@@ -665,19 +665,6 @@ def _read_literature_source(literature_source_element):
                                 booktitle=booktitle,
                                 language=language,
                                 doi=doi)
-    else:
-        return None
-
-def _read_file_resource(file_resource_element):
-    """
-    Read a fileResource object.
-    Return an object only if uri is provided
-    """
-    uri = _tag2obj(file_resource_element, _ns("url"), str)
-    description = _tag2obj(file_resource_element, _ns("description"), str)
-
-    if uri:
-        return ExternalReference(uri=uri, description=description)
     else:
         return None
 
@@ -721,14 +708,10 @@ def _read_value_with_uncertainty(parent, tag, type):
 def _read_external_reference(ref_element):
     """
     Read an ExternalReference object.
-    Return an object only if uri is provided
     """
     uri = _tag2obj(ref_element, _ns("uri"), str)
     description = _tag2obj(ref_element, _ns("description"), str)
-    if uri:
-        return ExternalReference(uri=uri, description=description)
-    else:
-        return None
+    return ExternalReference(uri=uri, description=description)
 
 def quality_index1(method=None, evaluation=None, reliability=None, completeness=None):
     """
@@ -1186,9 +1169,7 @@ def _write_reference(parent, site_indicator_obj):
         _obj2tag(literature_elem, "languageCode", literature_obj.language)
 
     if file_obj:
-        file_resource_elem = etree.SubElement(reference_elem, "fileResource")
-        _obj2tag(file_resource_elem, "description", file_obj.description)
-        _obj2tag(file_resource_elem, "url", file_obj.uri)
+        _write_external_reference(reference_elem, file_obj)
 
 
 def _write_methods(parent, site_indicator_name, site_indicator_obj):

@@ -717,15 +717,16 @@
 	<xs:complexType name="ReferenceType">
 		<xs:annotation>
 			<xs:documentation>
-				This type is used to provide reference information for site indicators. 
+				Reference information supporting a SiteXML value or indicator.
+				A reference may be a literature source, an external resource, or both.
 			</xs:documentation>
 		</xs:annotation>
 		<xs:choice>
 			<xs:sequence>
 				<xs:element name="literatureSource" type="LiteratureSourceType"/>
-				<xs:element name="fileResource" type="FileResourceType" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="externalReference" type="ExternalReferenceType" minOccurs="0" maxOccurs="1"/>
 			</xs:sequence>
-			<xs:element name="fileResource" type="FileResourceType"/>
+			<xs:element name="externalReference" type="ExternalReferenceType"/>
 		</xs:choice>
 	</xs:complexType>
 
@@ -805,24 +806,13 @@
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:complexType name="FileResourceType">
-		<xs:annotation>
-			<xs:documentation>This type contains a URL and a description for a resource.<br/>
-				<strong>Note: </strong>This type is identical to the FDSN ExternalReferenceType.
-			</xs:documentation>
-		</xs:annotation>
-		<!-- FileResourceType is identical to ExternalReferenceType. could be removed. -->
-		<xs:sequence>
-			<xs:element name="description" type="xs:string" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="url" type="xs:anyURI" minOccurs="0" maxOccurs="1"/>
-		</xs:sequence>
-	</xs:complexType>
-
 	<xs:complexType name="ExternalReferenceType">
 		<xs:annotation>
 			<xs:documentation>This type contains a URI and a description for external data that users
-				may want to reference in SiteXML.<br/>
-				<strong>Note: </strong>This type is identical to the FDSN ExternalReferenceType.
+				may want to reference in SiteXML. At the top level this describes external
+				resources for the site/document; inside a ReferenceType it supports the
+				specific value or indicator that contains it.<br/>
+				<strong>Note: </strong>This type follows the FDSN ExternalReferenceType structure.
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
