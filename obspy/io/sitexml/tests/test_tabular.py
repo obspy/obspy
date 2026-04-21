@@ -14,6 +14,23 @@ from obspy.io.sitexml.read_csv import csv_to_sera_site, excel_to_sera_site
 
 
 class TestSiteXMLCSVImport():
+    def _assert_full_reference_metadata(self, site_indicator):
+        literature_source = site_indicator.literature_source
+        assert literature_source is not None
+        assert literature_source.title == "Some title"
+        assert literature_source.first_author == "Author A."
+        assert literature_source.secondary_authors == "Author B., Author C."
+        assert literature_source.year == 2018
+        assert literature_source.booktitle == "Some magazine"
+        assert literature_source.language == "en"
+        assert literature_source.doi == "10.1007/s10518-017-0135-5"
+
+        external_reference = site_indicator.external_reference
+        assert external_reference is not None
+        assert external_reference.uri == (
+            "https://doi.org/10.1007/s10518-017-0135-5/")
+        assert external_reference.description == "paper"
+
     def test_csv_to_sera_site_imports_sites_analysis_and_velocity_profiles(
             self, datapath):
         sera_site_dict = csv_to_sera_site(
@@ -86,6 +103,22 @@ class TestSiteXMLCSVImport():
         assert analysis_001.velocity_s30.method_combined_qindex == "1.2"
         assert analysis_001.velocity_s30.manual_qindex == "1.0"
 
+    def test_csv_to_sera_site_imports_full_reference_metadata(self, datapath):
+        sera_site_dict = csv_to_sera_site(
+            site_owner_csv=datapath / "site_owner.csv",
+            site_description_csv=datapath / "site_description.csv",
+            analysis_csv=datapath / "site_analysis.csv",
+            velocity_profiles_csv=datapath / "velocity_profiles",
+            delim=";")
+
+        site_001 = sera_site_dict["quakeml:domain.ab/site/001"]
+        analysis_001 = site_001.analysis[0]
+
+        self._assert_full_reference_metadata(site_001.site_description.ec8)
+        self._assert_full_reference_metadata(analysis_001.resonance_frequency)
+        self._assert_full_reference_metadata(
+            analysis_001.velocity_profile_survey)
+
     def test_excel_to_sera_site_imports_sites_analysis_and_velocity_profiles(
             self, datapath):
         pytest.importorskip("openpyxl")
@@ -144,6 +177,21 @@ class TestSiteXMLCSVImport():
         assert analysis_002.velocity_profile_survey is not None
         assert len(analysis_002.velocity_profile_survey.velocity_profiles) == 3
 
+    def test_excel_to_sera_site_imports_full_reference_metadata(self, datapath):
+        pytest.importorskip("openpyxl")
+
+        sera_site_dict = excel_to_sera_site(
+            path_or_file_object=datapath / "sera_site_all.xlsx",
+            velocity_profiles=datapath / "velocity_profiles.xlsx")
+
+        site_001 = sera_site_dict["quakeml:domain.ab/site/001"]
+        analysis_001 = site_001.analysis[0]
+
+        self._assert_full_reference_metadata(site_001.site_description.ec8)
+        self._assert_full_reference_metadata(analysis_001.resonance_frequency)
+        self._assert_full_reference_metadata(
+            analysis_001.velocity_profile_survey)
+
     def test_excel_to_sera_site_warns_when_analysis_sheet_is_missing(
             self, datapath):
         pytest.importorskip("openpyxl")
@@ -158,7 +206,7 @@ class TestSiteXMLCSVImport():
             "quakeml:domain.ab/site/001",
             "quakeml:domain.ab/site/002",
         }
-        assert any("Missing analysis metadata." in str(w.message)
+        assert any("Analysis metadata not provided." in str(w.message)
                    for w in caught)
 
     def test_excel_to_sera_site_raises_for_missing_required_owner_sheet(
