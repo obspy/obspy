@@ -10,17 +10,26 @@ import pandas as pd
 import pytest
 
 from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLImportError
-from obspy.io.sitexml.read_csv import csv_to_sera_site, excel_to_sera_site
+from obspy.io.sitexml.read_csv import (csv_to_sera_site, excel_to_sera_site,
+                                       _read_year_cell)
 
 
 class TestSiteXMLCSVImport():
+    def test_read_year_cell_preserves_schema_string_type(self):
+        assert _read_year_cell(2018) == "2018"
+        assert _read_year_cell(2018.0) == "2018"
+        assert _read_year_cell("2018") == "2018"
+
+        with pytest.raises(SiteXMLImportError):
+            _read_year_cell("18")
+
     def _assert_full_reference_metadata(self, site_indicator):
         literature_source = site_indicator.literature_source
         assert literature_source is not None
         assert literature_source.title == "Some title"
         assert literature_source.first_author == "Author A."
         assert literature_source.secondary_authors == "Author B., Author C."
-        assert literature_source.year == 2018
+        assert literature_source.year == "2018"
         assert literature_source.booktitle == "Some magazine"
         assert literature_source.language == "en"
         assert literature_source.doi == "10.1007/s10518-017-0135-5"
@@ -226,15 +235,17 @@ class TestSiteXMLCSVImport():
     def test_csv_to_sera_site_skips_invalid_site_description_rows(self, tmp_path):
         site_owner_csv = tmp_path / "site_owner.csv"
         site_owner_csv.write_text(
-            "owner_codename;owner_fullname\n"
-            "TEST;Test Owner\n",
+            "owner_codename;owner_fullname;person_firstname;"
+            "person_lastname;person_mbox\n"
+            "TEST;Test Owner;Name;Surname;someemail@domain.ab\n",
             encoding="utf-8")
 
         site_description_csv = tmp_path / "site_description.csv"
         site_description_csv.write_text(
             "siteID;siteDescriptionID;latitude;longitude;station\n"
             "quakeml:test/site/001;quakeml:test/site_description/001;45.0;7.0;AAA\n"
-            ";quakeml:test/site_description/002;46.0;8.0;BBB\n",
+            ";quakeml:test/site_description/002;46.0;8.0;BBB\n"
+            "quakeml:test/site/003;;47.0;9.0;CCC\n",
             encoding="utf-8")
 
         with warnings.catch_warnings(record=True) as caught:
@@ -245,14 +256,16 @@ class TestSiteXMLCSVImport():
                 delim=";")
 
         assert set(sera_site_dict) == {"quakeml:test/site/001"}
-        assert any("Missing siteID, latitude or longitude value" in str(w.message)
+        assert any("Missing siteID, siteDescriptionID, latitude or longitude"
+                   in str(w.message)
                    for w in caught)
 
     def test_csv_to_sera_site_raises_for_invalid_optional_analysis_rows(self, tmp_path):
         site_owner_csv = tmp_path / "site_owner.csv"
         site_owner_csv.write_text(
-            "owner_codename;owner_fullname\n"
-            "TEST;Test Owner\n",
+            "owner_codename;owner_fullname;person_firstname;"
+            "person_lastname;person_mbox\n"
+            "TEST;Test Owner;Name;Surname;someemail@domain.ab\n",
             encoding="utf-8")
 
         site_description_csv = tmp_path / "site_description.csv"
@@ -275,11 +288,41 @@ class TestSiteXMLCSVImport():
                 analysis_csv=analysis_csv,
                 delim=";")
 
+    def test_csv_to_sera_site_raises_for_incomplete_literature_source(self, tmp_path):
+        site_owner_csv = tmp_path / "site_owner.csv"
+        site_owner_csv.write_text(
+            "owner_codename;owner_fullname;person_firstname;"
+            "person_lastname;person_mbox\n"
+            "TEST;Test Owner;Name;Surname;someemail@domain.ab\n",
+            encoding="utf-8")
+
+        site_description_csv = tmp_path / "site_description.csv"
+        site_description_csv.write_text(
+            "siteID;siteDescriptionID;latitude;longitude\n"
+            "quakeml:test/site/001;quakeml:test/site_description/001;45.0;7.0\n",
+            encoding="utf-8")
+
+        analysis_csv = tmp_path / "site_analysis.csv"
+        analysis_csv.write_text(
+            "siteID;analysisID;siteDescriptionID;velocityS30_value;"
+            "velocityS30_title\n"
+            "quakeml:test/site/001;quakeml:test/analysis/001;"
+            "quakeml:test/site_description/001;300;Some title\n",
+            encoding="utf-8")
+
+        with pytest.raises(SiteXMLImportError):
+            csv_to_sera_site(
+                site_owner_csv=site_owner_csv,
+                site_description_csv=site_description_csv,
+                analysis_csv=analysis_csv,
+                delim=";")
+
     def test_csv_to_sera_site_preserves_zero_uncertainty(self, tmp_path):
         site_owner_csv = tmp_path / "site_owner.csv"
         site_owner_csv.write_text(
-            "owner_codename;owner_fullname\n"
-            "TEST;Test Owner\n",
+            "owner_codename;owner_fullname;person_firstname;"
+            "person_lastname;person_mbox\n"
+            "TEST;Test Owner;Name;Surname;someemail@domain.ab\n",
             encoding="utf-8")
 
         site_description_csv = tmp_path / "site_description.csv"
@@ -309,6 +352,33 @@ class TestSiteXMLCSVImport():
         with pytest.raises(SiteXMLImportError):
             csv_to_sera_site(None, None)
 
+    def test_csv_to_sera_site_raises_for_missing_required_owner_contact(self, tmp_path):
+        site_owner_csv = tmp_path / "site_owner.csv"
+        site_owner_csv.write_text(
+            "owner_codename;owner_fullname\n"
+            "TEST;Test Owner\n",
+            encoding="utf-8")
+
+        site_description_csv = tmp_path / "site_description.csv"
+        site_description_csv.write_text(
+            "siteID;siteDescriptionID;latitude;longitude\n"
+            "quakeml:test/site/001;quakeml:test/site_description/001;45.0;7.0\n",
+            encoding="utf-8")
+
+        analysis_csv = tmp_path / "site_analysis.csv"
+        analysis_csv.write_text(
+            "siteID;analysisID;siteDescriptionID\n"
+            "quakeml:test/site/001;quakeml:test/analysis/001;"
+            "quakeml:test/site_description/001\n",
+            encoding="utf-8")
+
+        with pytest.raises(SiteXMLImportError):
+            csv_to_sera_site(
+                site_owner_csv=site_owner_csv,
+                site_description_csv=site_description_csv,
+                analysis_csv=analysis_csv,
+                delim=";")
+
     def test_csv_to_sera_site_raises_sitexml_io_error_for_missing_required_csv(self):
         with pytest.raises(SiteXMLIOError):
             csv_to_sera_site("missing_owner.csv", "missing_description.csv")
@@ -316,8 +386,9 @@ class TestSiteXMLCSVImport():
     def test_csv_to_sera_site_raises_for_invalid_optional_analysis_csv(self, tmp_path):
         site_owner_csv = tmp_path / "site_owner.csv"
         site_owner_csv.write_text(
-            "owner_codename;owner_fullname\n"
-            "TEST;Test Owner\n",
+            "owner_codename;owner_fullname;person_firstname;"
+            "person_lastname;person_mbox\n"
+            "TEST;Test Owner;Name;Surname;someemail@domain.ab\n",
             encoding="utf-8")
 
         site_description_csv = tmp_path / "site_description.csv"
@@ -341,6 +412,9 @@ class TestSiteXMLCSVImport():
             "siteOwner": pd.DataFrame([{
                 "owner_codename": "TEST",
                 "owner_fullname": "Test Owner",
+                "person_firstname": "Name",
+                "person_lastname": "Surname",
+                "person_mbox": "someemail@domain.ab",
             }]),
             "siteDescription": pd.DataFrame([{
                 "siteID": "quakeml:test/site/001",

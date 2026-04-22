@@ -16,7 +16,7 @@ from .util import (BaseNode, SiteXMLValidationError,
                     TopographySchemaA, TopographySchemaB, EC8Class, 
                     ResonanceFrequencyMethod, VelocityS30Method,
                     Vs30MethodCombined, Vs30ManualIndex,
-                    _pretty_str, wrapped_property, enum_property, 
+                    _pretty_str, scalar_property, wrapped_property, enum_property,
                     wrapped_list_property, enum_list_property)
     
 class ValueWithUncertainty(BaseNode):
@@ -77,8 +77,28 @@ class ValueWithUncertainty(BaseNode):
             return f"{self.value:.2f}"
 
 class LiteratureSource(BaseNode):
-    def __init__(self, title, first_author=None, secondary_authors=None, 
+    title = scalar_property("title", allow_none=False, allow_empty=False)
+    first_author = scalar_property(
+        "first_author", allow_none=False, allow_empty=False)
+
+    def __init__(self, title, first_author, secondary_authors=None,
                  year=None, booktitle=None, language=None, doi=None):
+        """
+        :type title: str
+        :param title: Title of the publication. Required.
+        :type first_author: str
+        :param first_author: Main author of the publication. Required.
+        :type secondary_authors: str, optional
+        :param secondary_authors: Comma-separated list of secondary authors.
+        :type year: str or int, optional
+        :param year: Four-digit publication year. Stored as a string.
+        :type booktitle: str, optional
+        :param booktitle: Journal, book, or proceedings title.
+        :type language: str, optional
+        :param language: Two-letter lowercase ISO 639-1 language code.
+        :type doi: str, optional
+        :param doi: Digital Object Identifier (DOI) of the publication.
+        """
         self.title = title
         self.first_author = first_author
         self.secondary_authors = secondary_authors
@@ -99,12 +119,18 @@ class LiteratureSource(BaseNode):
         if value is None:
             self._year = None
             return
-        try:
-            self._year = int(value)
-        except (TypeError, ValueError) as exc:
+        if isinstance(value, float):
+            if not value.is_integer():
+                raise SiteXMLValidationError(
+                    f"year must be a four-digit string, got {value!r}"
+                )
+            value = int(value)
+        value = str(value)
+        if not value.isdigit() or len(value) != 4:
             raise SiteXMLValidationError(
-                f"Could not convert {value} to int: {exc}"
+                f"year must be a four-digit string, got {value!r}"
             )
+        self._year = value
 
 class SiteIndicator(BaseNode):
     literature_source = wrapped_property("literature_source", LiteratureSource)
@@ -459,8 +485,20 @@ class VelocityProfile(BaseNode):
     
 class SERASiteOwner(BaseNode):
     #ownerID = wrapped_property("ownerID", ResourceIdentifier)
-    def __init__(self, owner_codename=None, owner_fullname=None, ownerID=None, 
-                 person_firstname=None, person_lastname=None, person_mbox=None, person_homepage=None, personID=None, 
+    owner_codename = scalar_property(
+        "owner_codename", allow_none=False, allow_empty=False)
+    owner_fullname = scalar_property(
+        "owner_fullname", allow_none=False, allow_empty=False)
+    person_firstname = scalar_property(
+        "person_firstname", allow_none=False, allow_empty=False)
+    person_lastname = scalar_property(
+        "person_lastname", allow_none=False, allow_empty=False)
+    person_mbox = scalar_property(
+        "person_mbox", allow_none=False, allow_empty=False)
+
+    def __init__(self, owner_codename, owner_fullname,
+                 person_firstname, person_lastname, person_mbox, ownerID=None,
+                 person_homepage=None, personID=None,
                  institution_name=None, institution_mbox=None, institution_phone=None, institution_homepage=None, institutionID=None,
                  address_street=None, address_locality=None, address_postal_code=None, address_country=None, address_country_code=None,
                  affiliation_department=None, affiliation_function=None):
@@ -516,8 +554,10 @@ class SERASiteOwner(BaseNode):
         return ret
     
 class SiteDescription(BaseNode):
-    latitude = wrapped_property("latitude", Latitude)
-    longitude = wrapped_property("longitude", Longitude)
+    resource_id = scalar_property(
+        "resource_id", allow_none=False, allow_empty=False)
+    latitude = wrapped_property("latitude", Latitude, allow_none=False)
+    longitude = wrapped_property("longitude", Longitude, allow_none=False)
     altitude = wrapped_property("altitude", Distance)
     min_distance_from_station = wrapped_property("min_distance_from_station", Distance)
     max_distance_from_station = wrapped_property("max_distance_from_station", Distance)
@@ -528,7 +568,7 @@ class SiteDescription(BaseNode):
     topographyA = enum_property("topographyA", TopographySchemaA)
     topographyB = enum_property("topographyB", TopographySchemaB)
 
-    def __init__(self, resource_id, latitude=0, longitude=0, altitude=None, 
+    def __init__(self, resource_id, latitude, longitude, altitude=None,
                  min_distance_from_station=None, max_distance_from_station=None, 
                  station_code=None, 
                  ec8=None, bedrock_depth=None, h800=None, geological_unit=None, 
@@ -651,11 +691,15 @@ class SiteDescription(BaseNode):
         self._station_code = value
 
 class Analysis(BaseNode):
+    resource_id = scalar_property(
+        "resource_id", allow_none=False, allow_empty=False)
+    site_descriptionID = scalar_property(
+        "site_descriptionID", allow_none=False, allow_empty=False)
     resonance_frequency = wrapped_property("resonance_frequency", ResonanceFrequency)
     velocity_s30 = wrapped_property("velocity_s30", VelocityS30)
     velocity_profile_survey = wrapped_property("velocity_profile_survey", VelocityProfileSurvey)
 
-    def __init__(self, resource_id=None, site_descriptionID=None, creation_date=None, 
+    def __init__(self, resource_id, site_descriptionID, creation_date=None,
                  resonance_frequency=None, velocity_s30=None, 
                  velocity_profile_survey=None, spt_logs_count=None,
                  cpt_logs_count=None, borehole_logs_count=None):

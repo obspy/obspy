@@ -236,32 +236,39 @@ def _read_site_owner(owner_element):
     codeName = _tag2obj(owner_element, _ns("codeName"), str)
     fullName = _tag2obj(owner_element, _ns("fullName"), str)
 
-    # To create the site_owner object we need codeName AND fullName to be present.
-    # Otherwise, skip reading the rest of the siteOwner element and return None.
-    if codeName is None or fullName is None:
-        warnings.warn("Missing owner_codename and owner_fullname value. " \
-                    "Processing of site owner element will be skipped.", UserWarning)
-        return None
-    
-    site_owner = SERASiteOwner(owner_codename = codeName, 
-                                owner_fullname = fullName,
-                                ownerID = ownerID)
-    
-    #
-    ### TODOS: Now all publicIDs are resource identifiers (xs:anyURI) and not str
-    #
-
     # Read person element
-    person_element = owner_element.find(_ns("contact")).find(_ns("person"))
-    if person_element is not None:
-        site_owner.personID = _attr2obj(person_element, "publicID", str)
-        site_owner.person_firstname = _tag2obj(person_element, _ns("firstname"), str)
-        site_owner.person_lastname = _tag2obj(person_element, _ns("lastname"), str)
-        site_owner.person_mbox = _tag2obj(person_element, _ns("mbox"), str)
-        site_owner.person_homepage = _tag2obj(person_element, _ns("homepage"), str)
+    contact_element = owner_element.find(_ns("contact"))
+    person_element = (
+        contact_element.find(_ns("person"))
+        if contact_element is not None
+        else None
+    )
+    if person_element is None:
+        personID = None
+        person_firstname = None
+        person_lastname = None
+        person_mbox = None
+        person_homepage = None
+    else:
+        personID = _attr2obj(person_element, "publicID", str)
+        person_firstname = _tag2obj(
+            person_element, _ns("firstname"), str)
+        person_lastname = _tag2obj(person_element, _ns("lastname"), str)
+        person_mbox = _tag2obj(person_element, _ns("mbox"), str)
+        person_homepage = _tag2obj(person_element, _ns("homepage"), str)
+
+    site_owner = SERASiteOwner(
+        owner_codename=codeName,
+        owner_fullname=fullName,
+        ownerID=ownerID,
+        personID=personID,
+        person_firstname=person_firstname,
+        person_lastname=person_lastname,
+        person_mbox=person_mbox,
+        person_homepage=person_homepage)
     
     # Read affiliation element
-    affiliation_element = owner_element.find(_ns("contact")).find(_ns("affiliation"))
+    affiliation_element = contact_element.find(_ns("affiliation"))
     if affiliation_element is None:
         return site_owner
     
@@ -319,19 +326,16 @@ def _read_site_description(site_description_element):
     - preferredVelocityProfileID
     - comment (0-unbounded)
     """
-    #
-    # Add checks for all resource IDs that are mandatory
-    #
     resource_id = _attr2obj(site_description_element, "publicID", str) 
     station_code = _tag2obj(site_description_element, _ns("station"), str)
     
     latitude = _tag2obj(site_description_element, _ns("latitude"), float)
     longitude = _tag2obj(site_description_element, _ns("longitude"), float)
-    if latitude is None or longitude is None:
-        warnings.warn("Missing latitude or longitude value. " \
-                    "Processing of site description element " \
-                    "will be skipped.", UserWarning)
-        return None
+    if resource_id is None or latitude is None or longitude is None:
+        raise SiteXMLValidationError(
+            "Missing required site description publicID, latitude or "
+            "longitude value."
+        )
     
     site_description = SiteDescription(resource_id=resource_id,
                                        station_code=station_code, 
@@ -478,15 +482,16 @@ def _read_analysis(analysis_element):
         - velocityProfileReference
     """
     
-    analysis_obj = Analysis()
+    resource_id = _attr2obj(analysis_element, "publicID", str)
+    site_descriptionID = _tag2obj(
+        analysis_element, _ns("siteDescriptionID"), str)
 
-    analysis_obj.resource_id = _attr2obj(analysis_element, "publicID", str)
-    analysis_obj.site_descriptionID = _tag2obj(analysis_element, _ns("siteDescriptionID"), str)
-
-    if not analysis_obj.resource_id or not analysis_obj.site_descriptionID:
-        return None
+    analysis_obj = Analysis(resource_id=resource_id,
+                            site_descriptionID=site_descriptionID)
     
-    analysis_obj.creation_date = obspy.UTCDateTime(analysis_element.find(_ns("creationTime")).text)
+    creation_time = _tag2obj(analysis_element, _ns("creationTime"), str)
+    if creation_time is not None:
+        analysis_obj.creation_date = obspy.UTCDateTime(creation_time)
     # Resonance Frequency 
     rfreq_value = _read_value_with_uncertainty(
         analysis_element, "resonanceFrequency", float)
@@ -637,7 +642,6 @@ def _read_reference(parent, tag):
 def _read_literature_source(literature_source_element):
     """
     Read a literatureSource element.
-    Return an object only if title or doi is provided
     """
     title = _tag2obj(literature_source_element, _ns("title"), str)
     first_author = _tag2obj(literature_source_element, _ns("firstAuthor"), str)
@@ -647,19 +651,13 @@ def _read_literature_source(literature_source_element):
     doi = _tag2obj(literature_source_element, _ns("doi"), str)
     language = _tag2obj(literature_source_element, _ns("languageCode"), str)
 
-    # TODOs
-    # title and first_author are the required arguments according to the schema
-    #
-    if title or doi:
-        return LiteratureSource(title=title, 
-                                first_author=first_author, 
-                                secondary_authors=secondary_authors,
-                                year=year,
-                                booktitle=booktitle,
-                                language=language,
-                                doi=doi)
-    else:
-        return None
+    return LiteratureSource(title=title,
+                            first_author=first_author,
+                            secondary_authors=secondary_authors,
+                            year=year,
+                            booktitle=booktitle,
+                            language=language,
+                            doi=doi)
 
 def _read_value(parent, tag, type):
     """
@@ -988,7 +986,9 @@ def _write_site_owner(parent, site_owner):
         _obj2tag(site_owner_elem, "codeName", site_owner.owner_codename)
         _obj2tag(site_owner_elem, "fullName", site_owner.owner_fullname)
     else:
-        return
+        raise SiteXMLValidationError(
+            "Site owner requires owner_codename and owner_fullname."
+        )
 
     if site_owner.person_firstname and site_owner.person_lastname and site_owner.person_mbox:
         contact_elem = etree.SubElement(site_owner_elem, "contact")
@@ -999,7 +999,9 @@ def _write_site_owner(parent, site_owner):
         _obj2tag(person_elem, "mbox", site_owner.person_mbox)
         _obj2tag(person_elem, "homepage", site_owner.person_homepage)
     else:
-        return
+        raise SiteXMLValidationError(
+            "Site owner contact person requires firstname, lastname and mbox."
+        )
 
     if site_owner.institution_name and site_owner.institution_mbox:
         affiliation_elem = etree.SubElement(contact_elem, "affiliation")

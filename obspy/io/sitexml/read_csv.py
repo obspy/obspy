@@ -184,10 +184,15 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
         ) from e
     
     try:
-        conv_dict = {'velocityS30_year': int, 'velocityProfile_year': int,
-                     'resonanceFrequency_year': int, 'siteClassEC8_year': int,
-                     'bedrockDepth_year': int, 'h800_year': int,
-                     'geologicalUnit_year': int}
+        conv_dict = {
+            'velocityS30_year': _read_year_cell,
+            'velocityProfile_year': _read_year_cell,
+            'resonanceFrequency_year': _read_year_cell,
+            'siteClassEC8_year': _read_year_cell,
+            'bedrockDepth_year': _read_year_cell,
+            'h800_year': _read_year_cell,
+            'geologicalUnit_year': _read_year_cell,
+        }
         df_dict = pd.read_excel(xls, None, converters=conv_dict)
     except Exception as e:
         raise SiteXMLImportError(
@@ -244,17 +249,17 @@ def _read_site_description(df_site_description):
     for row in df_site_description.iterrows():
 
         siteID = _read_cell(row[1], "siteID")
+        resource_id =  _read_cell(row[1], "siteDescriptionID")
         latitude = _read_cell(row[1], "latitude")
         longitude = _read_cell(row[1], "longitude")
-        if siteID is None or latitude is None or longitude is None:
-            warnings.warn("Missing siteID, latitude or longitude value. " \
+        if (siteID is None or resource_id is None or
+                latitude is None or longitude is None):
+            warnings.warn("Missing siteID, siteDescriptionID, latitude or " \
+                        "longitude value. " \
                         "Processing of site description element " \
                         "will be skipped.", UserWarning)
             continue
         
-        # TODOs What if they don't provide the IDs in the csv file??
-        #
-        resource_id =  _read_cell(row[1], "siteDescriptionID")
         station_code = _read_cell(row[1], "station")
         
         # TODOS
@@ -545,16 +550,22 @@ def _read_velocity_profile_excel_file(file_path):
 def _read_reference(df_row, indicator):
 
     title = _read_cell(df_row, 'title', indicator)
-    # Title is the only required property according to schema
+    first_author = _read_cell(df_row, 'firstAuthor', indicator)
+    # Title and firstAuthor are required according to the schema.
     #
-    if title: 
-        literature_source = LiteratureSource(title = title)
-        literature_source.first_author = _read_cell(df_row, 'firstAuthor', indicator)
+    if title and first_author:
+        literature_source = LiteratureSource(title=title,
+                                             first_author=first_author)
         literature_source.secondary_authors = _read_cell(df_row, 'secondaryAuthors', indicator)
         literature_source.year = _read_cell(df_row, 'year', indicator)
         literature_source.booktitle = _read_cell(df_row, 'booktitle', indicator)
         literature_source.language = _read_cell(df_row, 'language', indicator)
         literature_source.doi = _read_cell(df_row, 'doi', indicator)
+    elif title or first_author:
+        raise SiteXMLImportError(
+            f"{indicator} literature source requires both title and "
+            "firstAuthor."
+        )
     else:
         literature_source = None
     
@@ -579,21 +590,39 @@ def _read_value_with_uncertainty(row, name):
     return metric
 
 def _read_site_owner(df):
+    if df.empty:
+        raise SiteXMLImportError("Site owner metadata is mandatory.")
 
-    obj = SERASiteOwner()
+    row = next(df.iterrows())[1]
+    required_attrs = (
+        "owner_codename", "owner_fullname",
+        "person_firstname", "person_lastname", "person_mbox")
+    missing = [
+        attr for attr in required_attrs
+        if attr not in df.columns or _empty_value(row[attr])
+    ]
+    if missing:
+        raise SiteXMLImportError(
+            "Site owner metadata is missing required value(s): "
+            + ", ".join(missing)
+        )
 
-    for _, row in df.iterrows():
-        #obj = _safe_create_instance(cls)
-        
-        for attr in vars(obj).keys():
-            pub_attr = attr.strip('_')
-            if pub_attr in df.columns and not _empty_value(row[pub_attr]):
-                try:
-                    setattr(obj, pub_attr, row[pub_attr])
-                except Exception as e:
-                    warnings.warn(
-                        f"Could not set attribute '{pub_attr}' on SiteOwner: {e}",
-                        UserWarning)
+    obj = SERASiteOwner(
+        owner_codename=row["owner_codename"],
+        owner_fullname=row["owner_fullname"],
+        person_firstname=row["person_firstname"],
+        person_lastname=row["person_lastname"],
+        person_mbox=row["person_mbox"])
+
+    for attr in vars(obj).keys():
+        pub_attr = attr.strip('_')
+        if pub_attr in df.columns and not _empty_value(row[pub_attr]):
+            try:
+                setattr(obj, pub_attr, row[pub_attr])
+            except Exception as e:
+                warnings.warn(
+                    f"Could not set attribute '{pub_attr}' on SiteOwner: {e}",
+                    UserWarning)
     return obj
 
 def _read_cell(df_row, argument, indicator=None):
@@ -608,6 +637,22 @@ def _read_cell(df_row, argument, indicator=None):
                     return df_row[argument]
         
     return None
+
+def _read_year_cell(value):
+    if _empty_value(value):
+        return None
+    if isinstance(value, float):
+        if not value.is_integer():
+            raise SiteXMLImportError(
+                f"Year values must be four-digit years, got {value!r}."
+            )
+        value = int(value)
+    value = str(value)
+    if not value.isdigit() or len(value) != 4:
+        raise SiteXMLImportError(
+            f"Year values must be four-digit years, got {value!r}."
+        )
+    return value
 
 def _empty_value(value):
     if pd.isna(value):

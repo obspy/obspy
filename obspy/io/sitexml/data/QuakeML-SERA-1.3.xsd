@@ -141,7 +141,7 @@
 		</xs:sequence>
 		<xs:attribute name="publicID" type="ResourceIdentifier">
 			<xs:annotation>
-				<xs:documentation>Unique resource ID of the site owner.<br/>
+				<xs:documentation>Unique resource ID of the site owner. Optional.<br/>
 					<strong>Example: </strong>quakeml:domain.ab/site_owner/001.
 				</xs:documentation>
 			</xs:annotation>
@@ -186,7 +186,7 @@
 		</xs:sequence>
 		<xs:attribute name="publicID" type="ResourceIdentifier">
 			<xs:annotation>
-				<xs:documentation>Unique resource ID of the person.<br/>
+				<xs:documentation>Unique resource ID of the person. Optional.<br/>
 					<strong>Example: </strong>quakeml:domain.ab/person/001.
 				</xs:documentation>
 			</xs:annotation>
@@ -257,7 +257,7 @@
 		</xs:sequence>
 		<xs:attribute name="publicID" type="ResourceIdentifier">
 			<xs:annotation>
-				<xs:documentation>Unique resource ID of the institution.<br/>
+				<xs:documentation>Unique resource ID of the institution. Optional.<br/>
 					<strong>Example: </strong>quakeml:domain.ab/institution/001.
 				</xs:documentation>
 			</xs:annotation>
@@ -330,7 +330,8 @@
 		<xs:sequence>
 			<xs:element name="station" type="xs:string" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
-					<xs:documentation>Station code.<br/>
+					<xs:documentation>Station code. Fill this if site metadata refers to a station. 
+						Otherwise leave empty.<br/>
 						<strong>Example:</strong> AGN1
 					</xs:documentation>
 				</xs:annotation>
@@ -487,7 +488,8 @@
 			<!-- ***************** GEOLOGY **************************    -->
 			<xs:element name="geologicalUnit" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
-					<xs:documentation>Free text description of the surface geology of a site. Maximum 255 characters.</xs:documentation>
+					<xs:documentation>Free text description of the surface geology of a site. 
+						Maximum 255 characters.</xs:documentation>
 				</xs:annotation>
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
@@ -519,14 +521,18 @@
 		<xs:annotation>
 					<xs:documentation>Quantitative description of the surface according to two different 
 						schemas. For details on the schemas used see SERA Deliverable D7.1 - Appendix I.
+						You can provide information for schemaA, schemaB or both.
 						<ul><li>Example schema A: <strong>T1</strong></li>
 						<li>Example schema B: <strong>Flat</strong></li></ul>
 					</xs:documentation>
 				</xs:annotation>
-		<xs:sequence>
-			<xs:element name="schemaA" type="TopographySchemaAType"/>
+		<xs:choice>
+			<xs:sequence>
+				<xs:element name="schemaA" type="TopographySchemaAType"/>
+				<xs:element name="schemaB" type="TopographySchemaBType" minOccurs="0" maxOccurs="1"/>
+			</xs:sequence>
 			<xs:element name="schemaB" type="TopographySchemaBType"/>
-		</xs:sequence>
+		</xs:choice>
 	</xs:complexType>
 
 	<!-- Site Analysis Type Definitions -->
@@ -753,7 +759,7 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="firstAuthor" type="xs:string" minOccurs="0" maxOccurs="1">
+			<xs:element name="firstAuthor" type="xs:string">
 				<xs:annotation>
 					<xs:documentation>
 						Main author of the publication.<br/>
@@ -787,7 +793,10 @@
 			<xs:element name="doi" type="xs:string" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>
-						Digital Object Identifier (DOI) of the publication.<br/>
+						Digital Object Identifier (DOI) of the publication.
+						This is optional to allow for older publications,
+						but strongly recommended unless you also provide an 
+						externalReference<br/>
 						<strong>Example: </strong>10.1007/s10518-017-0135-5
 					</xs:documentation>
 				</xs:annotation>

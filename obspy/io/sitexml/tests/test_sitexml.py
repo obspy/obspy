@@ -13,10 +13,14 @@ import io
 import re
 import warnings
 
+from lxml import etree
 import obspy
 import pytest
+from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASiteOwner,
+                                   SiteDescription)
 from obspy.io.sitexml.util import SiteXMLValidationError
-from obspy.io.sitexml.sitexml import (_is_sitexml, read_sitexml)
+from obspy.io.sitexml.sitexml import (_is_sitexml, _read_site_description,
+                                      _read_site_owner, read_sitexml)
 from obspy.io.sitexml.sitexml import write_sitexml
 
 class TestSiteXML():
@@ -127,6 +131,108 @@ class TestSiteXML():
 
         with pytest.raises(SiteXMLValidationError):
             read_sitexml(xml_buffer)
+
+    def test_analysis_requires_schema_required_ids(self):
+        with pytest.raises(SiteXMLValidationError):
+            Analysis(resource_id=None,
+                     site_descriptionID="quakeml:domain.ab/site_description/001")
+
+        with pytest.raises(SiteXMLValidationError):
+            Analysis(resource_id="quakeml:domain.ab/analysis/001",
+                     site_descriptionID=None)
+
+        with pytest.raises(SiteXMLValidationError):
+            Analysis(resource_id="",
+                     site_descriptionID="quakeml:domain.ab/site_description/001")
+
+    def test_site_description_requires_schema_required_fields(self):
+        with pytest.raises(SiteXMLValidationError):
+            SiteDescription(resource_id=None, latitude=45.0, longitude=7.0)
+
+        with pytest.raises(SiteXMLValidationError):
+            SiteDescription(
+                resource_id="quakeml:domain.ab/site_description/001",
+                latitude=None, longitude=7.0)
+
+        with pytest.raises(SiteXMLValidationError):
+            SiteDescription(
+                resource_id="quakeml:domain.ab/site_description/001",
+                latitude=45.0, longitude=None)
+
+    def test_literature_source_requires_schema_required_fields(self):
+        with pytest.raises(SiteXMLValidationError):
+            LiteratureSource(title=None, first_author="Author A.")
+
+        with pytest.raises(SiteXMLValidationError):
+            LiteratureSource(title="Some title", first_author=None)
+
+        with pytest.raises(SiteXMLValidationError):
+            LiteratureSource(title=" ", first_author="Author A.")
+
+    def test_literature_source_year_uses_schema_string_type(self):
+        literature_source = LiteratureSource(
+            title="Some title", first_author="Author A.", year=2018)
+
+        assert literature_source.year == "2018"
+
+        with pytest.raises(SiteXMLValidationError):
+            LiteratureSource(
+                title="Some title", first_author="Author A.", year="18")
+
+    def test_site_owner_requires_schema_required_fields(self):
+        with pytest.raises(SiteXMLValidationError):
+            SERASiteOwner(
+                owner_codename=None,
+                owner_fullname="Test Owner",
+                person_firstname="Name",
+                person_lastname="Surname",
+                person_mbox="someemail@domain.ab")
+
+        with pytest.raises(SiteXMLValidationError):
+            SERASiteOwner(
+                owner_codename="TEST",
+                owner_fullname="Test Owner",
+                person_firstname="Name",
+                person_lastname=None,
+                person_mbox="someemail@domain.ab")
+
+    def test_read_site_description_requires_schema_required_fields(self):
+        element = etree.fromstring(
+            b"""
+            <siteDescription xmlns="http://www.orfeus-eu.org/xml/site/1">
+                <latitude>45.0</latitude>
+                <longitude>7.0</longitude>
+            </siteDescription>
+            """)
+
+        with pytest.raises(SiteXMLValidationError):
+            _read_site_description(element)
+
+    def test_read_site_owner_requires_schema_required_contact_person(self):
+        element = etree.fromstring(
+            b"""
+            <siteOwner xmlns="http://www.orfeus-eu.org/xml/site/1">
+                <codeName>TEST</codeName>
+                <fullName>Test Owner</fullName>
+            </siteOwner>
+            """)
+
+        with pytest.raises(SiteXMLValidationError):
+            _read_site_owner(element)
+
+    @pytest.mark.parametrize("topography_a, topography_b", [
+        ("T1", None),
+        (None, "Flat"),
+    ])
+    def test_write_site_topography_requires_at_least_one_schema(
+            self, testdata, topography_a, topography_b):
+        filename = testdata["minimal_sitexml.xml"]
+        sera_site = read_sitexml(filename)
+        sera_site.site_description.topographyA = topography_a
+        sera_site.site_description.topographyB = topography_b
+
+        xml_buffer = io.BytesIO()
+        write_sitexml(sera_site, xml_buffer, validate=True)
         
     def test_read_and_write_full_file(self, testdata):
         """
@@ -205,7 +311,7 @@ class TestSiteXML():
         assert ls.title == "Some title"
         assert ls.first_author == "Author A."
         assert ls.secondary_authors == "Author B., Author C."
-        assert ls.year == 2018
+        assert ls.year == "2018"
         assert ls.booktitle == "Some magazine"
         assert ls.doi == "10.1007/s10518-017-0135-5"
         assert ls.language == "en"
@@ -269,7 +375,7 @@ class TestSiteXML():
         assert ls.title == "Some title"
         assert ls.first_author == "Author A."
         assert ls.secondary_authors == "Author B., Author C."
-        assert ls.year == 2018
+        assert ls.year == "2018"
         assert ls.booktitle == "Some magazine"
         assert ls.doi == "10.1007/s10518-017-0135-5"
         assert ls.language == "en"
@@ -293,6 +399,25 @@ class TestSiteXML():
 
         # Write it again and compare to the original file.
         self._write_and_compare(filename, sera_site)
+
+    def test_read_analysis_without_creation_time(self, testdata):
+        """
+        Tests reading a schema-valid <analysis> without optional creationTime.
+        """
+        filename = testdata["full_analysis.xml"]
+        with open(filename, "rb") as fh:
+            xml = fh.read()
+
+        analysis_creation_time = (
+            b"        <creationTime>2015-11-10T00:00:00.000000Z"
+            b"</creationTime>\n"
+        )
+        xml = xml.replace(analysis_creation_time, b"", 1)
+
+        sera_site = read_sitexml(io.BytesIO(xml))
+
+        assert len(sera_site.analysis) == 1
+        assert sera_site.analysis[0].creation_date is None
 
     def test_reading_and_writing_velocity_profile_tag(self, testdata):
         """

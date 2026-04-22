@@ -343,7 +343,44 @@ def enum_list_property(attr_name, enum_type, allow_none=True):
 
     return property(getter, setter)
 
-def wrapped_property(attr_name, wrapper_type):
+def scalar_property(attr_name, value_type=None, allow_none=True,
+                    allow_empty=True):
+    """
+    Creates a property for scalar values with optional requiredness checks.
+
+    If ``value_type`` is not provided, values are stored unchanged. This keeps
+    resource identifier fields type-flexible until their exact API type is
+    reviewed separately.
+    """
+    private_name = f"_{attr_name}"
+
+    def getter(self):
+        return getattr(self, private_name)
+
+    def setter(self, value):
+        if value is None:
+            if allow_none:
+                setattr(self, private_name, None)
+                return
+            raise SiteXMLValidationError(f"{attr_name} is required.")
+
+        if isinstance(value, str) and not allow_empty and not value.strip():
+            raise SiteXMLValidationError(f"{attr_name} cannot be empty.")
+
+        if value_type is not None and not isinstance(value, value_type):
+            try:
+                value = value_type(value)
+            except Exception as e:
+                raise SiteXMLValidationError(
+                    f"Could not convert {value} "
+                    f"to {value_type.__name__}: {e}"
+                )
+
+        setattr(self, private_name, value)
+
+    return property(getter, setter)
+
+def wrapped_property(attr_name, wrapper_type, allow_none=True):
     """
     Method to produce getter/setter functions 
     and wrap argument values into the appropriate type.
@@ -354,7 +391,12 @@ def wrapped_property(attr_name, wrapper_type):
         return getattr(self, private_name)
 
     def setter(self, value):
-        if value is None or isinstance(value, wrapper_type):
+        if value is None:
+            if allow_none:
+                setattr(self, private_name, None)
+                return
+            raise SiteXMLValidationError(f"{attr_name} is required.")
+        if isinstance(value, wrapper_type):
             setattr(self, private_name, value)
         else:
             try:
