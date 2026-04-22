@@ -264,6 +264,11 @@ SERA Deliverable 7.1, Appendix III.
 """
 
 def _pretty_str(obj):
+    """
+    Return a compact representation of non-empty public object attributes.
+
+    :rtype: str
+    """
     return ", ".join(
         f"{key}='{value}'" for key, value in vars(obj).items() 
         if value is not None
@@ -273,6 +278,8 @@ def enum_property(attr_name, enum_type):
     """
     Method to produce getter/setter functions 
     and validate enum type values.
+
+    :rtype: property
     """
     private_name = f"_{attr_name}"
 
@@ -297,6 +304,8 @@ def enum_list_property(attr_name, enum_type, allow_none=True):
     - Accepts strings (case-insensitive) that match enum keys, and returns the
       canonical enum value string (original casing from Enum definition).
     - Stores a plain Python list for deepcopy safety.
+
+    :rtype: property
     """
 
     # TODOS
@@ -351,6 +360,8 @@ def scalar_property(attr_name, value_type=None, allow_none=True,
     If ``value_type`` is not provided, values are stored unchanged. This keeps
     resource identifier fields type-flexible until their exact API type is
     reviewed separately.
+
+    :rtype: property
     """
     private_name = f"_{attr_name}"
 
@@ -384,6 +395,11 @@ def wrapped_property(attr_name, wrapper_type, allow_none=True):
     """
     Method to produce getter/setter functions 
     and wrap argument values into the appropriate type.
+
+    :param attr_name: name of the attribute
+    :param wrapper_type: class used to wrap each element
+    :param allow_none: whether None is allowed
+    :rtype: property
     """
     private_name = f"_{attr_name}"
 
@@ -416,6 +432,7 @@ def wrapped_list_property(attr_name, wrapper_type, allow_none=True):
     :param attr_name: name of the attribute
     :param wrapper_type: class used to wrap each element
     :param allow_none: whether None is allowed
+    :rtype: property
     """
     private_name = f"_{attr_name}"
 

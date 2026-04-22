@@ -32,11 +32,18 @@ SCHEMA_VERSION = "1.3"
 NAMESPACE = "http://www.orfeus-eu.org/xml/site/1"
 
 def _ns(tagname):
-        return "{%s}%s" % (NAMESPACE, tagname)
+    """
+    Return a namespaced SiteXML tag name for lxml lookups.
+
+    :rtype: str
+    """
+    return "{%s}%s" % (NAMESPACE, tagname)
 
 def _get_version_from_xmldoc(xmldoc):
     """
     Return SiteXML version string or ``None`` if parsing fails.
+
+    :rtype: str or None
     """
     root = xmldoc.getroot()
     try:
@@ -61,6 +68,7 @@ def _is_sitexml(path_or_file_object):
     it only checks the root tag and the schema version. 
 
     :param path_or_file_object: File name or file like object.
+    :rtype: bool
     """
     if hasattr(path_or_file_object, "tell") and hasattr(path_or_file_object,
                                                         "seek"):
@@ -99,6 +107,7 @@ def validate_sitexml(path_or_object):
 
     :param path_or_object: File name or file like object. Can also be an etree
         element.
+    :rtype: tuple
     """
     if hasattr(path_or_object, "tell") and hasattr(path_or_object, "seek"):
         current_position = path_or_object.tell()
@@ -230,6 +239,7 @@ def _read_site_owner(owner_element):
                     - streetAddress, locality, postalCode
                     - country
                         - country, code
+    :rtype: :class:`~obspy.io.sitexml.core.SERASiteOwner`
     """
 
     ownerID = _attr2obj(owner_element, "publicID", str)
@@ -325,6 +335,7 @@ def _read_site_description(site_description_element):
     - preferredSiteAnalysisID
     - preferredVelocityProfileID
     - comment (0-unbounded)
+    :rtype: :class:`~obspy.io.sitexml.core.SiteDescription`
     """
     resource_id = _attr2obj(site_description_element, "publicID", str) 
     station_code = _tag2obj(site_description_element, _ns("station"), str)
@@ -383,6 +394,7 @@ def _read_morphology(morphology_element, site_description_obj):
         - h800, h800Qindex1, h800Reference
         - geologicalUnit, geologicalUnitQindex1, geologicalUnitReference, 
         - geologicalMapScale, geologicalUnitOGE
+    :rtype: None
     """
     site_description_obj.morphology = _tag2obj(morphology_element, _ns("morphology"), str)
 
@@ -455,6 +467,7 @@ def _read_analysis(analysis_element):
     :type analysis_obj: :class:`~obspy.core.io.sitexml.core.Analysis`
     :param analysis_obj: The Analysis object to store the values 
         read from the <Analysis> element.
+    :rtype: :class:`~obspy.io.sitexml.core.Analysis`
 
     <Analysis> element structure:
 
@@ -602,6 +615,11 @@ def _read_velocity_profile(analysis_element, analysis_obj):
         analysis_obj.velocity_profile_survey.velocity_profiles.append(vp)
 
 def _read_velocity_profile_data(vp_data_element):
+    """
+    Read one velocityProfileData element into a layer object.
+
+    :rtype: :class:`~obspy.io.sitexml.core.VelocityProfileData`
+    """
 
     density = _read_value_with_uncertainty(vp_data_element, "density", float)
     velocityS = _read_value_with_uncertainty(vp_data_element, "velocityS", float)
@@ -619,6 +637,11 @@ def _read_velocity_profile_data(vp_data_element):
     return vp_data
 
 def _read_reference(parent, tag):
+    """
+    Read literature and external references from an indicator reference tag.
+
+    :rtype: tuple
+    """
     reference_element = parent.find(_ns(tag))
     if reference_element is None:
         return None, None
@@ -642,6 +665,8 @@ def _read_reference(parent, tag):
 def _read_literature_source(literature_source_element):
     """
     Read a literatureSource element.
+
+    :rtype: :class:`~obspy.io.sitexml.core.LiteratureSource`
     """
     title = _tag2obj(literature_source_element, _ns("title"), str)
     first_author = _tag2obj(literature_source_element, _ns("firstAuthor"), str)
@@ -669,6 +694,8 @@ def _read_value(parent, tag, type):
 		    <xs:element name="value" type="type"/>
         </xs:element>
 	</xs:element>
+
+    :rtype: object or None
     """
     element = parent.find(_ns(tag))
     if element is None:
@@ -686,6 +713,8 @@ def _read_value_with_uncertainty(parent, tag, type):
             <xs:element name="uncertainty" type="type"/>
         </xs:element>
     </xs:element>
+
+    :rtype: :class:`~obspy.io.sitexml.core.ValueWithUncertainty` or None
     """
     element = parent.find(_ns(tag))
     if element is None:
@@ -699,6 +728,8 @@ def _read_value_with_uncertainty(parent, tag, type):
 def _read_external_reference(ref_element):
     """
     Read an ExternalReference object.
+
+    :rtype: :class:`~obspy.core.inventory.util.ExternalReference`
     """
     uri = _tag2obj(ref_element, _ns("uri"), str)
     description = _tag2obj(ref_element, _ns("description"), str)
@@ -734,6 +765,7 @@ def quality_index1(method=None, evaluation=None, reliability=None, completeness=
         Please note that the presence of a detailed report is very important; 
         in case of the absence of any report documenting the value of a given indicator, 
         the corresponding quality_index1 is assigned a zero value.
+    :rtype: float
     """
 
     # A. Method of acquisition and analysis quality index. Takes two values:
@@ -809,6 +841,7 @@ def quality_index2(sera_site):
     
     :type sera_site: :class:`~obspy.io.sitexml.core.SERASite
     :param sera_site: The site for which to calculate quality index #2
+    :rtype: float or None
     """
 
     if not sera_site:
@@ -888,6 +921,7 @@ def quality_index3(f0_vs30 = 0, f0_bedrock_depth = 0, f0_h800 = 0, vs30_h800 = 0
     Q_Index3 = [cons(f0, Vs30) + cons(f0, seismic_bedrock_depth) + 
                 cons(f0, engineering_bedrock_depth) + cons(H800, Vs30) + 
                 cons(Vs30, geology)] / n
+    :rtype: float
     """
     n = 5       # Number of couples used for the calculation of quality_index3
     quality_index3 = (f0_vs30 + f0_bedrock_depth + f0_h800 + vs30_h800 + vs30_geology) / n
@@ -905,6 +939,7 @@ def overall_quality_index(quality_index2 = 0, quality_index3 = 0):
     The range of values of Overall_Quality_Index is spanning from 0 to 1. 
     A value of 1 is for a site with a very thorough and reliable seismic characterization, 
     0 is assigned to a site badly or not characterized.
+    :rtype: float
     """
     overall_quality_index = (quality_index2 + quality_index3) / 2
 
@@ -924,6 +959,7 @@ def write_sitexml(sera_site, file_or_file_object, validate=True, nsmap=None):
         don't trust ObsPy. Defaults to True.
     :type nsmap: dict
     :param nsmap: Additional custom namespace abbreviation mappings.
+    :rtype: None
     """
     if nsmap is None:
         nsmap = {}
@@ -980,6 +1016,11 @@ def write_sitexml(sera_site, file_or_file_object, validate=True, nsmap=None):
 
 
 def _write_site_owner(parent, site_owner):
+    """
+    Append a siteOwner element to ``parent``.
+
+    :rtype: None
+    """
     if site_owner.owner_codename and site_owner.owner_fullname:
         attribs = {"publicID": site_owner.ownerID} if site_owner.ownerID else None
         site_owner_elem = etree.SubElement(parent, "siteOwner", attribs)
@@ -1026,6 +1067,11 @@ def _write_site_owner(parent, site_owner):
 
 
 def _write_site_description(parent, site_description):
+    """
+    Append a siteDescription element to ``parent``.
+
+    :rtype: None
+    """
     attribs = {"publicID": site_description.resource_id} if site_description.resource_id else None
     site_description_elem = etree.SubElement(parent, "siteDescription", attribs)
 
@@ -1065,6 +1111,11 @@ def _write_site_description(parent, site_description):
 
 
 def _write_analysis(parent, analysis_list):
+    """
+    Append all analysis elements to ``parent``.
+
+    :rtype: None
+    """
     for analysis in analysis_list:
         attribs = {"publicID": analysis.resource_id} if analysis.resource_id else None
         analysis_elem = etree.SubElement(parent, "analysis", attribs)
@@ -1081,6 +1132,11 @@ def _write_analysis(parent, analysis_list):
 
 
 def _write_velocity_profile(parent, velocity_profile_survey):
+    """
+    Append velocity-profile elements and survey metadata to ``parent``.
+
+    :rtype: None
+    """
     if velocity_profile_survey:
         if velocity_profile_survey.velocity_profiles:
             for vp in velocity_profile_survey.velocity_profiles:
@@ -1118,6 +1174,11 @@ def _write_velocity_profile(parent, velocity_profile_survey):
 
 
 def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
+    """
+    Append a site indicator value, methods, quality index, and reference.
+
+    :rtype: None
+    """
     if site_indicator_obj:
         if isinstance(site_indicator_obj.value, ValueWithUncertainty):
             _write_value_with_uncertainty(parent, site_indicator_name,
@@ -1147,6 +1208,11 @@ def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
 
 
 def _write_reference(parent, site_indicator_obj):
+    """
+    Append a reference element for a site indicator when metadata exists.
+
+    :rtype: None
+    """
     literature_obj = site_indicator_obj.literature_source
     external_reference_obj = site_indicator_obj.external_reference
 
@@ -1172,18 +1238,33 @@ def _write_reference(parent, site_indicator_obj):
 
 
 def _write_methods(parent, site_indicator_name, site_indicator_obj):
+    """
+    Append method elements for a site indicator.
+
+    :rtype: None
+    """
     if site_indicator_obj.methods:
         for method in site_indicator_obj.methods:
             _obj2tag(parent, site_indicator_name + "Method", method)
 
 
 def _write_value(parent, tag, value):
+    """
+    Append an element containing a nested value child.
+
+    :rtype: None
+    """
     if value is not None:
         element = etree.SubElement(parent, tag)
         etree.SubElement(element, "value").text = str(value)
 
 
 def _write_value_with_uncertainty(parent, tag, value):
+    """
+    Append a value/uncertainty quantity element.
+
+    :rtype: None
+    """
     if isinstance(value, ValueWithUncertainty):
         element = etree.SubElement(parent, tag)
         etree.SubElement(element, "value").text = str(value.value)
@@ -1192,11 +1273,21 @@ def _write_value_with_uncertainty(parent, tag, value):
 
 
 def _write_external_reference(parent, ref):
+    """
+    Append an externalReference element.
+
+    :rtype: None
+    """
     ref_elem = etree.SubElement(parent, "externalReference")
     etree.SubElement(ref_elem, "uri").text = ref.uri
     etree.SubElement(ref_elem, "description").text = ref.description
 
 
 def _obj2tag(parent, tag_name, tag_value):
+    """
+    Append a simple text element when ``tag_value`` is present.
+
+    :rtype: None
+    """
     if tag_value is not None:
         etree.SubElement(parent, tag_name).text = str(tag_value)

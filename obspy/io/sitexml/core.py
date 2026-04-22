@@ -20,6 +20,10 @@ from .util import (BaseNode, SiteXMLValidationError,
                     wrapped_list_property, enum_list_property)
     
 class ValueWithUncertainty(BaseNode):
+    """
+    Numeric SiteXML value with an optional uncertainty of the same type.
+    """
+
     def __init__(self, value, uncertainty=None, valid_type=float):
         """
         :param value: int or float, the main value.
@@ -77,6 +81,10 @@ class ValueWithUncertainty(BaseNode):
             return f"{self.value:.2f}"
 
 class LiteratureSource(BaseNode):
+    """
+    Bibliographic source metadata used by SiteXML indicator references.
+    """
+
     title = scalar_property("title", allow_none=False, allow_empty=False)
     first_author = scalar_property(
         "first_author", allow_none=False, allow_empty=False)
@@ -133,6 +141,10 @@ class LiteratureSource(BaseNode):
         self._year = value
 
 class SiteIndicator(BaseNode):
+    """
+    Base class for SiteXML site-characterization indicator objects.
+    """
+
     literature_source = wrapped_property("literature_source", LiteratureSource)
     #quality_index = wrapped_property("quality_index", float)
 
@@ -191,6 +203,10 @@ class SiteIndicator(BaseNode):
         return ret
 
 class EC8(SiteIndicator):
+    """
+    Eurocode 8 ground type indicator.
+    """
+
     value = enum_property("value", EC8Class)
     
     def __init__(self, value, quality_index=None, literature_source=None, external_reference=None):
@@ -210,6 +226,10 @@ class EC8(SiteIndicator):
                 literature_source=literature_source, external_reference=external_reference)
 
 class H800(SiteIndicator):
+    """
+    Engineering bedrock depth indicator for Vs greater than 800 m/s.
+    """
+
     value = wrapped_property("value", ValueWithUncertainty)
 
     def __init__(self, value, quality_index=None, literature_source=None, 
@@ -231,6 +251,10 @@ class H800(SiteIndicator):
                 literature_source=literature_source, external_reference=external_reference)
 
 class BedrockDepth(SiteIndicator):
+    """
+    Seismological bedrock depth indicator.
+    """
+
     value = wrapped_property("value", ValueWithUncertainty)
 
     def __init__(self, value, quality_index=None, literature_source=None, 
@@ -251,6 +275,10 @@ class BedrockDepth(SiteIndicator):
             literature_source=literature_source, external_reference=external_reference)
 
 class GeologicalUnit(SiteIndicator):
+    """
+    Surface geology indicator with optional map-scale metadata.
+    """
+
     def __init__(self, value, quality_index=None, geological_map_scale=None, 
                  geological_unit_OGE=None, literature_source=None, external_reference=None):
         """
@@ -275,6 +303,10 @@ class GeologicalUnit(SiteIndicator):
                 literature_source=literature_source, external_reference=external_reference)
         
 class ResonanceFrequency(SiteIndicator):
+    """
+    Site resonance-frequency indicator.
+    """
+
     value = wrapped_property("value", ValueWithUncertainty)
     methods = enum_list_property("methods", ResonanceFrequencyMethod)
 
@@ -299,6 +331,10 @@ class ResonanceFrequency(SiteIndicator):
             external_reference=external_reference)
         
 class VelocityS30(SiteIndicator):
+    """
+    Time-averaged shear-wave velocity over the upper 30 meters.
+    """
+
     value = wrapped_property("value", ValueWithUncertainty)
     methods = enum_list_property("methods", VelocityS30Method)
     method_combined_qindex = enum_property("velocityS30MethodCombIndex", Vs30MethodCombined)
@@ -348,7 +384,10 @@ class VelocityS30(SiteIndicator):
         return "\n".join(output)
         
 class VelocityProfileSurvey(SiteIndicator):
-    
+    """
+    Site indicator containing one or more velocity profiles.
+    """
+
     def __init__(self, velocity_profiles=None, quality_index=None, 
                  literature_source=None, external_reference=None):
         """
@@ -380,6 +419,10 @@ class VelocityProfileSurvey(SiteIndicator):
         return "\n".join(output) 
 
 class VelocityProfileData(BaseNode):
+    """
+    Physical properties for a single velocity-profile layer.
+    """
+
     density = wrapped_property("density", ValueWithUncertainty)
     velocityP = wrapped_property("velocityP", ValueWithUncertainty)
     velocityS = wrapped_property("velocityS", ValueWithUncertainty)
@@ -407,6 +450,10 @@ class VelocityProfileData(BaseNode):
         self.bottom_depth = bottom_depth
 
 class VelocityProfile(BaseNode):
+    """
+    Layered velocity profile associated with an analysis.
+    """
+
     velocity_profile_data = wrapped_list_property("velocity_profile_data", VelocityProfileData)
     #resource_id = wrapped_property("resource_id", ResourceIdentifier)
 
@@ -484,6 +531,10 @@ class VelocityProfile(BaseNode):
         return "\n".join(lines)
     
 class SERASiteOwner(BaseNode):
+    """
+    Site owner and required contact-person metadata.
+    """
+
     #ownerID = wrapped_property("ownerID", ResourceIdentifier)
     owner_codename = scalar_property(
         "owner_codename", allow_none=False, allow_empty=False)
@@ -502,6 +553,48 @@ class SERASiteOwner(BaseNode):
                  institution_name=None, institution_mbox=None, institution_phone=None, institution_homepage=None, institutionID=None,
                  address_street=None, address_locality=None, address_postal_code=None, address_country=None, address_country_code=None,
                  affiliation_department=None, affiliation_function=None):
+        """
+        :type owner_codename: str
+        :param owner_codename: Short code name for the site owner. Required.
+        :type owner_fullname: str
+        :param owner_fullname: Full name of the site owner. Required.
+        :type person_firstname: str
+        :param person_firstname: First name of the contact person. Required.
+        :type person_lastname: str
+        :param person_lastname: Last name of the contact person. Required.
+        :type person_mbox: str
+        :param person_mbox: Email address of the contact person. Required.
+        :type ownerID: str, optional
+        :param ownerID: Public identifier for the owner.
+        :type person_homepage: str, optional
+        :param person_homepage: Homepage URL for the contact person.
+        :type personID: str, optional
+        :param personID: Public identifier for the contact person.
+        :type institution_name: str, optional
+        :param institution_name: Name of the contact person's institution.
+        :type institution_mbox: str, optional
+        :param institution_mbox: Email address of the institution.
+        :type institution_phone: str, optional
+        :param institution_phone: Phone number of the institution.
+        :type institution_homepage: str, optional
+        :param institution_homepage: Homepage URL of the institution.
+        :type institutionID: str, optional
+        :param institutionID: Public identifier for the institution.
+        :type address_street: str, optional
+        :param address_street: Street address of the institution.
+        :type address_locality: str, optional
+        :param address_locality: Locality of the institution address.
+        :type address_postal_code: str, optional
+        :param address_postal_code: Postal code of the institution address.
+        :type address_country: str, optional
+        :param address_country: Country name of the institution address.
+        :type address_country_code: str, optional
+        :param address_country_code: Country code of the institution address.
+        :type affiliation_department: str, optional
+        :param affiliation_department: Department of the contact person.
+        :type affiliation_function: str, optional
+        :param affiliation_function: Function or position of the contact person.
+        """
         self.owner_codename = owner_codename 
         self.owner_fullname = owner_fullname
         self.ownerID = ownerID 
@@ -554,6 +647,10 @@ class SERASiteOwner(BaseNode):
         return ret
     
 class SiteDescription(BaseNode):
+    """
+    Location, morphology, and near-surface description for a SiteXML site.
+    """
+
     resource_id = scalar_property(
         "resource_id", allow_none=False, allow_empty=False)
     latitude = wrapped_property("latitude", Latitude, allow_none=False)
@@ -691,6 +788,10 @@ class SiteDescription(BaseNode):
         self._station_code = value
 
 class Analysis(BaseNode):
+    """
+    Site-characterization analysis and related indicator metadata.
+    """
+
     resource_id = scalar_property(
         "resource_id", allow_none=False, allow_empty=False)
     site_descriptionID = scalar_property(
@@ -723,7 +824,7 @@ class Analysis(BaseNode):
         :param cpt_logs_count: Number of available CPT profile(s). 
         :type borehole_logs_count: Non-negative int, optional.
         :param borehole_logs_count: Number of available borehole log profile(s). 
-       """
+        """
         self.resource_id = resource_id        
         self.site_descriptionID = site_descriptionID
         self.creation_date = creation_date
@@ -757,6 +858,11 @@ class Analysis(BaseNode):
 
     @staticmethod
     def _coerce_non_negative_int(attr_name, value):
+        """
+        Return ``value`` as a non-negative integer or ``None``.
+
+        :rtype: int or None
+        """
         if value is None:
             return None
         try:

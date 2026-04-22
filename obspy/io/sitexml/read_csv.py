@@ -39,6 +39,7 @@ def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     :type output_folder: str, optional
     :param output_folder: Output folder to write the SiteXMl files. 
                         If not provided writes to the current folder.
+    :rtype: None
     """
     for sera_site in sera_site_dict.values():
         if sera_site.site_description.station_code:
@@ -243,6 +244,11 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     return sera_site_dict
 
 def _read_site_description(df_site_description):
+    """
+    Return site-description objects keyed by site ID from tabular metadata.
+
+    :rtype: dict
+    """
     
     site_description_dict = {}
 
@@ -427,6 +433,11 @@ def _read_velocity_profile(rows):
     )
 
 def _read_site_indicator(df_row, cls, indicator):
+    """
+    Build one site indicator from a tabular row and indicator prefix.
+
+    :rtype: :class:`~obspy.io.sitexml.core.SiteIndicator` or None
+    """
     
     if indicator != "velocityProfile":
         value_column = indicator + '_value'
@@ -466,6 +477,11 @@ def _read_site_indicator(df_row, cls, indicator):
     return obj
 
 def _csv_import_velocity_profiles(path, delim='\t'):
+    """
+    Read velocity-profile metadata from CSV files or a CSV directory.
+
+    :rtype: dict or None
+    """
     return _import_velocity_profiles(
         path=path,
         allowed_extensions=(".csv",),
@@ -474,6 +490,11 @@ def _csv_import_velocity_profiles(path, delim='\t'):
         kind_name="CSV")
 
 def _excel_import_velocity_profiles(path):
+    """
+    Read velocity-profile metadata from Excel files or an Excel directory.
+
+    :rtype: dict or None
+    """
     return _import_velocity_profiles(
         path=path,
         allowed_extensions=(".xls", ".xlsx", ".xlsm", ".xlsb"),
@@ -482,6 +503,11 @@ def _excel_import_velocity_profiles(path):
 
 
 def _import_velocity_profiles(path, allowed_extensions, read_file, kind_name):
+    """
+    Read velocity-profile files and return dataframes grouped by site ID.
+
+    :rtype: dict or None
+    """
     if not path:
         return None
 
@@ -511,6 +537,11 @@ def _import_velocity_profiles(path, allowed_extensions, read_file, kind_name):
 
 
 def _read_velocity_profile_csv_file(file_path, delim='\t'):
+    """
+    Read one velocity-profile CSV file as a dataframe.
+
+    :rtype: :class:`pandas.DataFrame`
+    """
     try:
         return pd.read_csv(file_path, sep=delim)
     except OSError as e:
@@ -524,6 +555,11 @@ def _read_velocity_profile_csv_file(file_path, delim='\t'):
 
 
 def _read_velocity_profile_excel_file(file_path):
+    """
+    Read all non-empty velocity-profile sheets from one Excel file.
+
+    :rtype: :class:`pandas.DataFrame`
+    """
     try:
         df_dict = pd.read_excel(file_path, None)
     except OSError as e:
@@ -548,6 +584,11 @@ def _read_velocity_profile_excel_file(file_path):
     return df
 
 def _read_reference(df_row, indicator):
+    """
+    Return literature and external-reference metadata for one indicator.
+
+    :rtype: tuple
+    """
 
     title = _read_cell(df_row, 'title', indicator)
     first_author = _read_cell(df_row, 'firstAuthor', indicator)
@@ -580,6 +621,11 @@ def _read_reference(df_row, indicator):
     return literature_source, external_reference
 
 def _read_value_with_uncertainty(row, name):
+    """
+    Return a ValueWithUncertainty read from ``<name>_value`` columns.
+
+    :rtype: :class:`~obspy.io.sitexml.core.ValueWithUncertainty` or None
+    """
 
     metric = ValueWithUncertainty(row[name+"_value"]) \
         if not _empty_value(row[name+"_value"]) else None
@@ -590,6 +636,11 @@ def _read_value_with_uncertainty(row, name):
     return metric
 
 def _read_site_owner(df):
+    """
+    Return the required site-owner metadata from the first dataframe row.
+
+    :rtype: :class:`~obspy.io.sitexml.core.SERASiteOwner`
+    """
     if df.empty:
         raise SiteXMLImportError("Site owner metadata is mandatory.")
 
@@ -626,6 +677,11 @@ def _read_site_owner(df):
     return obj
 
 def _read_cell(df_row, argument, indicator=None):
+    """
+    Return a non-empty cell value, optionally using an indicator prefix.
+
+    :rtype: object or None
+    """
 
     if indicator:
         if indicator + "_" + argument in df_row and \
@@ -639,6 +695,11 @@ def _read_cell(df_row, argument, indicator=None):
     return None
 
 def _read_year_cell(value):
+    """
+    Normalize an Excel year cell to the schema's four-digit string form.
+
+    :rtype: str or None
+    """
     if _empty_value(value):
         return None
     if isinstance(value, float):
@@ -655,6 +716,11 @@ def _read_year_cell(value):
     return value
 
 def _empty_value(value):
+    """
+    Return whether a tabular cell should be treated as missing.
+
+    :rtype: bool
+    """
     if pd.isna(value):
         return True
     if isinstance(value, str):
