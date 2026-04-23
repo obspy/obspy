@@ -308,9 +308,6 @@ def enum_list_property(attr_name, enum_type, allow_none=True):
     :rtype: property
     """
 
-    # TODOS
-    # Validate when values are appended / inserted in the list
-    #
     private_name = f"_{attr_name}"
 
     def getter(self):
@@ -329,6 +326,25 @@ def enum_list_property(attr_name, enum_type, allow_none=True):
                 f"Invalid {attr_name} entry {x!r}. Allowed: {enum_type.values()}"
             )
 
+    class _EnumList(list):
+        def __init__(self, values=()):
+            super().__init__(_eval_enum(value) for value in values)
+
+        def append(self, value):
+            super().append(_eval_enum(value))
+
+        def insert(self, index, value):
+            super().insert(index, _eval_enum(value))
+
+        def extend(self, values):
+            super().extend(_eval_enum(value) for value in values)
+
+        def __setitem__(self, index, value):
+            if isinstance(index, slice):
+                super().__setitem__(index, [_eval_enum(item) for item in value])
+            else:
+                super().__setitem__(index, _eval_enum(value))
+
     def setter(self, values):
         if values is None:
             if allow_none:
@@ -341,14 +357,7 @@ def enum_list_property(attr_name, enum_type, allow_none=True):
                 f"{attr_name} must be an iterable of strings"
             )
 
-        normalized = [_eval_enum(v) for v in values]
-
-        setattr(self, private_name, normalized)
-
-        # store as tuple by default to prevent mutation without validation
-        #if iterable_type is list:    
-        #else:
-        #setattr(self, private_name, iterable_type(normalized))
+        setattr(self, private_name, _EnumList(values))
 
     return property(getter, setter)
 

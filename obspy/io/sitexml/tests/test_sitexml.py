@@ -18,6 +18,7 @@ import obspy
 import pytest
 from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASite,
                                    SERASiteOwner, SiteDescription,
+                                   ResonanceFrequency,
                                    ValueWithUncertainty, VelocityProfile,
                                    VelocityProfileData)
 from obspy.io.sitexml.util import SiteXMLValidationError
@@ -238,6 +239,28 @@ class TestSiteXML():
         with pytest.raises(SiteXMLValidationError):
             LiteratureSource(
                 title="Some title", first_author="Author A.", year="18")
+
+    def test_enum_list_property_validates_list_mutations(self):
+        resonance_frequency = ResonanceFrequency(
+            value=ValueWithUncertainty(1.0),
+            methods=["hvsr noise"])
+
+        assert resonance_frequency.methods == ["HVSR NOISE"]
+
+        resonance_frequency.methods.append("ssr earthquake records")
+        resonance_frequency.methods.insert(0, "inferred")
+
+        assert resonance_frequency.methods == [
+            "INFERRED",
+            "HVSR NOISE",
+            "SSR EARTHQUAKE RECORDS",
+        ]
+
+        with pytest.raises(SiteXMLValidationError):
+            resonance_frequency.methods.append("not-a-method")
+
+        with pytest.raises(SiteXMLValidationError):
+            resonance_frequency.methods.insert(0, 123)
 
     def test_site_owner_requires_schema_required_fields(self):
         with pytest.raises(SiteXMLValidationError):
