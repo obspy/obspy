@@ -52,6 +52,7 @@ class TestSiteXMLCSVImport():
         assert set(sera_site_dict) == {
             "quakeml:domain.ab/site/001",
             "quakeml:domain.ab/site/002",
+            "quakeml:domain.ab/site/003",
         }
 
         site_001 = sera_site_dict["quakeml:domain.ab/site/001"]
@@ -88,6 +89,7 @@ class TestSiteXMLCSVImport():
         site_002 = sera_site_dict["quakeml:domain.ab/site/002"]
         assert site_002.site_description.resource_id == (
             "quakeml:domain.ab/site_description/002")
+        assert site_002.site_description.station_code == "WXYZ"
         assert len(site_002.analysis) == 1
 
         analysis_002 = site_002.analysis[0]
@@ -97,6 +99,17 @@ class TestSiteXMLCSVImport():
         assert analysis_002.velocity_s30.methods == ["S-REFL"]
         assert analysis_002.velocity_profile_survey is not None
         assert len(analysis_002.velocity_profile_survey.velocity_profiles) == 3
+
+        site_003 = sera_site_dict["quakeml:domain.ab/site/003"]
+        assert site_003.site_description.resource_id == (
+            "quakeml:domain.ab/site_description/003")
+        assert site_003.site_description.station_code is None
+        assert site_003.site_description.topographyA == "T2"
+        assert site_003.site_description.topographyB == "Flat"
+        assert site_003.site_description.morphology == "Plain"
+        assert site_003.site_description.preferred_site_analysisID is None
+        assert site_003.site_description.preferred_velocity_profileID is None
+        assert site_003.analysis is None
 
     def test_csv_to_sera_site_imports_vs30_quality_indexes(self, datapath):
         sera_site_dict = csv_to_sera_site(

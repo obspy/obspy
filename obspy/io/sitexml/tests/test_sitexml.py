@@ -108,7 +108,10 @@ class TestSiteXML():
         Tests the _is_sitexml() function.
         """
         # Check positives.
-        sitexmls = [testdata["full_sitexml.xml"]]
+        sitexmls = [
+            testdata["full_sitexml.xml"],
+            testdata["full_sitedescription_without_station.xml"],
+        ]
         for stat in sitexmls:
             assert _is_sitexml(stat)
         
@@ -420,6 +423,52 @@ class TestSiteXML():
         assert sera_site.site_description.geological_unit.geological_map_scale == "1:50000"
         assert sera_site.site_description.geological_unit.geological_unit_OGE == "Some description"
         
+        # Write it again and compare to the original file.
+        self._write_and_compare(filename, sera_site)
+
+    def test_reading_and_writing_full_sitedescription_without_station_tag(
+            self, testdata):
+        """
+        Tests reading and writing a full SiteXML <siteDescription> tag for a
+        site without a station installation.
+        """
+        filename = testdata["full_sitedescription_without_station.xml"]
+        sera_site = read_sitexml(filename)
+
+        assert sera_site.site_description is not None
+        assert sera_site.site_description.resource_id == (
+            "quakeml:domain.ab/site_description/003")
+        assert sera_site.site_description.station_code is None
+        assert sera_site.site_description.latitude == 40.555907
+        assert sera_site.site_description.longitude == 22.988593
+        assert sera_site.site_description.altitude == 120.0
+        assert sera_site.site_description.min_distance_from_station is None
+        assert sera_site.site_description.max_distance_from_station is None
+        assert sera_site.site_description.topographyA == "T2"
+        assert sera_site.site_description.topographyB == "Flat"
+        assert sera_site.site_description.morphology == "Plain"
+
+        assert sera_site.site_description.ec8 is not None
+        assert sera_site.site_description.ec8.value == "A"
+        assert sera_site.site_description.ec8.quality_index == 1.0
+
+        assert sera_site.site_description.bedrock_depth is not None
+        assert sera_site.site_description.bedrock_depth.value.value == 820.0
+        assert sera_site.site_description.bedrock_depth.value.uncertainty is None
+        assert sera_site.site_description.bedrock_depth.quality_index == 0.8
+
+        assert sera_site.site_description.h800 is not None
+        assert sera_site.site_description.h800.value.value == 180.0
+        assert sera_site.site_description.h800.value.uncertainty is None
+
+        assert sera_site.site_description.geological_unit is not None
+        assert sera_site.site_description.geological_unit.value == (
+            "Holocene Deposits")
+        assert sera_site.site_description.geological_unit.geological_map_scale == (
+            "1:50000")
+        assert sera_site.site_description.preferred_site_analysisID is None
+        assert sera_site.site_description.preferred_velocity_profileID is None
+
         # Write it again and compare to the original file.
         self._write_and_compare(filename, sera_site)
 
