@@ -974,6 +974,10 @@ def write_sitexml(sera_site, file_or_file_object, validate=True, nsmap=None):
                "Use other namespace abbreviations for custom namespace tags.")
         raise SiteXMLError(msg)
 
+    # Validate cross-references in the in-memory SiteXML object graph before
+    # emitting XML, so broken internal IDs fail early with API-level errors.
+    sera_site.validate_references()
+
     nsmap[None] = NAMESPACE
     attribs = {"schemaVersion": SCHEMA_VERSION}
     if sera_site.resource_id:

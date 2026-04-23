@@ -377,6 +377,56 @@ class TestSiteXML():
 
         xml_buffer = io.BytesIO()
         write_sitexml(sera_site, xml_buffer, validate=True)
+
+    def test_write_sitexml_validates_analysis_site_description_reference(
+            self, testdata):
+        sera_site = read_sitexml(testdata["full_analysis.xml"])
+        sera_site.analysis[0].site_descriptionID = (
+            "quakeml:domain.ab/site_description/does-not-match")
+
+        with pytest.raises(SiteXMLValidationError, match="site_descriptionID"):
+            write_sitexml(sera_site, io.BytesIO(), validate=True)
+
+    def test_write_sitexml_validates_preferred_analysis_reference(
+            self, testdata):
+        sera_site = read_sitexml(testdata["full_analysis.xml"])
+        sera_site.site_description.preferred_site_analysisID = (
+            "quakeml:domain.ab/analysis/missing")
+
+        with pytest.raises(
+                SiteXMLValidationError, match="preferred_site_analysisID"):
+            write_sitexml(sera_site, io.BytesIO(), validate=True)
+
+    def test_write_sitexml_validates_preferred_velocity_profile_reference(
+            self, testdata):
+        sera_site = read_sitexml(testdata["full_analysis.xml"])
+        sera_site.site_description.preferred_velocity_profileID = (
+            "quakeml:domain.ab/velocity_profile/missing")
+
+        with pytest.raises(
+                SiteXMLValidationError, match="preferred_velocity_profileID"):
+            write_sitexml(sera_site, io.BytesIO(), validate=True)
+
+    def test_write_sitexml_validates_duplicate_analysis_ids(self, testdata):
+        sera_site = read_sitexml(testdata["full_analysis.xml"])
+        duplicate_analysis = sera_site.analysis[0].copy()
+        sera_site.analysis.append(duplicate_analysis)
+
+        with pytest.raises(
+                SiteXMLValidationError, match="Duplicate analysis resource_id"):
+            write_sitexml(sera_site, io.BytesIO(), validate=True)
+
+    def test_write_sitexml_validates_duplicate_velocity_profile_ids(
+            self, testdata):
+        sera_site = read_sitexml(testdata["full_analysis.xml"])
+        velocity_profiles = (
+            sera_site.analysis[0].velocity_profile_survey.velocity_profiles)
+        velocity_profiles[1].resource_id = velocity_profiles[0].resource_id
+
+        with pytest.raises(
+                SiteXMLValidationError,
+                match="Duplicate velocity profile resource_id"):
+            write_sitexml(sera_site, io.BytesIO(), validate=True)
         
     def test_read_and_write_full_file(self, testdata):
         """

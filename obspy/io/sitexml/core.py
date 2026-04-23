@@ -1009,6 +1009,59 @@ class SERASite(BaseNode):
         self.analysis = analysis
         self.created = created
         self.external_references = external_references
+
+    def validate_references(self):
+        """
+        Validate internal SiteXML object-graph references for one site.
+
+        :rtype: None
+        """
+        analysis_ids = set()
+        velocity_profile_ids = set()
+        site_description_id = self.site_description.resource_id
+
+        for analysis in self.analysis or []:
+            if analysis.site_descriptionID != site_description_id:
+                raise SiteXMLValidationError(
+                    "Analysis site_descriptionID does not match the parent "
+                    "SiteDescription resource_id."
+                )
+
+            if analysis.resource_id in analysis_ids:
+                raise SiteXMLValidationError(
+                    f"Duplicate analysis resource_id: {analysis.resource_id}"
+                )
+            analysis_ids.add(analysis.resource_id)
+
+            survey = analysis.velocity_profile_survey
+            if survey is None or not survey.velocity_profiles:
+                continue
+
+            for velocity_profile in survey.velocity_profiles:
+                if velocity_profile.resource_id in velocity_profile_ids:
+                    raise SiteXMLValidationError(
+                        "Duplicate velocity profile resource_id: "
+                        f"{velocity_profile.resource_id}"
+                    )
+                velocity_profile_ids.add(velocity_profile.resource_id)
+
+        preferred_analysis_id = self.site_description.preferred_site_analysisID
+        if preferred_analysis_id is not None and \
+                preferred_analysis_id not in analysis_ids:
+            raise SiteXMLValidationError(
+                "preferred_site_analysisID does not match any attached "
+                "analysis resource_id."
+            )
+
+        preferred_velocity_profile_id = \
+            self.site_description.preferred_velocity_profileID
+        if preferred_velocity_profile_id is not None and \
+                preferred_velocity_profile_id not in velocity_profile_ids:
+            raise SiteXMLValidationError(
+                "preferred_velocity_profileID does not match any attached "
+                "velocity profile resource_id."
+            )
+
     def __str__(self):
         output=["\n#################\n"]
         if self.site_description.station_code:
