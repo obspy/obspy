@@ -960,8 +960,8 @@ def write_sitexml(sera_site, file_or_file_object, validate=True, nsmap=None):
     :param file_or_file_object: The file or file-like object to be written to.
     :type validate: bool, optional
     :param validate: If True, the created document will be validated with the
-        SiteXML schema before being written. Useful for debugging or if you
-        don't trust ObsPy. Defaults to True.
+        SiteXML schema before being written. Defaults to True which is the
+        recommended usage.
     :type nsmap: dict
     :param nsmap: Additional custom namespace abbreviation mappings.
     :rtype: None
@@ -977,7 +977,7 @@ def write_sitexml(sera_site, file_or_file_object, validate=True, nsmap=None):
     nsmap[None] = NAMESPACE
     attribs = {"schemaVersion": SCHEMA_VERSION}
     if sera_site.resource_id:
-        attribs["publicID"] = sera_site.resource_id.id
+        attribs["publicID"] = sera_site.resource_id
 
     root = etree.Element("SERA_quakeml", attribs, nsmap=nsmap)
 

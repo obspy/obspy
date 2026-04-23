@@ -45,7 +45,7 @@ def sitedict_to_sitexml(sera_site_dict, output_folder="."):
         if sera_site.site_description.station_code:
             output_file = output_folder + "/" + sera_site.site_description.station_code + ".xml"
         else:
-            filename = re.sub(r"[^A-Za-z0-9]+", "_", sera_site.resource_id.id).strip("_")
+            filename = re.sub(r"[^A-Za-z0-9]+", "_", sera_site.resource_id).strip("_")
             output_file = output_folder + "/" + filename + ".xml"
         write_sitexml(sera_site, output_file, validate=True)
 

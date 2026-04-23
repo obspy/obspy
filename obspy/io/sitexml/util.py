@@ -11,6 +11,7 @@ SiteXML schema.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import copy
+from obspy.core.event import ResourceIdentifier
 from obspy.core.util import Enum
 from obspy.core.util.base import ComparingObject
 
@@ -395,6 +396,43 @@ def scalar_property(attr_name, value_type=None, allow_none=True,
                     f"Could not convert {value} "
                     f"to {value_type.__name__}: {e}"
                 )
+
+        setattr(self, private_name, value)
+
+    return property(getter, setter)
+
+def resource_id_property(attr_name, allow_none=True, allow_empty=True):
+    """
+    Creates a property for SiteXML resource identifier fields.
+
+    The SiteXML API stores resource identifiers internally as plain strings.
+    ``ResourceIdentifier`` inputs are accepted as a convenience and are
+    normalized to their ``.id`` string value on assignment.
+
+    :rtype: property
+    """
+    private_name = f"_{attr_name}"
+
+    def getter(self):
+        return getattr(self, private_name)
+
+    def setter(self, value):
+        if value is None:
+            if allow_none:
+                setattr(self, private_name, None)
+                return
+            raise SiteXMLValidationError(f"{attr_name} is required.")
+
+        if isinstance(value, ResourceIdentifier):
+            value = value.id
+
+        if not isinstance(value, str):
+            raise SiteXMLValidationError(
+                f"{attr_name} must be a string or ResourceIdentifier."
+            )
+
+        if not allow_empty and not value.strip():
+            raise SiteXMLValidationError(f"{attr_name} cannot be empty.")
 
         setattr(self, private_name, value)
 

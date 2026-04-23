@@ -12,15 +12,15 @@ Provides the SERASite class.
 from collections.abc import Iterable
 
 import obspy
-from obspy.core.event import ResourceIdentifier
 from obspy.core.inventory.util import (Latitude, Longitude, Distance, 
                                        ExternalReference)
 from .util import (BaseNode, SiteXMLValidationError,
                     TopographySchemaA, TopographySchemaB, EC8Class, 
                     ResonanceFrequencyMethod, VelocityS30Method,
                     Vs30MethodCombined, Vs30ManualIndex,
-                    _pretty_str, scalar_property, wrapped_property, enum_property,
-                    wrapped_list_property, enum_list_property)
+                    _pretty_str, scalar_property, resource_id_property,
+                    wrapped_property, enum_property, wrapped_list_property,
+                    enum_list_property)
     
 class ValueWithUncertainty(BaseNode):
     """
@@ -427,12 +427,12 @@ class VelocityProfile(BaseNode):
     Layered velocity profile associated with an analysis.
     """
 
-    resource_id = scalar_property(
+    resource_id = resource_id_property(
         "resource_id", allow_none=False, allow_empty=False)
 
     def __init__(self, resource_id, velocity_profile_data, layer_count=None):
         """
-        :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :type resource_id: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`
         :param resource_id: Unique Velocity Profile Resource ID.
         :type velocity_profile_data: :class:`~obspy.io.sitexml.core.VelocityProfileData`
         :param velocity_profile_data: An array of velocity profile data for all
@@ -592,7 +592,6 @@ class SERASiteOwner(BaseNode):
     Site owner and required contact-person metadata.
     """
 
-    #ownerID = wrapped_property("ownerID", ResourceIdentifier)
     owner_codename = scalar_property(
         "owner_codename", allow_none=False, allow_empty=False)
     owner_fullname = scalar_property(
@@ -603,6 +602,9 @@ class SERASiteOwner(BaseNode):
         "person_lastname", allow_none=False, allow_empty=False)
     person_mbox = scalar_property(
         "person_mbox", allow_none=False, allow_empty=False)
+    ownerID = resource_id_property("ownerID")
+    personID = resource_id_property("personID")
+    institutionID = resource_id_property("institutionID")
 
     def __init__(self, owner_codename, owner_fullname,
                  person_firstname, person_lastname, person_mbox, ownerID=None,
@@ -708,8 +710,12 @@ class SiteDescription(BaseNode):
     Location, morphology, and near-surface description for a SiteXML site.
     """
 
-    resource_id = scalar_property(
+    resource_id = resource_id_property(
         "resource_id", allow_none=False, allow_empty=False)
+    preferred_site_analysisID = resource_id_property(
+        "preferred_site_analysisID")
+    preferred_velocity_profileID = resource_id_property(
+        "preferred_velocity_profileID")
     latitude = wrapped_property("latitude", Latitude, allow_none=False)
     longitude = wrapped_property("longitude", Longitude, allow_none=False)
     altitude = wrapped_property("altitude", Distance)
@@ -730,7 +736,7 @@ class SiteDescription(BaseNode):
                  preferred_site_analysisID=None, preferred_velocity_profileID=None,
                  overall_quality_index=None):
         """
-        :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
+        :type resource_id: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
         :param resource_id: Unique Site Description Resource ID
         :type latitude: :class:`~obspy.core.inventory.util.Latitude`, required
         :param latitude: The latitude of the site.
@@ -766,10 +772,10 @@ class SiteDescription(BaseNode):
         :param topographyB: Quantitative description of the shape of the earth's surface according to 
             Burjanek et al, 2014 (detailed description of the scheme in SERA Deliverable D7.1 - Appendix I). 
             See :class:`~obspy.io.sitexml.util.TopographySchemaB` for allowed values. 
-        :type preferred_site_analysisID: :class:`~obspy.core.event.resourceid.ResourceIdentifier`.
+        :type preferred_site_analysisID: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`
         :param preferred_site_analysisID: Preferred Site Analysis ID. If you provide one or more
                 analysis for this site you should use this field to designate the prefered analysis.
-        :type preferred_velocity_profileID: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :type preferred_velocity_profileID: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`
         :param preferred_velocity_profileID: Preferred Velocity Profile ID. If you provide one or more
                 velocity profiles for this site you should use this field to designate the prefered VP.
         :type overall_quality_index: float, optional.
@@ -849,9 +855,9 @@ class Analysis(BaseNode):
     Site-characterization analysis and related indicator metadata.
     """
 
-    resource_id = scalar_property(
+    resource_id = resource_id_property(
         "resource_id", allow_none=False, allow_empty=False)
-    site_descriptionID = scalar_property(
+    site_descriptionID = resource_id_property(
         "site_descriptionID", allow_none=False, allow_empty=False)
     resonance_frequency = wrapped_property("resonance_frequency", ResonanceFrequency)
     velocity_s30 = wrapped_property("velocity_s30", VelocityS30)
@@ -862,9 +868,9 @@ class Analysis(BaseNode):
                  velocity_profile_survey=None, spt_logs_count=None,
                  cpt_logs_count=None, borehole_logs_count=None):
         """
-        :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required.
+        :type resource_id: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required.
         :param resource_id: Analysis resource ID. 
-        :type site_descriptionID: :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required.
+        :type site_descriptionID: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required.
         :param site_descriptionID: The Site Description object this analysis refers to. 
         :type creation_date: datetime, optional.
         :param creation_date: Date that this analysis was published.
@@ -965,17 +971,18 @@ class SERASite(BaseNode):
     """
     This is the parent class for the siteXML object tree.
     """
+    resource_id = resource_id_property(
+        "resource_id", allow_none=False, allow_empty=False)
     site_owner = wrapped_property("site_owner", SERASiteOwner)
     site_description = wrapped_property("site_description", SiteDescription)
     external_references = wrapped_list_property("external_references", ExternalReference)
     analysis = wrapped_list_property("analysis", Analysis)
-    resource_id = wrapped_property("resource_id", ResourceIdentifier)
     created = wrapped_property("created", obspy.UTCDateTime)
     
     def __init__(self, resource_id, site_owner, site_description, 
                  analysis=None, created=None, external_references=None):
         """
-        :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :type resource_id: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`
         :param resource_id: SERA SiteXML Unique Identifier (siteID).
         :type site_owner: :class:`~obspy.core.io.sitexml.SERASiteOwner`, required.
         :param site_owner: The site owner metadata. 
@@ -1002,17 +1009,6 @@ class SERASite(BaseNode):
         self.analysis = analysis
         self.created = created
         self.external_references = external_references
-    
-        """
-        # From ObsPy event for resource id
-        # Automatically bind a resource id to the parent object
-        # if value is a resource id bind or unbind the resource_id
-            if isinstance(value, ResourceIdentifier):
-                if name == "resource_id":  # bind the resource_id to self
-                    self.resource_id.set_referred_object(self, warn=False)
-                else:  # else unbind to allow event scoping later
-                    value._parent_key = None
-        """
     def __str__(self):
         output=["\n#################\n"]
         if self.site_description.station_code:

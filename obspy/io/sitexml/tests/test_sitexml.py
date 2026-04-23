@@ -16,6 +16,7 @@ import warnings
 from lxml import etree
 import obspy
 import pytest
+from obspy.core.event import ResourceIdentifier
 from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASite,
                                    SERASiteOwner, SiteDescription,
                                    ResonanceFrequency,
@@ -165,6 +166,63 @@ class TestSiteXML():
         with pytest.raises(SiteXMLValidationError):
             Analysis(resource_id="",
                      site_descriptionID="quakeml:domain.ab/site_description/001")
+
+    def test_resource_id_fields_normalize_resourceidentifier_inputs(self):
+        site_owner = SERASiteOwner(
+            owner_codename="TEST",
+            owner_fullname="Test Owner",
+            person_firstname="Name",
+            person_lastname="Surname",
+            person_mbox="someemail@domain.ab",
+            ownerID=ResourceIdentifier("quakeml:domain.ab/siteOwner/001"),
+            personID=ResourceIdentifier("quakeml:domain.ab/person/001"),
+            institutionID=ResourceIdentifier("quakeml:domain.ab/institution/001"),
+        )
+        site_description = SiteDescription(
+            resource_id=ResourceIdentifier(
+                "quakeml:domain.ab/site_description/001"),
+            latitude=1.0,
+            longitude=2.0,
+            preferred_site_analysisID=ResourceIdentifier(
+                "quakeml:domain.ab/analysis/001"),
+            preferred_velocity_profileID=ResourceIdentifier(
+                "quakeml:domain.ab/velocity_profile/001"),
+        )
+        analysis = Analysis(
+            resource_id=ResourceIdentifier("quakeml:domain.ab/analysis/001"),
+            site_descriptionID=ResourceIdentifier(
+                "quakeml:domain.ab/site_description/001"),
+        )
+        velocity_profile = VelocityProfile(
+            resource_id=ResourceIdentifier(
+                "quakeml:domain.ab/velocity_profile/001"),
+            velocity_profile_data=[
+                VelocityProfileData(top_depth=ValueWithUncertainty(0.0))
+            ],
+        )
+        sera_site = SERASite(
+            resource_id=ResourceIdentifier("quakeml:domain.ab/site/001"),
+            site_owner=site_owner,
+            site_description=site_description,
+            analysis=[analysis],
+        )
+
+        assert isinstance(sera_site.resource_id, str)
+        assert sera_site.resource_id == "quakeml:domain.ab/site/001"
+        assert site_owner.ownerID == "quakeml:domain.ab/siteOwner/001"
+        assert site_owner.personID == "quakeml:domain.ab/person/001"
+        assert site_owner.institutionID == "quakeml:domain.ab/institution/001"
+        assert site_description.resource_id == (
+            "quakeml:domain.ab/site_description/001")
+        assert site_description.preferred_site_analysisID == (
+            "quakeml:domain.ab/analysis/001")
+        assert site_description.preferred_velocity_profileID == (
+            "quakeml:domain.ab/velocity_profile/001")
+        assert analysis.resource_id == "quakeml:domain.ab/analysis/001"
+        assert analysis.site_descriptionID == (
+            "quakeml:domain.ab/site_description/001")
+        assert velocity_profile.resource_id == (
+            "quakeml:domain.ab/velocity_profile/001")
 
     def test_sitexml_created_validates_utcdatetime(self):
         with pytest.raises(SiteXMLValidationError):
