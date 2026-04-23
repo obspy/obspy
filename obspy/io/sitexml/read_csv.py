@@ -417,17 +417,16 @@ def _read_velocity_profile(rows):
         bottom_depth = _read_value_with_uncertainty(row, "layerBottomDepth")
 
         layer_obj = VelocityProfileData(
+            top_depth=top_depth,
+            bottom_depth=bottom_depth,
             density=density,
             velocityP=velP,
-            velocityS=velS,
-            top_depth=top_depth,
-            bottom_depth=bottom_depth
+            velocityS=velS
         )
 
         layer_objects.append(layer_obj)
 
     return VelocityProfile(
-        layer_count=len(layer_objects),
         resource_id=rows.iloc[0]["velocityProfileID"],
         velocity_profile_data=layer_objects
     )

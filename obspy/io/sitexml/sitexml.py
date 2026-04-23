@@ -592,16 +592,7 @@ def _read_velocity_profile(analysis_element, analysis_obj):
         resource_id = _attr2obj(vp_element, "publicID", str)
         layer_count = _tag2obj(vp_element, _ns("layerCount"), int)
         vp_data_element_list = vp_element.findall(_ns("velocityProfileData"))
-
-        if layer_count != len(vp_data_element_list):
-            raise SiteXMLValidationError(
-                "Number of <velocityProfileData> elements in SiteXML "
-                "does not match the <layerCount> value."
-            )
-
-        vp = VelocityProfile(layer_count = layer_count,
-                            resource_id = resource_id,
-                            velocity_profile_data = [])
+        vp_data_list = []
         
         # Go through the velocityProfileData elements. 
         # For each velocityProfileData tree element create a VelocityProfileData object
@@ -610,7 +601,11 @@ def _read_velocity_profile(analysis_element, analysis_obj):
         if vp_data_element_list is not None:
             for vp_data_element in vp_data_element_list:
                 vp_data = _read_velocity_profile_data(vp_data_element)
-                vp.velocity_profile_data.append(vp_data)
+                vp_data_list.append(vp_data)
+
+        vp = VelocityProfile(resource_id=resource_id,
+                             velocity_profile_data=vp_data_list,
+                             layer_count=layer_count)
     
         analysis_obj.velocity_profile_survey.velocity_profiles.append(vp)
 
@@ -626,14 +621,24 @@ def _read_velocity_profile_data(vp_data_element):
     velocityP = _read_value_with_uncertainty(vp_data_element, "velocityP", float)
     
     geometry_element = vp_data_element.find(_ns("layerThickness"))
+    if geometry_element is None:
+        raise SiteXMLValidationError(
+            "velocityProfileData requires a layerThickness element."
+        )
     top_depth = _read_value_with_uncertainty(geometry_element, "layerTopDepth", float)
     bottom_depth = _read_value_with_uncertainty(geometry_element, "layerBottomDepth", float)
+
+    if top_depth is None:
+        raise SiteXMLValidationError(
+            "velocityProfileData requires layerTopDepth."
+        )
     
-    vp_data = VelocityProfileData(density = density,
-                                  velocityS = velocityS,
-                                  velocityP = velocityP,
-                                  top_depth = top_depth,
-                                  bottom_depth = bottom_depth)
+    vp_data = VelocityProfileData(top_depth = top_depth,
+                                bottom_depth = bottom_depth,
+                                density = density,
+                                velocityS = velocityS,
+                                velocityP = velocityP
+                                )
     return vp_data
 
 def _read_reference(parent, tag):
@@ -1144,7 +1149,7 @@ def _write_velocity_profile(parent, velocity_profile_survey):
                 comment = etree.Comment(f" Velocity profile # {index + 1} ")
                 parent.append(comment)
 
-                attribs = {"publicID": vp.resource_id} if vp.resource_id else None
+                attribs = {"publicID": vp.resource_id}
                 vp_elem = etree.SubElement(parent, "velocityProfile", attribs)
                 if vp.layer_count != len(vp.velocity_profile_data):
                     raise SiteXMLValidationError(

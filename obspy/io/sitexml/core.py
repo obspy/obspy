@@ -9,6 +9,8 @@ Provides the SERASite class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+from collections.abc import Iterable
+
 from obspy.core.event import ResourceIdentifier
 from obspy.core.inventory.util import (Latitude, Longitude, Distance, 
                                        ExternalReference)
@@ -423,62 +425,68 @@ class VelocityProfileData(BaseNode):
     Physical properties for a single velocity-profile layer.
     """
 
+    top_depth = wrapped_property("top_depth", ValueWithUncertainty,
+                                 allow_none=False)
+    bottom_depth = wrapped_property("bottom_depth", ValueWithUncertainty)
     density = wrapped_property("density", ValueWithUncertainty)
     velocityP = wrapped_property("velocityP", ValueWithUncertainty)
     velocityS = wrapped_property("velocityS", ValueWithUncertainty)
-    top_depth = wrapped_property("top_depth", ValueWithUncertainty)
-    bottom_depth = wrapped_property("bottom_depth", ValueWithUncertainty)
 
-    def __init__(self, density=None, velocityP=None, velocityS=None, 
-                 top_depth=None, bottom_depth=None):
+    def __init__(self, top_depth, bottom_depth=None, density=None, velocityP=None, velocityS=None,
+                 bottom_depth=None):
         """
-        :type density: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param density: Layer density
-        :type velocityP: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param velocityP: Layer velocityP value
-        :type velocityS: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param velocityS: Layer velocityS value
         :type top_depth: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param top_depth: Layer top depth 
+        :param top_depth: Layer top depth, required.
         :type bottom_depth: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param bottom_depth: Layer bottom depth
+        :param bottom_depth: Layer bottom depth, optional.
+        :type density: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param density: Layer density, optional
+        :type velocityP: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param velocityP: Layer velocityP value, optional
+        :type velocityS: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param velocityS: Layer velocityS value, optional
         """
+        self.top_depth = top_depth
+        self.bottom_depth = bottom_depth
         self.density = density 
         self.velocityP = velocityP 
         self.velocityS = velocityS 
-        self.top_depth = top_depth
-        self.bottom_depth = bottom_depth
+        
 
 class VelocityProfile(BaseNode):
     """
     Layered velocity profile associated with an analysis.
     """
 
-    velocity_profile_data = wrapped_list_property("velocity_profile_data", VelocityProfileData)
-    #resource_id = wrapped_property("resource_id", ResourceIdentifier)
+    resource_id = scalar_property(
+        "resource_id", allow_none=False, allow_empty=False)
 
-    def __init__(self, layer_count, resource_id=None, velocity_profile_data=None):
+    def __init__(self, resource_id, velocity_profile_data, layer_count=None):
         """
         :type resource_id: :class:`~obspy.core.event.resourceid.ResourceIdentifier`
-        :param resource_id: Unique Velocity Profile Resource ID
-        :type layer_count: Positive int, required.
-        :param layer_count: Number of layers in velocity profile.
+        :param resource_id: Unique Velocity Profile Resource ID.
         :type velocity_profile_data: :class:`~obspy.io.sitexml.core.VelocityProfileData`
-        :param velocity_profile_data: An array of velocity profile data for all layers.
-                            Length of array should be equal to layer_count.
+        :param velocity_profile_data: An array of velocity profile data for all
+            layers. Must contain at least one layer.
+        :type layer_count: Positive int, optional.
+        :param layer_count: Number of layers in velocity profile. If omitted,
+            it is derived from ``velocity_profile_data``.
         """
-        self.resource_id = resource_id 
-        self.layer_count = layer_count 
-        self.velocity_profile_data = velocity_profile_data 
+        self.resource_id = resource_id
+        self.velocity_profile_data = velocity_profile_data
+        self.layer_count = layer_count
 
     @property
     def layer_count(self):
+        if self._layer_count is None:
+            return len(self.velocity_profile_data)
         return self._layer_count
 
     @layer_count.setter
     def layer_count(self, value):
         if value is None:
-            raise SiteXMLValidationError("layer_count is required.")
+            self._layer_count = None
+            return
         try:
             value = int(value)
         except (TypeError, ValueError) as exc:
@@ -489,7 +497,55 @@ class VelocityProfile(BaseNode):
             raise SiteXMLValidationError(
                 "layer_count must be a positive integer."
             )
+        if hasattr(self, "_velocity_profile_data") and \
+                self._velocity_profile_data is not None and \
+                value != len(self._velocity_profile_data):
+            raise SiteXMLValidationError(
+                "Number of velocity profile data layers does not match "
+                "the layer_count value."
+            )
         self._layer_count = value
+
+    @property
+    def velocity_profile_data(self):
+        return self._velocity_profile_data
+
+    @velocity_profile_data.setter
+    def velocity_profile_data(self, values):
+        if values is None:
+            raise SiteXMLValidationError("velocity_profile_data is required.")
+
+        if not isinstance(values, Iterable) or isinstance(values, (str, bytes)):
+            raise SiteXMLValidationError(
+                "velocity_profile_data must be an iterable"
+            )
+
+        wrapped_items = []
+        for value in values:
+            if isinstance(value, VelocityProfileData):
+                wrapped_items.append(value)
+            else:
+                try:
+                    wrapped_items.append(VelocityProfileData(value))
+                except Exception as exc:
+                    raise SiteXMLValidationError(
+                        "Could not convert element "
+                        f"{value} to VelocityProfileData: {exc}"
+                    )
+
+        if not wrapped_items:
+            raise SiteXMLValidationError(
+                "velocity_profile_data must contain at least one layer."
+            )
+
+        if hasattr(self, "_layer_count") and self._layer_count is not None and \
+                self._layer_count != len(wrapped_items):
+            raise SiteXMLValidationError(
+                "Number of velocity profile data layers does not match "
+                "the layer_count value."
+            )
+
+        self._velocity_profile_data = wrapped_items
     
     def __str__(self):
         def format_vwu(obj):

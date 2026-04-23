@@ -671,10 +671,13 @@
 
 	<xs:complexType name="VelocityProfile">
     	<xs:sequence>
-        	<xs:element name="layerCount" type="CounterType">
+        	<xs:element name="layerCount" type="CounterType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>
-						Number of layers in this Velocity Profile.
+						Number of layers in this Velocity Profile. Optional;
+						if omitted, it is inferred from the number of
+						velocityProfileData elements. If provided, it should much 
+						the number of velocityProfileData elements.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>

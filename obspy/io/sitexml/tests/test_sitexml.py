@@ -17,7 +17,8 @@ from lxml import etree
 import obspy
 import pytest
 from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASiteOwner,
-                                   SiteDescription)
+                                   SiteDescription, ValueWithUncertainty,
+                                   VelocityProfile, VelocityProfileData)
 from obspy.io.sitexml.util import SiteXMLValidationError
 from obspy.io.sitexml.sitexml import (_is_sitexml, _read_site_description,
                                       _read_site_owner, read_sitexml)
@@ -484,8 +485,62 @@ class TestSiteXML():
                 1),
             encoding="utf-8")
 
-        with pytest.raises(SiteXMLValidationError, match="layerCount"):
+        with pytest.raises(SiteXMLValidationError, match="layer_count"):
             read_sitexml(invalid_xml)
+
+    def test_reading_velocity_profile_without_layer_count(
+            self, testdata, tmp_path):
+        """
+        Tests that missing layerCount is derived from velocityProfileData items.
+        """
+        filename = testdata["full_analysis.xml"]
+        xml_text = filename.read_text(encoding="utf-8")
+        invalid_xml = tmp_path / "missing_layer_count.xml"
+        invalid_xml.write_text(
+            xml_text.replace("<layerCount>8</layerCount>", "", 1),
+            encoding="utf-8")
+
+        sera_site = read_sitexml(invalid_xml)
+        vp = sera_site.analysis[0].velocity_profile_survey.velocity_profiles[0]
+        assert vp.layer_count == 8
+        assert len(vp.velocity_profile_data) == 8
+
+    def test_velocity_profile_requires_schema_required_fields(self):
+        """
+        Tests required VelocityProfile and VelocityProfileData fields.
+        """
+        top_depth = ValueWithUncertainty(0.0)
+        layer = VelocityProfileData(top_depth=top_depth)
+
+        with pytest.raises(SiteXMLValidationError, match="resource_id"):
+            VelocityProfile(resource_id=None, velocity_profile_data=[layer])
+
+        with pytest.raises(SiteXMLValidationError, match="velocity_profile_data"):
+            VelocityProfile(
+                resource_id="quakeml:domain.ab/velocity_profile/001",
+                velocity_profile_data=None)
+
+        with pytest.raises(SiteXMLValidationError, match="at least one layer"):
+            VelocityProfile(
+                resource_id="quakeml:domain.ab/velocity_profile/001",
+                velocity_profile_data=[])
+
+        with pytest.raises(SiteXMLValidationError, match="top_depth"):
+            VelocityProfileData(top_depth=None)
+
+    def test_velocity_profile_derives_layer_count_from_data(self):
+        """
+        Tests that layer_count is derived from velocity_profile_data when omitted.
+        """
+        layers = [
+            VelocityProfileData(top_depth=ValueWithUncertainty(0.0)),
+            VelocityProfileData(top_depth=ValueWithUncertainty(10.0)),
+        ]
+        profile = VelocityProfile(
+            resource_id="quakeml:domain.ab/velocity_profile/001",
+            velocity_profile_data=layers)
+
+        assert profile.layer_count == 2
 
     def test_reading_twice_raises_no_warning(self, testdata):
         """
