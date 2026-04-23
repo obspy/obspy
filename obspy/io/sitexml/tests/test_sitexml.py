@@ -16,9 +16,10 @@ import warnings
 from lxml import etree
 import obspy
 import pytest
-from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASiteOwner,
-                                   SiteDescription, ValueWithUncertainty,
-                                   VelocityProfile, VelocityProfileData)
+from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASite,
+                                   SERASiteOwner, SiteDescription,
+                                   ValueWithUncertainty, VelocityProfile,
+                                   VelocityProfileData)
 from obspy.io.sitexml.util import SiteXMLValidationError
 from obspy.io.sitexml.sitexml import (_is_sitexml, _read_site_description,
                                       _read_site_owner, read_sitexml)
@@ -37,6 +38,21 @@ class TestSiteXML():
                      for _i in xml_file_buffer.read().splitlines()]
         org_lines = [_i.decode('utf-8').strip().replace("'", '"')
                      for _i in expected_xml_file_buffer.read().splitlines()]
+
+        def normalize_root_creation_time(lines):
+            normalized = list(lines)
+            for index, line in enumerate(normalized):
+                if "<creationTime>" in line:
+                    normalized[index] = re.sub(
+                        r"<creationTime>.*</creationTime>",
+                        "<creationTime>IGNORED</creationTime>",
+                        line,
+                        count=1)
+                    break
+            return normalized
+
+        new_lines = normalize_root_creation_time(new_lines)
+        org_lines = normalize_root_creation_time(org_lines)
 
         # Remove the module lines from the original file.
         #org_lines = [_i.strip() for _i in org_lines
@@ -145,6 +161,49 @@ class TestSiteXML():
         with pytest.raises(SiteXMLValidationError):
             Analysis(resource_id="",
                      site_descriptionID="quakeml:domain.ab/site_description/001")
+
+    def test_sitexml_created_validates_utcdatetime(self):
+        with pytest.raises(SiteXMLValidationError):
+            SERASite(
+                resource_id="quakeml:domain.ab/site/001",
+                site_owner=SERASiteOwner(
+                    owner_codename="TEST",
+                    owner_fullname="Test Owner",
+                    person_firstname="Name",
+                    person_lastname="Surname",
+                    person_mbox="someemail@domain.ab"),
+                site_description=SiteDescription(
+                    resource_id="quakeml:domain.ab/site_description/001",
+                    latitude=1.0,
+                    longitude=2.0),
+                created=object())
+
+    def test_write_sitexml_uses_serialization_time(self):
+        sera_site = SERASite(
+            resource_id="quakeml:domain.ab/site/001",
+            site_owner=SERASiteOwner(
+                owner_codename="TEST",
+                owner_fullname="Test Owner",
+                person_firstname="Name",
+                person_lastname="Surname",
+                person_mbox="someemail@domain.ab"),
+            site_description=SiteDescription(
+                resource_id="quakeml:domain.ab/site_description/001",
+                latitude=1.0,
+                longitude=2.0),
+            created=obspy.UTCDateTime(2000, 1, 1))
+
+        before = obspy.UTCDateTime()
+        xml_buffer = io.BytesIO()
+        write_sitexml(sera_site, xml_buffer, validate=True)
+        after = obspy.UTCDateTime()
+
+        root = etree.fromstring(xml_buffer.getvalue())
+        written_creation_time = obspy.UTCDateTime(
+            root.find("{http://www.orfeus-eu.org/xml/site/1}creationTime").text)
+
+        assert before <= written_creation_time <= after
+        assert sera_site.created == written_creation_time
 
     def test_site_description_requires_schema_required_fields(self):
         with pytest.raises(SiteXMLValidationError):

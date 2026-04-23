@@ -148,7 +148,7 @@ def csv_to_sera_site(site_owner_csv,
     for siteID in site_description_dict:
         sera_site_dict[siteID] = SERASite(site_owner = site_owner,
                                            site_description = site_description_dict[siteID],
-                                           created = obspy.UTCDateTime(),
+                                           created = None,
                                            resource_id = siteID)
         if exists_analysis and siteID in analysis_dict:
             sera_site_dict[siteID].analysis = analysis_dict[siteID]
@@ -236,7 +236,7 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     for siteID in site_description_dict:
         sera_site_dict[siteID] = SERASite(site_owner = site_owner,
                                            site_description = site_description_dict[siteID],
-                                           created = obspy.UTCDateTime(),
+                                           created = None,
                                            resource_id = siteID)
         if exists_analysis and siteID in analysis_dict:
             sera_site_dict[siteID].analysis = analysis_dict[siteID]

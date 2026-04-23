@@ -56,6 +56,7 @@ class TestSiteXMLCSVImport():
 
         site_001 = sera_site_dict["quakeml:domain.ab/site/001"]
         assert site_001.site_owner.owner_codename == "SITEOWNER"
+        assert site_001.created is None
         assert site_001.site_description.resource_id == (
             "quakeml:domain.ab/site_description/001")
         assert site_001.site_description.station_code == "ABCD"

@@ -11,6 +11,7 @@ Provides the SERASite class.
 """
 from collections.abc import Iterable
 
+import obspy
 from obspy.core.event import ResourceIdentifier
 from obspy.core.inventory.util import (Latitude, Longitude, Distance, 
                                        ExternalReference)
@@ -420,38 +421,6 @@ class VelocityProfileSurvey(SiteIndicator):
                 output.append(self.velocity_profiles[i].__str__())
         return "\n".join(output) 
 
-class VelocityProfileData(BaseNode):
-    """
-    Physical properties for a single velocity-profile layer.
-    """
-
-    top_depth = wrapped_property("top_depth", ValueWithUncertainty,
-                                 allow_none=False)
-    bottom_depth = wrapped_property("bottom_depth", ValueWithUncertainty)
-    density = wrapped_property("density", ValueWithUncertainty)
-    velocityP = wrapped_property("velocityP", ValueWithUncertainty)
-    velocityS = wrapped_property("velocityS", ValueWithUncertainty)
-
-    def __init__(self, top_depth, bottom_depth=None, density=None, velocityP=None, velocityS=None,
-                 bottom_depth=None):
-        """
-        :type top_depth: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param top_depth: Layer top depth, required.
-        :type bottom_depth: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param bottom_depth: Layer bottom depth, optional.
-        :type density: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param density: Layer density, optional
-        :type velocityP: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param velocityP: Layer velocityP value, optional
-        :type velocityS: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param velocityS: Layer velocityS value, optional
-        """
-        self.top_depth = top_depth
-        self.bottom_depth = bottom_depth
-        self.density = density 
-        self.velocityP = velocityP 
-        self.velocityS = velocityS 
-        
 
 class VelocityProfile(BaseNode):
     """
@@ -585,7 +554,39 @@ class VelocityProfile(BaseNode):
             "-+-".join("-" * width for width in col_widths),
         ] + [format_row(row) for row in rows]
         return "\n".join(lines)
-    
+
+class VelocityProfileData(BaseNode):
+    """
+    Physical properties for a single velocity-profile layer.
+    """
+
+    top_depth = wrapped_property("top_depth", ValueWithUncertainty,
+                                 allow_none=False)
+    bottom_depth = wrapped_property("bottom_depth", ValueWithUncertainty)
+    density = wrapped_property("density", ValueWithUncertainty)
+    velocityP = wrapped_property("velocityP", ValueWithUncertainty)
+    velocityS = wrapped_property("velocityS", ValueWithUncertainty)
+
+    def __init__(self, top_depth, bottom_depth=None, density=None, 
+                velocityP=None, velocityS=None):
+        """
+        :type top_depth: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param top_depth: Layer top depth, required.
+        :type bottom_depth: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param bottom_depth: Layer bottom depth, optional.
+        :type density: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param density: Layer density, optional
+        :type velocityP: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param velocityP: Layer velocityP value, optional
+        :type velocityS: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        :param velocityS: Layer velocityS value, optional
+        """
+        self.top_depth = top_depth
+        self.bottom_depth = bottom_depth
+        self.density = density 
+        self.velocityP = velocityP 
+        self.velocityS = velocityS 
+        
 class SERASiteOwner(BaseNode):
     """
     Site owner and required contact-person metadata.
@@ -969,6 +970,7 @@ class SERASite(BaseNode):
     external_references = wrapped_list_property("external_references", ExternalReference)
     analysis = wrapped_list_property("analysis", Analysis)
     resource_id = wrapped_property("resource_id", ResourceIdentifier)
+    created = wrapped_property("created", obspy.UTCDateTime)
     
     def __init__(self, resource_id, site_owner, site_description, 
                  analysis=None, created=None, external_references=None):
@@ -984,7 +986,13 @@ class SERASite(BaseNode):
         :param analysis: The site characterization parameters 
                             (VS30, resonance frequency, velocity profiles).
         :type created: :class:`~obspy.UTCDateTime`
-        :param created: DateTime the SiteXML file was generated
+        :param created: Root-level SiteXML document creation time. This
+            value is serialization metadata for the XML document itself, not
+            the creation time of the underlying site metadata. When
+            :func:`~obspy.io.sitexml.sitexml.write_sitexml` serializes a
+            ``SERASite`` object, it replaces this value with the current write
+            time and writes that timestamp to the root ``<creationTime>``
+            element.
         :type external_references: List of :class:`~obspy.core.inventory.util.ExternalReference`, optional.
         :param external_references: Additional resources with site characterization metadata. 
         """

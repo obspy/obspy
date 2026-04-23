@@ -981,10 +981,12 @@ def write_sitexml(sera_site, file_or_file_object, validate=True, nsmap=None):
 
     root = etree.Element("SERA_quakeml", attribs, nsmap=nsmap)
 
-    if sera_site.created:
-        etree.SubElement(root, "creationTime").text = str(sera_site.created)
-    else:
-        etree.SubElement(root, "creationTime").text = str(obspy.UTCDateTime())
+    # Root-level creationTime is document serialization metadata. Always
+    # stamp it with the current write time, even when rewriting an unchanged
+    # SERASite object that was read from an existing XML document.
+    creation_time = obspy.UTCDateTime()
+    sera_site.created = creation_time
+    etree.SubElement(root, "creationTime").text = str(creation_time)
 
     if sera_site.external_references:
         for ref in sera_site.external_references:
