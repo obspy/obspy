@@ -25,7 +25,7 @@ from .core import (SERASite, SERASiteOwner, SiteDescription, Analysis,
                    EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency,
                    VelocityProfileSurvey, VelocityProfile, VelocityProfileData,
                    VelocityS30, ValueWithUncertainty, LiteratureSource)
-from .util import SiteXMLError, SiteXMLValidationError
+from .util import SiteXMLValidationError
 
 # Define some constants for writing SiteXML files.
 SCHEMA_VERSION = "1.3"
@@ -951,7 +951,7 @@ def overall_quality_index(quality_index2 = 0, quality_index3 = 0):
     return overall_quality_index
 
 
-def write_sitexml(sera_site, file_or_file_object, validate=True, nsmap=None):
+def write_sitexml(sera_site, file_or_file_object, validate=True):
     """
     Writes a sera_site object to a buffer.
 
@@ -962,28 +962,17 @@ def write_sitexml(sera_site, file_or_file_object, validate=True, nsmap=None):
     :param validate: If True, the created document will be validated with the
         SiteXML schema before being written. Defaults to True which is the
         recommended usage.
-    :type nsmap: dict
-    :param nsmap: Additional custom namespace abbreviation mappings.
     :rtype: None
     """
-    if nsmap is None:
-        nsmap = {}
-    elif None in nsmap:
-        msg = ("Custom namespace mappings do not allow redefinition of "
-               "default SiteXML namespace (key `None`). "
-               "Use other namespace abbreviations for custom namespace tags.")
-        raise SiteXMLError(msg)
-
     # Validate cross-references in the in-memory SiteXML object graph before
     # emitting XML, so broken internal IDs fail early with API-level errors.
     sera_site.validate_references()
 
-    nsmap[None] = NAMESPACE
     attribs = {"schemaVersion": SCHEMA_VERSION}
     if sera_site.resource_id:
         attribs["publicID"] = sera_site.resource_id
 
-    root = etree.Element("SERA_quakeml", attribs, nsmap=nsmap)
+    root = etree.Element("SERA_quakeml", attribs, nsmap={None: NAMESPACE})
 
     # Root-level creationTime is document serialization metadata. Always
     # stamp it with the current write time, even when rewriting an unchanged
@@ -1016,10 +1005,6 @@ def write_sitexml(sera_site, file_or_file_object, validate=True, nsmap=None):
             for err in errors:
                 msg += "\t%s\n" % err
             raise SiteXMLValidationError(msg)
-
-    for prefix, ns in nsmap.items():
-        if prefix and ns:
-            etree.register_namespace(prefix, ns)
 
     etree.indent(tree, "    ")
     tree.write(file_or_file_object, pretty_print=True, xml_declaration=True,

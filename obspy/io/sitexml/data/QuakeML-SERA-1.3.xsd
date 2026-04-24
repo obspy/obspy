@@ -419,7 +419,6 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 		<xs:attribute name="publicID" type="ResourceIdentifier" use="required">
 			<xs:annotation>
@@ -513,7 +512,6 @@
 				</xs:annotation>
 			</xs:element>
 			<xs:element name="geologicalUnitReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
-			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 			
@@ -658,7 +656,6 @@
 			</xs:element>
 			<xs:element name="velocityProfileQindex1" type="QIndexType" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="velocityProfileReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
-			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 		<xs:attribute name="publicID" type="ResourceIdentifier" use="required"> 
 			<xs:annotation>
