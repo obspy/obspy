@@ -2301,7 +2301,7 @@ def get_rlnm(output_type='angular_rate', output_db=True):
     """
     Returns periods and psd values for the Rotational Low Noise Model (RLNM).
 
-    For information on Rotational Low Noise Model see relevant literature.
+    For information on Rotational Low Noise Model see [Brotzer2023]_.
 
     :type output_type: str
     :param output_type: Type of output data. Can be 'angular_rate' (default)
@@ -2343,7 +2343,7 @@ def get_rhnm(output_type='angular_rate', output_db=True):
     """
     Returns periods and psd values for the Rotational High Noise Model (RHNM).
 
-    For information on Rotational High Noise Model see relevant literature.
+    For information on Rotational High Noise Model see [Brotzer2023]_.
 
     :type output_type: str
     :param output_type: Type of output data. Can be 'angular_rate' (default)
