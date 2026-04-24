@@ -2,7 +2,8 @@ master
 ======
 
 Changes:
- - ...
+ - obspy.signal:
+   * spectral estimation: add getter functions for rotational noise models
 
 maintenance_1.5.x
 =================
