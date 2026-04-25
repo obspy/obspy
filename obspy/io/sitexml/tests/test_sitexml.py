@@ -32,6 +32,56 @@ from obspy.io.sitexml.sitexml import write_sitexml
 class TestSiteXML():
     """
     """
+    def _minimal_sera_site(self, station_code="XX.ABCD"):
+        """
+        Build a minimal SERASite used by conversion/helper tests.
+        """
+        site_owner = SERASiteOwner(
+            owner_codename="SITEOWNER",
+            owner_fullname="Site Owner Full Name",
+            person_firstname="Name",
+            person_lastname="Surname",
+            person_mbox="someemail@domain.ab")
+        site_description = SiteDescription(
+            resource_id="quakeml:domain.ab/site_description/001",
+            station_code=station_code,
+            latitude=1.0,
+            longitude=2.0)
+        return SERASite(
+            resource_id="quakeml:domain.ab/site/001",
+            site_owner=site_owner,
+            site_description=site_description)
+    def test_station_code_requires_network_station_notation(self):
+        """
+        Bare station codes are rejected to avoid ambiguous StationXML links.
+        """
+        valid_site = self._minimal_sera_site(station_code="1.ABC")
+        assert valid_site.site_description.station_code == "1.ABC"
+
+        invalid_codes = [
+            "ABCD",
+            "XXX.ABCD",
+            "X.AB",
+            "X.ABCDEF",
+            "X.ABC1",
+            "X.AB CD",
+        ]
+        for station_code in invalid_codes:
+            with pytest.raises(SiteXMLValidationError, match="network.station"):
+                self._minimal_sera_site(station_code=station_code)
+
+    def test_station_code_schema_rejects_invalid_notation(self, testdata):
+        """
+        The SiteXML schema rejects the same invalid station notation.
+        """
+        xml = testdata["full_sitedescription.xml"].read_text(
+            encoding="utf-8")
+        xml = xml.replace("<station>XX.ABCD</station>",
+                          "<station>XXX.ABCD</station>")
+
+        with pytest.raises(SiteXMLValidationError):
+            read_sitexml(io.BytesIO(xml.encode("utf-8")))
+
     def test_value_with_uncertainty_to_float_with_uncertainties(self):
         """
         SiteXML symmetric uncertainty maps to both ObsPy uncertainty sides.
@@ -642,7 +692,7 @@ class TestSiteXML():
 
         assert sera_site.site_description is not None
         assert sera_site.site_description.resource_id == "quakeml:domain.ab/site_description/001"
-        assert sera_site.site_description.station_code == "ABCD"
+        assert sera_site.site_description.station_code == "XX.ABCD"
         assert sera_site.site_description.latitude == 45.137174
         assert sera_site.site_description.longitude == 5.998905
 

@@ -328,11 +328,11 @@
 
 	<xs:complexType name="SiteDescriptionType">
 		<xs:sequence>
-			<xs:element name="station" type="xs:string" minOccurs="0" maxOccurs="1">
+			<xs:element name="station" type="StationCodeType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
-					<xs:documentation>Station code. Fill this if site metadata refers to a station. 
-						Otherwise leave empty.<br/>
-						<strong>Example:</strong> AGN1
+					<xs:documentation>FDSN network and station code in network.station notation. 
+						Fill this if site metadata refers to a station. Otherwise leave empty.<br/>
+						<strong>Example:</strong> XX.ABCD
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
@@ -1152,6 +1152,20 @@
 		<xs:restriction base="xs:double">
 			<xs:minInclusive value="0"/>
 			<xs:maxInclusive value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="StationCodeType">
+		<xs:annotation>
+			<xs:documentation>
+				FDSN network and station code in network.station notation.
+				The network code is one or two alphanumeric characters and
+				the station code is a three to five letter code.<br/>
+				<strong>Example: </strong>XX.ABCD
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Za-z0-9]{1,2}\.[A-Za-z]{3,5}"/>
 		</xs:restriction>
 	</xs:simpleType>
 

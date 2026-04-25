@@ -61,7 +61,7 @@ class TestSiteXMLCSVImport():
         assert site_001.created is None
         assert site_001.site_description.resource_id == (
             "quakeml:domain.ab/site_description/001")
-        assert site_001.site_description.station_code == "ABCD"
+        assert site_001.site_description.station_code == "XX.ABCD"
         assert site_001.site_description.preferred_site_analysisID == (
             "quakeml:domain.ab/analysis/001")
         assert len(site_001.analysis) == 3
@@ -90,7 +90,7 @@ class TestSiteXMLCSVImport():
         site_002 = sera_site_dict["quakeml:domain.ab/site/002"]
         assert site_002.site_description.resource_id == (
             "quakeml:domain.ab/site_description/002")
-        assert site_002.site_description.station_code == "WXYZ"
+        assert site_002.site_description.station_code == "YY.WXYZ"
         assert len(site_002.analysis) == 1
 
         analysis_002 = site_002.analysis[0]
@@ -160,7 +160,7 @@ class TestSiteXMLCSVImport():
         assert site_001.site_owner.owner_codename == "SITEOWNER"
         assert site_001.site_description.resource_id == (
             "quakeml:domain.ab/site_description/001")
-        assert site_001.site_description.station_code == "ABCD"
+        assert site_001.site_description.station_code == "XX.ABCD"
         assert site_001.site_description.preferred_site_analysisID == (
             "quakeml:domain.ab/analysis/001")
         assert len(site_001.analysis) == 3
@@ -258,9 +258,9 @@ class TestSiteXMLCSVImport():
         site_description_csv = tmp_path / "site_description.csv"
         site_description_csv.write_text(
             "siteID;siteDescriptionID;latitude;longitude;station\n"
-            "quakeml:test/site/001;quakeml:test/site_description/001;45.0;7.0;AAA\n"
-            ";quakeml:test/site_description/002;46.0;8.0;BBB\n"
-            "quakeml:test/site/003;;47.0;9.0;CCC\n",
+            "quakeml:test/site/001;quakeml:test/site_description/001;45.0;7.0;XX.AAA\n"
+            ";quakeml:test/site_description/002;46.0;8.0;XX.BBB\n"
+            "quakeml:test/site/003;;47.0;9.0;XX.CCC\n",
             encoding="utf-8")
 
         with warnings.catch_warnings(record=True) as caught:

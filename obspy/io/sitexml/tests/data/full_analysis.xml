@@ -19,7 +19,7 @@
         </contact>
     </siteOwner>
     <siteDescription publicID="quakeml:domain.ab/site_description/001">
-        <station>ABCD</station>
+        <station>XX.ABCD</station>
         <latitude>45.137174</latitude>
         <longitude>5.998905</longitude>
         <preferredSiteAnalysisID>quakeml:domain.ab/analysis/001</preferredSiteAnalysisID>

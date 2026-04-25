@@ -1040,7 +1040,7 @@ class SiteDescription(BaseNode):
             site characterization measurement. Should be used only when representative latitude and longitude 
             of site characterization measurements cannot be provided. 
         :type station_code: str, optional.
-        :param station_code: The seismological station code installed in the site (if any). 
+        :param station_code: FDSN network and station code in network.station notation (if any). 
         :type ec8: :class:`~obspy.io.sitexml.core.EC8`, optional.
         :param ec8: Ground type according to Eurocode 8, based on the velocity S30 value and geotechnical description. 
         :type h800: :class:`~obspy.io.sitexml.core.H800`, optional.
@@ -1134,6 +1134,24 @@ class SiteDescription(BaseNode):
         if not isinstance(value, str):
             raise SiteXMLValidationError(
                 "station_code must be a string or None"
+            )
+        if value.count(".") != 1 or any(char.isspace() for char in value):
+            raise SiteXMLValidationError(
+                "station_code must use 'network.station' notation with a "
+                "1-2 character FDSN network code and a 3-5 letter station "
+                "code"
+            )
+        network_code, station_code = value.split(".")
+        if not 1 <= len(network_code) <= 2 or \
+                not network_code.isascii() or \
+                not network_code.isalnum() or \
+                not 3 <= len(station_code) <= 5 or \
+                not station_code.isascii() or \
+                not station_code.isalpha():
+            raise SiteXMLValidationError(
+                "station_code must use 'network.station' notation with a "
+                "1-2 character FDSN network code and a 3-5 letter station "
+                "code"
             )
         self._station_code = value
 
