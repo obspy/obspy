@@ -17,6 +17,7 @@ from lxml import etree
 import obspy
 import pytest
 from obspy.core.event import ResourceIdentifier
+from obspy.core.inventory.util import Operator, Person
 from obspy.core.util.obspy_types import FloatWithUncertainties
 from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASite,
                                    SERASiteOwner, SiteDescription,
@@ -65,6 +66,101 @@ class TestSiteXML():
 
         with pytest.raises(SiteXMLValidationError, match="symmetric"):
             ValueWithUncertainty.from_float_with_uncertainties(value)
+
+    def test_site_owner_to_person(self):
+        """
+        SiteXML contact metadata maps to ObsPy Person lists.
+        """
+        site_owner = SERASiteOwner(
+            owner_codename="SITEOWNER",
+            owner_fullname="Site Owner Full Name",
+            person_firstname="Name",
+            person_lastname="Surname",
+            person_mbox="someemail@domain.ab",
+            institution_name="INSTITUTION_ABBR")
+
+        person = site_owner.to_person()
+
+        assert isinstance(person, Person)
+        assert person.names == ["Name Surname"]
+        assert person.agencies == ["INSTITUTION_ABBR"]
+        assert person.emails == ["someemail@domain.ab"]
+
+    def test_site_owner_to_operator(self):
+        """
+        SiteXML owner metadata maps to an ObsPy Operator with one contact.
+        """
+        site_owner = SERASiteOwner(
+            owner_codename="SITEOWNER",
+            owner_fullname="Site Owner Full Name",
+            person_firstname="Name",
+            person_lastname="Surname",
+            person_mbox="someemail@domain.ab",
+            institution_homepage="https://www.domain.ab")
+
+        operator = site_owner.to_operator()
+
+        assert isinstance(operator, Operator)
+        assert operator.agency == "Site Owner Full Name"
+        assert operator.website == "https://www.domain.ab"
+        assert len(operator.contacts) == 1
+        assert operator.contacts[0].names == ["Name Surname"]
+
+    def test_site_owner_from_person(self):
+        """
+        ObsPy Person metadata can seed SiteXML owner contact metadata.
+        """
+        person = Person(
+            names=["Name Surname"],
+            agencies=["INSTITUTION_ABBR"],
+            emails=["someemail@domain.ab"])
+
+        site_owner = SERASiteOwner.from_person(
+            person,
+            owner_codename="SITEOWNER",
+            owner_fullname="Site Owner Full Name")
+
+        assert site_owner.owner_codename == "SITEOWNER"
+        assert site_owner.owner_fullname == "Site Owner Full Name"
+        assert site_owner.person_firstname == "Name"
+        assert site_owner.person_lastname == "Surname"
+        assert site_owner.person_mbox == "someemail@domain.ab"
+        assert site_owner.institution_name == "INSTITUTION_ABBR"
+
+    def test_site_owner_from_operator(self):
+        """
+        ObsPy Operator metadata can seed SiteXML owner contact metadata.
+        """
+        operator = Operator(
+            agency="Site Owner Full Name",
+            contacts=[Person(
+                names=["Name Surname"],
+                emails=["someemail@domain.ab"])],
+            website="https://www.domain.ab")
+
+        site_owner = SERASiteOwner.from_operator(
+            operator, owner_codename="SITEOWNER")
+
+        assert site_owner.owner_codename == "SITEOWNER"
+        assert site_owner.owner_fullname == "Site Owner Full Name"
+        assert site_owner.person_firstname == "Name"
+        assert site_owner.person_lastname == "Surname"
+        assert site_owner.person_mbox == "someemail@domain.ab"
+        assert site_owner.institution_homepage == "https://www.domain.ab"
+
+    def test_site_owner_from_operator_rejects_ambiguous_contacts(self):
+        """
+        Reject multiple ObsPy contacts unless the caller selects one.
+        """
+        operator = Operator(
+            agency="Site Owner Full Name",
+            contacts=[
+                Person(names=["Name Surname"], emails=["one@domain.ab"]),
+                Person(names=["Other Contact"], emails=["two@domain.ab"])])
+
+        with pytest.raises(SiteXMLValidationError, match="multiple contacts"):
+            SERASiteOwner.from_operator(
+                operator, owner_codename="SITEOWNER")
 
     def _assert_site_xml_equality(self, xml_file_buffer,
                                      expected_xml_file_buffer):

@@ -56,6 +56,18 @@ class ValueWithUncertainty(BaseNode):
         The ObsPy ``measurement_method`` metadata is not represented in
         SiteXML's value/uncertainty pair and is therefore intentionally
         ignored.
+
+        .. rubric:: Example
+
+        >>> from obspy.core.util.obspy_types import FloatWithUncertainties
+        >>> value = FloatWithUncertainties(
+        ...     18.2, lower_uncertainty=0.5, upper_uncertainty=0.5)
+        >>> site_value = ValueWithUncertainty.from_float_with_uncertainties(
+        ...     value)
+        >>> site_value.value
+        18.2
+        >>> site_value.uncertainty
+        0.5
         """
         lower = value.lower_uncertainty
         upper = value.upper_uncertainty
@@ -72,6 +84,17 @@ class ValueWithUncertainty(BaseNode):
 
         The SiteXML uncertainty, when present, is mapped to both lower and
         upper ObsPy uncertainties.
+
+        .. rubric:: Example
+
+        >>> site_value = ValueWithUncertainty(18.2, uncertainty=0.5)
+        >>> obspy_value = site_value.to_float_with_uncertainties()
+        >>> float(obspy_value)
+        18.2
+        >>> obspy_value.lower_uncertainty
+        0.5
+        >>> obspy_value.upper_uncertainty
+        0.5
         """
         from obspy.core.util.obspy_types import FloatWithUncertainties
 
@@ -619,6 +642,14 @@ class VelocityProfileData(BaseNode):
 class SERASiteOwner(BaseNode):
     """
     Site owner and required contact-person metadata.
+
+    ObsPy's :class:`~obspy.core.inventory.util.Person` and
+    :class:`~obspy.core.inventory.util.Operator` classes are close, but not
+    identical, representations. SiteXML stores one required owner and one
+    required contact person split into first name, last name, and email. ObsPy
+    stores person names, agencies, and emails as lists, and operators can hold
+    multiple contacts. The conversion helpers below keep those policy choices
+    explicit.
     """
 
     owner_codename = scalar_property(
@@ -707,6 +738,232 @@ class SERASiteOwner(BaseNode):
     
         self.affiliation_department = affiliation_department
         self.affiliation_function = affiliation_function
+
+    @staticmethod
+    def _split_obspy_person_name(name):
+        """
+        Split an ObsPy full-name string into SiteXML first/last names.
+        """
+        parts = str(name).strip().split(None, 1)
+        if len(parts) != 2:
+            raise SiteXMLValidationError(
+                "Cannot derive SiteXML person_firstname and person_lastname "
+                "from an ObsPy Person name with fewer than two words"
+            )
+        return parts
+
+    @classmethod
+    def from_person(cls, person, owner_codename, owner_fullname, ownerID=None,
+                    person_firstname=None, person_lastname=None,
+                    person_mbox=None, person_homepage=None, personID=None,
+                    institution_name=None, institution_mbox=None,
+                    institution_phone=None, institution_homepage=None,
+                    institutionID=None, address_street=None,
+                    address_locality=None, address_postal_code=None,
+                    address_country=None, address_country_code=None,
+                    affiliation_department=None, affiliation_function=None):
+        """
+        Convert an ObsPy ``Person`` to a SiteXML owner contact.
+
+        ``owner_codename`` and ``owner_fullname`` are required because ObsPy
+        ``Person`` only represents the contact person, not the SiteXML owner
+        identity. If ``person_firstname`` and ``person_lastname`` are omitted,
+        they are derived from the first ObsPy person name. If ``person_mbox`` is
+        omitted, the first ObsPy email address is used. If ``institution_name``
+        is omitted, the first ObsPy agency is used.
+
+        .. rubric:: Example
+
+        >>> from obspy.core.inventory.util import Person
+        >>> person = Person(
+        ...     names=["Name Surname"],
+        ...     agencies=["INSTITUTION_ABBR"],
+        ...     emails=["someemail@domain.ab"])
+        >>> site_owner = SERASiteOwner.from_person(
+        ...     person,
+        ...     owner_codename="SITEOWNER",
+        ...     owner_fullname="Site Owner Full Name")
+        >>> site_owner.person_firstname
+        'Name'
+        >>> site_owner.person_lastname
+        'Surname'
+        >>> site_owner.institution_name
+        'INSTITUTION_ABBR'
+        """
+        names = list(person.names)
+        emails = list(person.emails)
+        agencies = list(person.agencies)
+
+        if person_firstname is None or person_lastname is None:
+            if not names:
+                raise SiteXMLValidationError(
+                    "Cannot derive SiteXML contact person from an ObsPy "
+                    "Person without names"
+                )
+            derived_firstname, derived_lastname = (
+                cls._split_obspy_person_name(names[0]))
+            person_firstname = person_firstname or derived_firstname
+            person_lastname = person_lastname or derived_lastname
+
+        if person_mbox is None:
+            if not emails:
+                raise SiteXMLValidationError(
+                    "Cannot derive SiteXML person_mbox from an ObsPy Person "
+                    "without emails"
+                )
+            person_mbox = emails[0]
+
+        if institution_name is None and agencies:
+            institution_name = agencies[0]
+
+        return cls(
+            owner_codename=owner_codename,
+            owner_fullname=owner_fullname,
+            ownerID=ownerID,
+            person_firstname=person_firstname,
+            person_lastname=person_lastname,
+            person_mbox=person_mbox,
+            person_homepage=person_homepage,
+            personID=personID,
+            institution_name=institution_name,
+            institution_mbox=institution_mbox,
+            institution_phone=institution_phone,
+            institution_homepage=institution_homepage,
+            institutionID=institutionID,
+            address_street=address_street,
+            address_locality=address_locality,
+            address_postal_code=address_postal_code,
+            address_country=address_country,
+            address_country_code=address_country_code,
+            affiliation_department=affiliation_department,
+            affiliation_function=affiliation_function)
+
+    @classmethod
+    def from_operator(cls, operator, owner_codename=None, owner_fullname=None,
+                      contact_index=None, **kwargs):
+        """
+        Convert an ObsPy ``Operator`` to a SiteXML owner contact.
+
+        ``operator.agency`` is used as ``owner_fullname`` when no explicit
+        value is provided. ``owner_codename`` defaults to ``operator.agency``
+        when omitted, though callers should pass a short code when they have
+        one. Operators with multiple contacts are rejected unless
+        ``contact_index`` selects which contact to convert, because SiteXML has
+        a single contact person in ``siteOwner``. Extra keyword arguments are
+        forwarded to :meth:`from_person`.
+
+        .. rubric:: Example
+
+        >>> from obspy.core.inventory.util import Operator, Person
+        >>> person = Person(
+        ...     names=["Name Surname"],
+        ...     emails=["someemail@domain.ab"])
+        >>> operator = Operator(
+        ...     agency="Site Owner Full Name",
+        ...     contacts=[person],
+        ...     website="https://www.domain.ab")
+        >>> site_owner = SERASiteOwner.from_operator(
+        ...     operator,
+        ...     owner_codename="SITEOWNER")
+        >>> site_owner.owner_fullname
+        'Site Owner Full Name'
+        >>> site_owner.institution_homepage
+        'https://www.domain.ab'
+        """
+        contacts = list(operator.contacts)
+        if not contacts:
+            raise SiteXMLValidationError(
+                "Cannot derive SiteXML owner contact from an ObsPy Operator "
+                "without contacts"
+            )
+        if contact_index is None:
+            if len(contacts) != 1:
+                raise SiteXMLValidationError(
+                    "Cannot derive one SiteXML owner contact from an ObsPy "
+                    "Operator with multiple contacts; pass contact_index"
+                )
+            contact_index = 0
+
+        if owner_fullname is None:
+            owner_fullname = operator.agency
+        if owner_codename is None:
+            owner_codename = operator.agency
+        kwargs.setdefault("institution_homepage", operator.website)
+
+        return cls.from_person(
+            contacts[contact_index],
+            owner_codename=owner_codename,
+            owner_fullname=owner_fullname,
+            **kwargs)
+
+    def to_person(self):
+        """
+        Convert this SiteXML owner contact to ObsPy's ``Person`` type.
+
+        The SiteXML first and last names are joined into one ObsPy name. The
+        SiteXML institution name is mapped to the first ObsPy agency, when
+        present, and ``person_mbox`` is mapped to the first ObsPy email.
+        SiteXML person homepage and public IDs are not represented by ObsPy
+        ``Person``.
+
+        .. rubric:: Example
+
+        >>> site_owner = SERASiteOwner(
+        ...     owner_codename="SITEOWNER",
+        ...     owner_fullname="Site Owner Full Name",
+        ...     person_firstname="Name",
+        ...     person_lastname="Surname",
+        ...     person_mbox="someemail@domain.ab",
+        ...     institution_name="INSTITUTION_ABBR")
+        >>> person = site_owner.to_person()
+        >>> person.names
+        ['Name Surname']
+        >>> person.agencies
+        ['INSTITUTION_ABBR']
+        >>> person.emails
+        ['someemail@domain.ab']
+        """
+        from obspy.core.inventory.util import Person
+
+        agencies = (
+            [self.institution_name] if self.institution_name is not None
+            else [])
+        return Person(
+            names=[f"{self.person_firstname} {self.person_lastname}"],
+            agencies=agencies,
+            emails=[self.person_mbox])
+
+    def to_operator(self):
+        """
+        Convert this SiteXML owner contact to ObsPy's ``Operator`` type.
+
+        ``owner_fullname`` is mapped to ``operator.agency``, the converted
+        contact person becomes the only operator contact, and
+        ``institution_homepage`` is mapped to ``operator.website``.
+
+        .. rubric:: Example
+
+        >>> site_owner = SERASiteOwner(
+        ...     owner_codename="SITEOWNER",
+        ...     owner_fullname="Site Owner Full Name",
+        ...     person_firstname="Name",
+        ...     person_lastname="Surname",
+        ...     person_mbox="someemail@domain.ab",
+        ...     institution_homepage="https://www.domain.ab")
+        >>> operator = site_owner.to_operator()
+        >>> operator.agency
+        'Site Owner Full Name'
+        >>> operator.website
+        'https://www.domain.ab'
+        >>> operator.contacts[0].names
+        ['Name Surname']
+        """
+        from obspy.core.inventory.util import Operator
+
+        return Operator(
+            agency=self.owner_fullname,
+            contacts=[self.to_person()],
+            website=self.institution_homepage)
 
     def __str__(self):
         ret = ("Site owner information:\n"
