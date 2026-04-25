@@ -39,7 +39,7 @@
 			<xs:field xpath="@publicID"/>
 		</xs:key>
 		<xs:key name="velocityProfilePublicIDKey">
-			<xs:selector xpath="tns:analysis/tns:velocityProfile"/>
+			<xs:selector xpath="tns:analysis/tns:velocityProfile/tns:profile"/>
 			<xs:field xpath="@publicID"/>
 		</xs:key>
 		<xs:keyref name="analysisSiteDescriptionRef" refer="tns:siteDescriptionPublicIDKey">
@@ -428,7 +428,7 @@
 			</xs:annotation>
 		</xs:attribute>
 	</xs:complexType>
-	
+
 	<xs:complexType name="SiteMorphologyType">
 		<xs:annotation>
 			<xs:documentation source="http://www.itsak.gr/SERA_Deliverable7.1.pdf">
@@ -459,22 +459,15 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<!-- ***************** EC8 CLASS **************************    -->
-			<xs:element name="siteClassEC8" type="EC8ClassType" minOccurs="0" maxOccurs="1">
+			<xs:element name="siteClassEC8" type="EC8SiteIndicatorType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Ground type according to Eurocode 8 (EC8 § 3.1.2, Table 3.1), 
 						based on the velocityS30 value and the geotechnical description.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="siteClassEC8Qindex1" type="QIndexType" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="siteClassEC8Reference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
-			<!-- ***************** SEISMOLOGICAL BEDROCK DEPTH **************************    -->
-			<xs:element name="bedrockDepth" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="bedrockDepthQindex1" type="QIndexType" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="bedrockDepthReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
-			<!-- ***************** ENGINEERING  BEDROCK DEPTH **************************    -->
-			<xs:element name="h800" type="RealQuantity" minOccurs="0" maxOccurs="1">
+			<xs:element name="bedrockDepth" type="BedrockDepthSiteIndicatorType" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="h800" type="H800SiteIndicatorType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Depth beyond which the shear-wave velocity Vs 
 						exceeds 800 m/s (only if measured).
@@ -482,36 +475,7 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="h800Qindex1" type="QIndexType" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="h800Reference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
-			<!-- ***************** GEOLOGY **************************    -->
-			<xs:element name="geologicalUnit" minOccurs="0" maxOccurs="1">
-				<xs:annotation>
-					<xs:documentation>Free text description of the surface geology of a site. 
-						Maximum 255 characters.</xs:documentation>
-				</xs:annotation>
-				<xs:simpleType>
-					<xs:restriction base="xs:string">
-						<xs:maxLength value="255"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:element>
-			<xs:element name="geologicalUnitQindex1" type="QIndexType" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="geologicalMapScale" type="xs:string" minOccurs="0" maxOccurs="1">
-				<xs:annotation>
-					<xs:documentation>Scale of geological map used for the description of 
-						surface geology provided in geologicalUnit
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="geologicalUnitOGE" type="xs:string" minOccurs="0" maxOccurs="1">
-				<xs:annotation>
-					<xs:documentation>Description of the surface geology according to a 
-						Unified, Pan-European Map
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="geologicalUnitReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="geologicalUnit" type="GeologicalUnitSiteIndicatorType" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 	</xs:complexType>
 			
@@ -533,6 +497,89 @@
 		</xs:choice>
 	</xs:complexType>
 
+	<xs:complexType name="EC8SiteIndicatorType">
+		<xs:sequence>
+			<xs:element name="value" type="EC8ClassType"/>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="BedrockDepthSiteIndicatorType">
+		<xs:sequence>
+			<xs:element name="value" type="RealQuantity"/>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="H800SiteIndicatorType">
+		<xs:sequence>
+			<xs:element name="value" type="RealQuantity"/>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="GeologicalUnitSiteIndicatorType">
+		<xs:sequence>
+			<xs:element name="value">
+				<xs:annotation>
+					<xs:documentation>
+						Free text description of the surface geology of a site.
+						Maximum 255 characters.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="255"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="geologicalMapScale" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Scale of geological map used for the description of
+						surface geology provided in geologicalUnit.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="geologicalUnitOGE" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Description of the surface geology according to a
+						Unified, Pan-European Map.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:group name="SiteIndicatorMetadataGroup">
+		<xs:annotation>
+			<xs:documentation>
+				Common metadata for SiteXML site indicators. SiteXML groups an
+				indicator value with its quality index and supporting reference
+				inside the indicator element.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="qualityIndex" type="QIndexType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Quality index for the provided site-indicator value.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="reference" type="ReferenceType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Literature or external reference supporting the provided
+						site-indicator value.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:group>
+	
 	<!-- Site Analysis Type Definitions -->
 
 	<xs:complexType name="AnalysisType">
@@ -545,74 +592,21 @@
 			</xs:element>
 			<xs:element name="creationTime" type="xs:dateTime" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
-					<xs:documentation>Date that this analysis was generated. 
+					<xs:documentation>Date that this analysis was generated.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
 			<!--   ************** RESONANCE FREQUENCY  **********     -->
-			<xs:element name="resonanceFrequency" type="RealQuantity" minOccurs="0" maxOccurs="1">
+			<xs:element name="resonanceFrequency" type="ResonanceFrequencySiteIndicatorType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Resonance frequency of the soil column at each location/site.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="resonanceFrequencyQindex1" type="QIndexType" minOccurs="0" maxOccurs="1">
-				<xs:annotation>
-					<xs:documentation>Quality Index for the provided resonance frequency 
-						which is derived <strong>automatically</strong> on the basis of the 
-						completeness of information (resonanceFrequencyMethod and 
-						resonanceFrequencyReference) and grading of the different values of the 
-						resonanceFrequencyMethod. <br/>
-						Detailed description on the computation of this index is given in Appendix II.
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="resonanceFrequencyMethod" type="ResonanceFrequencyMethodType" minOccurs="0" maxOccurs="unbounded">
-				<xs:annotation>
-					<xs:documentation>Method by which resonance frequency value 
-						has been determined.<br/>
-						<strong>Note: </strong>Multiple values allowed
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="resonanceFrequencyReference" type="ReferenceType" minOccurs="0" maxOccurs="1">
-				<xs:annotation>
-					<xs:documentation>Literature or web reference providing detailed information 
-						on the methodology adopted for determining the resonance frequency.
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
 			<!--   ************** VS30   **********     -->
-			<xs:element name="velocityS30" type="RealQuantity" minOccurs="0" maxOccurs="1">
+			<xs:element name="velocityS30" type="VelocityS30SiteIndicatorType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Average shear-wave velocity between 0 and 30 meters depth.
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="velocityS30Qindex1" type="QIndexType" minOccurs="0" maxOccurs="1">
-				<xs:annotation>
-					<xs:documentation>Quality Index for the provided velocityS30 value, 
-						which is derived <strong>automatically</strong> on the basis of the completeness of 
-						information (velocityS30Method and velocityS30Reference), 
-						the velocityS30MethodCombIndex, a grading scheme of the different values of
-						velocityS30Method and the velocityS30ManualIndex. <br/>
-						More information on how this index is computed is given in Appendix IV.
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="velocityS30Method" type="VelocityS30MethodType" minOccurs="0" maxOccurs="unbounded">
-				<xs:annotation>
-					<xs:documentation>Method by which velocityS30 value has been determined.<br/>
-					<strong>Note: </strong>Multiple values allowed
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="velocityS30MethodCombIndex" type="VelocityS30MethodCombIndexType" minOccurs="0" maxOccurs="1"/>		
-			<xs:element name="velocityS30ManualIndex" type="VelocityS30ManualIndexType" minOccurs="0" maxOccurs="1"/>	
-			<xs:element name="velocityS30Reference" type="ReferenceType" minOccurs="0" maxOccurs="1">
-				<xs:annotation>
-					<xs:documentation>Literature or web reference providing detailed information 
-						on the methodology adopted for determining the velocityS30 value.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
@@ -648,14 +642,12 @@
 				</xs:annotation>
 			</xs:element>
 			<!-- **************** VELOCITY PROFILE *********************** -->
-			<xs:element name="velocityProfile" type="VelocityProfile" minOccurs="0" maxOccurs="unbounded">
+			<xs:element name="velocityProfile" type="VelocityProfileSiteIndicatorType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>One or more velocity profiles associated with this analysis.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="velocityProfileQindex1" type="QIndexType" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="velocityProfileReference" type="ReferenceType" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 		<xs:attribute name="publicID" type="ResourceIdentifier" use="required"> 
 			<xs:annotation>
@@ -664,6 +656,65 @@
 				</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="ResonanceFrequencySiteIndicatorType">	
+		<xs:sequence>
+			<xs:element name="value" type="RealQuantity"/>
+			<xs:element name="method" type="ResonanceFrequencyMethodType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						Method by which resonance frequency value has been
+						determined. Multiple values are allowed.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="VelocityS30SiteIndicatorType">
+		<xs:sequence>
+			<xs:element name="value" type="RealQuantity"/>
+			<xs:element name="method" type="VelocityS30MethodType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						Method by which velocityS30 value has been determined.
+						Multiple values are allowed.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="methodCombIndex" type="VelocityS30MethodCombIndexType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Information on whether a combination of two or more
+						methods has been applied to estimate velocityS30.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="manualIndex" type="VelocityS30ManualIndexType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Overall qualitative factor on the knowledge of the
+						maximum depth of Vs measurements.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="VelocityProfileSiteIndicatorType">
+		<xs:sequence>
+			<xs:element name="profile" type="VelocityProfile" minOccurs="1" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						Velocity profile associated with this analysis.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
 	</xs:complexType>
 
 	<xs:complexType name="VelocityProfile">
@@ -846,48 +897,6 @@
 		<xs:sequence>
 			<xs:element name="value" type="xs:double"/>
 			<xs:element name="uncertainty" type="NonNegativeDouble" minOccurs="0" maxOccurs="1"/>
-		</xs:sequence>
-	</xs:complexType>
-
-	<xs:simpleType name="LatitudeType">
-		<xs:annotation>
-			<xs:documentation>
-				Latitude expressed in decimal degrees.
-			</xs:documentation>
-		</xs:annotation>
-		<xs:restriction base="xs:double">
-			<xs:minInclusive value="-90"/>
-			<xs:maxInclusive value="90"/>
-		</xs:restriction>
-	</xs:simpleType>
-
-	<xs:simpleType name="LongitudeType">
-		<xs:annotation>
-			<xs:documentation>
-				Longitude expressed in decimal degrees.
-			</xs:documentation>
-		</xs:annotation>
-		<xs:restriction base="xs:double">
-			<xs:minInclusive value="-180"/>
-			<xs:maxInclusive value="180"/>
-		</xs:restriction>
-	</xs:simpleType>
-
-	<xs:complexType name="QIndexType">
-		<xs:annotation>
-			<xs:documentation>
-				This type is used to restrict the values of a quality index between 0 an 1. 
-			</xs:documentation>
-		</xs:annotation>
-		<xs:sequence>
-			<xs:element name="value">
-				<xs:simpleType>
-					<xs:restriction base="xs:double">
-						<xs:minInclusive value="0"/>
-						<xs:maxInclusive value="1"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -1117,6 +1126,42 @@
               <xs:pattern value="[a-z]{2}"/>
 			  <xs:maxLength value="2"/>
         </xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="LatitudeType">
+		<xs:annotation>
+			<xs:documentation>
+				Latitude expressed in decimal degrees.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:minInclusive value="-90"/>
+			<xs:maxInclusive value="90"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="LongitudeType">
+		<xs:annotation>
+			<xs:documentation>
+				Longitude expressed in decimal degrees.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:minInclusive value="-180"/>
+			<xs:maxInclusive value="180"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="QIndexType">
+		<xs:annotation>
+			<xs:documentation>
+				This type is used to restrict the values of a quality index between 0 an 1. 
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:minInclusive value="0"/>
+			<xs:maxInclusive value="1"/>
+		</xs:restriction>
 	</xs:simpleType>
 
 	<xs:simpleType name="ResourceIdentifier">

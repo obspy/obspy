@@ -327,11 +327,15 @@ def _read_site_description(site_description_element):
         - schemaA, schemaB
     - siteMorphology
         - morphology
-        - siteClassEC8, siteClassEC8Qindex1, siteClassEC8Reference
-        - bedrockDepth, bedrockDepthQindex1, bedrockDepthReference
-        - h800, h800Qindex1, h800Reference
-        - geologicalUnit, geologicalUnitQindex1, geologicalUnitReference, 
-        - geologicalMapScale, geologicalUnitOGE
+        - siteClassEC8
+            - value, qualityIndex, reference
+        - bedrockDepth
+            - value, qualityIndex, reference
+        - h800
+            - value, qualityIndex, reference
+        - geologicalUnit
+            - value, geologicalMapScale, geologicalUnitOGE,
+              qualityIndex, reference
     - preferredSiteAnalysisID
     - preferredVelocityProfileID
     - comment (0-unbounded)
@@ -378,7 +382,7 @@ def _read_site_description(site_description_element):
  
     # Overall Quality Index
     site_description.overall_quality_index = \
-        _read_value(site_description_element, "overallQindex", float)
+        _tag2obj(site_description_element, _ns("overallQindex"), float)
     # Comments
     #
     return site_description
@@ -389,72 +393,29 @@ def _read_morphology(morphology_element, site_description_obj):
 
     - siteMorphology
         - morphology
-        - siteClassEC8, siteClassEC8Qindex1, siteClassEC8Reference
-        - bedrockDepth, bedrockDepthQindex1, bedrockDepthReference
-        - h800, h800Qindex1, h800Reference
-        - geologicalUnit, geologicalUnitQindex1, geologicalUnitReference, 
-        - geologicalMapScale, geologicalUnitOGE
+        - siteClassEC8
+            - value, qualityIndex, reference
+        - bedrockDepth
+            - value, qualityIndex, reference
+        - h800
+            - value, qualityIndex, reference
+        - geologicalUnit
+            - value, geologicalMapScale, geologicalUnitOGE,
+              qualityIndex, reference
     :rtype: None
     """
     site_description_obj.morphology = _tag2obj(morphology_element, _ns("morphology"), str)
 
-    # EC8 Class
-    ec8_value = _tag2obj(morphology_element, _ns("siteClassEC8"), str)
-    if ec8_value is not None: 
-        value = _read_value(morphology_element, "siteClassEC8Qindex1", float)
-        ec8_qindex = value if value is not None else 0
-        [ec8_literature_source, ec8_external_reference] = _read_reference(
-            morphology_element, "siteClassEC8Reference")
-        site_description_obj.ec8 = EC8(
-                value = ec8_value,
-                quality_index = ec8_qindex,
-                literature_source = ec8_literature_source, 
-                external_reference = ec8_external_reference)
-
-    # Bedrock Depth
-    bdepth_value = _read_value_with_uncertainty(
-        morphology_element, "bedrockDepth", float)
-    if bdepth_value is not None: 
-        value = _read_value(morphology_element, "bedrockDepthQindex1", float)
-        bdepth_qindex = value if value is not None else 0
-        [bdepth_literature_source, bdepth_external_reference] = _read_reference(
-            morphology_element, "bedrockDepthReference")
-        site_description_obj.bedrock_depth = BedrockDepth(
-                value = bdepth_value,
-                quality_index = bdepth_qindex,
-                literature_source = bdepth_literature_source,
-                external_reference = bdepth_external_reference)
-    
-    # H800
-    h800_value = _read_value_with_uncertainty(
-        morphology_element, "h800", float)
-    if h800_value is not None: 
-        value = _read_value(morphology_element, "h800Qindex1", float)
-        h800_qindex = value if value is not None else 0
-        [h800_literature_source, h800_external_reference] = _read_reference(
-            morphology_element, "h800Reference")
-        site_description_obj.h800 = H800(
-                value = h800_value,
-                quality_index = h800_qindex,
-                literature_source = h800_literature_source, 
-                external_reference = h800_external_reference)
-        
-    # Geological Unit
-    gunit_value = _tag2obj(morphology_element, _ns("geologicalUnit"), str)
-    if gunit_value is not None:
-        value = _read_value(morphology_element, "geologicalUnitQindex1", float)
-        gunit_qindex = value if value is not None else 0
-        gunit_map_scale = _tag2obj(morphology_element, _ns("geologicalMapScale"), str)
-        gunit_oge = _tag2obj(morphology_element, _ns("geologicalUnitOGE"), str)
-        [gunit_literature_source, gunit_external_reference] = _read_reference(
-            morphology_element, "geologicalUnitReference")
-        site_description_obj.geological_unit = GeologicalUnit(
-                value = gunit_value, 
-                quality_index = gunit_qindex,
-                geological_map_scale = gunit_map_scale,
-                geological_unit_OGE = gunit_oge,
-                literature_source = gunit_literature_source,
-                external_reference = gunit_external_reference)
+    site_description_obj.ec8 = _read_site_indicator(
+        morphology_element, "siteClassEC8", EC8)
+    site_description_obj.bedrock_depth = _read_site_indicator(
+        morphology_element, "bedrockDepth", BedrockDepth,
+        value_with_uncertainty=True)
+    site_description_obj.h800 = _read_site_indicator(
+        morphology_element, "h800", H800,
+        value_with_uncertainty=True)
+    site_description_obj.geological_unit = _read_site_indicator(
+        morphology_element, "geologicalUnit", GeologicalUnit)
     
 def _read_analysis(analysis_element):
     """
@@ -474,25 +435,27 @@ def _read_analysis(analysis_element):
     - Analysis [List]
         - PublicID (attr)
         - creationTime
-        - resonanceFrequency, resonanceFrequencyQIndex1, 
-        - resonanceFrequencyReference, resonanceFrequencyMethod
-        - velocityS30, velocityS30Qindex1, velocityS30Reference, 
-        - velocityS30Method, velocityS30ManualIndex, velocityS30MethodCombIndex
+        - resonanceFrequency
+            - value, method, qualityIndex, reference
+        - velocityS30
+            - value, method, manualIndex, methodCombIndex,
+              qualityIndex, reference
         - sptLogsCount
         - cptLogsCount
         - boreholeLogsCount
-        - velocityProfile [List]
-            - PublicID (attr)
-            - layerCount
-            - velocityProfileData [List]
-                - density
-                - velocityP
-                - velocityS
-                - layerThickness
-                    - layerTopDepth
-                    - layerBottomDepth
-        - velocityProfileQindex1
-        - velocityProfileReference
+        - velocityProfile
+            - profile [List]
+                - PublicID (attr)
+                - layerCount
+                - velocityProfileData [List]
+                    - density
+                    - velocityP
+                    - velocityS
+                    - layerThickness
+                        - layerTopDepth
+                        - layerBottomDepth
+            - qualityIndex
+            - reference
     """
     
     resource_id = _attr2obj(analysis_element, "publicID", str)
@@ -505,43 +468,12 @@ def _read_analysis(analysis_element):
     creation_time = _tag2obj(analysis_element, _ns("creationTime"), str)
     if creation_time is not None:
         analysis_obj.creation_date = obspy.UTCDateTime(creation_time)
-    # Resonance Frequency 
-    rfreq_value = _read_value_with_uncertainty(
-        analysis_element, "resonanceFrequency", float)
-    if rfreq_value is not None: 
-        value = _read_value(analysis_element, "resonanceFrequencyQindex1", float)
-        rfreq_qindex = value if value is not None else 0
-        rfreq_methods = _tags2obj(analysis_element, _ns("resonanceFrequencyMethod"), str)
-        [rfreq_literature_source, rfreq_external_reference] = \
-            _read_reference(analysis_element, "resonanceFrequencyReference")
-
-        analysis_obj.resonance_frequency = ResonanceFrequency(
-                value = rfreq_value,
-                quality_index = rfreq_qindex,
-                methods = rfreq_methods,
-                literature_source = rfreq_literature_source,
-                external_reference = rfreq_external_reference)
-
-    # Velocity S30
-    vs30_value = _read_value_with_uncertainty(
-        analysis_element, "velocityS30", float)
-    if vs30_value is not None: 
-        value = _read_value(analysis_element, "velocityS30Qindex1", float)
-        vs30_qindex = value if value is not None else 0
-        vs30_methods = _tags2obj(analysis_element, _ns("velocityS30Method"), str)
-        vs30_methods_index = _tag2obj(analysis_element, _ns("velocityS30MethodCombIndex"), str)
-        vs30_manual_index = _tag2obj(analysis_element, _ns("velocityS30ManualIndex"), str)
-        [vs30_literature_source, vs30_external_reference] = \
-            _read_reference(analysis_element, "velocityS30Reference")
-
-        analysis_obj.velocity_s30 = VelocityS30(
-                value = vs30_value,
-                quality_index = vs30_qindex,
-                methods = vs30_methods,
-                method_combined_qindex = vs30_methods_index,
-                manual_qindex = vs30_manual_index,
-                literature_source = vs30_literature_source,
-                external_reference = vs30_external_reference)
+    analysis_obj.resonance_frequency = _read_site_indicator(
+        analysis_element, "resonanceFrequency", ResonanceFrequency,
+        value_with_uncertainty=True)
+    analysis_obj.velocity_s30 = _read_site_indicator(
+        analysis_element, "velocityS30", VelocityS30,
+        value_with_uncertainty=True)
 
     analysis_obj.spt_logs_count = \
         _tag2obj(analysis_element, _ns("sptLogsCount"), int)
@@ -566,13 +498,17 @@ def _read_velocity_profile(analysis_element, analysis_obj):
     :rtype: :class:`~obspy.io.sitexml.core.VelocityProfileSurvey`
     """
 
-    vp_element_list=analysis_element.findall(_ns("velocityProfile"))
-    value = _read_value(analysis_element, "velocityProfileQindex1", float)
+    velocity_profile_element = analysis_element.find(_ns("velocityProfile"))
+    if velocity_profile_element is None:
+        return None
+
+    vp_element_list = velocity_profile_element.findall(_ns("profile"))
+    value = _tag2obj(velocity_profile_element, _ns("qualityIndex"), float)
     vp_qindex = value if value is not None else 0
     [vp_literature_source, vp_external_reference] = \
-            _read_reference(analysis_element, "velocityProfileReference")
+            _read_reference(velocity_profile_element)
 
-    # At least one velocityProfile or a velocityProfileReference 
+    # At least one profile or a reference
     # should be present in SiteXML in order to create the VelocityProfileSurvey object
     if len(vp_element_list) == 0 \
             and vp_literature_source is None \
@@ -641,7 +577,52 @@ def _read_velocity_profile_data(vp_data_element):
                                 )
     return vp_data
 
-def _read_reference(parent, tag):
+def _read_site_indicator(parent, site_indicator_name, site_indicator_cls,
+                         value_with_uncertainty=False):
+    """
+    Read one nested SiteXML site indicator into its API object.
+
+    :rtype: :class:`~obspy.io.sitexml.core.SiteIndicator` or None
+    """
+    indicator_element = parent.find(_ns(site_indicator_name))
+    if indicator_element is None:
+        return None
+
+    if value_with_uncertainty:
+        indicator_value = _read_value_with_uncertainty(
+            indicator_element, "value", float)
+    else:
+        indicator_value = _tag2obj(indicator_element, _ns("value"), str)
+
+    value = _tag2obj(indicator_element, _ns("qualityIndex"), float)
+    quality_index = value if value is not None else 0
+    literature_source, external_reference = _read_reference(indicator_element)
+
+    kwargs = {
+        "value": indicator_value,
+        "quality_index": quality_index,
+        "literature_source": literature_source,
+        "external_reference": external_reference,
+    }
+
+    if site_indicator_name in ("resonanceFrequency", "velocityS30"):
+        kwargs["methods"] = _tags2obj(indicator_element, _ns("method"), str)
+
+    if site_indicator_name == "geologicalUnit":
+        kwargs["geological_map_scale"] = _tag2obj(
+            indicator_element, _ns("geologicalMapScale"), str)
+        kwargs["geological_unit_OGE"] = _tag2obj(
+            indicator_element, _ns("geologicalUnitOGE"), str)
+
+    if site_indicator_name == "velocityS30":
+        kwargs["method_combined_qindex"] = _tag2obj(
+            indicator_element, _ns("methodCombIndex"), str)
+        kwargs["manual_qindex"] = _tag2obj(
+            indicator_element, _ns("manualIndex"), str)
+
+    return site_indicator_cls(**kwargs)
+
+def _read_reference(parent, tag="reference"):
     """
     Read literature and external references from an indicator reference tag.
 
@@ -1102,8 +1083,8 @@ def _write_site_description(parent, site_description):
              site_description.preferred_site_analysisID)
     _obj2tag(site_description_elem, "preferredVelocityProfileID",
              site_description.preferred_velocity_profileID)
-    _write_value(site_description_elem, "overallQindex",
-                 site_description.overall_quality_index)
+    _obj2tag(site_description_elem, "overallQindex",
+             site_description.overall_quality_index)
 
 
 def _write_analysis(parent, analysis_list):
@@ -1134,14 +1115,15 @@ def _write_velocity_profile(parent, velocity_profile_survey):
     :rtype: None
     """
     if velocity_profile_survey:
+        velocity_profile_elem = etree.SubElement(parent, "velocityProfile")
         if velocity_profile_survey.velocity_profiles:
             for vp in velocity_profile_survey.velocity_profiles:
                 index = velocity_profile_survey.velocity_profiles.index(vp)
                 comment = etree.Comment(f" Velocity profile # {index + 1} ")
-                parent.append(comment)
+                velocity_profile_elem.append(comment)
 
                 attribs = {"publicID": vp.resource_id}
-                vp_elem = etree.SubElement(parent, "velocityProfile", attribs)
+                vp_elem = etree.SubElement(velocity_profile_elem, "profile", attribs)
                 if vp.layer_count != len(vp.velocity_profile_data):
                     raise SiteXMLValidationError(
                         "Number of velocity profile data layers does not "
@@ -1164,9 +1146,9 @@ def _write_velocity_profile(parent, velocity_profile_survey):
                     _write_value_with_uncertainty(geometry_elem, "layerBottomDepth",
                                                   vp_data.bottom_depth)
 
-        _write_value(parent, "velocityProfileQindex1",
-                     velocity_profile_survey.quality_index)
-        _write_reference(parent, velocity_profile_survey)
+        _obj2tag(velocity_profile_elem, "qualityIndex",
+                 velocity_profile_survey.quality_index)
+        _write_reference(velocity_profile_elem, velocity_profile_survey)
 
 
 def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
@@ -1176,31 +1158,33 @@ def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
     :rtype: None
     """
     if site_indicator_obj:
+        site_indicator_elem = etree.SubElement(parent, site_indicator_name)
         if isinstance(site_indicator_obj.value, ValueWithUncertainty):
-            _write_value_with_uncertainty(parent, site_indicator_name,
+            _write_value_with_uncertainty(site_indicator_elem, "value",
                                           site_indicator_obj.value)
         else:
-            etree.SubElement(parent, site_indicator_name).text = (
+            etree.SubElement(site_indicator_elem, "value").text = (
                 str(site_indicator_obj.value)
             )
 
-        _write_value(parent, site_indicator_name + "Qindex1",
-                     site_indicator_obj.quality_index)
-        _write_methods(parent, site_indicator_name, site_indicator_obj)
-
-        if site_indicator_name == "geologicalUnit":
-            _obj2tag(parent, "geologicalMapScale",
-                     site_indicator_obj.geological_map_scale)
-            _obj2tag(parent, "geologicalUnitOGE",
-                     site_indicator_obj.geological_unit_OGE)
+        _write_methods(site_indicator_elem, site_indicator_obj)
 
         if site_indicator_name == "velocityS30":
-            _obj2tag(parent, "velocityS30MethodCombIndex",
+            _obj2tag(site_indicator_elem, "methodCombIndex",
                      site_indicator_obj.method_combined_qindex)
-            _obj2tag(parent, "velocityS30ManualIndex",
+            _obj2tag(site_indicator_elem, "manualIndex",
                      site_indicator_obj.manual_qindex)
 
-        _write_reference(parent, site_indicator_obj)
+        if site_indicator_name == "geologicalUnit":
+            _obj2tag(site_indicator_elem, "geologicalMapScale",
+                     site_indicator_obj.geological_map_scale)
+            _obj2tag(site_indicator_elem, "geologicalUnitOGE",
+                     site_indicator_obj.geological_unit_OGE)
+
+        _obj2tag(site_indicator_elem, "qualityIndex",
+                 site_indicator_obj.quality_index)
+
+        _write_reference(site_indicator_elem, site_indicator_obj)
 
 
 def _write_reference(parent, site_indicator_obj):
@@ -1213,8 +1197,7 @@ def _write_reference(parent, site_indicator_obj):
     external_reference_obj = site_indicator_obj.external_reference
 
     if literature_obj or external_reference_obj:
-        reference_elem = etree.SubElement(
-            parent, site_indicator_obj.name + "Reference")
+        reference_elem = etree.SubElement(parent, "reference")
     else:
         return
 
@@ -1233,7 +1216,7 @@ def _write_reference(parent, site_indicator_obj):
         _write_external_reference(reference_elem, external_reference_obj)
 
 
-def _write_methods(parent, site_indicator_name, site_indicator_obj):
+def _write_methods(parent, site_indicator_obj):
     """
     Append method elements for a site indicator.
 
@@ -1241,7 +1224,7 @@ def _write_methods(parent, site_indicator_name, site_indicator_obj):
     """
     if site_indicator_obj.methods:
         for method in site_indicator_obj.methods:
-            _obj2tag(parent, site_indicator_name + "Method", method)
+            _obj2tag(parent, "method", method)
 
 
 def _write_value(parent, tag, value):
