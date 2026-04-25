@@ -2,7 +2,10 @@ master
 ======
 
 Changes:
- - ...
+ - General
+   * Update codebase operate multiprocessing via context manager (see #3719)
+   * Github CI: suppress pytest unclosed sqlite3 warnings (see #3719)
+
 
 maintenance_1.5.x
 =================
