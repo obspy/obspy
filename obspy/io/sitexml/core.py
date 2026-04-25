@@ -1120,8 +1120,6 @@ class SiteDescription(BaseNode):
             vp_id = self.preferred_velocity_profileID)
         return ret
 
-    # TODOs: Check station_code against rules
-    #
     @property
     def station_code(self):
         return self._station_code
@@ -1331,6 +1329,86 @@ class SERASite(BaseNode):
             if analysis.resource_id == resource_id:
                 return analysis
         return None
+
+    def write_stationxml_reference(
+            self, sitexml_url, path, datacenter, description=None,
+            client=None):
+        """
+        Retrieve StationXML for this site's station, attach the SiteXML URL as
+        a StationXML ``ExternalReference``, and write the updated inventory.
+
+        The station code is taken from
+        :attr:`site_description.station_code`, which must use
+        ``network.station`` notation.
+
+        :type sitexml_url: str
+        :param sitexml_url: URL of the SiteXML document to reference.
+        :type path: str or pathlib.Path or file-like object
+        :param path: Local output path or writable file-like object for the
+            updated StationXML.
+        :type datacenter: str
+        :param datacenter: FDSN data center used to initialize
+            :class:`obspy.clients.fdsn.client.Client`, for example
+            ``"EARTHSCOPE"``.
+        :type description: str, optional
+        :param description: StationXML external-reference description. If
+            omitted, a SERA SiteXML description is used.
+        :type client: :class:`obspy.clients.fdsn.client.Client`, optional
+        :param client: Existing FDSN client. Mainly useful for tests or for
+            callers that already manage client construction.
+        :rtype: :class:`obspy.core.inventory.inventory.Inventory`
+        :return: The updated inventory that was written to ``path``.
+        """
+        full_station_code = self.site_description.station_code
+        if not full_station_code:
+            raise SiteXMLValidationError(
+                "Cannot retrieve StationXML without "
+                "site_description.station_code."
+            )
+        network_code, station_code = full_station_code.split(".")
+
+        query = {
+            "network": network_code,
+            "station": station_code,
+            "level": "response",
+        }
+
+        if client is None:
+            from obspy.clients.fdsn import Client
+
+            client = Client(datacenter)
+
+        inventory = client.get_stations(**query)
+        matches = [
+            (network, station)
+            for network in inventory
+            for station in network
+            if station.code == station_code and
+            network.code == network_code
+        ]
+
+        if not matches:
+            raise SiteXMLValidationError(
+                "FDSN StationXML response did not contain station "
+                f"{full_station_code!r}."
+            )
+
+        ## TODOs: How to replace an older siteXML with a newer one??
+        # Keep only a specific description to look for, for replacing?
+        #
+        # Maybe add a comment with the addition date.
+        # This could also serve as a history of SiteXML updates.
+        #
+        _, station = matches[0]
+        description = description or "SERA SiteXML site characterization"
+        if not any(ref.uri == sitexml_url for ref in
+                   station.external_references):
+            station.external_references.append(
+                ExternalReference(uri=sitexml_url, description=description)
+            )
+
+        inventory.write(path, format="STATIONXML")
+        return inventory
 
     def validate_references(self):
         """

@@ -17,6 +17,7 @@ from lxml import etree
 import obspy
 import pytest
 from obspy.core.event import ResourceIdentifier
+from obspy.core.inventory import Inventory, Network, Station, read_inventory
 from obspy.core.inventory.util import Operator, Person
 from obspy.core.util.obspy_types import FloatWithUncertainties
 from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASite,
@@ -51,6 +52,47 @@ class TestSiteXML():
             resource_id="quakeml:domain.ab/site/001",
             site_owner=site_owner,
             site_description=site_description)
+
+    def test_write_stationxml_reference(self, tmp_path):
+        """
+        SiteXML URL is added as StationXML station ExternalReference.
+        """
+        class DummyClient:
+            def __init__(self, inventory):
+                self.inventory = inventory
+                self.query = None
+
+            def get_stations(self, **kwargs):
+                self.query = kwargs
+                return self.inventory
+
+        station = Station(
+            code="ABCD", latitude=1.0, longitude=2.0, elevation=3.0)
+        inventory = Inventory(
+            networks=[Network(code="XX", stations=[station])],
+            source="TEST")
+        client = DummyClient(inventory)
+        sera_site = self._minimal_sera_site()
+        output = tmp_path / "station.xml"
+
+        returned = sera_site.write_stationxml_reference(
+            "https://example.org/site.xml",
+            output,
+            datacenter="EARTHSCOPE",
+            client=client)
+
+        assert returned is inventory
+        assert client.query == {
+            "station": "ABCD",
+            "level": "response",
+            "network": "XX",
+        }
+        written = read_inventory(output, format="STATIONXML")
+        refs = written[0][0].external_references
+        assert len(refs) == 1
+        assert refs[0].uri == "https://example.org/site.xml"
+        assert refs[0].description == "SERA SiteXML site characterization"
+
     def test_station_code_requires_network_station_notation(self):
         """
         Bare station codes are rejected to avoid ambiguous StationXML links.
@@ -81,6 +123,30 @@ class TestSiteXML():
 
         with pytest.raises(SiteXMLValidationError):
             read_sitexml(io.BytesIO(xml.encode("utf-8")))
+
+    def test_write_stationxml_reference_rejects_missing_station(
+            self, tmp_path):
+        """
+        The FDSN response must contain the exact network.station code.
+        """
+        class DummyClient:
+            def get_stations(self, **kwargs):
+                return Inventory(networks=[
+                    Network(code="YY", stations=[
+                        Station(
+                            code="ABCD", latitude=1.0, longitude=2.0,
+                            elevation=3.0)
+                    ]),
+                ], source="TEST")
+
+        sera_site = self._minimal_sera_site()
+
+        with pytest.raises(SiteXMLValidationError, match="XX.ABCD"):
+            sera_site.write_stationxml_reference(
+                "https://example.org/site.xml",
+                tmp_path / "station.xml",
+                datacenter="EARTHSCOPE",
+                client=DummyClient())
 
     def test_value_with_uncertainty_to_float_with_uncertainties(self):
         """
