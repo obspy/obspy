@@ -275,7 +275,7 @@ class BaseRoutingClient(HTTPClient):
                 "data_type": data_type,
                 "kwargs": kwargs,
                 "credentials": self.credentials})
-        with closing(ThreadPool(processes=len(dl_requests))) as pool:
+        with ThreadPool(processes=len(dl_requests)) as pool:
             results = pool.map(_try_download_bulk, dl_requests)
 
         # Merge all results into a single object.
