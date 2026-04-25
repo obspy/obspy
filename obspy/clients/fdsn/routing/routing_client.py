@@ -275,8 +275,8 @@ class BaseRoutingClient(HTTPClient):
                 "data_type": data_type,
                 "kwargs": kwargs,
                 "credentials": self.credentials})
-        pool = ThreadPool(processes=len(dl_requests))
-        results = pool.map(_try_download_bulk, dl_requests)
+        with closing(ThreadPool(processes=len(dl_requests))) as pool:
+            results = pool.map(_try_download_bulk, dl_requests)
 
         # Merge all results into a single object.
         if data_type == "waveform":
@@ -292,10 +292,6 @@ class BaseRoutingClient(HTTPClient):
             if not _i:
                 continue
             collection += _i
-
-        # Explitly close the thread pool as somehow this does not work
-        # automatically under linux. See #2342.
-        pool.close()
 
         return collection
 
