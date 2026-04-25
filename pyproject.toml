@@ -7,9 +7,8 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 # Ignore the pytest sqlite3 db connection errors which
-# started showing up in py3.14
+# python3.14 stopped tolerating
 [tool.pytest.ini_options]
 filterwarnings = [
-    "ignore:Exception ignored while finalizing database "
-    "connection:pytest.PytestUnraisableExceptionWarning",
+    "ignore:Exception ignored while finalizing database connection:pytest.PytestUnraisableExceptionWarning",
 ]
