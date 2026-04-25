@@ -356,6 +356,32 @@ class TestSiteXML():
         assert velocity_profile.resource_id == (
             "quakeml:domain.ab/velocity_profile/001")
 
+    def test_sera_site_get_analysis_by_resource_id(self):
+        site_description = SiteDescription(
+            resource_id="quakeml:domain.ab/site_description/001",
+            latitude=1.0,
+            longitude=2.0)
+        analysis = Analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            site_descriptionID="quakeml:domain.ab/site_description/001")
+        sera_site = SERASite(
+            resource_id="quakeml:domain.ab/site/001",
+            site_owner=SERASiteOwner(
+                owner_codename="TEST",
+                owner_fullname="Test Owner",
+                person_firstname="Name",
+                person_lastname="Surname",
+                person_mbox="someemail@domain.ab"),
+            site_description=site_description,
+            analysis=[analysis])
+
+        assert sera_site.get_analysis(
+            "quakeml:domain.ab/analysis/001") is analysis
+        assert sera_site.get_analysis(
+            ResourceIdentifier("quakeml:domain.ab/analysis/001")) is analysis
+        assert sera_site.get_analysis(
+            "quakeml:domain.ab/analysis/missing") is None
+
     def test_sitexml_created_validates_utcdatetime(self):
         with pytest.raises(SiteXMLValidationError):
             SERASite(

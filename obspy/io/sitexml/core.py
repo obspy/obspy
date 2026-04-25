@@ -12,6 +12,7 @@ Provides the SERASite class.
 from collections.abc import Iterable
 
 import obspy
+from obspy.core.event import ResourceIdentifier
 from obspy.core.inventory.util import (Latitude, Longitude, Distance, 
                                        ExternalReference)
 from .util import (BaseNode, SiteXMLValidationError,
@@ -1295,6 +1296,23 @@ class SERASite(BaseNode):
         self.analysis = analysis
         self.created = created
         self.external_references = external_references
+
+    def get_analysis(self, resource_id):
+        """
+        Return the attached analysis with matching resource ID, if present.
+
+        :type resource_id: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :param resource_id: Analysis resource ID to look up.
+        :rtype: :class:`~obspy.io.sitexml.core.Analysis` or None
+        """
+        if isinstance(resource_id, ResourceIdentifier):
+            resource_id = resource_id.id
+
+        for analysis in self.analysis or []:
+            if analysis.resource_id == resource_id:
+                return analysis
+        return None
 
     def validate_references(self):
         """
