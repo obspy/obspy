@@ -36,21 +36,19 @@
             <method>HVSR EARTHQUAKE RECORDS</method>
             <method>SSR EARTHQUAKE RECORDS</method>
             <qualityIndex>0.8</qualityIndex>
-            <reference>
-                <literatureSource>
-                    <title>Some title</title>
-                    <firstAuthor>Author A.</firstAuthor>
-                    <secondaryAuthors>Author B., Author C.</secondaryAuthors>
-                    <year>2018</year>
-                    <booktitle>Some magazine</booktitle>
-                    <doi>10.1007/s10518-017-0135-5</doi>
-                    <languageCode>en</languageCode>
-                </literatureSource>
-                <externalReference>
-                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
-                    <description>paper</description>
-                </externalReference>
-            </reference>
+            <literatureSource>
+                <title>Some title</title>
+                <firstAuthor>Author A.</firstAuthor>
+                <secondaryAuthors>Author B., Author C.</secondaryAuthors>
+                <year>2018</year>
+                <booktitle>Some magazine</booktitle>
+                <doi>10.1007/s10518-017-0135-5</doi>
+                <languageCode>en</languageCode>
+            </literatureSource>
+            <externalReference>
+                <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                <description>paper</description>
+            </externalReference>
         </resonanceFrequency>
         <velocityS30>
             <value>
@@ -62,21 +60,19 @@
             <methodCombIndex>1.2</methodCombIndex>
             <manualIndex>1.0</manualIndex>
             <qualityIndex>0.8</qualityIndex>
-            <reference>
-                <literatureSource>
-                    <title>Some title</title>
-                    <firstAuthor>Author A.</firstAuthor>
-                    <secondaryAuthors>Author B., Author C.</secondaryAuthors>
-                    <year>2018</year>
-                    <booktitle>Some magazine</booktitle>
-                    <doi>10.1007/s10518-017-0135-5</doi>
-                    <languageCode>en</languageCode>
-                </literatureSource>
-                <externalReference>
-                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
-                    <description>paper</description>
-                </externalReference>
-            </reference>
+            <literatureSource>
+                <title>Some title</title>
+                <firstAuthor>Author A.</firstAuthor>
+                <secondaryAuthors>Author B., Author C.</secondaryAuthors>
+                <year>2018</year>
+                <booktitle>Some magazine</booktitle>
+                <doi>10.1007/s10518-017-0135-5</doi>
+                <languageCode>en</languageCode>
+            </literatureSource>
+            <externalReference>
+                <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                <description>paper</description>
+            </externalReference>
         </velocityS30>
         <sptLogsCount>2</sptLogsCount>
         <cptLogsCount>0</cptLogsCount>
@@ -294,21 +290,19 @@
                 </velocityProfileData>
             </profile>
             <qualityIndex>1.0</qualityIndex>
-            <reference>
-                <literatureSource>
-                    <title>Some title</title>
-                    <firstAuthor>Author A.</firstAuthor>
-                    <secondaryAuthors>Author B., Author C.</secondaryAuthors>
-                    <year>2018</year>
-                    <booktitle>Some magazine</booktitle>
-                    <doi>10.1007/s10518-017-0135-5</doi>
-                    <languageCode>en</languageCode>
-                </literatureSource>
-                <externalReference>
-                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
-                    <description>paper</description>
-                </externalReference>
-            </reference>
+            <literatureSource>
+                <title>Some title</title>
+                <firstAuthor>Author A.</firstAuthor>
+                <secondaryAuthors>Author B., Author C.</secondaryAuthors>
+                <year>2018</year>
+                <booktitle>Some magazine</booktitle>
+                <doi>10.1007/s10518-017-0135-5</doi>
+                <languageCode>en</languageCode>
+            </literatureSource>
+            <externalReference>
+                <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                <description>paper</description>
+            </externalReference>
         </velocityProfile>
     </analysis>
 </SERA_quakeml>

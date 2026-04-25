@@ -622,24 +622,20 @@ def _read_site_indicator(parent, site_indicator_name, site_indicator_cls,
 
     return site_indicator_cls(**kwargs)
 
-def _read_reference(parent, tag="reference"):
+def _read_reference(parent):
     """
-    Read literature and external references from an indicator reference tag.
+    Read literature and external references from a site indicator element.
 
     :rtype: tuple
     """
-    reference_element = parent.find(_ns(tag))
-    if reference_element is None:
-        return None, None
-
-    literature_source_element = reference_element.find(_ns("literatureSource"))
+    literature_source_element = parent.find(_ns("literatureSource"))
     literature_source = (
         _read_literature_source(literature_source_element)
         if literature_source_element is not None
         else None
     )
 
-    external_reference_element = reference_element.find(_ns("externalReference"))
+    external_reference_element = parent.find(_ns("externalReference"))
     external_reference = (
         _read_external_reference(external_reference_element)
         if external_reference_element is not None
@@ -1189,20 +1185,15 @@ def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
 
 def _write_reference(parent, site_indicator_obj):
     """
-    Append a reference element for a site indicator when metadata exists.
+    Append site-indicator reference metadata when present.
 
     :rtype: None
     """
     literature_obj = site_indicator_obj.literature_source
     external_reference_obj = site_indicator_obj.external_reference
 
-    if literature_obj or external_reference_obj:
-        reference_elem = etree.SubElement(parent, "reference")
-    else:
-        return
-
     if literature_obj:
-        literature_elem = etree.SubElement(reference_elem, "literatureSource")
+        literature_elem = etree.SubElement(parent, "literatureSource")
         _obj2tag(literature_elem, "title", literature_obj.title)
         _obj2tag(literature_elem, "firstAuthor", literature_obj.first_author)
         _obj2tag(literature_elem, "secondaryAuthors",
@@ -1213,7 +1204,7 @@ def _write_reference(parent, site_indicator_obj):
         _obj2tag(literature_elem, "languageCode", literature_obj.language)
 
     if external_reference_obj:
-        _write_external_reference(reference_elem, external_reference_obj)
+        _write_external_reference(parent, external_reference_obj)
 
 
 def _write_methods(parent, site_indicator_obj):

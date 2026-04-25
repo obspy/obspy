@@ -31,74 +31,66 @@
             <siteClassEC8>
                 <value>A</value>
                 <qualityIndex>1.0</qualityIndex>
-                <reference>
-                    <literatureSource>
-                        <title>Another title</title>
-                        <firstAuthor>Author B.</firstAuthor>
-                        <secondaryAuthors>Author D., Author E.</secondaryAuthors>
-                        <year>2023</year>
-                        <booktitle>Another magazine</booktitle>
-                        <doi>10.1002/nsg.12248</doi>
-                        <languageCode>en</languageCode>
-                    </literatureSource>
-                    <externalReference>
-                        <uri>https://doi.org/10.1002/nsg.12248</uri>
-                        <description>paper</description>
-                    </externalReference>
-                </reference>
+                <literatureSource>
+                    <title>Another title</title>
+                    <firstAuthor>Author B.</firstAuthor>
+                    <secondaryAuthors>Author D., Author E.</secondaryAuthors>
+                    <year>2023</year>
+                    <booktitle>Another magazine</booktitle>
+                    <doi>10.1002/nsg.12248</doi>
+                    <languageCode>en</languageCode>
+                </literatureSource>
+                <externalReference>
+                    <uri>https://doi.org/10.1002/nsg.12248</uri>
+                    <description>paper</description>
+                </externalReference>
             </siteClassEC8>
             <bedrockDepth>
                 <value>
                     <value>820.0</value>
                 </value>
                 <qualityIndex>0.8</qualityIndex>
-                <reference>
-                    <literatureSource>
-                        <title>Another title</title>
-                        <firstAuthor>Author B.</firstAuthor>
-                        <secondaryAuthors>Author D., Author E.</secondaryAuthors>
-                        <year>2023</year>
-                        <booktitle>Another magazine</booktitle>
-                        <doi>10.1002/nsg.12248</doi>
-                        <languageCode>en</languageCode>
-                    </literatureSource>
-                    <externalReference>
-                        <uri>https://doi.org/10.1002/nsg.12248</uri>
-                        <description>paper</description>
-                    </externalReference>
-                </reference>
+                <literatureSource>
+                    <title>Another title</title>
+                    <firstAuthor>Author B.</firstAuthor>
+                    <secondaryAuthors>Author D., Author E.</secondaryAuthors>
+                    <year>2023</year>
+                    <booktitle>Another magazine</booktitle>
+                    <doi>10.1002/nsg.12248</doi>
+                    <languageCode>en</languageCode>
+                </literatureSource>
+                <externalReference>
+                    <uri>https://doi.org/10.1002/nsg.12248</uri>
+                    <description>paper</description>
+                </externalReference>
             </bedrockDepth>
             <h800>
                 <value>
                     <value>180.0</value>
                 </value>
                 <qualityIndex>0.8</qualityIndex>
-                <reference>
-                    <literatureSource>
-                        <title>Another title</title>
-                        <firstAuthor>Author B.</firstAuthor>
-                        <secondaryAuthors>Author D., Author E.</secondaryAuthors>
-                        <year>2023</year>
-                        <booktitle>Another magazine</booktitle>
-                        <doi>10.1002/nsg.12248</doi>
-                        <languageCode>en</languageCode>
-                    </literatureSource>
-                    <externalReference>
-                        <uri>https://doi.org/10.1002/nsg.12248</uri>
-                        <description>paper</description>
-                    </externalReference>
-                </reference>
+                <literatureSource>
+                    <title>Another title</title>
+                    <firstAuthor>Author B.</firstAuthor>
+                    <secondaryAuthors>Author D., Author E.</secondaryAuthors>
+                    <year>2023</year>
+                    <booktitle>Another magazine</booktitle>
+                    <doi>10.1002/nsg.12248</doi>
+                    <languageCode>en</languageCode>
+                </literatureSource>
+                <externalReference>
+                    <uri>https://doi.org/10.1002/nsg.12248</uri>
+                    <description>paper</description>
+                </externalReference>
             </h800>
             <geologicalUnit>
                 <value>Holocene Deposits</value>
                 <geologicalMapScale>1:50000</geologicalMapScale>
                 <qualityIndex>0.8</qualityIndex>
-                <reference>
-                    <literatureSource>
-                        <title>IGME map</title>
-                        <firstAuthor>IGME</firstAuthor>
-                    </literatureSource>
-                </reference>
+                <literatureSource>
+                    <title>IGME map</title>
+                    <firstAuthor>IGME</firstAuthor>
+                </literatureSource>
             </geologicalUnit>
         </siteMorphology>
     </siteDescription>

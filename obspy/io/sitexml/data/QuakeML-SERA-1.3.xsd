@@ -557,8 +557,9 @@
 		<xs:annotation>
 			<xs:documentation>
 				Common metadata for SiteXML site indicators. SiteXML groups an
-				indicator value with its quality index and supporting reference
-				inside the indicator element.
+				indicator value with its quality index, supporting literature
+				source, and supporting external reference inside the indicator
+				element.
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
@@ -569,11 +570,17 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="reference" type="ReferenceType" minOccurs="0" maxOccurs="1">
+			<xs:element name="literatureSource" type="LiteratureSourceType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>
-						Literature or external reference supporting the provided
-						site-indicator value.
+						Literature source supporting the provided site-indicator value.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="externalReference" type="ExternalReferenceType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						External reference supporting the provided site-indicator value.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
@@ -777,22 +784,6 @@
 
 	<!-- Common COMPLEX TYPES --> 
 
-	<xs:complexType name="ReferenceType">
-		<xs:annotation>
-			<xs:documentation>
-				Reference information supporting a SiteXML value or indicator.
-				A reference may be a literature source, an external resource, or both.
-			</xs:documentation>
-		</xs:annotation>
-		<xs:choice>
-			<xs:sequence>
-				<xs:element name="literatureSource" type="LiteratureSourceType"/>
-				<xs:element name="externalReference" type="ExternalReferenceType" minOccurs="0" maxOccurs="1"/>
-			</xs:sequence>
-			<xs:element name="externalReference" type="ExternalReferenceType"/>
-		</xs:choice>
-	</xs:complexType>
-
 	<xs:complexType name="LiteratureSourceType">
 		<xs:annotation>
 			<xs:documentation>
@@ -876,8 +867,8 @@
 		<xs:annotation>
 			<xs:documentation>This type contains a URI and a description for external data that users
 				may want to reference in SiteXML. At the top level this describes external
-				resources for the site/document; inside a ReferenceType it supports the
-				specific value or indicator that contains it.<br/>
+				resources for the site/document; inside a site indicator it supports the
+				specific indicator value that contains it.<br/>
 				<strong>Note: </strong>This type follows the FDSN ExternalReferenceType structure.
 			</xs:documentation>
 		</xs:annotation>

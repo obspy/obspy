@@ -34,21 +34,19 @@
             <siteClassEC8>
                 <value>C</value>
                 <qualityIndex>1.0</qualityIndex>
-                <reference>
-                    <literatureSource>
-                        <title>Some title</title>
-                        <firstAuthor>Author A.</firstAuthor>
-                        <secondaryAuthors>Author B., Author C.</secondaryAuthors>
-                        <year>2018</year>
-                        <booktitle>Some magazine</booktitle>
-                        <doi>10.1007/s10518-017-0135-5</doi>
-                        <languageCode>en</languageCode>
-                    </literatureSource>
-                    <externalReference>
-                        <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
-                        <description>paper</description>
-                    </externalReference>
-                </reference>
+                <literatureSource>
+                    <title>Some title</title>
+                    <firstAuthor>Author A.</firstAuthor>
+                    <secondaryAuthors>Author B., Author C.</secondaryAuthors>
+                    <year>2018</year>
+                    <booktitle>Some magazine</booktitle>
+                    <doi>10.1007/s10518-017-0135-5</doi>
+                    <languageCode>en</languageCode>
+                </literatureSource>
+                <externalReference>
+                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                    <description>paper</description>
+                </externalReference>
             </siteClassEC8>
             <bedrockDepth>
                 <value>
@@ -56,21 +54,19 @@
                     <uncertainty>107.8669</uncertainty>
                 </value>
                 <qualityIndex>0.5</qualityIndex>
-                <reference>
-                    <literatureSource>
-                        <title>Some title</title>
-                        <firstAuthor>Author A.</firstAuthor>
-                        <secondaryAuthors>Author B, Author. C</secondaryAuthors>
-                        <year>2018</year>
-                        <booktitle>Some magazine</booktitle>
-                        <doi>10.1007/s10518-017-0135-5</doi>
-                        <languageCode>en</languageCode>
-                    </literatureSource>
-                    <externalReference>
-                        <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
-                        <description>paper</description>
-                    </externalReference>
-                </reference>
+                <literatureSource>
+                    <title>Some title</title>
+                    <firstAuthor>Author A.</firstAuthor>
+                    <secondaryAuthors>Author B, Author. C</secondaryAuthors>
+                    <year>2018</year>
+                    <booktitle>Some magazine</booktitle>
+                    <doi>10.1007/s10518-017-0135-5</doi>
+                    <languageCode>en</languageCode>
+                </literatureSource>
+                <externalReference>
+                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                    <description>paper</description>
+                </externalReference>
             </bedrockDepth>
             <h800>
                 <value>
@@ -78,42 +74,38 @@
                     <uncertainty>15.5748</uncertainty>
                 </value>
                 <qualityIndex>0.43</qualityIndex>
-                <reference>
-                    <literatureSource>
-                        <title>Some title</title>
-                        <firstAuthor>Author A.</firstAuthor>
-                        <secondaryAuthors>Author B, Author. C</secondaryAuthors>
-                        <year>2018</year>
-                        <booktitle>Some magazine</booktitle>
-                        <doi>10.1007/s10518-017-0135-5</doi>
-                        <languageCode>en</languageCode>
-                    </literatureSource>
-                    <externalReference>
-                        <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
-                        <description>paper</description>
-                    </externalReference>
-                </reference>
+                <literatureSource>
+                    <title>Some title</title>
+                    <firstAuthor>Author A.</firstAuthor>
+                    <secondaryAuthors>Author B, Author. C</secondaryAuthors>
+                    <year>2018</year>
+                    <booktitle>Some magazine</booktitle>
+                    <doi>10.1007/s10518-017-0135-5</doi>
+                    <languageCode>en</languageCode>
+                </literatureSource>
+                <externalReference>
+                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                    <description>paper</description>
+                </externalReference>
             </h800>
             <geologicalUnit>
                 <value>Some geology</value>
                 <geologicalMapScale>1:50000</geologicalMapScale>
                 <geologicalUnitOGE>Some description</geologicalUnitOGE>
                 <qualityIndex>0.25</qualityIndex>
-                <reference>
-                    <literatureSource>
-                        <title>Some title</title>
-                        <firstAuthor>Author A.</firstAuthor>
-                        <secondaryAuthors>Author B, Author. C</secondaryAuthors>
-                        <year>2018</year>
-                        <booktitle>Some magazine</booktitle>
-                        <doi>10.1007/s10518-017-0135-5</doi>
-                        <languageCode>en</languageCode>
-                    </literatureSource>
-                    <externalReference>
-                        <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
-                        <description>paper</description>
-                    </externalReference>
-                </reference>
+                <literatureSource>
+                    <title>Some title</title>
+                    <firstAuthor>Author A.</firstAuthor>
+                    <secondaryAuthors>Author B, Author. C</secondaryAuthors>
+                    <year>2018</year>
+                    <booktitle>Some magazine</booktitle>
+                    <doi>10.1007/s10518-017-0135-5</doi>
+                    <languageCode>en</languageCode>
+                </literatureSource>
+                <externalReference>
+                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                    <description>paper</description>
+                </externalReference>
             </geologicalUnit>
         </siteMorphology>
         <overallQindex>0.41</overallQindex>
