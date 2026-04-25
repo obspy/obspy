@@ -25,6 +25,13 @@ from .util import (BaseNode, SiteXMLValidationError,
 class ValueWithUncertainty(BaseNode):
     """
     Numeric SiteXML value with an optional uncertainty of the same type.
+
+    SiteXML stores a single symmetric ``uncertainty`` value next to the main
+    ``value``. ObsPy's
+    :class:`~obspy.core.util.obspy_types.FloatWithUncertainties` stores lower
+    and upper uncertainty values instead. This class intentionally keeps the
+    SiteXML representation simple and schema-shaped, while the conversion
+    helpers below make future ObsPy interoperability explicit.
     """
 
     def __init__(self, value, uncertainty=None, valid_type=float):
@@ -38,6 +45,40 @@ class ValueWithUncertainty(BaseNode):
         #self.indicator_name = indicator_name
         self.value = value
         self.uncertainty = uncertainty
+
+    @classmethod
+    def from_float_with_uncertainties(cls, value, valid_type=float):
+        """
+        Convert an ObsPy ``FloatWithUncertainties`` to SiteXML form.
+
+        SiteXML can only represent symmetric uncertainty. Values with different
+        lower and upper uncertainties are rejected to avoid silent data loss.
+        The ObsPy ``measurement_method`` metadata is not represented in
+        SiteXML's value/uncertainty pair and is therefore intentionally
+        ignored.
+        """
+        lower = value.lower_uncertainty
+        upper = value.upper_uncertainty
+        if lower != upper:
+            raise SiteXMLValidationError(
+                "SiteXML value/uncertainty pairs only support symmetric "
+                "uncertainty"
+            )
+        return cls(valid_type(value), lower, valid_type=valid_type)
+
+    def to_float_with_uncertainties(self):
+        """
+        Convert this value to ObsPy's ``FloatWithUncertainties`` type.
+
+        The SiteXML uncertainty, when present, is mapped to both lower and
+        upper ObsPy uncertainties.
+        """
+        from obspy.core.util.obspy_types import FloatWithUncertainties
+
+        return FloatWithUncertainties(
+            float(self.value),
+            lower_uncertainty=self.uncertainty,
+            upper_uncertainty=self.uncertainty)
 
     @property
     def value(self):

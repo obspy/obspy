@@ -17,6 +17,7 @@ from lxml import etree
 import obspy
 import pytest
 from obspy.core.event import ResourceIdentifier
+from obspy.core.util.obspy_types import FloatWithUncertainties
 from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASite,
                                    SERASiteOwner, SiteDescription,
                                    ResonanceFrequency,
@@ -30,6 +31,41 @@ from obspy.io.sitexml.sitexml import write_sitexml
 class TestSiteXML():
     """
     """
+    def test_value_with_uncertainty_to_float_with_uncertainties(self):
+        """
+        SiteXML symmetric uncertainty maps to both ObsPy uncertainty sides.
+        """
+        value = ValueWithUncertainty(12.5, uncertainty=0.4)
+
+        converted = value.to_float_with_uncertainties()
+
+        assert isinstance(converted, FloatWithUncertainties)
+        assert float(converted) == 12.5
+        assert converted.lower_uncertainty == 0.4
+        assert converted.upper_uncertainty == 0.4
+
+    def test_value_with_uncertainty_from_float_with_uncertainties(self):
+        """
+        Symmetric ObsPy uncertainty can be represented as SiteXML uncertainty.
+        """
+        value = FloatWithUncertainties(
+            12.5, lower_uncertainty=0.4, upper_uncertainty=0.4)
+
+        converted = ValueWithUncertainty.from_float_with_uncertainties(value)
+
+        assert converted.value == 12.5
+        assert converted.uncertainty == 0.4
+
+    def test_value_with_uncertainty_rejects_asymmetric_uncertainty(self):
+        """
+        Reject asymmetric ObsPy uncertainty instead of losing one side.
+        """
+        value = FloatWithUncertainties(
+            12.5, lower_uncertainty=0.3, upper_uncertainty=0.4)
+
+        with pytest.raises(SiteXMLValidationError, match="symmetric"):
+            ValueWithUncertainty.from_float_with_uncertainties(value)
+
     def _assert_site_xml_equality(self, xml_file_buffer,
                                      expected_xml_file_buffer):
         """
