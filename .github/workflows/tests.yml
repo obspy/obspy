@@ -153,6 +153,7 @@ jobs:
           miniforge-version: latest
           activate-environment: test
           python-version: ${{ matrix.python-version }}
+          conda-solver: libmamba
 
       - uses: actions/cache@v5
         with:
@@ -166,7 +167,7 @@ jobs:
       - name: Update environment
         run: conda env update -n test -f ${{ env.env_file }}
         if: steps.cache.outputs.cache-hit != 'true'
-        timeout-minutes: 5
+        timeout-minutes: 10
 
       - name: Fix for missing libtiff.so.5 for Python3.8 on Ubuntu
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.8'
