@@ -47,6 +47,10 @@
                     <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
                     <description>paper</description>
                 </externalReference>
+                <externalReference>
+                    <uri>https://www.domain.ab/SiteXML/ec8-supporting-resource</uri>
+                    <description>supporting resource</description>
+                </externalReference>
             </siteClassEC8>
             <bedrockDepth>
                 <value>

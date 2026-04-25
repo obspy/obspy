@@ -505,21 +505,21 @@ def _read_velocity_profile(analysis_element, analysis_obj):
     vp_element_list = velocity_profile_element.findall(_ns("profile"))
     value = _tag2obj(velocity_profile_element, _ns("qualityIndex"), float)
     vp_qindex = value if value is not None else 0
-    [vp_literature_source, vp_external_reference] = \
-            _read_reference(velocity_profile_element)
+    vp_literature_source = _read_literature_source(velocity_profile_element)
+    vp_external_references = _read_external_references(velocity_profile_element)
 
     # At least one profile or a reference
     # should be present in SiteXML in order to create the VelocityProfileSurvey object
     if len(vp_element_list) == 0 \
             and vp_literature_source is None \
-            and vp_external_reference is None:
+            and not vp_external_references:
         return None
 
     analysis_obj.velocity_profile_survey = \
             VelocityProfileSurvey(velocity_profiles = [],    # We will fill this later
                             quality_index = vp_qindex,
                             literature_source = vp_literature_source,
-                            external_reference = vp_external_reference)
+                            external_references = vp_external_references)
 
     # Go through the list of Velocity Profiles. 
     # For each velocityProfile tree element create a VelocityProfile object.
@@ -596,13 +596,14 @@ def _read_site_indicator(parent, site_indicator_name, site_indicator_cls,
 
     value = _tag2obj(indicator_element, _ns("qualityIndex"), float)
     quality_index = value if value is not None else 0
-    literature_source, external_reference = _read_reference(indicator_element)
+    literature_source = _read_literature_source(indicator_element)
+    external_references = _read_external_references(indicator_element)
 
     kwargs = {
         "value": indicator_value,
         "quality_index": quality_index,
         "literature_source": literature_source,
-        "external_reference": external_reference,
+        "external_references": external_references,
     }
 
     if site_indicator_name in ("resonanceFrequency", "velocityS30"):
@@ -622,34 +623,27 @@ def _read_site_indicator(parent, site_indicator_name, site_indicator_cls,
 
     return site_indicator_cls(**kwargs)
 
-def _read_reference(parent):
+def _read_external_references(parent):
     """
-    Read literature and external references from a site indicator element.
+    Read all externalReference elements from ``parent``.
 
-    :rtype: tuple
+    :rtype: list or None
+    """
+    return [
+        _read_external_reference(external_reference_element)
+        for external_reference_element in parent.findall(_ns("externalReference"))
+    ] or None
+
+def _read_literature_source(parent):
+    """
+    Read a literatureSource element from ``parent``.
+
+    :rtype: :class:`~obspy.io.sitexml.core.LiteratureSource` or None
     """
     literature_source_element = parent.find(_ns("literatureSource"))
-    literature_source = (
-        _read_literature_source(literature_source_element)
-        if literature_source_element is not None
-        else None
-    )
+    if literature_source_element is None:
+        return None
 
-    external_reference_element = parent.find(_ns("externalReference"))
-    external_reference = (
-        _read_external_reference(external_reference_element)
-        if external_reference_element is not None
-        else None
-    )
-
-    return literature_source, external_reference
-
-def _read_literature_source(literature_source_element):
-    """
-    Read a literatureSource element.
-
-    :rtype: :class:`~obspy.io.sitexml.core.LiteratureSource`
-    """
     title = _tag2obj(literature_source_element, _ns("title"), str)
     first_author = _tag2obj(literature_source_element, _ns("firstAuthor"), str)
     secondary_authors = _tag2obj(literature_source_element, _ns("secondaryAuthors"), str)
@@ -1144,7 +1138,12 @@ def _write_velocity_profile(parent, velocity_profile_survey):
 
         _obj2tag(velocity_profile_elem, "qualityIndex",
                  velocity_profile_survey.quality_index)
-        _write_reference(velocity_profile_elem, velocity_profile_survey)
+        if velocity_profile_survey.literature_source:
+            _write_literature_source(
+                velocity_profile_elem, velocity_profile_survey.literature_source)
+        if velocity_profile_survey.external_references:
+            for external_reference in velocity_profile_survey.external_references:
+                _write_external_reference(velocity_profile_elem, external_reference)
 
 
 def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
@@ -1180,31 +1179,29 @@ def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
         _obj2tag(site_indicator_elem, "qualityIndex",
                  site_indicator_obj.quality_index)
 
-        _write_reference(site_indicator_elem, site_indicator_obj)
+        if site_indicator_obj.literature_source:
+            _write_literature_source(
+                site_indicator_elem, site_indicator_obj.literature_source)
+        if site_indicator_obj.external_references:
+            for external_reference in site_indicator_obj.external_references:
+                _write_external_reference(site_indicator_elem, external_reference)
 
 
-def _write_reference(parent, site_indicator_obj):
+def _write_literature_source(parent, literature_obj):
     """
-    Append site-indicator reference metadata when present.
+    Append a literatureSource element.
 
     :rtype: None
     """
-    literature_obj = site_indicator_obj.literature_source
-    external_reference_obj = site_indicator_obj.external_reference
-
-    if literature_obj:
-        literature_elem = etree.SubElement(parent, "literatureSource")
-        _obj2tag(literature_elem, "title", literature_obj.title)
-        _obj2tag(literature_elem, "firstAuthor", literature_obj.first_author)
-        _obj2tag(literature_elem, "secondaryAuthors",
-                 literature_obj.secondary_authors)
-        _obj2tag(literature_elem, "year", literature_obj.year)
-        _obj2tag(literature_elem, "booktitle", literature_obj.booktitle)
-        _obj2tag(literature_elem, "doi", literature_obj.doi)
-        _obj2tag(literature_elem, "languageCode", literature_obj.language)
-
-    if external_reference_obj:
-        _write_external_reference(parent, external_reference_obj)
+    literature_elem = etree.SubElement(parent, "literatureSource")
+    _obj2tag(literature_elem, "title", literature_obj.title)
+    _obj2tag(literature_elem, "firstAuthor", literature_obj.first_author)
+    _obj2tag(literature_elem, "secondaryAuthors",
+             literature_obj.secondary_authors)
+    _obj2tag(literature_elem, "year", literature_obj.year)
+    _obj2tag(literature_elem, "booktitle", literature_obj.booktitle)
+    _obj2tag(literature_elem, "doi", literature_obj.doi)
+    _obj2tag(literature_elem, "languageCode", literature_obj.language)
 
 
 def _write_methods(parent, site_indicator_obj):

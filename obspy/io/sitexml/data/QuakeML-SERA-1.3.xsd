@@ -577,7 +577,7 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="externalReference" type="ExternalReferenceType" minOccurs="0" maxOccurs="1">
+			<xs:element name="externalReference" type="ExternalReferenceType" minOccurs="0" maxOccurs="unbounded">
 				<xs:annotation>
 					<xs:documentation>
 						External reference supporting the provided site-indicator value.

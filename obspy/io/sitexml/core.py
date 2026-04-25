@@ -149,10 +149,11 @@ class SiteIndicator(BaseNode):
     """
 
     literature_source = wrapped_property("literature_source", LiteratureSource)
+    external_references = wrapped_list_property("external_references", ExternalReference)
     #quality_index = wrapped_property("quality_index", float)
 
     def __init__(self, name, value, methods=None, 
-                 quality_index=None, literature_source=None, external_reference=None):
+                 quality_index=None, literature_source=None, external_references=None):
         """
         :type name: str
         :param name: Indicator type. One of: "siteClassEC8", "h800", "bedrockDepth", 
@@ -166,28 +167,15 @@ class SiteIndicator(BaseNode):
             Calculated according to the guidelines of the SERA D7.2 Deliverable.
         :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
         :param literature_source: The literature source related with the provided site indicator value
-        :type external_reference: :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_reference: An external URI and description for this indicator.
+        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this indicator.
         """
         self.name = name
         self.value = value
         self.methods = methods or []
         self.quality_index = quality_index 
         self.literature_source = literature_source
-        self.external_reference = external_reference
-
-    @property
-    def external_reference(self):
-        return self._external_reference
-
-    @external_reference.setter
-    def external_reference(self, value):
-        if value is None:
-            self._external_reference = None
-        elif isinstance(value, ExternalReference):
-            self._external_reference = value
-        else:
-            self._external_reference = ExternalReference(value, None)
+        self.external_references = external_references
 
     def __str__(self):
         ret = ("{name} parameters:\n"
@@ -202,7 +190,7 @@ class SiteIndicator(BaseNode):
             methods = self.methods,     # iterate over methods for printing
             qindex = self.quality_index,
             lit_source=self.literature_source if self.literature_source else "None",
-            external_ref=_pretty_str(self.external_reference) if self.external_reference else "None")
+            external_ref=_pretty_str(self.external_references) if self.external_references else "None")
         return ret
 
 class EC8(SiteIndicator):
@@ -212,7 +200,7 @@ class EC8(SiteIndicator):
 
     value = enum_property("value", EC8Class)
     
-    def __init__(self, value, quality_index=None, literature_source=None, external_reference=None):
+    def __init__(self, value, quality_index=None, literature_source=None, external_references=None):
         """
         :type value: Enum of type :class:`~obspy.io.sitexml.util.EC8Class`, required.
         :param value: EC8 class
@@ -221,12 +209,12 @@ class EC8(SiteIndicator):
             Calculated according to the guidelines of the SERA D7.2 Deliverable.
         :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
         :param literature_source: The literature source related with the provided site indicator value
-        :type external_reference: :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_reference: An external URI and description for this indicator.
+        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this indicator.
         """
         super(EC8, self).__init__(
                 name="siteClassEC8", value=value, quality_index=quality_index, 
-                literature_source=literature_source, external_reference=external_reference)
+                literature_source=literature_source, external_references=external_references)
 
 class H800(SiteIndicator):
     """
@@ -236,7 +224,7 @@ class H800(SiteIndicator):
     value = wrapped_property("value", ValueWithUncertainty)
 
     def __init__(self, value, quality_index=None, literature_source=None, 
-                 external_reference=None):
+                 external_references=None):
         """
         :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required.   
         :param value: Engineering depth. Depth beyond which the shear-wave 
@@ -246,12 +234,12 @@ class H800(SiteIndicator):
             Calculated according to the guidelines of the SERA D7.2 Deliverable.
         :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
         :param literature_source: The literature source related with the provided site indicator value
-        :type external_reference: :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_reference: An external URI and description for this indicator.
+        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this indicator.
         """
         super(H800, self).__init__(
                 name="h800", value=value, quality_index=quality_index, 
-                literature_source=literature_source, external_reference=external_reference)
+                literature_source=literature_source, external_references=external_references)
 
 class BedrockDepth(SiteIndicator):
     """
@@ -261,7 +249,7 @@ class BedrockDepth(SiteIndicator):
     value = wrapped_property("value", ValueWithUncertainty)
 
     def __init__(self, value, quality_index=None, literature_source=None, 
-                 external_reference=None):
+                 external_references=None):
         """
         :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required.      
         :param value: Seismological bedrock depth. Expecting Integer values.
@@ -270,12 +258,12 @@ class BedrockDepth(SiteIndicator):
             Calculated according to the guidelines of the SERA D7.2 Deliverable.
         :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
         :param literature_source: The literature source related with the provided site indicator value
-        :type external_reference: :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_reference: An external URI and description for this indicator.
+        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this indicator.
         """
         super(BedrockDepth, self).__init__(
             name="bedrockDepth", value=value, quality_index=quality_index, 
-            literature_source=literature_source, external_reference=external_reference)
+            literature_source=literature_source, external_references=external_references)
 
 class GeologicalUnit(SiteIndicator):
     """
@@ -283,7 +271,7 @@ class GeologicalUnit(SiteIndicator):
     """
 
     def __init__(self, value, quality_index=None, geological_map_scale=None, 
-                 geological_unit_OGE=None, literature_source=None, external_reference=None):
+                 geological_unit_OGE=None, literature_source=None, external_references=None):
         """
         :type value: str, required.
         :param value: Brief description of the surface geology (free text)
@@ -296,14 +284,14 @@ class GeologicalUnit(SiteIndicator):
         :param geological_unit_OGE: Description of the surface geology according to a Unified, Pan- European Map
         :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
         :param literature_source: The literature source related with the provided site indicator value
-        :type external_reference: :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_reference: An external URI and description for this indicator.
+        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this indicator.
         """
         self.geological_map_scale = geological_map_scale
         self.geological_unit_OGE = geological_unit_OGE
         super(GeologicalUnit, self).__init__(
             name="geologicalUnit", value=value, quality_index=quality_index, 
-                literature_source=literature_source, external_reference=external_reference)
+                literature_source=literature_source, external_references=external_references)
         
 class ResonanceFrequency(SiteIndicator):
     """
@@ -314,7 +302,7 @@ class ResonanceFrequency(SiteIndicator):
     methods = enum_list_property("methods", ResonanceFrequencyMethod)
 
     def __init__(self, value, quality_index=None, methods=None, 
-                 literature_source=None, external_reference=None):
+                 literature_source=None, external_references=None):
         """
         :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required.           
         :param value: Resonance Frequency (f0). Expecting float values.
@@ -325,13 +313,13 @@ class ResonanceFrequency(SiteIndicator):
         :param methods: Methods used for the estimation of ResonanceFrequency
         :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
         :param literature_source: The literature source related with the provided site indicator value
-        :type external_reference: :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_reference: An external URI and description for this indicator.
+        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this indicator.
         """
         super(ResonanceFrequency, self).__init__(
             name="resonanceFrequency", value=value, methods=methods, 
             quality_index=quality_index, literature_source=literature_source, 
-            external_reference=external_reference)
+            external_references=external_references)
         
 class VelocityS30(SiteIndicator):
     """
@@ -345,7 +333,7 @@ class VelocityS30(SiteIndicator):
     
     def __init__(self, value, quality_index=None, methods=None,
                  method_combined_qindex=None, manual_qindex=None, 
-                 literature_source=None, external_reference=None):
+                 literature_source=None, external_references=None):
         """
         :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required.         
         :param value: Velocity S30. Expecting float values.
@@ -362,8 +350,8 @@ class VelocityS30(SiteIndicator):
             maximum depth of Vs measurements
         :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
         :param literature_source: The literature source related with the provided site indicator value
-        :type external_reference: :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_reference: An external URI and description for this indicator.
+        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this indicator.
         """
 
         self.method_combined_qindex = method_combined_qindex
@@ -374,7 +362,7 @@ class VelocityS30(SiteIndicator):
             quality_index=quality_index, 
             methods=methods, 
             literature_source=literature_source, 
-            external_reference=external_reference)
+            external_references=external_references)
 
     def __str__(self):
         output = [super().__str__()]
@@ -392,7 +380,7 @@ class VelocityProfileSurvey(SiteIndicator):
     """
 
     def __init__(self, velocity_profiles=None, quality_index=None, 
-                 literature_source=None, external_reference=None):
+                 literature_source=None, external_references=None):
         """
         :type velocity_profiles: list of :class:`~obspy.io.sitexml.core.VelocityProfile`
         :param velocity_profiles: List of Velocity Profiles.
@@ -401,8 +389,8 @@ class VelocityProfileSurvey(SiteIndicator):
             Calculated according to the guidelines of the SERA D7.2 Deliverable.
         :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
         :param literature_source: The literature source related with the provided site indicator value
-        :type external_reference: :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_reference: An external URI and description for this indicator.
+        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this indicator.
         """
         self.velocity_profiles = velocity_profiles  # triggers setter/validation
         super(VelocityProfileSurvey, self).__init__(
@@ -410,7 +398,7 @@ class VelocityProfileSurvey(SiteIndicator):
             value=self.velocity_profiles,
             quality_index=quality_index,
             literature_source=literature_source,
-            external_reference=external_reference)
+            external_references=external_references)
 
     def __str__(self):
         output=[]

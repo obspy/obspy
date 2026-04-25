@@ -470,7 +470,8 @@ def _read_site_indicator(df_row, cls, indicator):
     else:
         obj = cls()
 
-    [obj.literature_source, obj.external_reference] = _read_reference(df_row, indicator)
+    obj.literature_source = _read_literature_source(df_row, indicator)
+    obj.external_references = _read_external_references(df_row, indicator)
     obj.quality_index = _read_cell(df_row, indicator+'Qindex1')
     
     return obj
@@ -582,11 +583,11 @@ def _read_velocity_profile_excel_file(file_path):
         df = pd.concat([df, sheet_df], ignore_index=True)
     return df
 
-def _read_reference(df_row, indicator):
+def _read_literature_source(df_row, indicator):
     """
-    Return literature and external-reference metadata for one indicator.
+    Return literature metadata for one indicator.
 
-    :rtype: tuple
+    :rtype: :class:`~obspy.io.sitexml.core.LiteratureSource` or None
     """
 
     title = _read_cell(df_row, 'title', indicator)
@@ -601,23 +602,27 @@ def _read_reference(df_row, indicator):
         literature_source.booktitle = _read_cell(df_row, 'booktitle', indicator)
         literature_source.language = _read_cell(df_row, 'language', indicator)
         literature_source.doi = _read_cell(df_row, 'doi', indicator)
+        return literature_source
     elif title or first_author:
         raise SiteXMLImportError(
             f"{indicator} literature source requires both title and "
             "firstAuthor."
         )
-    else:
-        literature_source = None
-    
+    return None
+
+
+def _read_external_references(df_row, indicator):
+    """
+    Return external references for one indicator.
+
+    :rtype: list[:class:`~obspy.io.sitexml.core.ExternalReference`] or None
+    """
+
     uri = _read_cell(df_row, 'uri', indicator)
     description = _read_cell(df_row, 'description', indicator)
     if uri:
-        external_reference = ExternalReference(uri = uri,
-                                          description = description)
-    else:
-        external_reference = None
-
-    return literature_source, external_reference
+        return [ExternalReference(uri=uri, description=description)]
+    return None
 
 def _read_value_with_uncertainty(row, name):
     """

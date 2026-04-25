@@ -510,10 +510,16 @@ class TestSiteXML():
         assert ls.doi == "10.1007/s10518-017-0135-5"
         assert ls.language == "en"
 
-        assert sera_site.site_description.ec8.external_reference is not None
-        external_ref = sera_site.site_description.ec8.external_reference
+        assert sera_site.site_description.ec8.external_references is not None
+        assert len(sera_site.site_description.ec8.external_references) == 2
+        external_ref = sera_site.site_description.ec8.external_references[0]
         assert external_ref.uri == "https://doi.org/10.1007/s10518-017-0135-5/"
         assert external_ref.description == "paper"
+        external_ref = sera_site.site_description.ec8.external_references[1]
+        assert external_ref.uri == (
+            "https://www.domain.ab/SiteXML/ec8-supporting-resource"
+        )
+        assert external_ref.description == "supporting resource"
 
         assert sera_site.site_description.bedrock_depth is not None
         assert sera_site.site_description.bedrock_depth.value.value == 774.6218
@@ -620,8 +626,9 @@ class TestSiteXML():
         assert ls.doi == "10.1007/s10518-017-0135-5"
         assert ls.language == "en"
 
-        assert f0.external_reference is not None
-        external_ref = f0.external_reference
+        assert f0.external_references is not None
+        assert len(f0.external_references) == 1
+        external_ref = f0.external_references[0]
         assert external_ref.uri == "https://doi.org/10.1007/s10518-017-0135-5/"
         assert external_ref.description == "paper"
 

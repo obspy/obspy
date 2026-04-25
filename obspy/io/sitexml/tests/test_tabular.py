@@ -34,8 +34,9 @@ class TestSiteXMLCSVImport():
         assert literature_source.language == "en"
         assert literature_source.doi == "10.1007/s10518-017-0135-5"
 
-        external_reference = site_indicator.external_reference
-        assert external_reference is not None
+        external_references = site_indicator.external_references
+        assert len(external_references) == 1
+        external_reference = external_references[0]
         assert external_reference.uri == (
             "https://doi.org/10.1007/s10518-017-0135-5/")
         assert external_reference.description == "paper"
