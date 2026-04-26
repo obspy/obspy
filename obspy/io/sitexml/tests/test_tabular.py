@@ -4,17 +4,62 @@
 Tests for SiteXML CSV and Excel import helpers.
 """
 
+from pathlib import Path
 import warnings
 
 import pandas as pd
 import pytest
 
+from obspy.io.sitexml import read_csv as read_csv_module
+from obspy.io.sitexml.core import SERASite, SERASiteOwner, SiteDescription
 from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLImportError
 from obspy.io.sitexml.read_csv import (csv_to_sera_site, excel_to_sera_site,
                                        _read_year_cell)
 
 
 class TestSiteXMLCSVImport():
+    def _minimal_sera_site(self, resource_id, station_code="XX.ABCD"):
+        site_owner = SERASiteOwner(
+            owner_codename="SITEOWNER",
+            owner_fullname="Site Owner Full Name",
+            person_firstname="Name",
+            person_lastname="Surname",
+            person_mbox="someemail@domain.ab")
+        site_description = SiteDescription(
+            resource_id=resource_id + "/description",
+            station_code=station_code,
+            latitude=1.0,
+            longitude=2.0)
+        return SERASite(
+            resource_id=resource_id,
+            site_owner=site_owner,
+            site_description=site_description)
+
+    def test_sitedict_to_sitexml_uses_network_station_filename(
+            self, tmp_path, monkeypatch):
+        output_calls = []
+
+        def fake_write_sitexml(sera_site, filename, validate):
+            output_calls.append((sera_site, filename, validate))
+
+        monkeypatch.setattr(
+            read_csv_module, "write_sitexml", fake_write_sitexml)
+
+        station_site = self._minimal_sera_site(
+            "quakeml:domain.ab/site/001", station_code="XX.ABCD")
+        non_station_site = self._minimal_sera_site(
+            "quakeml:domain.ab/site/without_station", station_code=None)
+
+        read_csv_module.sitedict_to_sitexml({
+            "quakeml:domain.ab/site/001": station_site,
+            "quakeml:domain.ab/site/without_station": non_station_site,
+        }, output_folder=tmp_path)
+
+        assert [tmp_path / "XX.ABCD.xml",
+                tmp_path / "quakeml_domain_ab_site_without_station.xml"] == [
+                    Path(filename) for _, filename, _ in output_calls]
+        assert [validate for _, _, validate in output_calls] == [True, True]
+
     def test_read_year_cell_preserves_schema_string_type(self):
         assert _read_year_cell(2018) == "2018"
         assert _read_year_cell(2018.0) == "2018"

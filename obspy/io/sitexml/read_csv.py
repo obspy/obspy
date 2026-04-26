@@ -31,8 +31,10 @@ def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     Exports a dictionary of SERAsite objects to the respective SiteXML files. 
     The files are written to a folder given with argument "output_folder".
     The name of the SiteXML file is either:
-    - the station_code if the metadata belong to a station site
-    - The siteID otherwise
+    
+    * The station code in ``network.station`` notation if the metadata belong
+      to a station site
+    * The siteID otherwise
 
     :type sera_site_dict: dict of :class:`~obspy.io.sitexml.core.SERASite`
     :param sera_site_dict: Dictionary of SERAsite objects
@@ -40,14 +42,18 @@ def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     :param output_folder: Output folder to write the SiteXMl files. 
                         If not provided writes to the current folder.
     :rtype: None
+
+    Example
+
+    >>> from obspy.io.sitexml.read_csv import sitedict_to_sitexml
+    >>> sitedict_to_sitexml(sera_site_dict, "./output")
+
     """
+    output_folder = Path(output_folder)
     for sera_site in sera_site_dict.values():
-        if sera_site.site_description.station_code:
-            output_file = output_folder + "/" + sera_site.site_description.station_code + ".xml"
-        else:
-            filename = re.sub(r"[^A-Za-z0-9]+", "_", sera_site.resource_id).strip("_")
-            output_file = output_folder + "/" + filename + ".xml"
-        write_sitexml(sera_site, output_file, validate=True)
+        output_file = output_folder / sera_site.get_sitexml_filename()
+        write_sitexml(sera_site, str(output_file), validate=True)
+
 
 def csv_to_sera_site(site_owner_csv,
                      site_description_csv, 

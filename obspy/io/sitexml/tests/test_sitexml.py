@@ -53,6 +53,17 @@ class TestSiteXML():
             site_owner=site_owner,
             site_description=site_description)
 
+    def test_get_sitexml_filename(self):
+        """
+        The default SiteXML filename follows station or site-ID identity.
+        """
+        station_site = self._minimal_sera_site(station_code="XX.ABCD")
+        assert station_site.get_sitexml_filename() == "XX.ABCD.xml"
+
+        non_station_site = self._minimal_sera_site(station_code=None)
+        assert non_station_site.get_sitexml_filename() == (
+            "quakeml_domain_ab_site_001.xml")
+
     def test_write_stationxml_reference(self, tmp_path):
         """
         SiteXML URL is added as StationXML station ExternalReference.

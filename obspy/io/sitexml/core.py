@@ -10,6 +10,7 @@ Provides the SERASite class.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 from collections.abc import Iterable
+import re
 
 import obspy
 from obspy.core.event import ResourceIdentifier
@@ -1329,6 +1330,24 @@ class SERASite(BaseNode):
             if analysis.resource_id == resource_id:
                 return analysis
         return None
+
+    def get_sitexml_filename(self):
+        """
+        Return the default SiteXML filename for this site.
+
+        Station-backed sites use the associated FDSN station code in
+        ``network.station`` notation. Other sites use this site's resource ID.
+
+        :rtype: str
+        """
+        station_code = self.site_description.station_code
+        if station_code:
+            return station_code + ".xml"
+
+        filename = re.sub(
+            r"[^A-Za-z0-9]+", "_", str(self.resource_id)
+        ).strip("_")
+        return filename + ".xml"
 
     def write_stationxml_reference(
             self, sitexml_url, path, datacenter, description=None,
