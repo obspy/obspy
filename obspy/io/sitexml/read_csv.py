@@ -78,7 +78,7 @@ def csv_to_sera_site(site_owner_csv,
     :param velocity_profiles_csv: CSV file or path to a folder with velocity
         profile metadata. The folder can contain any number of CSV files.
     :type delim: str, optional
-    :param delim: CSV file delimiter. Default tab delimeted.
+    :param delim: CSV file delimiter. Default comma ';' delimeted.
     :rtype: dictionary of :class:`~obspy.io.sitexml.core.SERASite`
     :return: Returns a dictionary of SERASite objects. Dictionary keys are the
         unique SiteIDs.
@@ -496,7 +496,7 @@ def _read_site_indicator(df_row, cls, indicator):
     
     return obj
 
-def _csv_import_velocity_profiles(path, delim='\t'):
+def _csv_import_velocity_profiles(path, delim=';'):
     """
     Read velocity-profile metadata from CSV files or a CSV directory.
 
@@ -556,7 +556,7 @@ def _import_velocity_profiles(path, allowed_extensions, read_file, kind_name):
     return None
 
 
-def _read_velocity_profile_csv_file(file_path, delim='\t'):
+def _read_velocity_profile_csv_file(file_path, delim=';'):
     """
     Read one velocity-profile CSV file as a dataframe.
 
