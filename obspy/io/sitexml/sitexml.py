@@ -108,6 +108,17 @@ def validate_sitexml(path_or_object):
     :param path_or_object: File name or file like object. Can also be an etree
         element.
     :rtype: tuple
+
+    Example
+
+    >>> from obspy.io.sitexml.sitexml import validate_sitexml
+    >>> validates, errors = validate_sitexml(path_or_file_object)
+    >>> if validates:
+    ...     print("This is valid SiteXML file")
+    ... else:
+    ...     print("The provided SiteXML file fails to validate "
+    ...           "against the schema.")
+    
     """
     if hasattr(path_or_object, "tell") and hasattr(path_or_object, "seek"):
         current_position = path_or_object.tell()
@@ -125,9 +136,11 @@ def validate_sitexml(path_or_object):
         version = _get_version_from_xmldoc(xmldoc)
 
         # Get the schema location.
-        schema_location = Path(inspect.getfile(inspect.currentframe())).parent
+        schema_location = Path(
+            inspect.getfile(inspect.currentframe())).parent
         schema_location = schema_location / "data"
-        schema_location = str(schema_location / ("QuakeML-SERA-%s.xsd" % version))
+        schema_location = str(
+            schema_location / ("QuakeML-SERA-%s.xsd" % version))
         
         if not Path(schema_location).exists():
             msg = "No schema file found to validate SiteXML version '%s'"
@@ -155,9 +168,9 @@ def read_sitexml(path_or_file_object):
     :param file_or_file_object: The file name or file-like object to read from.
     :rtype: :class:`~obspy.io.sitexml.core.SERASite`
 
-    Returns a SERASite object with metadata read from the provided SiteXML file.
-    At least site owner and site description metadata should be present in XMl file 
-    in order to create the SERASite object.
+    Returns a SERASite object with metadata read from the provided SiteXML
+    file. At least site owner and site description metadata should be present
+    in XML file in order to create the SERASite object.
 
     Example
 
@@ -222,6 +235,14 @@ def read_sitexml(path_or_file_object):
 
 def _read_site_owner(owner_element):
     """
+    Read the <siteOwner> element
+
+    :type owner_element: :class:`~lxml.etree._Element`, required
+
+    :rtype: :class:`~obspy.io.sitexml.core.SERASiteOwner`
+    :return: A `SERASiteOwner` object populated with the values read from 
+            the <siteOwner> element.
+
     <siteOwner> element structure:
 
     - publicID (attribute)
@@ -239,7 +260,6 @@ def _read_site_owner(owner_element):
                     - streetAddress, locality, postalCode
                     - country
                         - country, code
-    :rtype: :class:`~obspy.io.sitexml.core.SERASiteOwner`
     """
 
     ownerID = _attr2obj(owner_element, "publicID", str)
@@ -317,11 +337,19 @@ def _read_site_owner(owner_element):
 
 def _read_site_description(site_description_element):
     """
+    Read the <siteDescription> element
+
+    :type site_description_element: :class:`~lxml.etree._Element`, required
+
+    :rtype: :class:`~obspy.io.sitexml.core.SiteDescription`
+    :return: A `SiteDescription` object populated with the values read from 
+            the <siteDescription> element.
 
     <siteDescription> element structure:
 
     - publicID (attribute)
-    - station_code, latitude, longitude, altitude, minDistanceFromStation, maxDistanceFromStation
+    - station_code, latitude, longitude, altitude, minDistanceFromStation,
+      maxDistanceFromStation
     - OverallQindex
     - siteTopography
         - schemaA, schemaB
@@ -338,8 +366,6 @@ def _read_site_description(site_description_element):
               qualityIndex, reference
     - preferredSiteAnalysisID
     - preferredVelocityProfileID
-    - comment (0-unbounded)
-    :rtype: :class:`~obspy.io.sitexml.core.SiteDescription`
     """
     resource_id = _attr2obj(site_description_element, "publicID", str) 
     station_code = _tag2obj(site_description_element, _ns("station"), str)
@@ -389,6 +415,10 @@ def _read_site_description(site_description_element):
 
 def _read_morphology(morphology_element, site_description_obj):
     """
+    Read the <siteMorphology> element
+
+    :rtype: None
+
      <siteMorphology> element structure:
 
     - siteMorphology
@@ -402,7 +432,6 @@ def _read_morphology(morphology_element, site_description_obj):
         - geologicalUnit
             - value, geologicalMapScale, geologicalUnitOGE,
               qualityIndex, reference
-    :rtype: None
     """
     site_description_obj.morphology = _tag2obj(morphology_element, _ns("morphology"), str)
 
@@ -421,14 +450,11 @@ def _read_analysis(analysis_element):
     """
     Read the <Analysis> element
 
-    :type analysis_element: :class:`~lxml.etree._Element`
-    :param analysis_element: 
+    :type analysis_element: :class:`~lxml.etree._Element`, required
 
-    Returns:
-    :type analysis_obj: :class:`~obspy.core.io.sitexml.core.Analysis`
-    :param analysis_obj: The Analysis object to store the values 
-        read from the <Analysis> element.
     :rtype: :class:`~obspy.io.sitexml.core.Analysis`
+    :return: An Analysis object populated with the values read from 
+            the <Analysis> element.
 
     <Analysis> element structure:
 
@@ -490,11 +516,13 @@ def _read_velocity_profile(analysis_element, analysis_obj):
     """
     Read the <velocityProfile> element
 
-    :type analysis_element: :class:`~lxml.etree._Element`
+    :type analysis_element: :class:`~lxml.etree._Element`, required
     :param analysis_element: 
-    :type analysis_obj: :class:`~obspy.core.io.sitexml.core.Analysis`
-    :param analysis_obj: The Analysis object to store the values read from the <velocityProfile> element. 
-                        It should be pre-initialized by the calling function.
+    :type analysis_obj:
+        :class:`~obspy.core.io.sitexml.core.Analysis`, required
+    :param analysis_obj: Analysis object to store values read from the
+        <velocityProfile> element. It should be pre-initialized by the calling
+        function.
     :rtype: :class:`~obspy.io.sitexml.core.VelocityProfileSurvey`
     """
 
@@ -644,13 +672,20 @@ def _read_literature_source(parent):
     if literature_source_element is None:
         return None
 
-    title = _tag2obj(literature_source_element, _ns("title"), str)
-    first_author = _tag2obj(literature_source_element, _ns("firstAuthor"), str)
-    secondary_authors = _tag2obj(literature_source_element, _ns("secondaryAuthors"), str)
-    year = _tag2obj(literature_source_element, _ns("year"), str)
-    booktitle = _tag2obj(literature_source_element, _ns("booktitle"), str)
-    doi = _tag2obj(literature_source_element, _ns("doi"), str)
-    language = _tag2obj(literature_source_element, _ns("languageCode"), str)
+    title = _tag2obj(
+        literature_source_element, _ns("title"), str)
+    first_author = _tag2obj(
+        literature_source_element, _ns("firstAuthor"), str)
+    secondary_authors = _tag2obj(
+        literature_source_element, _ns("secondaryAuthors"), str)
+    year = _tag2obj(
+        literature_source_element, _ns("year"), str)
+    booktitle = _tag2obj(
+        literature_source_element, _ns("booktitle"), str)
+    doi = _tag2obj(
+        literature_source_element, _ns("doi"), str)
+    language = _tag2obj(
+        literature_source_element, _ns("languageCode"), str)
 
     return LiteratureSource(title=title,
                             first_author=first_author,
@@ -660,18 +695,21 @@ def _read_literature_source(parent):
                             language=language,
                             doi=doi)
 
+### NOT USED anymore
+#
 def _read_value(parent, tag, type):
     """
-    Method used to read a value 
-    from an element of the following structure
-    
-    <xs:element name="parent">
-        <xs:element name="tag">
-		    <xs:element name="value" type="type"/>
-        </xs:element>
-	</xs:element>
+    Read a nested value from an element.
 
     :rtype: object or None
+
+    The element should have the following structure
+
+        <parent>
+            <tag>
+                <value>...</value>
+            </tag>
+        </parent>
     """
     element = parent.find(_ns(tag))
     if element is None:
@@ -680,17 +718,18 @@ def _read_value(parent, tag, type):
 
 def _read_value_with_uncertainty(parent, tag, type):
     """
-    Method used to read a value / uncertainty pair 
-    from an element of the following structure
-    
-    <xs:element name="parent">
-        <xs:element name="tag">
-            <xs:element name="value" type="type"/>
-            <xs:element name="uncertainty" type="type"/>
-        </xs:element>
-    </xs:element>
+    Read a nested value/uncertainty pair from an element.
 
     :rtype: :class:`~obspy.io.sitexml.core.ValueWithUncertainty` or None
+
+    The element should have the following structure
+    
+        <parent>
+            <tag>
+                <value>...</value>
+                <uncertainty>...</uncertainty>
+            </tag>
+        </parent>
     """
     element = parent.find(_ns(tag))
     if element is None:
@@ -713,7 +752,8 @@ def _read_external_reference(ref_element):
 
 def quality_index1(method=None, evaluation=None, reliability=None, completeness=None):
     """
-    This function calculates the Quality Index #1 according to SERA Deliverable 7.2. 
+    This function calculates the Quality Index #1 according to SERA
+    Deliverable 7.2.
     It varies from 0 to 1 and refers to a single mandatory indicator. 
     
     Four criteria are used for the calculation:
@@ -726,21 +766,24 @@ def quality_index1(method=None, evaluation=None, reliability=None, completeness=
     The Quality Index #1 is then calculated using the following formula
         Q_Index1 = [ (A + B + C) * D ] / (Amax + Bmax + Cmax)
 
-    :type method: float       
+    :type method: float, optional
     :param method: It defines the reliability of the method of acquisition and 
         analysis to infer the value of the target indicator, on the basis of 
         peer-reviewed papers
-    :param evaluation: It defines the way of evaluating the target indicator: direct or
-        proxy. The evaluation is direct if derived from in-situ field experiments; 
-        whereas it is inferred if derived from proxies or empirical relationships.
-    :param reliability: It indicates the confidence on the single indicator (the 
-        reliability of its value) and it is based on the available information 
+    :param evaluation: It defines the way of evaluating the target indicator:
+        direct or proxy. The evaluation is direct if derived from in-situ field
+        experiments; whereas it is inferred if derived from proxies or
+        empirical relationships.
+    :param reliability: It indicates the confidence on the single indicator
+        (the reliability of its value) and it is based on the available
+        information
         summarized within the intermediate report.
-    :param completeness: it defines whether there exists a report describing step by step 
-        the field survey and the data processing to evaluate the target indicator. 
+    :param completeness: it defines whether there exists a report describing
+        step by step the field survey and the data processing to evaluate the
+        target indicator.
         Please note that the presence of a detailed report is very important; 
-        in case of the absence of any report documenting the value of a given indicator, 
-        the corresponding quality_index1 is assigned a zero value.
+        in case of the absence of any report documenting the value of a given
+        indicator, the corresponding quality_index1 is assigned a zero value.
     :rtype: float
     """
 
@@ -798,15 +841,19 @@ def quality_index1(method=None, evaluation=None, reliability=None, completeness=
 
 def quality_index2(sera_site):
     """
-    This function calculates the Quality Index #2 for a site, according to SERA Deliverable 7.2. 
+    This function calculates the Quality Index #2 for a site, according to
+    SERA Deliverable 7.2.
 
-    Quality Index #2 is a weighted sum computed on the quality index #1 of all site 
-    indicators evaluated at the target site and varies from 0 to 1.
+    Quality Index #2 is a weighted sum computed on the quality index #1 of all
+    site indicators evaluated at the target site and varies from 0 to 1.
 
     The formula used for the calculation is :
-    Q_Index2 = (w1*Q_Index1_si1 + w2*Q_Index1_si2 + ... + w7*Q_Index1_si7) / (w1 + w2 + ... + w7)
+    Q_Index2 = (
+        w1*Q_Index1_si1 + w2*Q_Index1_si2 + ... + w7*Q_Index1_si7
+    ) / (w1 + w2 + ... + w7)
 
-    The weights used for this calculation for each site indicator, as proposed by SERA, are:
+    The weights used for this calculation for each site indicator, as proposed
+    by SERA, are:
     - Resonance Frequency   : 1
     - Velocity Profile      : 1
     - Velocity S30          : 0.5
@@ -815,7 +862,7 @@ def quality_index2(sera_site):
     - Geological Unit       : 0.5
     - Soil Class EC8        : 0.25
     
-    :type sera_site: :class:`~obspy.io.sitexml.core.SERASite
+    :type sera_site: :class:`~obspy.io.sitexml.core.SERASite`, required
     :param sera_site: The site for which to calculate quality index #2
     :rtype: float or None
     """
@@ -868,31 +915,35 @@ def quality_index2(sera_site):
 
 def quality_index3(f0_vs30 = 0, f0_bedrock_depth = 0, f0_h800 = 0, vs30_h800 = 0, vs30_geology = 0):
     """
-    This function calculates the Quality Index #3 for a site, according to SERA Deliverable 7.2. 
+    This function calculates the Quality Index #3 for a site, according to
+    SERA Deliverable 7.2.
 
     Quality Index #3 refers to the overall consistency between the various 
     indicators and varies from 0 to 1.
     
-    Specifically, Q_Index3 evaluates consistency of various couples of indicators according to the 
-    current state of knowledge of the community. If estimates for a given couple of indicators 
-    (e.g f0 and Vs30, geology and Vs30, etc.) are not within the range of reported values, then 
-    these two estimates are considered as not consistent with one another.
+    Specifically, Q_Index3 evaluates consistency of various couples of
+    indicators according to the current state of knowledge of the community. If
+    estimates for a given couple of indicators (e.g f0 and Vs30, geology and
+    Vs30, etc.) are not within the range of reported values, then these two
+    estimates are considered as not consistent with one another.
 
-    The consistency among various couple of indicators should be performed between the following 
-    mandatory indicators: f0, Vs(z), Vs30, H800 (engineering bedrock), seismic bedrock depth and 
-    surface geology.
+    The consistency among various couple of indicators should be performed
+    between the following mandatory indicators: f0, Vs(z), Vs30, H800
+    (engineering bedrock), seismic bedrock depth and surface geology.
 
-    The computation of Q_Index3 is given by the sum of consistency values among the following 
-    five couples of indicators, for which published references are available. 
+    The computation of Q_Index3 is given by the sum of consistency values among
+    the following five couples of indicators, for which published references
+    are available.
         1. f0 and Vs30
         2. f0 and seismic_bedrock_depth
         3. f0 and engineering_bedrock_depth
         4. Vs30 and H800 
         5. Vs30 and geology
 
-    The consistency at a specific site is computed only for the available indicators 
-    (e.g. if only Vs30 and geological information are reported for a site, then the consistency 
-    (cons) should be checked only for the couple Vs30-surface geology).
+    The consistency at a specific site is computed only for the available
+    indicators (e.g. if only Vs30 and geological information are reported for a
+    site, then the consistency (cons) should be checked only for the couple
+    Vs30-surface geology).
 
     Q_Index3 = [cons(f0, Vs30) + cons(f0, seismic_bedrock_depth) + 
                 cons(f0, engineering_bedrock_depth) + cons(H800, Vs30) + 
@@ -906,15 +957,17 @@ def quality_index3(f0_vs30 = 0, f0_bedrock_depth = 0, f0_h800 = 0, vs30_h800 = 0
 
 def overall_quality_index(quality_index2 = 0, quality_index3 = 0):
     """
-    This function calculates the Quality Index #3 for a site, according to SERA Deliverable 7.2. 
+    This function calculates the Quality Index #3 for a site, according to
+    SERA Deliverable 7.2.
 
-    The overall quality index is computed as the arithmetic mean between Q_Index2 and Q_Index3. 
+    The overall quality index is computed as the arithmetic mean between
+    Q_Index2 and Q_Index3.
     
     Overall_Quality_Index = (Q_Index2 + Q_Index3) / 2 
 
     The range of values of Overall_Quality_Index is spanning from 0 to 1. 
-    A value of 1 is for a site with a very thorough and reliable seismic characterization, 
-    0 is assigned to a site badly or not characterized.
+    A value of 1 is for a site with a very thorough and reliable seismic
+    characterization, 0 is assigned to a site badly or not characterized.
     :rtype: float
     """
     overall_quality_index = (quality_index2 + quality_index3) / 2
@@ -926,14 +979,22 @@ def write_sitexml(sera_site, file_or_file_object, validate=True):
     """
     Writes a sera_site object to a buffer.
 
-    :type sera_site: :class:`~obspy.io.sitexml.core.SERASite`
+    :type sera_site: :class:`~obspy.io.sitexml.core.SERASite`, required
     :param sera_site: The sitexml instance to be written.
+    :type file_or_file_object: str or file-like object, required
     :param file_or_file_object: The file or file-like object to be written to.
     :type validate: bool, optional
     :param validate: If True, the created document will be validated with the
         SiteXML schema before being written. Defaults to True which is the
         recommended usage.
     :rtype: None
+
+    Example
+
+    >>> from obspy.io.sitexml.sitexml import write_sitexml
+    >>> write_sitexml(
+    ...     sera_site, sera_site.get_sitexml_filename(), validate=True)
+
     """
     # Validate cross-references in the in-memory SiteXML object graph before
     # emitting XML, so broken internal IDs fail early with API-level errors.
@@ -1214,7 +1275,8 @@ def _write_methods(parent, site_indicator_obj):
         for method in site_indicator_obj.methods:
             _obj2tag(parent, "method", method)
 
-
+### NOT USED anymore
+#
 def _write_value(parent, tag, value):
     """
     Append an element containing a nested value child.

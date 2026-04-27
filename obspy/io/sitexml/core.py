@@ -40,13 +40,11 @@ class ValueWithUncertainty(BaseNode):
         """
         :param value: int or float, the main value.
         :param uncertainty: int, float, or None, representing uncertainty.
-        :param indicator_name: str, for meaningful error messages.
         :param valid_type: type, expected numeric type (e.g., float, int).
         """
-        self.valid_type = valid_type
-        #self.indicator_name = indicator_name
         self.value = value
         self.uncertainty = uncertainty
+        self.valid_type = valid_type
 
     @classmethod
     def from_float_with_uncertainties(cls, value, valid_type=float):
@@ -117,8 +115,7 @@ class ValueWithUncertainty(BaseNode):
             raise SiteXMLValidationError(
                 f"Value must be convertible to {self.valid_type.__name__}"
             )
-        #if val <= 0:
-        #    raise ValueError(f"Value of {self.indicator_name} must be positive.")
+        
         self._value = val
 
     @property
@@ -137,8 +134,7 @@ class ValueWithUncertainty(BaseNode):
                 f"Uncertainty must be convertible to "
                 f"{self.valid_type.__name__} or None"
             )
-        #if val <= 0:
-        #    raise ValueError(f"Uncertainty of {self.indicator_name} must be positive.")
+        
         self._uncertainty = val
 
     def __str__(self):
@@ -161,10 +157,10 @@ class LiteratureSource(BaseNode):
     def __init__(self, title, first_author, secondary_authors=None,
                  year=None, booktitle=None, language=None, doi=None):
         """
-        :type title: str
-        :param title: Title of the publication. Required.
-        :type first_author: str
-        :param first_author: Main author of the publication. Required.
+        :type title: str, required
+        :param title: Title of the publication.
+        :type first_author: str, required
+        :param first_author: Main author of the publication.
         :type secondary_authors: str, optional
         :param secondary_authors: Comma-separated list of secondary authors.
         :type year: str or int, optional
@@ -218,23 +214,30 @@ class SiteIndicator(BaseNode):
     external_references = wrapped_list_property("external_references", ExternalReference)
     #quality_index = wrapped_property("quality_index", float)
 
-    def __init__(self, name, value, methods=None, 
-                 quality_index=None, literature_source=None, external_references=None):
+    def __init__(self, name, value, methods=None, quality_index=None,
+                 literature_source=None, external_references=None):
         """
-        :type name: str
-        :param name: Indicator type. One of: "siteClassEC8", "h800", "bedrockDepth", 
-                    "geologicalUnit", "velocityS30", "resonanceFrequency", "velocityProfile"
-        :type value: str / ValueWithUncertainty / VelocityProfileData
+        :type name: str, required
+        :param name: Indicator type. One of: "siteClassEC8", "h800",
+            "bedrockDepth", "geologicalUnit", "velocityS30",
+            "resonanceFrequency", "velocityProfile".
+        :type value: str / ValueWithUncertainty / VelocityProfileData, required
         :param value: Value of the indicator. Type depends on the indicator.
         :type methods: list of str, optional
-        :param methods: Methods used for the estimation / calculation of the site indicator
+        :param methods: Methods used for the estimation/calculation of the
+            site indicator.
         :type quality_index: float, optional
-        :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
-            Calculated according to the guidelines of the SERA D7.2 Deliverable.
-        :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
-        :param literature_source: The literature source related with the provided site indicator value
-        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_references: External URIs and descriptions for this indicator.
+        :param quality_index: Quality index of the site indicator. Takes
+            values between 0 and 1. Calculated according to the guidelines of
+            the SERA D7.2 Deliverable.
+        :type literature_source:
+            :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
+        :param literature_source: Literature source related to the provided
+            site indicator value.
+        :type external_references: list of
+            :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this
+            indicator.
         """
         self.name = name
         self.value = value
@@ -266,17 +269,24 @@ class EC8(SiteIndicator):
 
     value = enum_property("value", EC8Class)
     
-    def __init__(self, value, quality_index=None, literature_source=None, external_references=None):
+    def __init__(self, value, quality_index=None, literature_source=None,
+                 external_references=None):
         """
-        :type value: Enum of type :class:`~obspy.io.sitexml.util.EC8Class`, required.
+        :type value: Enum of type
+            :class:`~obspy.io.sitexml.util.EC8Class`, required
         :param value: EC8 class
         :type quality_index: float, optional
-        :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
-            Calculated according to the guidelines of the SERA D7.2 Deliverable.
-        :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
-        :param literature_source: The literature source related with the provided site indicator value
-        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_references: External URIs and descriptions for this indicator.
+        :param quality_index: Quality index of the site indicator. Takes
+            values between 0 and 1. Calculated according to the guidelines of
+            the SERA D7.2 Deliverable.
+        :type literature_source:
+            :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
+        :param literature_source: Literature source related to the provided
+            site indicator value.
+        :type external_references: list of
+            :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this
+            indicator.
         """
         super(EC8, self).__init__(
                 name="siteClassEC8", value=value, quality_index=quality_index, 
@@ -292,20 +302,28 @@ class H800(SiteIndicator):
     def __init__(self, value, quality_index=None, literature_source=None, 
                  external_references=None):
         """
-        :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required.   
-        :param value: Engineering depth. Depth beyond which the shear-wave 
-                        velocity Vs exceeds 800 m/s. Expecting Integer value.
+        :type value:
+            :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required
+        :param value: Engineering depth. Depth beyond which the shear-wave
+            velocity Vs exceeds 800 m/s. Expecting Integer value.
         :type quality_index: float, optional
-        :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
-            Calculated according to the guidelines of the SERA D7.2 Deliverable.
-        :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
-        :param literature_source: The literature source related with the provided site indicator value
-        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_references: External URIs and descriptions for this indicator.
+        :param quality_index: Quality index of the site indicator. Takes
+            values between 0 and 1. Calculated according to the guidelines of
+            the SERA D7.2 Deliverable.
+        :type literature_source:
+            :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
+        :param literature_source: Literature source related to the provided
+            site indicator value.
+        :type external_references: list of
+            :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this
+            indicator.
         """
         super(H800, self).__init__(
-                name="h800", value=value, quality_index=quality_index, 
-                literature_source=literature_source, external_references=external_references)
+                name="h800", value=value, 
+                quality_index=quality_index, 
+                literature_source=literature_source, 
+                external_references=external_references)
 
 class BedrockDepth(SiteIndicator):
     """
@@ -317,47 +335,66 @@ class BedrockDepth(SiteIndicator):
     def __init__(self, value, quality_index=None, literature_source=None, 
                  external_references=None):
         """
-        :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required.      
+        :type value:
+            :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required
         :param value: Seismological bedrock depth. Expecting Integer values.
-        :type quality_index: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, optional
-        :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
-            Calculated according to the guidelines of the SERA D7.2 Deliverable.
-        :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
-        :param literature_source: The literature source related with the provided site indicator value
-        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_references: External URIs and descriptions for this indicator.
+        :type quality_index:
+            :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, optional
+        :param quality_index: Quality index of the site indicator. Takes
+            values between 0 and 1. Calculated according to the guidelines of
+            the SERA D7.2 Deliverable.
+        :type literature_source:
+            :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
+        :param literature_source: Literature source related to the provided
+            site indicator value.
+        :type external_references: list of
+            :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this
+            indicator.
         """
         super(BedrockDepth, self).__init__(
-            name="bedrockDepth", value=value, quality_index=quality_index, 
-            literature_source=literature_source, external_references=external_references)
+            name="bedrockDepth", value=value, 
+            quality_index=quality_index, 
+            literature_source=literature_source, 
+            external_references=external_references)
 
 class GeologicalUnit(SiteIndicator):
     """
     Surface geology indicator with optional map-scale metadata.
     """
 
-    def __init__(self, value, quality_index=None, geological_map_scale=None, 
-                 geological_unit_OGE=None, literature_source=None, external_references=None):
+    def __init__(self, value, quality_index=None, 
+                geological_map_scale=None, geological_unit_OGE=None, 
+                literature_source=None, external_references=None):
         """
-        :type value: str, required.
+        :type value: str, required
         :param value: Brief description of the surface geology (free text)
         :type quality_index: float, optional
-        :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
-            Calculated according to the guidelines of the SERA D7.2 Deliverable.
-        :type geological_map_scale: str, optional.
-        :param geological_map_scale: Scale of geological map used for the description of surface geology
-        :type geological_unit_OGE: str, optional.
-        :param geological_unit_OGE: Description of the surface geology according to a Unified, Pan- European Map
-        :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
-        :param literature_source: The literature source related with the provided site indicator value
-        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_references: External URIs and descriptions for this indicator.
+        :param quality_index: Quality index of the site indicator. Takes
+            values between 0 and 1. Calculated according to the guidelines of
+            the SERA D7.2 Deliverable.
+        :type geological_map_scale: str, optional
+        :param geological_map_scale: Scale of geological map used for the
+            description of surface geology.
+        :type geological_unit_OGE: str, optional
+        :param geological_unit_OGE: Description of the surface geology
+            according to a Unified, Pan-European Map.
+        :type literature_source:
+            :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
+        :param literature_source: Literature source related to the provided
+            site indicator value.
+        :type external_references: list of
+            :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this
+            indicator.
         """
         self.geological_map_scale = geological_map_scale
         self.geological_unit_OGE = geological_unit_OGE
         super(GeologicalUnit, self).__init__(
-            name="geologicalUnit", value=value, quality_index=quality_index, 
-                literature_source=literature_source, external_references=external_references)
+            name="geologicalUnit", value=value, 
+                quality_index=quality_index, 
+                literature_source=literature_source, 
+                external_references=external_references)
         
 class ResonanceFrequency(SiteIndicator):
     """
@@ -370,21 +407,30 @@ class ResonanceFrequency(SiteIndicator):
     def __init__(self, value, quality_index=None, methods=None, 
                  literature_source=None, external_references=None):
         """
-        :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required.           
+        :type value:
+            :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required
         :param value: Resonance Frequency (f0). Expecting float values.
         :type quality_index: float, optional
-        :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
-            Calculated according to the guidelines of the SERA D7.2 Deliverable.
-        :type methods: List of Enum type :class:`~obspy.io.sitexml.util.ResonanceFrequencyMethod`
+        :param quality_index: Quality index of the site indicator. Takes
+            values between 0 and 1. Calculated according to the guidelines of
+            the SERA D7.2 Deliverable.
+        :type methods: List of Enum type
+            :class:`~obspy.io.sitexml.util.ResonanceFrequencyMethod`,
+            optional
         :param methods: Methods used for the estimation of ResonanceFrequency
-        :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
-        :param literature_source: The literature source related with the provided site indicator value
-        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_references: External URIs and descriptions for this indicator.
+        :type literature_source:
+            :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
+        :param literature_source: Literature source related to the provided
+            site indicator value.
+        :type external_references: list of
+            :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this
+            indicator.
         """
         super(ResonanceFrequency, self).__init__(
             name="resonanceFrequency", value=value, methods=methods, 
-            quality_index=quality_index, literature_source=literature_source, 
+            quality_index=quality_index, 
+            literature_source=literature_source, 
             external_references=external_references)
         
 class VelocityS30(SiteIndicator):
@@ -401,23 +447,32 @@ class VelocityS30(SiteIndicator):
                  method_combined_qindex=None, manual_qindex=None, 
                  literature_source=None, external_references=None):
         """
-        :type value: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required.         
+        :type value:
+            :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required
         :param value: Velocity S30. Expecting float values.
         :type quality_index: float, optional
-        :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
-            Calculated according to the guidelines of the SERA D7.2 Deliverable.
-        :type methods: List of Enum type :class:`~obspy.io.sitexml.util.VelocityS30Method`
+        :param quality_index: Quality index of the site indicator. Takes
+            values between 0 and 1. Calculated according to the guidelines of
+            the SERA D7.2 Deliverable.
+        :type methods: List of Enum type
+            :class:`~obspy.io.sitexml.util.VelocityS30Method`, optional
         :param methods: Methods used for the estimation of Velocity S30
-        :type method_combined_qindex: Enum of type :class:`~obspy.io.sitexml.util.Vs30MethodCombined`, optional
-        :param method_combined_qindex: Carries the information on whether a combination of 
-            two or more methodshas been applied to estimate the Vs30 value.
-        :type manual_qindex: Enum of type :class:`~obspy.io.sitexml.util.Vs30ManualIndex`, optional
-        :param manual_qindex: Overall qualitative factor on the knowledge of the 
-            maximum depth of Vs measurements
-        :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional.
-        :param literature_source: The literature source related with the provided site indicator value
-        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_references: External URIs and descriptions for this indicator.
+        :type method_combined_qindex: Enum of type
+            :class:`~obspy.io.sitexml.util.Vs30MethodCombined`, optional
+        :param method_combined_qindex: Whether a combination of two or more
+            methods has been applied to estimate the Vs30 value.
+        :type manual_qindex: Enum of type
+            :class:`~obspy.io.sitexml.util.Vs30ManualIndex`, optional
+        :param manual_qindex: Overall qualitative factor on the knowledge of
+            the maximum depth of Vs measurements.
+        :type literature_source:
+            :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
+        :param literature_source: Literature source related to the provided
+            site indicator value.
+        :type external_references: list of
+            :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this
+            indicator.
         """
 
         self.method_combined_qindex = method_combined_qindex
@@ -448,15 +503,21 @@ class VelocityProfileSurvey(SiteIndicator):
     def __init__(self, velocity_profiles=None, quality_index=None, 
                  literature_source=None, external_references=None):
         """
-        :type velocity_profiles: list of :class:`~obspy.io.sitexml.core.VelocityProfile`
+        :type velocity_profiles: list of
+            :class:`~obspy.io.sitexml.core.VelocityProfile`, optional
         :param velocity_profiles: List of Velocity Profiles.
         :type quality_index: float, optional
-        :param quality_index: Quality index of the site indicator. Takes values between 0 and 1.
-            Calculated according to the guidelines of the SERA D7.2 Deliverable.
-        :type literature_source: :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
-        :param literature_source: The literature source related with the provided site indicator value
-        :type external_references: list of :class:`~obspy.core.inventory.util.ExternalReference`, optional
-        :param external_references: External URIs and descriptions for this indicator.
+        :param quality_index: Quality index of the site indicator. Takes
+            values between 0 and 1. Calculated according to the guidelines of
+            the SERA D7.2 Deliverable.
+        :type literature_source:
+            :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
+        :param literature_source: Literature source related to the provided
+            site indicator value.
+        :type external_references: list of
+            :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: External URIs and descriptions for this
+            indicator.
         """
         self.velocity_profiles = velocity_profiles  # triggers setter/validation
         super(VelocityProfileSurvey, self).__init__(
@@ -486,12 +547,14 @@ class VelocityProfile(BaseNode):
 
     def __init__(self, resource_id, velocity_profile_data, layer_count=None):
         """
-        :type resource_id: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :type resource_id: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
         :param resource_id: Unique Velocity Profile Resource ID.
-        :type velocity_profile_data: :class:`~obspy.io.sitexml.core.VelocityProfileData`
+        :type velocity_profile_data:
+            :class:`~obspy.io.sitexml.core.VelocityProfileData`, required
         :param velocity_profile_data: An array of velocity profile data for all
             layers. Must contain at least one layer.
-        :type layer_count: Positive int, optional.
+        :type layer_count: Positive int, optional
         :param layer_count: Number of layers in velocity profile. If omitted,
             it is derived from ``velocity_profile_data``.
         """
@@ -624,16 +687,21 @@ class VelocityProfileData(BaseNode):
     def __init__(self, top_depth, bottom_depth=None, density=None, 
                 velocityP=None, velocityS=None):
         """
-        :type top_depth: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param top_depth: Layer top depth, required.
-        :type bottom_depth: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param bottom_depth: Layer bottom depth, optional.
-        :type density: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param density: Layer density, optional
-        :type velocityP: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param velocityP: Layer velocityP value, optional
-        :type velocityS: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-        :param velocityS: Layer velocityS value, optional
+        :type top_depth:
+            :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required
+        :param top_depth: Layer top depth.
+        :type bottom_depth:
+            :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, optional
+        :param bottom_depth: Layer bottom depth.
+        :type density:
+            :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, optional
+        :param density: Layer density.
+        :type velocityP:
+            :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, optional
+        :param velocityP: Layer velocityP value.
+        :type velocityS:
+            :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, optional
+        :param velocityS: Layer velocityS value.
         """
         self.top_depth = top_depth
         self.bottom_depth = bottom_depth
@@ -671,20 +739,22 @@ class SERASiteOwner(BaseNode):
     def __init__(self, owner_codename, owner_fullname,
                  person_firstname, person_lastname, person_mbox, ownerID=None,
                  person_homepage=None, personID=None,
-                 institution_name=None, institution_mbox=None, institution_phone=None, institution_homepage=None, institutionID=None,
-                 address_street=None, address_locality=None, address_postal_code=None, address_country=None, address_country_code=None,
+                 institution_name=None, institution_mbox=None, 
+                 institution_phone=None, institution_homepage=None, institutionID=None,
+                 address_street=None, address_locality=None, address_postal_code=None, 
+                 address_country=None, address_country_code=None,
                  affiliation_department=None, affiliation_function=None):
         """
-        :type owner_codename: str
-        :param owner_codename: Short code name for the site owner. Required.
-        :type owner_fullname: str
-        :param owner_fullname: Full name of the site owner. Required.
-        :type person_firstname: str
-        :param person_firstname: First name of the contact person. Required.
-        :type person_lastname: str
-        :param person_lastname: Last name of the contact person. Required.
-        :type person_mbox: str
-        :param person_mbox: Email address of the contact person. Required.
+        :type owner_codename: str, required
+        :param owner_codename: Short code name for the site owner.
+        :type owner_fullname: str, required
+        :param owner_fullname: Full name of the site owner.
+        :type person_firstname: str, required
+        :param person_firstname: First name of the contact person.
+        :type person_lastname: str, required
+        :param person_lastname: Last name of the contact person.
+        :type person_mbox: str, required
+        :param person_mbox: Email address of the contact person.
         :type ownerID: str, optional
         :param ownerID: Public identifier for the owner.
         :type person_homepage: str, optional
@@ -714,7 +784,8 @@ class SERASiteOwner(BaseNode):
         :type affiliation_department: str, optional
         :param affiliation_department: Department of the contact person.
         :type affiliation_function: str, optional
-        :param affiliation_function: Function or position of the contact person.
+        :param affiliation_function: Function or position of the contact
+            person.
         """
         self.owner_codename = owner_codename 
         self.owner_fullname = owner_fullname
@@ -770,9 +841,9 @@ class SERASiteOwner(BaseNode):
         ``owner_codename`` and ``owner_fullname`` are required because ObsPy
         ``Person`` only represents the contact person, not the SiteXML owner
         identity. If ``person_firstname`` and ``person_lastname`` are omitted,
-        they are derived from the first ObsPy person name. If ``person_mbox`` is
-        omitted, the first ObsPy email address is used. If ``institution_name``
-        is omitted, the first ObsPy agency is used.
+        they are derived from the first ObsPy person name. If
+        ``person_mbox`` is omitted, the first ObsPy email address is used. If
+        ``institution_name`` is omitted, the first ObsPy agency is used.
 
         .. rubric:: Example
 
@@ -1024,51 +1095,72 @@ class SiteDescription(BaseNode):
                  preferred_site_analysisID=None, preferred_velocity_profileID=None,
                  overall_quality_index=None):
         """
-        :type resource_id: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
+        :type resource_id: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
         :param resource_id: Unique Site Description Resource ID
         :type latitude: :class:`~obspy.core.inventory.util.Latitude`, required
         :param latitude: The latitude of the site.
-        :type longitude: :class:`~obspy.core.inventory.util.Longitude`, required
+        :type longitude:
+            :class:`~obspy.core.inventory.util.Longitude`, required
         :param longitude: The longitude of the site. 
-        :type altitude: :class:`~obspy.core.inventory.util.Distance`, optional.
+        :type altitude: :class:`~obspy.core.inventory.util.Distance`, optional
         :param altitude: Elevation of ground with respect to sea level (m).
-        :type min_distance_from_station: :class:`~obspy.core.inventory.util.Distance`, optional.
-        :param min_distance_from_station: Minimum distance between the permanent seismological station and 
-            site characterization measurement. Should be used only when representative latitude and longitude 
-            of site characterization measurements cannot be provided. 
-        :type max_distance_from_station: :class:`~obspy.core.inventory.util.Distance`, optional.
-        :param max_distance_from_station: Maximum distance between the permanent seismological station and 
-            site characterization measurement. Should be used only when representative latitude and longitude 
-            of site characterization measurements cannot be provided. 
-        :type station_code: str, optional.
-        :param station_code: FDSN network and station code in network.station notation (if any). 
-        :type ec8: :class:`~obspy.io.sitexml.core.EC8`, optional.
-        :param ec8: Ground type according to Eurocode 8, based on the velocity S30 value and geotechnical description. 
-        :type h800: :class:`~obspy.io.sitexml.core.H800`, optional.
-        :param h800: Engineering depth. Depth beyond which the shear-wave velocity Vs exceeds 800 m/s.
-        :type bedrock_depth: :class:`~obspy.io.sitexml.core.BedrockDepth`, optional.
+        :type min_distance_from_station:
+            :class:`~obspy.core.inventory.util.Distance`, optional
+        :param min_distance_from_station: Minimum distance between the
+            permanent seismological station and site characterization
+            measurement. Should be used only when representative latitude and
+            longitude of site characterization measurements cannot be provided.
+        :type max_distance_from_station:
+            :class:`~obspy.core.inventory.util.Distance`, optional
+        :param max_distance_from_station: Maximum distance between the
+            permanent seismological station and site characterization
+            measurement. Should be used only when representative latitude and
+            longitude of site characterization measurements cannot be provided.
+        :type station_code: str, optional
+        :param station_code: FDSN network and station code in
+            network.station notation (if any).
+        :type ec8: :class:`~obspy.io.sitexml.core.EC8`, optional
+        :param ec8: Ground type according to Eurocode 8, based on the
+            velocity S30 value and geotechnical description.
+        :type h800: :class:`~obspy.io.sitexml.core.H800`, optional
+        :param h800: Engineering depth. Depth beyond which the shear-wave
+            velocity Vs exceeds 800 m/s.
+        :type bedrock_depth:
+            :class:`~obspy.io.sitexml.core.BedrockDepth`, optional
         :param bedrock_depth: Seismological bedrock depth. 
-        :type geological_unit: :class:`~obspy.io.sitexml.core.GeologicalUnit`, optional.
-        :param geological_unit: Brief description of the surface geology (free text). 
-        :type morphology: str, optional.
-        :param morphology: Qualitative description of the shape of the earth's surface (free text). 
-        :type topographyA: str, optional.
-        :param topographyA: Quantitative description of the surface according to the Italian Code 
-            (detailed description of the scheme in SERA Deliverable D7.1 - Appendix I).
-            See :class:`~obspy.io.sitexml.util.TopographySchemaA` for allowed values. 
-        :type topographyB: str, optional.
-        :param topographyB: Quantitative description of the shape of the earth's surface according to 
-            Burjanek et al, 2014 (detailed description of the scheme in SERA Deliverable D7.1 - Appendix I). 
-            See :class:`~obspy.io.sitexml.util.TopographySchemaB` for allowed values. 
-        :type preferred_site_analysisID: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`
-        :param preferred_site_analysisID: Preferred Site Analysis ID. If you provide one or more
-                analysis for this site you should use this field to designate the prefered analysis.
-        :type preferred_velocity_profileID: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`
-        :param preferred_velocity_profileID: Preferred Velocity Profile ID. If you provide one or more
-                velocity profiles for this site you should use this field to designate the prefered VP.
-        :type overall_quality_index: float, optional.
+        :type geological_unit:
+            :class:`~obspy.io.sitexml.core.GeologicalUnit`, optional
+        :param geological_unit: Brief description of the surface geology
+            (free text).
+        :type morphology: str, optional
+        :param morphology: Qualitative description of the shape of the
+            earth's surface (free text).
+        :type topographyA: str, optional
+        :param topographyA: Quantitative description of the surface according
+            to the Italian Code (detailed description of the scheme in SERA
+            Deliverable D7.1 - Appendix I). See
+            :class:`~obspy.io.sitexml.util.TopographySchemaA` for allowed
+            values.
+        :type topographyB: str, optional
+        :param topographyB: Quantitative description of the shape of the
+            earth's surface according to Burjanek et al, 2014 (detailed
+            description of the scheme in SERA Deliverable D7.1 - Appendix I).
+            See :class:`~obspy.io.sitexml.util.TopographySchemaB` for allowed
+            values.
+        :type preferred_site_analysisID: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, optional
+        :param preferred_site_analysisID: Preferred Site Analysis ID. 
+                If you provide one or more analysis for this site 
+                you should use this field to designate the prefered analysis.
+        :type preferred_velocity_profileID: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, optional
+        :param preferred_velocity_profileID: Preferred Velocity Profile ID. 
+                If you provide one or more velocity profiles for this site 
+                you should use this field to designate the prefered VP.
+        :type overall_quality_index: float, optional
         :param overall_quality_index: The overall quality index of the site 
-                            characterization parameters.
+                characterization parameters.
         """
 
         self.resource_id = resource_id
@@ -1172,25 +1264,34 @@ class Analysis(BaseNode):
                  velocity_profile_survey=None, spt_logs_count=None,
                  cpt_logs_count=None, borehole_logs_count=None):
         """
-        :type resource_id: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required.
+        :type resource_id: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
         :param resource_id: Analysis resource ID. 
-        :type site_descriptionID: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required.
-        :param site_descriptionID: The Site Description object this analysis refers to. 
-        :type creation_date: datetime, optional.
+        :type site_descriptionID: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
+        :param site_descriptionID: The Site Description object this analysis
+            refers to.
+        :type creation_date: datetime, optional
         :param creation_date: Date that this analysis was published.
-        :type resonance_frequency: :class:`~obspy.io.sitexml.core.ResonanceFrequency`, optional.
-        :param resonance_frequency: The Resonance frequency of the soil column. 
-        :type velocity_s30: :class:`~obspy.io.sitexml.core.VelocityS30`, optional.
-        :param velocity_s30: Average shear-wave velocity between 0 and 30 meters depth. 
-        :type velocity_profile_survey: :class:`~obspy.io.sitexml.core.VelocityProfileSurvey`, optional.
+        :type resonance_frequency:
+            :class:`~obspy.io.sitexml.core.ResonanceFrequency`, optional
+        :param resonance_frequency: The Resonance frequency of the soil
+            column.
+        :type velocity_s30:
+            :class:`~obspy.io.sitexml.core.VelocityS30`, optional
+        :param velocity_s30: Average shear-wave velocity between 0 and 30
+            meters depth.
+        :type velocity_profile_survey:
+            :class:`~obspy.io.sitexml.core.VelocityProfileSurvey`, optional
         :param velocity_profile_survey: Velocity Profile Survey.
             Parent object for Velocity Profiles. 
-        :type spt_logs_count: Non-negative int, optional.
+        :type spt_logs_count: Non-negative int, optional
         :param spt_logs_count: Number of available SPT profile(s). 
-        :type cpt_logs_count: Non-negative int, optional.
+        :type cpt_logs_count: Non-negative int, optional
         :param cpt_logs_count: Number of available CPT profile(s). 
-        :type borehole_logs_count: Non-negative int, optional.
-        :param borehole_logs_count: Number of available borehole log profile(s). 
+        :type borehole_logs_count: Non-negative int, optional
+        :param borehole_logs_count: Number of available borehole log
+            profile(s).
         """
         self.resource_id = resource_id        
         self.site_descriptionID = site_descriptionID
@@ -1286,17 +1387,22 @@ class SERASite(BaseNode):
     def __init__(self, resource_id, site_owner, site_description, 
                  analysis=None, created=None, external_references=None):
         """
-        :type resource_id: str or :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+        :type resource_id: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
         :param resource_id: SERA SiteXML Unique Identifier (siteID).
-        :type site_owner: :class:`~obspy.core.io.sitexml.SERASiteOwner`, required.
+        :type site_owner:
+            :class:`~obspy.core.io.sitexml.SERASiteOwner`, required
         :param site_owner: The site owner metadata. 
-        :type site_description: :class:`~obspy.core.io.sitexml.SiteDescription`, required.
-        :param site_description: The site description parameters (H800, Bedrock depth, 
-                            EC8 class, geological unit, morphology, topography).
-        :type analysis: list of :class:`~obspy.io.sitexml.core.Analysis`, optional.
+        :type site_description:
+            :class:`~obspy.core.io.sitexml.SiteDescription`, required
+        :param site_description: The site description parameters (H800,
+            Bedrock depth, EC8 class, geological unit, morphology,
+            topography).
+        :type analysis: list of
+            :class:`~obspy.io.sitexml.core.Analysis`, optional
         :param analysis: The site characterization parameters 
                             (VS30, resonance frequency, velocity profiles).
-        :type created: :class:`~obspy.UTCDateTime`
+        :type created: :class:`~obspy.UTCDateTime`, optional
         :param created: Root-level SiteXML document creation time. This
             value is serialization metadata for the XML document itself, not
             the creation time of the underlying site metadata. When
@@ -1304,8 +1410,10 @@ class SERASite(BaseNode):
             ``SERASite`` object, it replaces this value with the current write
             time and writes that timestamp to the root ``<creationTime>``
             element.
-        :type external_references: List of :class:`~obspy.core.inventory.util.ExternalReference`, optional.
-        :param external_references: Additional resources with site characterization metadata. 
+        :type external_references: List of
+            :class:`~obspy.core.inventory.util.ExternalReference`, optional
+        :param external_references: Additional resources with site
+            characterization metadata.
         """
         self.resource_id = resource_id
         self.site_owner = site_owner
@@ -1319,7 +1427,7 @@ class SERASite(BaseNode):
         Return the attached analysis with matching resource ID, if present.
 
         :type resource_id: str or
-            :class:`~obspy.core.event.resourceid.ResourceIdentifier`
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
         :param resource_id: Analysis resource ID to look up.
         :rtype: :class:`~obspy.io.sitexml.core.Analysis` or None
         """
@@ -1349,9 +1457,8 @@ class SERASite(BaseNode):
         ).strip("_")
         return filename + ".xml"
 
-    def write_stationxml_reference(
-            self, sitexml_url, path, datacenter, description=None,
-            client=None):
+    def write_stationxml_reference(self, sitexml_url, path,
+            datacenter, description=None, client=None):
         """
         Retrieve StationXML for this site's station, attach the SiteXML URL as
         a StationXML ``ExternalReference``, and write the updated inventory.
@@ -1360,12 +1467,12 @@ class SERASite(BaseNode):
         :attr:`site_description.station_code`, which must use
         ``network.station`` notation.
 
-        :type sitexml_url: str
+        :type sitexml_url: str, required
         :param sitexml_url: URL of the SiteXML document to reference.
-        :type path: str or pathlib.Path or file-like object
+        :type path: str or pathlib.Path or file-like object, required
         :param path: Local output path or writable file-like object for the
             updated StationXML.
-        :type datacenter: str
+        :type datacenter: str, required
         :param datacenter: FDSN data center used to initialize
             :class:`obspy.clients.fdsn.client.Client`, for example
             ``"EARTHSCOPE"``.
@@ -1377,6 +1484,14 @@ class SERASite(BaseNode):
             callers that already manage client construction.
         :rtype: :class:`obspy.core.inventory.inventory.Inventory`
         :return: The updated inventory that was written to ``path``.
+
+        Example
+
+        >>> from obspy.io.sitexml.sitexml import read_sitexml
+        >>> sera_site = read_sitexml("test_site.xml")
+        >>> sera_site.write_stationxml_reference("https://url/to/site.xml", 
+        ...             path="./updated_stationXML",
+        ...             datacenter="EARTHSCOPE")
         """
         full_station_code = self.site_description.station_code
         if not full_station_code:
