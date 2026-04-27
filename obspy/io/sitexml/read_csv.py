@@ -26,6 +26,82 @@ from .core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
 from .util import SiteXMLIOError, SiteXMLImportError
 
 
+def apply_quality_index_csv(sera_site_dict, quality_index_csv, delim=';'):
+    """
+    Apply CSV quality-index calculation inputs to existing SERASite objects.
+
+    The sidecar values are used immediately to calculate SiteXML quality
+    indexes and are not stored. The input dictionary is mutated in place and
+    returned for convenience.
+
+    :type sera_site_dict: dict of
+        :class:`~obspy.io.sitexml.core.SERASite`, required
+    :param sera_site_dict: Dictionary of SERASite objects keyed by site ID.
+    :type quality_index_csv: File name or file-like object, required
+    :param quality_index_csv: CSV file with quality-index calculation inputs.
+    :type delim: str, optional
+    :param delim: CSV file delimiter. Default comma ';' delimeted.
+    :rtype: dict
+    :return: The input ``sera_site_dict`` after applying calculated values.
+    """
+    try:
+        df_quality_index = pd.read_csv(quality_index_csv, sep=delim)
+    except OSError as e:
+        raise SiteXMLIOError(
+            f"Could not access quality-index CSV metadata: "
+            f"{quality_index_csv}"
+        ) from e
+    except Exception as e:
+        raise SiteXMLImportError(
+            f"Could not read quality-index CSV metadata: {quality_index_csv}"
+        ) from e
+
+    _apply_quality_index_metadata(sera_site_dict, df_quality_index)
+    return sera_site_dict
+
+
+def apply_quality_index_excel(
+        sera_site_dict, path_or_file_object, sheet_name="qualityIndex"):
+    """
+    Apply Excel quality-index calculation inputs to existing SERASite objects.
+
+    The sidecar values are used immediately to calculate SiteXML quality
+    indexes and are not stored. The input dictionary is mutated in place and
+    returned for convenience.
+
+    :type sera_site_dict: dict of
+        :class:`~obspy.io.sitexml.core.SERASite`, required
+    :param sera_site_dict: Dictionary of SERASite objects keyed by site ID.
+    :type path_or_file_object: File name or file-like object, required
+    :param path_or_file_object: Excel file containing the quality-index sheet.
+    :type sheet_name: str, optional
+    :param sheet_name: Sheet containing quality-index calculation inputs.
+        Defaults to ``"qualityIndex"``.
+    :rtype: dict
+    :return: The input ``sera_site_dict`` after applying calculated values.
+    """
+    try:
+        df_quality_index = pd.read_excel(
+            path_or_file_object, sheet_name=sheet_name)
+    except OSError as e:
+        raise SiteXMLIOError(
+            f"Could not access quality-index Excel metadata: "
+            f"{path_or_file_object}"
+        ) from e
+    except ValueError as e:
+        raise SiteXMLImportError(
+            f"Could not find quality-index Excel sheet: {sheet_name}"
+        ) from e
+    except Exception as e:
+        raise SiteXMLImportError(
+            f"Could not read quality-index Excel metadata: "
+            f"{path_or_file_object}"
+        ) from e
+
+    _apply_quality_index_metadata(sera_site_dict, df_quality_index)
+    return sera_site_dict
+
+
 def csv_to_sera_site(site_owner_csv,
                      site_description_csv, 
                      analysis_csv=None, 
@@ -107,22 +183,6 @@ def csv_to_sera_site(site_owner_csv,
     #
     df_vp_dict = _csv_import_velocity_profiles(
         velocity_profiles_csv, delim=delim)
-
-    if quality_index_csv:
-        try:
-            df_quality_index = pd.read_csv(quality_index_csv, sep=delim)
-        except OSError as e:
-            raise SiteXMLIOError(
-                f"Could not access quality-index CSV metadata: "
-                f"{quality_index_csv}"
-            ) from e
-        except Exception as e:
-            raise SiteXMLImportError(
-                f"Could not read quality-index CSV metadata: "
-                f"{quality_index_csv}"
-            ) from e
-    else:
-        df_quality_index = None
     
     #site_owner_dict = _read_sheet(df_site_owner, SERASiteOwner)
     site_owner = _read_site_owner(df_site_owner)
@@ -149,8 +209,9 @@ def csv_to_sera_site(site_owner_csv,
         if exists_analysis and siteID in analysis_dict:
             sera_site_dict[siteID].analysis = analysis_dict[siteID]
 
-    if df_quality_index is not None:
-        _apply_quality_index_metadata(sera_site_dict, df_quality_index)
+    if quality_index_csv:
+        apply_quality_index_csv(
+            sera_site_dict, quality_index_csv, delim=delim)
 
     return sera_site_dict
 

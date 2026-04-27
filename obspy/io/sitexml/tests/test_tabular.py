@@ -10,8 +10,11 @@ import pandas as pd
 import pytest
 
 from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLImportError
-from obspy.io.sitexml.read_csv import (csv_to_sera_site, excel_to_sera_site,
+from obspy.io.sitexml.read_csv import (apply_quality_index_csv,
+                                       apply_quality_index_excel,
+                                       csv_to_sera_site, excel_to_sera_site,
                                        _read_year_cell)
+from obspy.io.sitexml.sitexml import sitexml_to_seradict
 
 
 class TestSiteXMLCSVImport():
@@ -154,6 +157,29 @@ class TestSiteXMLCSVImport():
         assert site_002.site_description.bedrock_depth.quality_index == 0.375
         assert site_002.site_description.overall_quality_index is not None
 
+    def test_apply_quality_index_csv_updates_existing_sitexml_dict(
+            self, datapath):
+        sera_site_dict = sitexml_to_seradict(datapath / "full_sitexml.xml")
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = apply_quality_index_csv(
+                sera_site_dict,
+                datapath / "quality_index.csv",
+                delim=";")
+
+        site = sera_site_dict["quakeml:domain.ab/site/001"]
+        q2 = site.calculate_quality_index2()
+        q3 = site.calculate_quality_index3(
+            f0_vs30=1, f0_bedrock_depth=0, vs30_geology=1)
+
+        assert result is sera_site_dict
+        assert site.site_description.ec8.quality_index == 0.875
+        assert site.site_description.overall_quality_index == pytest.approx(
+            (q2 + q3) / 2)
+        assert any("unknown siteID quakeml:domain.ab/site/002" in
+                   str(w.message) for w in caught)
+
     def test_csv_to_sera_site_rejects_invalid_q3_sidecar_value(
             self, datapath, tmp_path):
         quality_index_csv = tmp_path / "quality_index.csv"
@@ -280,6 +306,29 @@ class TestSiteXMLCSVImport():
         assert site_002.site_description.ec8.quality_index == 0.875
         assert site_002.site_description.bedrock_depth.quality_index == 0.375
         assert site_002.site_description.overall_quality_index is not None
+
+    def test_apply_quality_index_excel_updates_existing_sitexml_dict(
+            self, datapath):
+        pytest.importorskip("openpyxl")
+        sera_site_dict = sitexml_to_seradict(datapath / "full_sitexml.xml")
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = apply_quality_index_excel(
+                sera_site_dict,
+                datapath / "sera_site_all.xlsx")
+
+        site = sera_site_dict["quakeml:domain.ab/site/001"]
+        q2 = site.calculate_quality_index2()
+        q3 = site.calculate_quality_index3(
+            f0_vs30=1, f0_bedrock_depth=0, vs30_geology=1)
+
+        assert result is sera_site_dict
+        assert site.site_description.ec8.quality_index == 0.875
+        assert site.site_description.overall_quality_index == pytest.approx(
+            (q2 + q3) / 2)
+        assert any("unknown siteID quakeml:domain.ab/site/002" in
+                   str(w.message) for w in caught)
 
     def test_excel_to_sera_site_warns_when_analysis_sheet_is_missing(
             self, datapath):
