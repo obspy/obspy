@@ -248,7 +248,7 @@ class SiteIndicator(BaseNode):
 
     def calculate_quality_index1(
             self, method=None, evaluation=None, reliability=None,
-            completeness=None, assign=True):
+            report=None, assign=True):
         """
         Calculate Q_Index1 for this site indicator.
 
@@ -266,7 +266,7 @@ class SiteIndicator(BaseNode):
             method=method,
             evaluation=evaluation,
             reliability=reliability,
-            completeness=completeness)
+            report=report)
 
         if assign:
             self.quality_index = value

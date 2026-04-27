@@ -133,7 +133,7 @@ class TestSiteXML():
             method="documented",
             evaluation="direct",
             reliability="partial",
-            completeness="yes")
+            report="yes")
 
         assert value == 0.875
         assert ec8.quality_index == 0.875

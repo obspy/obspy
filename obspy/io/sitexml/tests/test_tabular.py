@@ -174,6 +174,48 @@ class TestSiteXMLCSVImport():
         assert analysis_001.velocity_s30.method_combined_qindex == "1.2"
         assert analysis_001.velocity_s30.manual_qindex == "1.0"
 
+    def test_csv_to_sera_site_applies_quality_index_sidecar(
+            self, datapath):
+        sera_site_dict = csv_to_sera_site(
+            site_owner_csv=datapath / "site_owner.csv",
+            site_description_csv=datapath / "site_description.csv",
+            analysis_csv=datapath / "site_analysis.csv",
+            velocity_profiles_csv=datapath / "velocity_profiles",
+            quality_index_csv=datapath / "quality_index.csv",
+            delim=";")
+
+        site = sera_site_dict["quakeml:domain.ab/site/001"]
+        q2 = site.calculate_quality_index2()
+        q3 = site.calculate_quality_index3(
+            f0_vs30=1, f0_bedrock_depth=0, vs30_geology=1)
+
+        assert site.site_description.ec8.quality_index == 0.875
+        assert q3 == pytest.approx(2 / 3)
+        assert site.site_description.overall_quality_index == pytest.approx(
+            (q2 + q3) / 2)
+
+        site_002 = sera_site_dict["quakeml:domain.ab/site/002"]
+        assert site_002.site_description.ec8.quality_index == 0.875
+        assert site_002.site_description.bedrock_depth.quality_index == 0.375
+        assert site_002.site_description.overall_quality_index is not None
+
+    def test_csv_to_sera_site_rejects_invalid_q3_sidecar_value(
+            self, datapath, tmp_path):
+        quality_index_csv = tmp_path / "quality_index.csv"
+        quality_index_csv.write_text(
+            "siteID;f0_vs30\n"
+            "quakeml:domain.ab/site/001;0.5\n",
+            encoding="utf-8")
+
+        with pytest.raises(SiteXMLImportError, match="must be 0 or 1"):
+            csv_to_sera_site(
+                site_owner_csv=datapath / "site_owner.csv",
+                site_description_csv=datapath / "site_description.csv",
+                analysis_csv=datapath / "site_analysis.csv",
+                velocity_profiles_csv=datapath / "velocity_profiles",
+                quality_index_csv=quality_index_csv,
+                delim=";")
+
     def test_csv_to_sera_site_imports_full_reference_metadata(self, datapath):
         sera_site_dict = csv_to_sera_site(
             site_owner_csv=datapath / "site_owner.csv",
@@ -262,6 +304,27 @@ class TestSiteXMLCSVImport():
         self._assert_full_reference_metadata(analysis_001.resonance_frequency)
         self._assert_full_reference_metadata(
             analysis_001.velocity_profile_survey)
+
+    def test_excel_to_sera_site_applies_quality_index_sheet(self, datapath):
+        pytest.importorskip("openpyxl")
+
+        sera_site_dict = excel_to_sera_site(
+            path_or_file_object=datapath / "sera_site_all.xlsx",
+            velocity_profiles=datapath / "velocity_profiles.xlsx")
+
+        site = sera_site_dict["quakeml:domain.ab/site/001"]
+        q2 = site.calculate_quality_index2()
+        q3 = site.calculate_quality_index3(
+            f0_vs30=1, f0_bedrock_depth=0, vs30_geology=1)
+        assert site.site_description.ec8.quality_index == 0.875
+        assert q3 == pytest.approx(2 / 3)
+        assert site.site_description.overall_quality_index == pytest.approx(
+            (q2 + q3) / 2)
+
+        site_002 = sera_site_dict["quakeml:domain.ab/site/002"]
+        assert site_002.site_description.ec8.quality_index == 0.875
+        assert site_002.site_description.bedrock_depth.quality_index == 0.375
+        assert site_002.site_description.overall_quality_index is not None
 
     def test_excel_to_sera_site_warns_when_analysis_sheet_is_missing(
             self, datapath):

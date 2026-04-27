@@ -62,6 +62,7 @@ def csv_to_sera_site(site_owner_csv,
                      site_description_csv, 
                      analysis_csv=None, 
                      velocity_profiles_csv=None, 
+                     quality_index_csv=None,
                      delim=';'):
     """
     Function to import SiteXML metadata from CSV files.
@@ -77,6 +78,10 @@ def csv_to_sera_site(site_owner_csv,
     :type velocity_profiles_csv: optional
     :param velocity_profiles_csv: CSV file or path to a folder with velocity
         profile metadata. The folder can contain any number of CSV files.
+    :type quality_index_csv: File name or file like object, optional
+    :param quality_index_csv: CSV file with extra quality-index calculation
+        inputs. Values are used immediately to calculate SiteXML quality
+        indexes and are not stored.
     :type delim: str, optional
     :param delim: CSV file delimiter. Default comma ';' delimeted.
     :rtype: dictionary of :class:`~obspy.io.sitexml.core.SERASite`
@@ -134,6 +139,22 @@ def csv_to_sera_site(site_owner_csv,
     #
     df_vp_dict = _csv_import_velocity_profiles(
         velocity_profiles_csv, delim=delim)
+
+    if quality_index_csv:
+        try:
+            df_quality_index = pd.read_csv(quality_index_csv, sep=delim)
+        except OSError as e:
+            raise SiteXMLIOError(
+                f"Could not access quality-index CSV metadata: "
+                f"{quality_index_csv}"
+            ) from e
+        except Exception as e:
+            raise SiteXMLImportError(
+                f"Could not read quality-index CSV metadata: "
+                f"{quality_index_csv}"
+            ) from e
+    else:
+        df_quality_index = None
     
     #site_owner_dict = _read_sheet(df_site_owner, SERASiteOwner)
     site_owner = _read_site_owner(df_site_owner)
@@ -160,6 +181,9 @@ def csv_to_sera_site(site_owner_csv,
         if exists_analysis and siteID in analysis_dict:
             sera_site_dict[siteID].analysis = analysis_dict[siteID]
 
+    if df_quality_index is not None:
+        _apply_quality_index_metadata(sera_site_dict, df_quality_index)
+
     return sera_site_dict
 
 def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
@@ -171,6 +195,7 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     * ``siteOwner``: site ownership metadata. Mandatory.
     * ``siteDescription``: site description metadata. Mandatory.
     * ``analysis``: analysis metadata. Optional.
+    * ``qualityIndex``: quality indexes calculation parameters. Optional
 
     :type path_or_file_object: File name or file like object, required
     :param path_or_file_object: Excel file with site metadata.
@@ -221,7 +246,6 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     df_vp_dict = _excel_import_velocity_profiles(velocity_profiles) \
         if velocity_profiles else None
     
-    #site_owner_dict = _read_sheet(df_dict['siteOwner'], SERASiteOwner)
     site_owner = _read_site_owner(df_dict['siteOwner'])
     site_description_dict = _read_site_description(df_dict['siteDescription'])
 
@@ -251,6 +275,9 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
             resource_id = siteID)
         if exists_analysis and siteID in analysis_dict:
             sera_site_dict[siteID].analysis = analysis_dict[siteID]
+
+    if "qualityIndex" in df_dict:
+        _apply_quality_index_metadata(sera_site_dict, df_dict["qualityIndex"])
 
     return sera_site_dict
 
@@ -388,6 +415,141 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
             )
     
     return analysis_dict
+
+
+_QUALITY_INDEX_INDICATORS = (
+    "siteClassEC8",
+    "bedrockDepth",
+    "h800",
+    "geologicalUnit",
+    "resonanceFrequency",
+    "velocityS30",
+    "velocityProfile",
+)
+
+_QUALITY_INDEX1_CRITERIA = (
+    "method",
+    "evaluation",
+    "reliability",
+    "report",
+)
+
+_QUALITY_INDEX3_COLUMNS = (
+    "f0_vs30",
+    "f0_bedrock_depth",
+    "f0_h800",
+    "vs30_h800",
+    "vs30_geology",
+)
+
+
+def _apply_quality_index_metadata(sera_site_dict, df_quality_index):
+    """
+    Apply tabular quality-index calculation inputs to imported sites.
+
+    Q_Index1 criteria and Q_Index3 consistency values are not stored. Only the
+    calculated indicator quality indexes and overall quality index are assigned
+    to the SiteXML object model.
+
+    :rtype: None
+    """
+    for _, row in df_quality_index.iterrows():
+        site_id = _read_cell(row, "siteID")
+        if site_id is None:
+            warnings.warn(
+                "Missing siteID value. Processing of quality-index row will "
+                "be skipped.",
+                UserWarning)
+            continue
+        if site_id not in sera_site_dict:
+            warnings.warn(
+                f"Quality-index metadata references unknown siteID {site_id}. "
+                "Processing of quality-index row will be skipped.",
+                UserWarning)
+            continue
+
+        sera_site = sera_site_dict[site_id]
+        has_quality_input = False
+
+        for indicator_name in _QUALITY_INDEX_INDICATORS:
+            # Get the proper indicator object from sera_site
+            indicator = _get_quality_index_indicator(
+                sera_site, indicator_name)
+            if indicator is None:
+                continue
+
+            criteria = {
+                criterion: _read_cell(row, f"{indicator_name}_{criterion}")
+                for criterion in _QUALITY_INDEX1_CRITERIA
+            }
+            if all(value is None for value in criteria.values()):
+                continue
+
+            indicator.calculate_quality_index1(**criteria)
+            has_quality_input = True
+
+        q3_values = {
+            name: _read_quality_index_consistency(row, name)
+            for name in _QUALITY_INDEX3_COLUMNS
+        }
+        if any(value is not None for value in q3_values.values()):
+            has_quality_input = True
+
+        if has_quality_input:
+            sera_site.calculate_overall_quality_index(**q3_values)
+
+
+def _get_quality_index_indicator(sera_site, indicator_name):
+    """
+    Return the SiteXML indicator object for quality-index calculations.
+
+    :rtype: :class:`~obspy.io.sitexml.core.SiteIndicator` or None
+    """
+    site_description = sera_site.site_description
+    site_description_indicators = {
+        "siteClassEC8": site_description.ec8,
+        "bedrockDepth": site_description.bedrock_depth,
+        "h800": site_description.h800,
+        "geologicalUnit": site_description.geological_unit,
+    }
+    if indicator_name in site_description_indicators:
+        return site_description_indicators[indicator_name]
+
+    analysis = sera_site.get_preferred_analysis()
+    if analysis is None:
+        return None
+
+    analysis_indicators = {
+        "resonanceFrequency": analysis.resonance_frequency,
+        "velocityS30": analysis.velocity_s30,
+        "velocityProfile": analysis.velocity_profile_survey,
+    }
+    return analysis_indicators[indicator_name]
+
+
+def _read_quality_index_consistency(row, name):
+    """
+    Return one Q_Index3 consistency value from a tabular quality-index row.
+
+    :rtype: int or None
+    """
+    value = _read_cell(row, name)
+    if value is None:
+        return None
+    if isinstance(value, str):
+        value = value.strip()
+    try:
+        value = float(value)
+    except (TypeError, ValueError) as e:
+        raise SiteXMLImportError(
+            f"Q_Index3 consistency value {name!r} must be 0 or 1."
+        ) from e
+    if value not in (0, 1):
+        raise SiteXMLImportError(
+            f"Q_Index3 consistency value {name!r} must be 0 or 1."
+        )
+    return int(value)
+
 
 def _read_velocity_profiles_for_analysis(df_vp, analysis_id):
     """

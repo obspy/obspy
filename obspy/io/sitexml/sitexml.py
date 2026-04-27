@@ -1116,7 +1116,7 @@ def _quality_index_or_zero(indicator):
     return indicator.quality_index
 
 def quality_index1(method=None, evaluation=None, reliability=None,
-                   completeness=None):
+                   report=None):
     """
     Standalone formula helper for Q_Index1.
 
@@ -1135,7 +1135,7 @@ def quality_index1(method=None, evaluation=None, reliability=None,
     - A: method of acquisition and analysis
     - B: estimation of indicator
     - C: reliability of the value
-    - D: completeness of the report
+    - D: report documenting the indicator value
 
     Accepted values are:
 
@@ -1146,9 +1146,9 @@ def quality_index1(method=None, evaluation=None, reliability=None,
     - ``reliability="yes"`` or ``reliability=1``: C = 1
     - ``reliability="partial"`` or ``reliability=0.5``: C = 0.5
     - any other ``reliability`` value, including ``None``: C = 0
-    - ``completeness="yes"`` or ``completeness=1``: D = 1
-    - ``completeness="partial"`` or ``completeness=0.5``: D = 0.5
-    - any other ``completeness`` value, including ``None``: D = 0
+    - ``report="yes"`` or ``report=1``: D = 1
+    - ``report="partial"`` or ``report=0.5``: D = 0.5
+    - any other ``report`` value, including ``None``: D = 0
     
     The Quality Index #1 is then calculated using the following formula
         Q_Index1 = [ (A + B + C) * D ] / (Amax + Bmax + Cmax)
@@ -1164,12 +1164,11 @@ def quality_index1(method=None, evaluation=None, reliability=None,
     :param reliability: Confidence in the indicator value. Accepted values are
         ``"yes"``/``1`` for reliable and ``"partial"``/``0.5`` for partial
         reliability.
-    :type completeness: str or float, optional
-    :param completeness: Completeness of the report documenting the field
-        survey and data processing. Accepted values are ``"yes"``/``1`` for a
-        complete report and ``"partial"``/``0.5`` for partial documentation.
-        Missing documentation gives a zero Q_Index1 contribution because
-        D = 0.
+    :type report: str or float, optional
+    :param report: Whether a report documents the field survey and data
+        processing. Accepted values are ``"yes"``/``1`` for a complete report
+        and ``"partial"``/``0.5`` for a partial report. Missing report
+        documentation gives a zero Q_Index1 contribution because D = 0.
     :rtype: float
     """
 
@@ -1212,9 +1211,9 @@ def quality_index1(method=None, evaluation=None, reliability=None,
     #               is partial and not very detailed
     #       0   - No: The value is provided without any documentation
     
-    if completeness == "yes" or completeness == 1:
+    if report == "yes" or report == 1:
         D = 1
-    elif completeness == "partial" or completeness == 0.5:
+    elif report == "partial" or report == 0.5:
         D = 0.5
     else:
         D = 0
