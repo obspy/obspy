@@ -145,6 +145,8 @@ class TestSiteXMLCSVImport():
         assert analysis_002.velocity_s30.methods == ["S-REFL"]
         assert analysis_002.velocity_profile_survey is not None
         assert len(analysis_002.velocity_profile_survey.velocity_profiles) == 3
+        assert site_002.site_description.h800.quality_index is None
+        assert site_002.site_description.geological_unit.quality_index is None
 
         site_003 = sera_site_dict["quakeml:domain.ab/site/003"]
         assert site_003.site_description.resource_id == (

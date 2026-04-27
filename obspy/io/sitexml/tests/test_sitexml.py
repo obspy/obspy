@@ -24,10 +24,12 @@ from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASite,
                                    SERASiteOwner, SiteDescription,
                                    ResonanceFrequency,
                                    ValueWithUncertainty, VelocityProfile,
-                                   VelocityProfileData)
+                                   VelocityProfileData,
+                                   VelocityProfileSurvey)
 from obspy.io.sitexml.util import SiteXMLValidationError
 from obspy.io.sitexml.sitexml import (_is_sitexml, _read_site_description,
-                                      _read_site_owner, read_sitexml)
+                                      _read_site_owner, overall_quality_index,
+                                      read_sitexml)
 from obspy.io.sitexml.sitexml import write_sitexml
 
 class TestSiteXML():
@@ -63,6 +65,152 @@ class TestSiteXML():
         non_station_site = self._minimal_sera_site(station_code=None)
         assert non_station_site.get_sitexml_filename() == (
             "quakeml_domain_ab_site_001.xml")
+
+    def test_get_preferred_analysis(self):
+        """
+        Preferred analysis lookup follows the SiteDescription reference.
+        """
+        sera_site = self._minimal_sera_site()
+        analysis_001 = Analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            site_descriptionID=sera_site.site_description.resource_id)
+        analysis_002 = Analysis(
+            resource_id="quakeml:domain.ab/analysis/002",
+            site_descriptionID=sera_site.site_description.resource_id)
+        sera_site.analysis = [analysis_001, analysis_002]
+
+        assert sera_site.get_preferred_analysis() is analysis_001
+
+        sera_site.site_description.preferred_site_analysisID = (
+            analysis_002.resource_id)
+        assert sera_site.get_preferred_analysis() is analysis_002
+
+        sera_site.site_description.preferred_site_analysisID = (
+            "quakeml:domain.ab/analysis/missing")
+        assert sera_site.get_preferred_analysis() is None
+
+    def test_validate_references_requires_preferred_velocity_profile_in_preferred_analysis(self):
+        """
+        Preferred velocity profile must belong to the preferred analysis.
+        """
+        sera_site = self._minimal_sera_site()
+        profile_data = [VelocityProfileData(top_depth=ValueWithUncertainty(0))]
+        profile_001 = VelocityProfile(
+            resource_id="quakeml:domain.ab/velocity_profile/001",
+            velocity_profile_data=profile_data)
+        profile_002 = VelocityProfile(
+            resource_id="quakeml:domain.ab/velocity_profile/002",
+            velocity_profile_data=profile_data)
+        analysis_001 = Analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            site_descriptionID=sera_site.site_description.resource_id,
+            velocity_profile_survey=VelocityProfileSurvey(
+                velocity_profiles=[profile_001]))
+        analysis_002 = Analysis(
+            resource_id="quakeml:domain.ab/analysis/002",
+            site_descriptionID=sera_site.site_description.resource_id,
+            velocity_profile_survey=VelocityProfileSurvey(
+                velocity_profiles=[profile_002]))
+        sera_site.analysis = [analysis_001, analysis_002]
+        sera_site.site_description.preferred_site_analysisID = (
+            analysis_001.resource_id)
+        sera_site.site_description.preferred_velocity_profileID = (
+            profile_002.resource_id)
+
+        with pytest.raises(
+                SiteXMLValidationError,
+                match="preferred_velocity_profileID does not belong"):
+            sera_site.validate_references()
+
+    def test_site_indicator_calculates_quality_index1(self, testdata):
+        """
+        Site indicators can calculate and store their Q_Index1 value.
+        """
+        sera_site = read_sitexml(testdata["full_sitedescription.xml"])
+        ec8 = sera_site.site_description.ec8
+
+        value = ec8.calculate_quality_index1(
+            method="documented",
+            evaluation="direct",
+            reliability="partial",
+            completeness="yes")
+
+        assert value == 0.875
+        assert ec8.quality_index == 0.875
+
+    def test_sera_site_calculates_quality_indexes(self, testdata):
+        """
+        SERASite exposes convenience methods for Q2, Q3, and overall QI.
+        """
+        sera_site = read_sitexml(testdata["full_sitexml.xml"])
+
+        q2 = sera_site.calculate_quality_index2()
+        q3 = sera_site.calculate_quality_index3(
+            f0_vs30=1,
+            f0_bedrock_depth=1,
+            f0_h800=1,
+            vs30_h800=1,
+            vs30_geology=1)
+        overall = sera_site.calculate_overall_quality_index(
+            f0_vs30=1,
+            f0_bedrock_depth=1,
+            f0_h800=1,
+            vs30_h800=1,
+            vs30_geology=1)
+
+        assert q2 == pytest.approx(3.04 / 4.25)
+        assert q3 == 1
+        assert overall == pytest.approx((q2 + q3) / 2)
+        assert sera_site.site_description.overall_quality_index == overall
+
+    def test_sera_site_quality_index3_uses_provided_consistency_pairs(
+            self, testdata):
+        """
+        Q_Index3 averages only consistency pairs that are provided.
+        """
+        sera_site = read_sitexml(testdata["full_sitexml.xml"])
+
+        q3 = sera_site.calculate_quality_index3(
+            f0_vs30=1,
+            f0_bedrock_depth=0)
+
+        assert q3 == 0.5
+
+    def test_sera_site_overall_quality_index_treats_missing_q3_as_zero(
+            self, testdata):
+        """
+        Missing Q_Index3 is zero for the overall quality-index formula.
+        """
+        sera_site = read_sitexml(testdata["full_sitexml.xml"])
+
+        q2 = sera_site.calculate_quality_index2()
+        overall = sera_site.calculate_overall_quality_index()
+
+        assert sera_site.calculate_quality_index3() is None
+        assert overall == pytest.approx(q2 / 2)
+        assert sera_site.site_description.overall_quality_index == overall
+
+    def test_sera_site_overall_quality_index_is_zero_when_q2_is_zero(self):
+        """
+        Overall quality index is zero when Q_Index2 is zero.
+        """
+        sera_site = self._minimal_sera_site()
+
+        value = sera_site.calculate_overall_quality_index(
+            f0_vs30=1,
+            f0_bedrock_depth=1,
+            f0_h800=1,
+            vs30_h800=1,
+            vs30_geology=1)
+
+        assert value == 0
+        assert sera_site.site_description.overall_quality_index == 0
+
+    def test_overall_quality_index_is_zero_when_q2_is_zero(self):
+        """
+        Formula helper returns zero when Q_Index2 is zero.
+        """
+        assert overall_quality_index(0, 1) == 0
 
     def test_write_stationxml_reference(self, tmp_path):
         """
@@ -824,6 +972,36 @@ class TestSiteXML():
         
         # Write it again and compare to the original file.
         self._write_and_compare(filename, sera_site)
+
+    def test_reading_missing_site_indicator_quality_index_preserves_none(
+            self, testdata):
+        """
+        Missing optional qualityIndex stays None in the object model.
+        """
+        filename = testdata["full_sitedescription.xml"]
+        xml = filename.read_bytes().replace(
+            b"                <qualityIndex>1.0</qualityIndex>\n",
+            b"",
+            1)
+
+        sera_site = read_sitexml(io.BytesIO(xml))
+
+        assert sera_site.site_description.ec8.quality_index is None
+
+    def test_reading_missing_velocity_profile_quality_index_preserves_none(
+            self, testdata):
+        """
+        Missing optional velocityProfile qualityIndex stays None.
+        """
+        filename = testdata["full_analysis.xml"]
+        xml = filename.read_bytes().replace(
+            b"            <qualityIndex>1.0</qualityIndex>\n",
+            b"",
+            1)
+
+        sera_site = read_sitexml(io.BytesIO(xml))
+
+        assert sera_site.analysis[0].velocity_profile_survey.quality_index is None
 
     def test_reading_and_writing_full_sitedescription_without_station_tag(
             self, testdata):

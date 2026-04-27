@@ -42,9 +42,9 @@ class ValueWithUncertainty(BaseNode):
         :param uncertainty: int, float, or None, representing uncertainty.
         :param valid_type: type, expected numeric type (e.g., float, int).
         """
+        self.valid_type = valid_type
         self.value = value
         self.uncertainty = uncertainty
-        self.valid_type = valid_type
 
     @classmethod
     def from_float_with_uncertainties(cls, value, valid_type=float):
@@ -245,6 +245,33 @@ class SiteIndicator(BaseNode):
         self.quality_index = quality_index 
         self.literature_source = literature_source
         self.external_references = external_references
+
+    def calculate_quality_index1(
+            self, method=None, evaluation=None, reliability=None,
+            completeness=None, assign=True):
+        """
+        Calculate Q_Index1 for this site indicator.
+
+        The input criteria are not stored in SiteXML. If ``assign`` is true,
+        store the calculated value in ``self.quality_index``.
+
+        See :func:`obspy.io.sitexml.sitexml.quality_index1` for the formula
+        and accepted criterion values.
+
+        :rtype: float
+        """
+        from .sitexml import quality_index1
+
+        value = quality_index1(
+            method=method,
+            evaluation=evaluation,
+            reliability=reliability,
+            completeness=completeness)
+
+        if assign:
+            self.quality_index = value
+
+        return value
 
     def __str__(self):
         ret = ("{name} parameters:\n"
@@ -1157,7 +1184,11 @@ class SiteDescription(BaseNode):
             :class:`~obspy.core.event.resourceid.ResourceIdentifier`, optional
         :param preferred_velocity_profileID: Preferred Velocity Profile ID. 
                 If you provide one or more velocity profiles for this site 
-                you should use this field to designate the prefered VP.
+                you should use this field to designate the prefered VP. If
+                ``preferred_site_analysisID`` is also provided, the preferred
+                VP must belong to the preferred analysis. The overall quality
+                index calculation uses the Velocity Profile Survey quality
+                index associated with the preferred analysis.
         :type overall_quality_index: float, optional
         :param overall_quality_index: The overall quality index of the site 
                 characterization parameters.
@@ -1439,6 +1470,130 @@ class SERASite(BaseNode):
                 return analysis
         return None
 
+    def get_preferred_analysis(self):
+        """
+        Return the preferred analysis, falling back to the first analysis.
+
+        If ``site_description.preferred_site_analysisID`` is set, the matching
+        attached analysis is returned. If no preferred analysis is declared,
+        the first attached analysis is returned. If there are no analyses, or
+        the preferred ID cannot be found, ``None`` is returned.
+
+        :rtype: :class:`~obspy.io.sitexml.core.Analysis` or None
+        """
+        if not self.analysis:
+            return None
+
+        preferred_id = self.site_description.preferred_site_analysisID
+        if preferred_id is not None:
+            return self.get_analysis(preferred_id)
+
+        return self.analysis[0]
+
+    def get_velocity_profile(self, resource_id, analysis=None):
+        """
+        Return the attached velocity profile with matching resource ID.
+
+        If ``analysis`` is provided, only that analysis is searched.
+        Otherwise all attached analyses are searched.
+
+        :type resource_id: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
+        :param resource_id: Velocity profile resource ID to look up.
+        :type analysis: :class:`~obspy.io.sitexml.core.Analysis`, optional
+        :param analysis: Analysis whose velocity-profile survey should be
+            searched.
+        :rtype: :class:`~obspy.io.sitexml.core.VelocityProfile` or None
+        """
+        if isinstance(resource_id, ResourceIdentifier):
+            resource_id = resource_id.id
+
+        analyses = [analysis] if analysis is not None else self.analysis or []
+        for item in analyses:
+            survey = item.velocity_profile_survey
+            if survey is None or not survey.velocity_profiles:
+                continue
+            for velocity_profile in survey.velocity_profiles:
+                if velocity_profile.resource_id == resource_id:
+                    return velocity_profile
+        return None
+
+    def calculate_quality_index2(self):
+        """
+        Calculate Q_Index2 for this site.
+
+        The calculation uses Q_Index1 values already stored on this site's
+        indicators. Missing indicator quality indexes contribute zero.
+
+        See :func:`obspy.io.sitexml.sitexml.quality_index2` for the formula
+        and indicator weights.
+
+        :rtype: float
+        """
+        from .sitexml import quality_index2
+
+        return quality_index2(self)
+
+    def calculate_quality_index3(
+            self, f0_vs30=None, f0_bedrock_depth=None, f0_h800=None,
+            vs30_h800=None, vs30_geology=None):
+        """
+        Calculate Q_Index3 from externally assessed consistency values.
+
+        These consistency inputs are not stored in SiteXML. The denominator is
+        the number of provided consistency pairs. Each consistency value is
+        binary: ``0`` for no consistency and ``1`` for consistency. ``None``
+        means unavailable or not evaluated.
+
+        See :func:`obspy.io.sitexml.sitexml.quality_index3` for the formula
+        and consistency-pair definitions.
+
+        :rtype: float or None
+        """
+        from .sitexml import quality_index3
+
+        return quality_index3(
+            f0_vs30=f0_vs30,
+            f0_bedrock_depth=f0_bedrock_depth,
+            f0_h800=f0_h800,
+            vs30_h800=vs30_h800,
+            vs30_geology=vs30_geology)
+
+    def calculate_overall_quality_index(
+            self, f0_vs30=None, f0_bedrock_depth=None, f0_h800=None,
+            vs30_h800=None, vs30_geology=None, assign=True):
+        """
+        Calculate the overall quality index for this site.
+
+        Q_Index2 is calculated from the site's stored indicator quality
+        indexes. Q_Index3 is calculated from the provided consistency values.
+        If no Q_Index3 consistency values are provided, Q_Index3 is treated as
+        zero for the overall quality-index formula.
+
+        If ``assign`` is true, store the final value in
+        ``self.site_description.overall_quality_index``.
+
+        See :func:`obspy.io.sitexml.sitexml.overall_quality_index` for the
+        standalone formula helper.
+
+        :rtype: float
+        """
+        from .sitexml import overall_quality_index
+
+        q2 = self.calculate_quality_index2()
+        q3 = self.calculate_quality_index3(
+            f0_vs30=f0_vs30,
+            f0_bedrock_depth=f0_bedrock_depth,
+            f0_h800=f0_h800,
+            vs30_h800=vs30_h800,
+            vs30_geology=vs30_geology)
+        value = overall_quality_index(q2, q3)
+
+        if assign:
+            self.site_description.overall_quality_index = value
+
+        return value
+
     def get_sitexml_filename(self):
         """
         Return the default SiteXML filename for this site.
@@ -1595,6 +1750,17 @@ class SERASite(BaseNode):
                 "preferred_velocity_profileID does not match any attached "
                 "velocity profile resource_id."
             )
+
+        if preferred_analysis_id is not None and \
+                preferred_velocity_profile_id is not None:
+            preferred_analysis = self.get_preferred_analysis()
+            if self.get_velocity_profile(
+                    preferred_velocity_profile_id,
+                    analysis=preferred_analysis) is None:
+                raise SiteXMLValidationError(
+                    "preferred_velocity_profileID does not belong to the "
+                    "preferred_site_analysisID."
+                )
 
     def __str__(self):
         output=["\n#################\n"]

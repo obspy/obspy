@@ -406,8 +406,10 @@
 				<xs:annotation>
 					<xs:documentation>If you provide one or more velocity profiles for this site 
 						you should use this field to designate the prefered Velocity Profile.<br/>
+						If preferredSiteAnalysisID is also provided, the preferred Velocity Profile must belong to the
+						preferred analysis.<br/>
 						<strong>Note: </strong>The Overall Quality index of the Site Characterization will be calculated 
-						using the preferred velocity profile.<br/>
+						using the Velocity Profile Survey quality index associated with the preferred analysis.<br/>
 						<strong>Example: </strong>quakeml:domain.ab/velocity_profile/001
 					</xs:documentation>
 				</xs:annotation>
