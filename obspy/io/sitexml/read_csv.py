@@ -23,39 +23,7 @@ from .core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
                    ResonanceFrequency, VelocityS30, 
                    VelocityProfile, VelocityProfileData, VelocityProfileSurvey, 
                    LiteratureSource, ValueWithUncertainty)
-from .sitexml import write_sitexml
 from .util import SiteXMLIOError, SiteXMLImportError
-
-
-def sitedict_to_sitexml(sera_site_dict, output_folder="."):
-    """
-    Exports a dictionary of SERAsite objects to the respective SiteXML files.
-
-    The files are written to a folder given with argument "output_folder".
-    The name of the SiteXML file is either:
-    
-    * The station code in ``network.station`` notation if the metadata belong
-      to a station site
-    * The siteID otherwise
-
-    :type sera_site_dict: dict of
-        :class:`~obspy.io.sitexml.core.SERASite`, required
-    :param sera_site_dict: Dictionary of SERAsite objects
-    :type output_folder: str, optional
-    :param output_folder: Output folder to write the SiteXMl files. 
-                        If not provided writes to the current folder.
-    :rtype: None
-
-    Example
-
-    >>> from obspy.io.sitexml.read_csv import sitedict_to_sitexml
-    >>> sitedict_to_sitexml(sera_site_dict, "./output")
-
-    """
-    output_folder = Path(output_folder)
-    for sera_site in sera_site_dict.values():
-        output_file = output_folder / sera_site.get_sitexml_filename()
-        write_sitexml(sera_site, str(output_file), validate=True)
 
 
 def csv_to_sera_site(site_owner_csv,

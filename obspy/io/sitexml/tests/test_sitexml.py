@@ -10,6 +10,7 @@ Test suite for the SiteXML reader and writer.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import io
+from pathlib import Path
 import re
 import warnings
 
@@ -26,16 +27,19 @@ from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASite,
                                    ValueWithUncertainty, VelocityProfile,
                                    VelocityProfileData,
                                    VelocityProfileSurvey)
-from obspy.io.sitexml.util import SiteXMLValidationError
+from obspy.io.sitexml import sitexml as sitexml_module
+from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLValidationError
 from obspy.io.sitexml.sitexml import (_is_sitexml, _read_site_description,
                                       _read_site_owner, overall_quality_index,
-                                      read_sitexml)
+                                      read_sitexml, sitedict_to_sitexml,
+                                      sitexml_to_seradict)
 from obspy.io.sitexml.sitexml import write_sitexml
 
 class TestSiteXML():
     """
     """
-    def _minimal_sera_site(self, station_code="XX.ABCD"):
+    def _minimal_sera_site(self, station_code="XX.ABCD",
+                           resource_id="quakeml:domain.ab/site/001"):
         """
         Build a minimal SERASite used by conversion/helper tests.
         """
@@ -51,7 +55,7 @@ class TestSiteXML():
             latitude=1.0,
             longitude=2.0)
         return SERASite(
-            resource_id="quakeml:domain.ab/site/001",
+            resource_id=resource_id,
             site_owner=site_owner,
             site_description=site_description)
 
@@ -65,6 +69,73 @@ class TestSiteXML():
         non_station_site = self._minimal_sera_site(station_code=None)
         assert non_station_site.get_sitexml_filename() == (
             "quakeml_domain_ab_site_001.xml")
+
+    def test_sitedict_to_sitexml_uses_network_station_filename(
+            self, tmp_path, monkeypatch):
+        output_calls = []
+
+        def fake_write_sitexml(sera_site, filename, validate):
+            output_calls.append((sera_site, filename, validate))
+
+        monkeypatch.setattr(
+            sitexml_module, "write_sitexml", fake_write_sitexml)
+
+        station_site = self._minimal_sera_site(
+            "XX.ABCD", resource_id="quakeml:domain.ab/site/001")
+        non_station_site = self._minimal_sera_site(
+            None, resource_id="quakeml:domain.ab/site/without_station")
+
+        sitedict_to_sitexml({
+            "quakeml:domain.ab/site/001": station_site,
+            "quakeml:domain.ab/site/without_station": non_station_site,
+        }, output_folder=tmp_path)
+
+        assert [tmp_path / "XX.ABCD.xml",
+                tmp_path / "quakeml_domain_ab_site_without_station.xml"] == [
+                    Path(filename) for _, filename, _ in output_calls]
+        assert [validate for _, _, validate in output_calls] == [True, True]
+
+    def test_sitexml_to_seradict_reads_single_file(self, tmp_path):
+        sera_site = self._minimal_sera_site()
+        filename = tmp_path / "site.xml"
+        write_sitexml(sera_site, filename)
+
+        sera_site_dict = sitexml_to_seradict(filename)
+
+        assert list(sera_site_dict) == ["quakeml:domain.ab/site/001"]
+        assert sera_site_dict["quakeml:domain.ab/site/001"].resource_id == (
+            "quakeml:domain.ab/site/001")
+
+    def test_sitexml_to_seradict_reads_directory(self, tmp_path):
+        site_001 = self._minimal_sera_site(
+            "XX.ABCD", resource_id="quakeml:domain.ab/site/001")
+        site_002 = self._minimal_sera_site(
+            "YY.EFGH", resource_id="quakeml:domain.ab/site/002")
+        write_sitexml(site_002, tmp_path / "b.xml")
+        write_sitexml(site_001, tmp_path / "a.xml")
+
+        sera_site_dict = sitexml_to_seradict(tmp_path)
+
+        assert list(sera_site_dict) == [
+            "quakeml:domain.ab/site/001",
+            "quakeml:domain.ab/site/002",
+        ]
+
+    def test_sitexml_to_seradict_rejects_duplicate_site_ids(self, tmp_path):
+        site_001 = self._minimal_sera_site(
+            "XX.ABCD", resource_id="quakeml:domain.ab/site/001")
+        site_002 = self._minimal_sera_site(
+            "YY.EFGH", resource_id="quakeml:domain.ab/site/001")
+        write_sitexml(site_001, tmp_path / "a.xml")
+        write_sitexml(site_002, tmp_path / "b.xml")
+
+        with pytest.raises(
+                SiteXMLValidationError, match="Duplicate SiteXML site"):
+            sitexml_to_seradict(tmp_path)
+
+    def test_sitexml_to_seradict_rejects_missing_path(self, tmp_path):
+        with pytest.raises(SiteXMLIOError):
+            sitexml_to_seradict(tmp_path / "missing.xml")
 
     def test_get_preferred_analysis(self):
         """

@@ -25,7 +25,7 @@ from .core import (SERASite, SERASiteOwner, SiteDescription, Analysis,
                    EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency,
                    VelocityProfileSurvey, VelocityProfile, VelocityProfileData,
                    VelocityS30, ValueWithUncertainty, LiteratureSource)
-from .util import SiteXMLValidationError
+from .util import SiteXMLIOError, SiteXMLValidationError
 
 # Define some constants for writing SiteXML files.
 SCHEMA_VERSION = "1.3"
@@ -163,6 +163,49 @@ def validate_sitexml(path_or_object):
 
 ###### READ SiteXML functionality
 #
+def sitexml_to_seradict(path_or_file_object, pattern="*.xml"):
+    """
+    Read one SiteXML file or all matching files in a directory.
+
+    The returned dictionary is keyed by each site's resource ID.
+
+    :type path_or_file_object: str, pathlib.Path, or file-like object
+    :param path_or_file_object: SiteXML file, file-like object, or directory
+        containing SiteXML files.
+    :type pattern: str, optional
+    :param pattern: Glob pattern used when ``path_or_file_object`` is a
+        directory. Defaults to ``"*.xml"``.
+    :rtype: dict
+    :return: Dictionary of :class:`~obspy.io.sitexml.core.SERASite` objects.
+    """
+    def _add_site(sera_site_dict, sera_site):
+        if sera_site.resource_id in sera_site_dict:
+            raise SiteXMLValidationError(
+                f"Duplicate SiteXML site resource_id: {sera_site.resource_id}"
+            )
+        sera_site_dict[sera_site.resource_id] = sera_site
+
+    sera_site_dict = {}
+
+    if hasattr(path_or_file_object, "read"):
+        _add_site(sera_site_dict, read_sitexml(path_or_file_object))
+        return sera_site_dict
+
+    path = Path(path_or_file_object)
+    if path.is_file():
+        _add_site(sera_site_dict, read_sitexml(path))
+        return sera_site_dict
+
+    if path.is_dir():
+        for filename in sorted(path.glob(pattern)):
+            if filename.is_file():
+                _add_site(sera_site_dict, read_sitexml(filename))
+        return sera_site_dict
+
+    raise SiteXMLIOError(
+        f"Could not access SiteXML file or directory: {path_or_file_object}"
+    )
+
 def read_sitexml(path_or_file_object):
     """
     Function reading a SiteXML file.
@@ -752,6 +795,30 @@ def _read_external_reference(ref_element):
 
 ###### WRITE SiteXML functionality
 #
+def sitedict_to_sitexml(sera_site_dict, output_folder="."):
+    """
+    Exports a dictionary of SERASite objects to SiteXML files.
+
+    The files are written to a folder given with argument ``output_folder``.
+    The name of each SiteXML file is either:
+
+    * The station code in ``network.station`` notation if the metadata belong
+      to a station site
+    * The siteID otherwise
+
+    :type sera_site_dict: dict of
+        :class:`~obspy.io.sitexml.core.SERASite`, required
+    :param sera_site_dict: Dictionary of SERASite objects.
+    :type output_folder: str or pathlib.Path, optional
+    :param output_folder: Output folder to write the SiteXML files. If not
+        provided writes to the current folder.
+    :rtype: None
+    """
+    output_folder = Path(output_folder)
+    for sera_site in sera_site_dict.values():
+        output_file = output_folder / sera_site.get_sitexml_filename()
+        write_sitexml(sera_site, output_file, validate=True)
+
 def write_sitexml(sera_site, file_or_file_object, validate=True):
     """
     Writes a sera_site object to a buffer.
