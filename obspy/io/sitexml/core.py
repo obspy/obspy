@@ -255,12 +255,12 @@ class SiteIndicator(BaseNode):
         The input criteria are not stored in SiteXML. If ``assign`` is true,
         store the calculated value in ``self.quality_index``.
 
-        See :func:`obspy.io.sitexml.sitexml.quality_index1` for the formula
+        See :func:`obspy.io.sitexml.quality_index.quality_index1` for the formula
         and accepted criterion values.
 
         :rtype: float
         """
-        from .sitexml import quality_index1
+        from .quality_index import quality_index1
 
         value = quality_index1(
             method=method,
@@ -1518,6 +1518,45 @@ class SERASite(BaseNode):
                     return velocity_profile
         return None
 
+    def get_indicator_object(self, name):
+        """
+        Return a site indicator object by SiteXML indicator name.
+
+        Site-description indicators are read from ``site_description``.
+        Analysis indicators are read from the preferred analysis, falling back
+        to the first attached analysis when no preferred analysis is declared.
+
+        Supported names are ``siteClassEC8``, ``bedrockDepth``, ``h800``,
+        ``geologicalUnit``, ``resonanceFrequency``, ``velocityS30``, and
+        ``velocityProfile``.
+
+        :type name: str
+        :param name: SiteXML indicator name.
+        :rtype: :class:`~obspy.io.sitexml.core.SiteIndicator` or None
+        """
+        site_description_indicators = {
+            "siteClassEC8": self.site_description.ec8,
+            "bedrockDepth": self.site_description.bedrock_depth,
+            "h800": self.site_description.h800,
+            "geologicalUnit": self.site_description.geological_unit,
+        }
+        if name in site_description_indicators:
+            return site_description_indicators[name]
+
+        analysis = self.get_preferred_analysis()
+        if analysis is None:
+            return None
+
+        analysis_indicators = {
+            "resonanceFrequency": analysis.resonance_frequency,
+            "velocityS30": analysis.velocity_s30,
+            "velocityProfile": analysis.velocity_profile_survey,
+        }
+        if name in analysis_indicators:
+            return analysis_indicators[name]
+
+        raise SiteXMLValidationError(f"Unknown site indicator name: {name}")
+
     def calculate_quality_index2(self):
         """
         Calculate Q_Index2 for this site.
@@ -1525,12 +1564,12 @@ class SERASite(BaseNode):
         The calculation uses Q_Index1 values already stored on this site's
         indicators. Missing indicator quality indexes contribute zero.
 
-        See :func:`obspy.io.sitexml.sitexml.quality_index2` for the formula
+        See :func:`obspy.io.sitexml.quality_index.quality_index2` for the formula
         and indicator weights.
 
         :rtype: float
         """
-        from .sitexml import quality_index2
+        from .quality_index import quality_index2
 
         return quality_index2(self)
 
@@ -1545,12 +1584,12 @@ class SERASite(BaseNode):
         binary: ``0`` for no consistency and ``1`` for consistency. ``None``
         means unavailable or not evaluated.
 
-        See :func:`obspy.io.sitexml.sitexml.quality_index3` for the formula
+        See :func:`obspy.io.sitexml.quality_index.quality_index3` for the formula
         and consistency-pair definitions.
 
         :rtype: float or None
         """
-        from .sitexml import quality_index3
+        from .quality_index import quality_index3
 
         return quality_index3(
             f0_vs30=f0_vs30,
@@ -1573,12 +1612,12 @@ class SERASite(BaseNode):
         If ``assign`` is true, store the final value in
         ``self.site_description.overall_quality_index``.
 
-        See :func:`obspy.io.sitexml.sitexml.overall_quality_index` for the
+        See :func:`obspy.io.sitexml.quality_index.overall_quality_index` for the
         standalone formula helper.
 
         :rtype: float
         """
-        from .sitexml import overall_quality_index
+        from .quality_index import overall_quality_index
 
         q2 = self.calculate_quality_index2()
         q3 = self.calculate_quality_index3(

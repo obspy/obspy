@@ -10,11 +10,11 @@ import pandas as pd
 import pytest
 
 from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLImportError
-from obspy.io.sitexml.read_csv import (apply_quality_index_csv,
-                                       apply_quality_index_excel,
-                                       csv_to_sera_site, excel_to_sera_site,
+from obspy.io.sitexml.quality_index import (apply_quality_index_csv,
+                                            apply_quality_index_excel)
+from obspy.io.sitexml.read_csv import (csv_to_sera_site, excel_to_sera_site,
                                        _read_year_cell)
-from obspy.io.sitexml.sitexml import sitexml_to_seradict
+from obspy.io.sitexml.sitexml import sitexml_to_sitedict
 
 
 class TestSiteXMLCSVImport():
@@ -159,7 +159,7 @@ class TestSiteXMLCSVImport():
 
     def test_apply_quality_index_csv_updates_existing_sitexml_dict(
             self, datapath):
-        sera_site_dict = sitexml_to_seradict(datapath / "full_sitexml.xml")
+        sera_site_dict = sitexml_to_sitedict(datapath / "full_sitexml.xml")
 
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
@@ -310,7 +310,7 @@ class TestSiteXMLCSVImport():
     def test_apply_quality_index_excel_updates_existing_sitexml_dict(
             self, datapath):
         pytest.importorskip("openpyxl")
-        sera_site_dict = sitexml_to_seradict(datapath / "full_sitexml.xml")
+        sera_site_dict = sitexml_to_sitedict(datapath / "full_sitexml.xml")
 
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")

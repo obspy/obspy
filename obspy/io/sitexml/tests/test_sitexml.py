@@ -29,10 +29,11 @@ from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASite,
                                    VelocityProfileSurvey)
 from obspy.io.sitexml import sitexml as sitexml_module
 from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLValidationError
+from obspy.io.sitexml.quality_index import overall_quality_index
 from obspy.io.sitexml.sitexml import (_is_sitexml, _read_site_description,
-                                      _read_site_owner, overall_quality_index,
-                                      read_sitexml, sitedict_to_sitexml,
-                                      sitexml_to_seradict)
+                                      _read_site_owner, read_sitexml,
+                                      sitedict_to_sitexml,
+                                      sitexml_to_sitedict)
 from obspy.io.sitexml.sitexml import write_sitexml
 
 class TestSiteXML():
@@ -95,18 +96,18 @@ class TestSiteXML():
                     Path(filename) for _, filename, _ in output_calls]
         assert [validate for _, _, validate in output_calls] == [True, True]
 
-    def test_sitexml_to_seradict_reads_single_file(self, tmp_path):
+    def test_sitexml_to_sitedict_reads_single_file(self, tmp_path):
         sera_site = self._minimal_sera_site()
         filename = tmp_path / "site.xml"
         write_sitexml(sera_site, filename)
 
-        sera_site_dict = sitexml_to_seradict(filename)
+        sera_site_dict = sitexml_to_sitedict(filename)
 
         assert list(sera_site_dict) == ["quakeml:domain.ab/site/001"]
         assert sera_site_dict["quakeml:domain.ab/site/001"].resource_id == (
             "quakeml:domain.ab/site/001")
 
-    def test_sitexml_to_seradict_reads_directory(self, tmp_path):
+    def test_sitexml_to_sitedict_reads_directory(self, tmp_path):
         site_001 = self._minimal_sera_site(
             "XX.ABCD", resource_id="quakeml:domain.ab/site/001")
         site_002 = self._minimal_sera_site(
@@ -114,14 +115,14 @@ class TestSiteXML():
         write_sitexml(site_002, tmp_path / "b.xml")
         write_sitexml(site_001, tmp_path / "a.xml")
 
-        sera_site_dict = sitexml_to_seradict(tmp_path)
+        sera_site_dict = sitexml_to_sitedict(tmp_path)
 
         assert list(sera_site_dict) == [
             "quakeml:domain.ab/site/001",
             "quakeml:domain.ab/site/002",
         ]
 
-    def test_sitexml_to_seradict_rejects_duplicate_site_ids(self, tmp_path):
+    def test_sitexml_to_sitedict_rejects_duplicate_site_ids(self, tmp_path):
         site_001 = self._minimal_sera_site(
             "XX.ABCD", resource_id="quakeml:domain.ab/site/001")
         site_002 = self._minimal_sera_site(
@@ -131,11 +132,11 @@ class TestSiteXML():
 
         with pytest.raises(
                 SiteXMLValidationError, match="Duplicate SiteXML site"):
-            sitexml_to_seradict(tmp_path)
+            sitexml_to_sitedict(tmp_path)
 
-    def test_sitexml_to_seradict_rejects_missing_path(self, tmp_path):
+    def test_sitexml_to_sitedict_rejects_missing_path(self, tmp_path):
         with pytest.raises(SiteXMLIOError):
-            sitexml_to_seradict(tmp_path / "missing.xml")
+            sitexml_to_sitedict(tmp_path / "missing.xml")
 
     def test_get_preferred_analysis(self):
         """
@@ -159,6 +160,24 @@ class TestSiteXML():
         sera_site.site_description.preferred_site_analysisID = (
             "quakeml:domain.ab/analysis/missing")
         assert sera_site.get_preferred_analysis() is None
+
+    def test_get_indicator_object(self, testdata):
+        """
+        Indicator lookup uses site description and preferred analysis context.
+        """
+        sera_site = read_sitexml(testdata["full_sitexml.xml"])
+
+        assert sera_site.get_indicator_object("siteClassEC8") is (
+            sera_site.site_description.ec8)
+        assert sera_site.get_indicator_object("velocityS30") is (
+            sera_site.get_preferred_analysis().velocity_s30)
+        assert sera_site.get_indicator_object("velocityProfile") is (
+            sera_site.get_preferred_analysis().velocity_profile_survey)
+
+        with pytest.raises(
+                SiteXMLValidationError,
+                match="Unknown site indicator name"):
+            sera_site.get_indicator_object("unknownIndicator")
 
     def test_validate_references_requires_preferred_velocity_profile_in_preferred_analysis(self):
         """
