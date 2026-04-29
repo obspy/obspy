@@ -294,7 +294,7 @@ def _pretty_str(obj):
         if value is not None
     )
 
-def enum_property(attr_name, enum_type):
+def _enum_property(attr_name, enum_type):
     """
     Method to produce getter/setter functions 
     and validate enum type values.
@@ -317,7 +317,7 @@ def enum_property(attr_name, enum_type):
             )
     return property(getter, setter)
 
-def enum_list_property(attr_name, enum_type, allow_none=True):
+def _enum_list_property(attr_name, enum_type, allow_none=True):
     """
     Validates an iterable of enum entries and stores canonical strings.
 
@@ -381,7 +381,7 @@ def enum_list_property(attr_name, enum_type, allow_none=True):
 
     return property(getter, setter)
 
-def scalar_property(attr_name, value_type=None, allow_none=True,
+def _scalar_property(attr_name, value_type=None, allow_none=True,
                     allow_empty=True):
     """
     Creates a property for scalar values with optional requiredness checks.
@@ -420,7 +420,7 @@ def scalar_property(attr_name, value_type=None, allow_none=True,
 
     return property(getter, setter)
 
-def resource_id_property(attr_name, allow_none=True, allow_empty=True):
+def _resource_id_property(attr_name, allow_none=True, allow_empty=True):
     """
     Creates a property for SiteXML resource identifier fields.
 
@@ -457,7 +457,7 @@ def resource_id_property(attr_name, allow_none=True, allow_empty=True):
 
     return property(getter, setter)
 
-def wrapped_property(attr_name, wrapper_type, allow_none=True):
+def _wrapped_property(attr_name, wrapper_type, allow_none=True):
     """
     Method to produce getter/setter functions 
     and wrap argument values into the appropriate type.
@@ -491,7 +491,7 @@ def wrapped_property(attr_name, wrapper_type, allow_none=True):
 
     return property(getter, setter)
 
-def wrapped_list_property(attr_name, wrapper_type, allow_none=True):
+def _wrapped_list_property(attr_name, wrapper_type, allow_none=True):
     """
     Creates a property that wraps iterable elements into wrapper_type.
 

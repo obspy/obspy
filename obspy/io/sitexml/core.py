@@ -20,9 +20,9 @@ from .util import (BaseNode, SiteXMLValidationError,
                     TopographySchemaA, TopographySchemaB, EC8Class, 
                     ResonanceFrequencyMethod, VelocityS30Method,
                     Vs30MethodCombined, Vs30ManualIndex,
-                    _pretty_str, scalar_property, resource_id_property,
-                    wrapped_property, enum_property, wrapped_list_property,
-                    enum_list_property)
+                    _pretty_str, _scalar_property, _resource_id_property,
+                    _wrapped_property, _enum_property, _wrapped_list_property,
+                    _enum_list_property)
     
 class ValueWithUncertainty(BaseNode):
     """
@@ -150,8 +150,8 @@ class LiteratureSource(BaseNode):
     Bibliographic source metadata used by SiteXML indicator references.
     """
 
-    title = scalar_property("title", allow_none=False, allow_empty=False)
-    first_author = scalar_property(
+    title = _scalar_property("title", allow_none=False, allow_empty=False)
+    first_author = _scalar_property(
         "first_author", allow_none=False, allow_empty=False)
 
     def __init__(self, title, first_author, secondary_authors=None,
@@ -210,9 +210,9 @@ class SiteIndicator(BaseNode):
     Base class for SiteXML site-characterization indicator objects.
     """
 
-    literature_source = wrapped_property("literature_source", LiteratureSource)
-    external_references = wrapped_list_property("external_references", ExternalReference)
-    #quality_index = wrapped_property("quality_index", float)
+    literature_source = _wrapped_property("literature_source", LiteratureSource)
+    external_references = _wrapped_list_property("external_references", ExternalReference)
+    #quality_index = _wrapped_property("quality_index", float)
 
     def __init__(self, name, value, methods=None, quality_index=None,
                  literature_source=None, external_references=None):
@@ -295,7 +295,7 @@ class EC8(SiteIndicator):
     Eurocode 8 ground type indicator.
     """
 
-    value = enum_property("value", EC8Class)
+    value = _enum_property("value", EC8Class)
     
     def __init__(self, value, quality_index=None, literature_source=None,
                  external_references=None):
@@ -325,7 +325,7 @@ class H800(SiteIndicator):
     Engineering bedrock depth indicator for Vs greater than 800 m/s.
     """
 
-    value = wrapped_property("value", ValueWithUncertainty)
+    value = _wrapped_property("value", ValueWithUncertainty)
 
     def __init__(self, value, quality_index=None, literature_source=None, 
                  external_references=None):
@@ -358,7 +358,7 @@ class BedrockDepth(SiteIndicator):
     Seismological bedrock depth indicator.
     """
 
-    value = wrapped_property("value", ValueWithUncertainty)
+    value = _wrapped_property("value", ValueWithUncertainty)
 
     def __init__(self, value, quality_index=None, literature_source=None, 
                  external_references=None):
@@ -429,8 +429,8 @@ class ResonanceFrequency(SiteIndicator):
     Site resonance-frequency indicator.
     """
 
-    value = wrapped_property("value", ValueWithUncertainty)
-    methods = enum_list_property("methods", ResonanceFrequencyMethod)
+    value = _wrapped_property("value", ValueWithUncertainty)
+    methods = _enum_list_property("methods", ResonanceFrequencyMethod)
 
     def __init__(self, value, quality_index=None, methods=None, 
                  literature_source=None, external_references=None):
@@ -466,10 +466,10 @@ class VelocityS30(SiteIndicator):
     Time-averaged shear-wave velocity over the upper 30 meters.
     """
 
-    value = wrapped_property("value", ValueWithUncertainty)
-    methods = enum_list_property("methods", VelocityS30Method)
-    method_combined_qindex = enum_property("velocityS30MethodCombIndex", Vs30MethodCombined)
-    manual_qindex = enum_property("velocityS30ManualIndex", Vs30ManualIndex)
+    value = _wrapped_property("value", ValueWithUncertainty)
+    methods = _enum_list_property("methods", VelocityS30Method)
+    method_combined_qindex = _enum_property("velocityS30MethodCombIndex", Vs30MethodCombined)
+    manual_qindex = _enum_property("velocityS30ManualIndex", Vs30ManualIndex)
     
     def __init__(self, value, quality_index=None, methods=None,
                  method_combined_qindex=None, manual_qindex=None, 
@@ -571,7 +571,7 @@ class VelocityProfile(BaseNode):
     Layered velocity profile associated with an analysis.
     """
 
-    resource_id = resource_id_property(
+    resource_id = _resource_id_property(
         "resource_id", allow_none=False, allow_empty=False)
 
     def __init__(self, resource_id, velocity_profile_data, layer_count=None):
@@ -706,12 +706,12 @@ class VelocityProfileData(BaseNode):
     Physical properties for a single velocity-profile layer.
     """
 
-    top_depth = wrapped_property("top_depth", ValueWithUncertainty,
+    top_depth = _wrapped_property("top_depth", ValueWithUncertainty,
                                  allow_none=False)
-    bottom_depth = wrapped_property("bottom_depth", ValueWithUncertainty)
-    density = wrapped_property("density", ValueWithUncertainty)
-    velocityP = wrapped_property("velocityP", ValueWithUncertainty)
-    velocityS = wrapped_property("velocityS", ValueWithUncertainty)
+    bottom_depth = _wrapped_property("bottom_depth", ValueWithUncertainty)
+    density = _wrapped_property("density", ValueWithUncertainty)
+    velocityP = _wrapped_property("velocityP", ValueWithUncertainty)
+    velocityS = _wrapped_property("velocityS", ValueWithUncertainty)
 
     def __init__(self, top_depth, bottom_depth=None, density=None, 
                 velocityP=None, velocityS=None):
@@ -751,19 +751,19 @@ class SERASiteOwner(BaseNode):
     explicit.
     """
 
-    owner_codename = scalar_property(
+    owner_codename = _scalar_property(
         "owner_codename", allow_none=False, allow_empty=False)
-    owner_fullname = scalar_property(
+    owner_fullname = _scalar_property(
         "owner_fullname", allow_none=False, allow_empty=False)
-    person_firstname = scalar_property(
+    person_firstname = _scalar_property(
         "person_firstname", allow_none=False, allow_empty=False)
-    person_lastname = scalar_property(
+    person_lastname = _scalar_property(
         "person_lastname", allow_none=False, allow_empty=False)
-    person_mbox = scalar_property(
+    person_mbox = _scalar_property(
         "person_mbox", allow_none=False, allow_empty=False)
-    ownerID = resource_id_property("ownerID")
-    personID = resource_id_property("personID")
-    institutionID = resource_id_property("institutionID")
+    ownerID = _resource_id_property("ownerID")
+    personID = _resource_id_property("personID")
+    institutionID = _resource_id_property("institutionID")
 
     def __init__(self, owner_codename, owner_fullname,
                  person_firstname, person_lastname, person_mbox, ownerID=None,
@@ -865,15 +865,18 @@ class SERASiteOwner(BaseNode):
                     address_country=None, address_country_code=None,
                     affiliation_department=None, affiliation_function=None):
         """
-        Convert an ObsPy ``Person`` to a SiteXML owner contact.
+        Convert an ObsPy :class:`~obspy.core.inventory.util.Person` 
+        to a SiteXML owner contact.
 
         ``owner_codename`` and ``owner_fullname`` are required because ObsPy
-        ``Person`` only represents the contact person, not the SiteXML owner
-        identity. If ``person_firstname`` and ``person_lastname`` are omitted,
-        they are derived from the first ObsPy person name. If
+        :class:`~obspy.core.inventory.util.Person` only represents the contact person, 
+        not the SiteXML owner identity. If ``person_firstname`` and ``person_lastname`` 
+        are omitted, they are derived from the first ObsPy person name. If
         ``person_mbox`` is omitted, the first ObsPy email address is used. If
         ``institution_name`` is omitted, the first ObsPy agency is used.
 
+        :rtype: :class:`~obspy.io.sitexml.core.SiteOwner`
+        
         .. rubric:: Example
 
         >>> from obspy.core.inventory.util import Person
@@ -944,15 +947,18 @@ class SERASiteOwner(BaseNode):
     def from_operator(cls, operator, owner_codename=None, owner_fullname=None,
                       contact_index=None, **kwargs):
         """
-        Convert an ObsPy ``Operator`` to a SiteXML owner contact.
+        Convert an ObsPy :class:`~obspy.core.inventory.util.Operator` 
+        to a SiteXML owner contact.
 
         ``operator.agency`` is used as ``owner_fullname`` when no explicit
         value is provided. ``owner_codename`` defaults to ``operator.agency``
         when omitted, though callers should pass a short code when they have
         one. Operators with multiple contacts are rejected unless
         ``contact_index`` selects which contact to convert, because SiteXML has
-        a single contact person in ``siteOwner``. Extra keyword arguments are
-        forwarded to :meth:`from_person`.
+        a single contact person in :class:`~obspy.io.sitexml.core.SiteOwner`. 
+        Extra keyword arguments are forwarded to :meth:`from_person`.
+
+        :rtype: :class:`~obspy.io.sitexml.core.SiteOwner`
 
         .. rubric:: Example
 
@@ -1000,13 +1006,16 @@ class SERASiteOwner(BaseNode):
 
     def to_person(self):
         """
-        Convert this SiteXML owner contact to ObsPy's ``Person`` type.
+        Convert this SiteXML owner contact to ObsPy's 
+        :class:`~obspy.core.inventory.util.Person` type.
 
         The SiteXML first and last names are joined into one ObsPy name. The
         SiteXML institution name is mapped to the first ObsPy agency, when
         present, and ``person_mbox`` is mapped to the first ObsPy email.
         SiteXML person homepage and public IDs are not represented by ObsPy
-        ``Person``.
+        :class:`~obspy.core.inventory.util.Person`.
+
+        :rtype: :class:`~obspy.core.inventory.util.Person`
 
         .. rubric:: Example
 
@@ -1037,11 +1046,14 @@ class SERASiteOwner(BaseNode):
 
     def to_operator(self):
         """
-        Convert this SiteXML owner contact to ObsPy's ``Operator`` type.
+        Convert this SiteXML owner contact to ObsPy's 
+        :class:`~obspy.core.inventory.util.Operator` type.
 
         ``owner_fullname`` is mapped to ``operator.agency``, the converted
         contact person becomes the only operator contact, and
         ``institution_homepage`` is mapped to ``operator.website``.
+
+        :rtype: :class:`~obspy.core.inventory.util.Operator`
 
         .. rubric:: Example
 
@@ -1098,23 +1110,23 @@ class SiteDescription(BaseNode):
     Location, morphology, and near-surface description for a SiteXML site.
     """
 
-    resource_id = resource_id_property(
+    resource_id = _resource_id_property(
         "resource_id", allow_none=False, allow_empty=False)
-    preferred_site_analysisID = resource_id_property(
+    preferred_site_analysisID = _resource_id_property(
         "preferred_site_analysisID")
-    preferred_velocity_profileID = resource_id_property(
+    preferred_velocity_profileID = _resource_id_property(
         "preferred_velocity_profileID")
-    latitude = wrapped_property("latitude", Latitude, allow_none=False)
-    longitude = wrapped_property("longitude", Longitude, allow_none=False)
-    altitude = wrapped_property("altitude", Distance)
-    min_distance_from_station = wrapped_property("min_distance_from_station", Distance)
-    max_distance_from_station = wrapped_property("max_distance_from_station", Distance)
-    bedrock_depth = wrapped_property("bedrock_depth", BedrockDepth)
-    h800 = wrapped_property("h800", H800)
-    ec8 = wrapped_property("ec8", EC8)
-    geological_unit = wrapped_property("geological_unit", GeologicalUnit)
-    topographyA = enum_property("topographyA", TopographySchemaA)
-    topographyB = enum_property("topographyB", TopographySchemaB)
+    latitude = _wrapped_property("latitude", Latitude, allow_none=False)
+    longitude = _wrapped_property("longitude", Longitude, allow_none=False)
+    altitude = _wrapped_property("altitude", Distance)
+    min_distance_from_station = _wrapped_property("min_distance_from_station", Distance)
+    max_distance_from_station = _wrapped_property("max_distance_from_station", Distance)
+    bedrock_depth = _wrapped_property("bedrock_depth", BedrockDepth)
+    h800 = _wrapped_property("h800", H800)
+    ec8 = _wrapped_property("ec8", EC8)
+    geological_unit = _wrapped_property("geological_unit", GeologicalUnit)
+    topographyA = _enum_property("topographyA", TopographySchemaA)
+    topographyB = _enum_property("topographyB", TopographySchemaB)
 
     def __init__(self, resource_id, latitude, longitude, altitude=None,
                  min_distance_from_station=None, max_distance_from_station=None, 
@@ -1280,13 +1292,13 @@ class Analysis(BaseNode):
     Site-characterization analysis and related indicator metadata.
     """
 
-    resource_id = resource_id_property(
+    resource_id = _resource_id_property(
         "resource_id", allow_none=False, allow_empty=False)
-    site_descriptionID = resource_id_property(
+    site_descriptionID = _resource_id_property(
         "site_descriptionID", allow_none=False, allow_empty=False)
-    resonance_frequency = wrapped_property("resonance_frequency", ResonanceFrequency)
-    velocity_s30 = wrapped_property("velocity_s30", VelocityS30)
-    velocity_profile_survey = wrapped_property("velocity_profile_survey", VelocityProfileSurvey)
+    resonance_frequency = _wrapped_property("resonance_frequency", ResonanceFrequency)
+    velocity_s30 = _wrapped_property("velocity_s30", VelocityS30)
+    velocity_profile_survey = _wrapped_property("velocity_profile_survey", VelocityProfileSurvey)
 
     def __init__(self, resource_id, site_descriptionID, creation_date=None,
                  resonance_frequency=None, velocity_s30=None, 
@@ -1405,13 +1417,13 @@ class SERASite(BaseNode):
     """
     This is the parent class for the siteXML object tree.
     """
-    resource_id = resource_id_property(
+    resource_id = _resource_id_property(
         "resource_id", allow_none=False, allow_empty=False)
-    site_owner = wrapped_property("site_owner", SERASiteOwner)
-    site_description = wrapped_property("site_description", SiteDescription)
-    external_references = wrapped_list_property("external_references", ExternalReference)
-    analysis = wrapped_list_property("analysis", Analysis)
-    created = wrapped_property("created", obspy.UTCDateTime)
+    site_owner = _wrapped_property("site_owner", SERASiteOwner)
+    site_description = _wrapped_property("site_description", SiteDescription)
+    external_references = _wrapped_list_property("external_references", ExternalReference)
+    analysis = _wrapped_list_property("analysis", Analysis)
+    created = _wrapped_property("created", obspy.UTCDateTime)
     
     def __init__(self, resource_id, site_owner, site_description, 
                  analysis=None, created=None, external_references=None):
