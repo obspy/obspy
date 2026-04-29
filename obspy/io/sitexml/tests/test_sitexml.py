@@ -21,7 +21,7 @@ from obspy.core.event import ResourceIdentifier
 from obspy.core.inventory import Inventory, Network, Station, read_inventory
 from obspy.core.inventory.util import Operator, Person
 from obspy.core.util.obspy_types import FloatWithUncertainties
-from obspy.io.sitexml.core import (Analysis, LiteratureSource, SERASite,
+from obspy.io.sitexml.core import (Analysis, EC8, LiteratureSource, SERASite,
                                    SERASiteOwner, SiteDescription,
                                    ResonanceFrequency,
                                    ValueWithUncertainty, VelocityProfile,
@@ -227,6 +227,23 @@ class TestSiteXML():
 
         assert value == 0.875
         assert ec8.quality_index == 0.875
+
+    def test_site_indicator_quality_index_validates_range(self):
+        """
+        Quality indexes are optional numeric values in the closed [0, 1] range.
+        """
+        ec8 = EC8("A", quality_index="1")
+        assert ec8.quality_index == 1.0
+
+        ec8.quality_index = 0
+        assert ec8.quality_index == 0.0
+
+        ec8.quality_index = None
+        assert ec8.quality_index is None
+
+        for value in (-0.1, 1.1, "not-a-number", True):
+            with pytest.raises(SiteXMLValidationError, match="quality_index"):
+                ec8.quality_index = value
 
     def test_sera_site_calculates_quality_indexes(self, testdata):
         """

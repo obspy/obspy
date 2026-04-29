@@ -11,6 +11,7 @@ Provides the SERASite class.
 """
 from collections.abc import Iterable
 import re
+import math
 
 import obspy
 from obspy.core.event import ResourceIdentifier
@@ -212,7 +213,6 @@ class SiteIndicator(BaseNode):
 
     literature_source = _wrapped_property("literature_source", LiteratureSource)
     external_references = _wrapped_list_property("external_references", ExternalReference)
-    #quality_index = _wrapped_property("quality_index", float)
 
     def __init__(self, name, value, methods=None, quality_index=None,
                  literature_source=None, external_references=None):
@@ -246,6 +246,31 @@ class SiteIndicator(BaseNode):
         self.quality_index = quality_index 
         self.literature_source = literature_source
         self.external_references = external_references
+
+    @property
+    def quality_index(self):
+        return self._quality_index
+
+    @quality_index.setter
+    def quality_index(self, value):
+        if value is None:
+            self._quality_index = None
+            return
+        if isinstance(value, bool):
+            raise SiteXMLValidationError(
+                "quality_index must be a number between 0 and 1."
+            )
+        try:
+            value = float(value)
+        except (TypeError, ValueError) as exc:
+            raise SiteXMLValidationError(
+                "quality_index must be a number between 0 and 1."
+            ) from exc
+        if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+            raise SiteXMLValidationError(
+                "quality_index must be a number between 0 and 1."
+            )
+        self._quality_index = value
 
     def calculate_quality_index1(
             self, method=None, evaluation=None, reliability=None,
@@ -1821,7 +1846,7 @@ class SERASite(BaseNode):
         output.append(title)
         output.append("\n#################\n")
        
-        #output.append("resource_id: " + self.resource_id + "\n")
+        output.append("resource_id: " + self.resource_id + "\n")
         output.append(self.site_owner.__str__())
         output.append(self.site_description.__str__())
         

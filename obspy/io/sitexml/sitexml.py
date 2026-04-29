@@ -455,8 +455,7 @@ def _read_site_description(site_description_element):
     # Overall Quality Index
     site_description.overall_quality_index = \
         _tag2obj(site_description_element, _ns("overallQindex"), float)
-    # Comments
-    #
+    
     return site_description
 
 def _read_morphology(morphology_element, site_description_obj):
