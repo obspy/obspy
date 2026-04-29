@@ -255,6 +255,24 @@
     - The active writer entry point is
       :func:`~obspy.io.sitexml.sitexml.write_sitexml`.
     
+    Enums
+    -----
+
+    .. autosummary::
+       :toctree: autogen
+       :nosignatures:
+
+       ~util.TopographySchemaA
+       ~util.TopographySchemaB
+       ~util.MorphologyType
+       ~util.EC8Class
+       ~util.ResonanceFrequencyMethod
+       ~util.VelocityS30Method
+       ~util.Vs30MethodCombined
+       ~util.Vs30ManualIndex
+
+    .. comment to end block
+
     Functions
     ---------
     
@@ -268,10 +286,10 @@
        ~sitexml.write_sitexml
        ~sitexml.sitedict_to_sitexml
        ~sitexml.sitexml_to_sitedict
+       ~sitexml.write_stationxml_reference
        ~read_csv.csv_to_sera_site
        ~read_csv.excel_to_sera_site
        
-
     .. comment to end block
 
     Classes
