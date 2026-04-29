@@ -33,7 +33,8 @@ from obspy.io.sitexml.quality_index import overall_quality_index
 from obspy.io.sitexml.sitexml import (_is_sitexml, _read_site_description,
                                       _read_site_owner, read_sitexml,
                                       sitedict_to_sitexml,
-                                      sitexml_to_sitedict)
+                                      sitexml_to_sitedict,
+                                      write_stationxml_reference)
 from obspy.io.sitexml.sitexml import write_sitexml
 
 class TestSiteXML():
@@ -338,10 +339,10 @@ class TestSiteXML():
             networks=[Network(code="XX", stations=[station])],
             source="TEST")
         client = DummyClient(inventory)
-        sera_site = self._minimal_sera_site()
         output = tmp_path / "station.xml"
 
-        returned = sera_site.write_stationxml_reference(
+        returned = write_stationxml_reference(
+            "XX.ABCD",
             "https://example.org/site.xml",
             output,
             datacenter="EARTHSCOPE",
@@ -405,10 +406,9 @@ class TestSiteXML():
                     ]),
                 ], source="TEST")
 
-        sera_site = self._minimal_sera_site()
-
         with pytest.raises(SiteXMLValidationError, match="XX.ABCD"):
-            sera_site.write_stationxml_reference(
+            write_stationxml_reference(
+                "XX.ABCD",
                 "https://example.org/site.xml",
                 tmp_path / "station.xml",
                 datacenter="EARTHSCOPE",

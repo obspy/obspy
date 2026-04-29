@@ -25,7 +25,7 @@ from .core import (SERASite, SERASiteOwner, SiteDescription, Analysis,
                    EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency,
                    VelocityProfileSurvey, VelocityProfile, VelocityProfileData,
                    VelocityS30, ValueWithUncertainty, LiteratureSource)
-from .util import SiteXMLIOError, SiteXMLValidationError
+from .util import SiteXMLIOError, SiteXMLValidationError, _split_station_code
 
 # Define some constants for writing SiteXML files.
 SCHEMA_VERSION = "1.3"
@@ -1164,3 +1164,91 @@ def _obj2tag(parent, tag_name, tag_value):
     """
     if tag_value is not None:
         etree.SubElement(parent, tag_name).text = str(tag_value)
+
+###### Associate SiteXML with the respective StationXML
+#
+def write_stationxml_reference(station_code, sitexml_url, path,
+        datacenter, description=None, client=None):
+    """
+    Attach the SiteXML URL as a StationXML 
+    :class:`~obspy.core.inventory.util.ExternalReference`.
+
+    Attach a SiteXML remote URL as a StationXML
+    :class:`~obspy.core.inventory.util.ExternalReference`, 
+    write and return the updated inventory.
+
+    :type station_code: str, required
+    :param station_code: FDSN network and station code in ``network.station``
+        notation.
+    :type sitexml_url: str, required
+    :param sitexml_url: URL of the SiteXML document to reference.
+    :type path: str or pathlib.Path or file-like object, required
+    :param path: Local output path or writable file-like object for the
+        updated StationXML.
+    :type datacenter: str, required
+    :param datacenter: FDSN data center used to initialize
+        :class:`~obspy.clients.fdsn.client.Client`, for example
+        ``"EARTHSCOPE"``.
+    :type description: str, optional
+    :param description: StationXML external-reference description. If
+        omitted, a SERA SiteXML description is used.
+    :type client: :class:`~obspy.clients.fdsn.client.Client`, optional
+    :param client: Existing FDSN client. Mainly useful for tests or for
+        callers that already manage client construction.
+    :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
+    :return: The updated inventory that was written to ``path``.
+
+    Example
+
+        >>> from obspy.io.sitexml.sitexml import write_stationxml_reference
+        >>> write_stationxml_reference("XX.ABCD", "https://url/to/site.xml", 
+        ...             path="./updated_stationXML",
+        ...             datacenter="EARTHSCOPE")
+    """
+    if not station_code:
+        raise SiteXMLValidationError(
+            "Cannot retrieve StationXML without station_code."
+        )
+    network_code, station_only_code = _split_station_code(station_code)
+
+    query = {
+        "network": network_code,
+        "station": station_only_code,
+        "level": "response",
+    }
+
+    if client is None:
+        from obspy.clients.fdsn import Client
+
+        client = Client(datacenter)
+
+    inventory = client.get_stations(**query)
+    matches = [
+        (network, station)
+        for network in inventory
+        for station in network
+        if station.code == station_only_code and network.code == network_code
+    ]
+
+    if not matches:
+        raise SiteXMLValidationError(
+            "FDSN StationXML response did not contain station "
+            f"{station_code!r}."
+        )
+
+    ## TODOs: How to replace an older siteXML with a newer one??
+    # Keep only a specific description to look for, for replacing?
+    #
+    # Maybe add a comment with the addition date.
+    # This could also serve as a history of SiteXML updates.
+    #
+    _, station = matches[0]
+    description = description or "SERA SiteXML site characterization"
+    if not any(ref.uri == sitexml_url for ref in
+               station.external_references):
+        station.external_references.append(
+            ExternalReference(uri=sitexml_url, description=description)
+        )
+
+    inventory.write(path, format="STATIONXML")
+    return inventory

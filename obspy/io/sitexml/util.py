@@ -41,6 +41,31 @@ class SiteXMLIOError(SiteXMLError, OSError):
     Raised when SiteXML-related input paths or files cannot be accessed.
     """
 
+def _split_station_code(value):
+    """
+    Split a ``network.station`` code into FDSN network and station codes.
+
+    :rtype: tuple[str, str]
+    """
+    message = (
+        "station_code must use 'network.station' notation with a "
+        "1-2 character FDSN network code and a 3-5 letter station code"
+    )
+    if not isinstance(value, str):
+        raise SiteXMLValidationError("station_code must be a string or None")
+    if value.count(".") != 1 or any(char.isspace() for char in value):
+        raise SiteXMLValidationError(message)
+    network_code, station_code = value.split(".")
+    if not 1 <= len(network_code) <= 2 or \
+            not network_code.isascii() or \
+            not network_code.isalnum() or \
+            not 3 <= len(station_code) <= 5 or \
+            not station_code.isascii() or \
+            not station_code.isalpha():
+        raise SiteXMLValidationError(message)
+    return network_code, station_code
+
+
 class BaseNode(ComparingObject):
     """
     The parent class for SERASite, SiteDescription, Analysis etc classes.
@@ -251,7 +276,7 @@ Whether multiple methods were combined to estimate Vs30.
 
 .. note::
     Required by **EGD (European Geocharacterization Database)** 
-    when calculating the EGD specific Vs30 quality index.
+    for calculating the EGD specific Vs30 quality index.
 
 Allowed values are:
 
@@ -270,7 +295,7 @@ Qualitative factor regarding the maximum Vs measurement depth.
 
 .. note::
     Required by **EGD (European Geocharacterization Database)** 
-    when calculating the EGD specific Vs30 quality index.
+    for calculating the EGD specific Vs30 quality index.
 
 This depth is commonly compared with the EC8 engineering bedrock depth, where Vs >= 800 m/s.
 

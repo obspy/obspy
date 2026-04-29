@@ -23,7 +23,7 @@ from .util import (BaseNode, SiteXMLValidationError,
                     Vs30MethodCombined, Vs30ManualIndex,
                     _pretty_str, _scalar_property, _resource_id_property,
                     _wrapped_property, _enum_property, _wrapped_list_property,
-                    _enum_list_property)
+                    _enum_list_property, _split_station_code)
     
 class ValueWithUncertainty(BaseNode):
     """
@@ -738,6 +738,8 @@ class VelocityProfileData(BaseNode):
     velocityP = _wrapped_property("velocityP", ValueWithUncertainty)
     velocityS = _wrapped_property("velocityS", ValueWithUncertainty)
 
+    # Need to decide which if these arguments besides top_depth will be
+    # mandatory
     def __init__(self, top_depth, bottom_depth=None, density=None, 
                 velocityP=None, velocityS=None):
         """
@@ -900,7 +902,7 @@ class SERASiteOwner(BaseNode):
         ``person_mbox`` is omitted, the first ObsPy email address is used. If
         ``institution_name`` is omitted, the first ObsPy agency is used.
 
-        :rtype: :class:`~obspy.io.sitexml.core.SiteOwner`
+        :rtype: :class:`~obspy.io.sitexml.core.SERASiteOwner`
         
         .. rubric:: Example
 
@@ -980,10 +982,10 @@ class SERASiteOwner(BaseNode):
         when omitted, though callers should pass a short code when they have
         one. Operators with multiple contacts are rejected unless
         ``contact_index`` selects which contact to convert, because SiteXML has
-        a single contact person in :class:`~obspy.io.sitexml.core.SiteOwner`. 
+        a single contact person in :class:`~obspy.io.sitexml.core.SERASiteOwner`. 
         Extra keyword arguments are forwarded to :meth:`from_person`.
 
-        :rtype: :class:`~obspy.io.sitexml.core.SiteOwner`
+        :rtype: :class:`~obspy.io.sitexml.core.SERASiteOwner`
 
         .. rubric:: Example
 
@@ -1288,29 +1290,9 @@ class SiteDescription(BaseNode):
         if value is None:
             self._station_code = None
             return
-        if not isinstance(value, str):
-            raise SiteXMLValidationError(
-                "station_code must be a string or None"
-            )
-        if value.count(".") != 1 or any(char.isspace() for char in value):
-            raise SiteXMLValidationError(
-                "station_code must use 'network.station' notation with a "
-                "1-2 character FDSN network code and a 3-5 letter station "
-                "code"
-            )
-        network_code, station_code = value.split(".")
-        if not 1 <= len(network_code) <= 2 or \
-                not network_code.isascii() or \
-                not network_code.isalnum() or \
-                not 3 <= len(station_code) <= 5 or \
-                not station_code.isascii() or \
-                not station_code.isalpha():
-            raise SiteXMLValidationError(
-                "station_code must use 'network.station' notation with a "
-                "1-2 character FDSN network code and a 3-5 letter station "
-                "code"
-            )
+        _split_station_code(value)
         self._station_code = value
+
 
 class Analysis(BaseNode):
     """
@@ -1685,94 +1667,6 @@ class SERASite(BaseNode):
             r"[^A-Za-z0-9]+", "_", str(self.resource_id)
         ).strip("_")
         return filename + ".xml"
-
-    def write_stationxml_reference(self, sitexml_url, path,
-            datacenter, description=None, client=None):
-        """
-        Retrieve StationXML for this site's station, attach the SiteXML URL as
-        a StationXML ``ExternalReference``, and write the updated inventory.
-
-        The station code is taken from
-        :attr:`site_description.station_code
-        <obspy.io.sitexml.core.SiteDescription.station_code>`, which must use
-        ``network.station`` notation.
-
-        :type sitexml_url: str, required
-        :param sitexml_url: URL of the SiteXML document to reference.
-        :type path: str or pathlib.Path or file-like object, required
-        :param path: Local output path or writable file-like object for the
-            updated StationXML.
-        :type datacenter: str, required
-        :param datacenter: FDSN data center used to initialize
-            :class:`obspy.clients.fdsn.client.Client`, for example
-            ``"EARTHSCOPE"``.
-        :type description: str, optional
-        :param description: StationXML external-reference description. If
-            omitted, a SERA SiteXML description is used.
-        :type client: :class:`obspy.clients.fdsn.client.Client`, optional
-        :param client: Existing FDSN client. Mainly useful for tests or for
-            callers that already manage client construction.
-        :rtype: :class:`obspy.core.inventory.inventory.Inventory`
-        :return: The updated inventory that was written to ``path``.
-
-        Example
-
-        >>> from obspy.io.sitexml.sitexml import read_sitexml
-        >>> sera_site = read_sitexml("test_site.xml")
-        >>> sera_site.write_stationxml_reference("https://url/to/site.xml", 
-        ...             path="./updated_stationXML",
-        ...             datacenter="EARTHSCOPE")
-        """
-        full_station_code = self.site_description.station_code
-        if not full_station_code:
-            raise SiteXMLValidationError(
-                "Cannot retrieve StationXML without "
-                "site_description.station_code."
-            )
-        network_code, station_code = full_station_code.split(".")
-
-        query = {
-            "network": network_code,
-            "station": station_code,
-            "level": "response",
-        }
-
-        if client is None:
-            from obspy.clients.fdsn import Client
-
-            client = Client(datacenter)
-
-        inventory = client.get_stations(**query)
-        matches = [
-            (network, station)
-            for network in inventory
-            for station in network
-            if station.code == station_code and
-            network.code == network_code
-        ]
-
-        if not matches:
-            raise SiteXMLValidationError(
-                "FDSN StationXML response did not contain station "
-                f"{full_station_code!r}."
-            )
-
-        ## TODOs: How to replace an older siteXML with a newer one??
-        # Keep only a specific description to look for, for replacing?
-        #
-        # Maybe add a comment with the addition date.
-        # This could also serve as a history of SiteXML updates.
-        #
-        _, station = matches[0]
-        description = description or "SERA SiteXML site characterization"
-        if not any(ref.uri == sitexml_url for ref in
-                   station.external_references):
-            station.external_references.append(
-                ExternalReference(uri=sitexml_url, description=description)
-            )
-
-        inventory.write(path, format="STATIONXML")
-        return inventory
 
     def validate_references(self):
         """

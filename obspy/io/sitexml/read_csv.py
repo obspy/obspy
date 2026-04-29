@@ -110,7 +110,6 @@ def csv_to_sera_site(site_owner_csv,
     df_vp_dict = _csv_import_velocity_profiles(
         velocity_profiles_csv, delim=delim)
     
-    #site_owner_dict = _read_sheet(df_site_owner, SERASiteOwner)
     site_owner = _read_site_owner(df_site_owner)
     site_description_dict = _read_site_description(df_site_description)
 
@@ -263,9 +262,6 @@ def _read_site_description(df_site_description):
         
         station_code = _read_cell(row[1], "station")
         
-        # TODOS
-        # If station is empty print a warning
-        #
         site_description_obj = SiteDescription(resource_id=resource_id,
                                        station_code=station_code, 
                                        latitude=latitude, 
