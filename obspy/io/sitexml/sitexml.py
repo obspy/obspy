@@ -67,6 +67,7 @@ def _is_sitexml(path_or_file_object):
     The test is not exhaustive - 
     it only checks the root tag and the schema version. 
 
+    :type path_or_file_object: str, pathlib.Path, or file-like object
     :param path_or_file_object: File name or file like object.
     :rtype: bool
     """
@@ -175,8 +176,7 @@ def sitexml_to_sitedict(path_or_file_object, pattern="*.xml"):
     :type pattern: str, optional
     :param pattern: Glob pattern used when ``path_or_file_object`` is a
         directory. Defaults to ``"*.xml"``.
-    :rtype: dict
-    :return: Dictionary of :class:`~obspy.io.sitexml.core.SERASite` objects.
+    :rtype: dict of :class:`~obspy.io.sitexml.core.SERASite`
     """
     def _add_site(sera_site_dict, sera_site):
         if sera_site.resource_id in sera_site_dict:
@@ -210,6 +210,7 @@ def read_sitexml(path_or_file_object):
     """
     Function reading a SiteXML file.
 
+    :type file_or_file_object: str, pathlib.Path, or file-like object
     :param file_or_file_object: The file name or file-like object to read from.
     :rtype: :class:`~obspy.io.sitexml.core.SERASite`
 
@@ -564,7 +565,7 @@ def _read_velocity_profile(analysis_element, analysis_obj):
     :type analysis_element: :class:`~lxml.etree._Element`, required
     :param analysis_element: 
     :type analysis_obj:
-        :class:`~obspy.core.io.sitexml.core.Analysis`, required
+        :class:`~obspy.io.sitexml.core.Analysis`, required
     :param analysis_obj: Analysis object to store values read from the
         <velocityProfile> element. It should be pre-initialized by the calling
         function.
@@ -746,7 +747,7 @@ def _read_value(parent, tag, type):
 
     :rtype: object or None
 
-    The element should have the following structure
+    The element should have the following structure::
 
         <parent>
             <tag>
@@ -765,7 +766,7 @@ def _read_value_with_uncertainty(parent, tag, type):
 
     :rtype: :class:`~obspy.io.sitexml.core.ValueWithUncertainty` or None
 
-    The element should have the following structure
+    The element should have the following structure::
 
         <parent>
             <tag>

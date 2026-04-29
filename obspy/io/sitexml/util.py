@@ -90,17 +90,15 @@ TopographySchemaA = Enum([
 ])
 """
 Topography is a precise (quantitative) description of the ground surface 
-features of a site. Schema A is the topography description scheme of the Italian Code.
-T1 : Flat surface, isolated slopes and cliffs with average slop angle 
-T2 : Slopes with average slope angle i>15
-T3 : Ridges with crest width significantly less than the base width and average slope angle 15
-T4 : Ridges with crest width significantly less than the base width and average slope angle i>30
+features of a site. 
+
+**Schema A** is the topography description scheme of the **Italian Code**.
 Allowed values are:
 
-* ``"T1"``
-* ``"T2"``
-* ``"T3"``
-* ``"T4"``
+* ``"T1"`` : Flat surface, isolated slopes and cliffs with average slop angle 
+* ``"T2"`` : Slopes with average slope angle i>15
+* ``"T3"`` : Ridges with crest width significantly less than the base width and average slope angle 15
+* ``"T4"`` : Ridges with crest width significantly less than the base width and average slope angle i>30
 """
 
 TopographySchemaB = Enum([
@@ -113,8 +111,12 @@ TopographySchemaB = Enum([
 ])
 """
 Topography is a precise (quantitative) description of the ground surface 
-features of a site. Schema B is the one proposed by Burjanek et al. (2014).
-For the precise definition of the allowed values refer to SERA Deliverable D7.1.
+features of a site. 
+
+**Schema B** is the one proposed by **Burjanek et al. (2014)**.
+For the precise definition of the allowed values
+refer to **SERA Deliverable D7.1, Appendix I**.
+
 Allowed values are:
 
 * ``"Valley"``
@@ -152,8 +154,8 @@ EC8Class = Enum([
     "Undefined"
 ])
 """
-Ground type according to Eurocode 8 (EC8 § 3.1.2, Table 3.1), 
-based on the velocityS30Value and geotechnical description
+Ground type according to Eurocode 8 (EC8 § 3.1.2, Table 3.1).
+
 Allowed values are:
 
 * ``"A"``
@@ -175,7 +177,12 @@ ResonanceFrequencyMethod = Enum([
     "INFERRED",
 ])
 """
-Method used for the estimation of the dominant frequency, f0, of a site.
+Method used for the estimation of the resonance frequency, f0, of a site.
+
+.. note::
+    Required by **EGD (European Geocharacterization Database)**
+    when calculating the EGD specific resonance frequency quality index.
+
 Allowed values are:
 
 * ``"HVSR EARTHQUAKE RECORDS"``
@@ -206,8 +213,13 @@ VelocityS30Method = Enum([
      "DH Strong Motion Arrays"
 ])
 """
-Method used for the extraction of S-wave velocity profiles and, thus, 
-of the average shear-wave velocity over the top 30 meters of the soil column, Vs30.
+Method used to estimate the S-wave velocity profile and Vs30.
+
+.. note::
+    Required by **EGD (European Geocharacterization Database)**
+    when calculating the EGD specific Vs30 quality index.
+
+Vs30 is the average shear-wave velocity in the upper 30 meters of the soil column.
 Allowed values are:
 
 * ``"Geology"``
@@ -235,15 +247,16 @@ Vs30MethodCombined = Enum([
     "1.2",
 ])
 """
-Carries the information on whether a combination of two methods or more has been applied 
-to estimate the Vs30 value. It is used for the estimation of the Vs30 quality index.
-Allowed values are: 
+Whether multiple methods were combined to estimate Vs30.
 
-1.0 : if only one method has been used to estimate the Vs30 value
-1.2 : if a combination of two or more methods has been applied to estimate the Vs30 value
+.. note::
+    Required by **EGD (European Geocharacterization Database)** 
+    when calculating the EGD specific Vs30 quality index.
 
-* ``"1.0"``
-* ``"1.2"``
+Allowed values are:
+
+* ``"1.0"`` : if only one method has been used to estimate the Vs30 value
+* ``"1.2"`` : if a combination of two or more methods has been applied to estimate the Vs30 value
 """
 
 Vs30ManualIndex = Enum([
@@ -253,15 +266,21 @@ Vs30ManualIndex = Enum([
     "1.0",
 ])
 """
-Overall qualitative factor on the knowledge of the maximum depth of Vs measurements, 
-which is most commonly related to the depth the EC8 engineering bedrock (Vs≥800 m/s). 
-The reasoning for introducing this index and description of its values is provided in 
-SERA Deliverable 7.1, Appendix III.
+Qualitative factor regarding the maximum Vs measurement depth.
 
-* ``"0.2"``
-* ``"0.4"``
-* ``"0.8"``
-* ``"1.0"``
+.. note::
+    Required by **EGD (European Geocharacterization Database)** 
+    when calculating the EGD specific Vs30 quality index.
+
+This depth is commonly compared with the EC8 engineering bedrock depth, where Vs >= 800 m/s.
+
+The reasoning for introducing this index and description of its values is provided in 
+**SERA Deliverable 7.1, Appendix III**.
+
+* ``"0.2"`` : Unknown/partly unknown stratigraphy
+* ``"0.4"`` : Maximum depth of Vs measurements < 10m
+* ``"0.8"`` : Maximum depth of Vs measurements 10-30m
+* ``"1.0"`` : Maximum depth of Vs measurements > 30m
 """
 
 def _pretty_str(obj):

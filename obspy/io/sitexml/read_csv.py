@@ -37,24 +37,24 @@ def csv_to_sera_site(site_owner_csv,
     """
     Function to import SiteXML metadata from CSV files.
 
-    :type site_owner_csv: File name or file like object, required
+    :type site_owner_csv: str, pathlib.Path, or file-like object, required
     :param site_owner_csv: One line csv file with site owner metadata.
-    :type site_description_csv: File name or file like object, required
+    :type site_description_csv: str, pathlib.Path, or file-like object, required
     :param site_description_csv: CSV file with site description metadata. One
         line per station/location.
-    :type analysis_csv: File name or file like object, optional
+    :type analysis_csv: str, pathlib.Path, or file-like object, optional
     :param analysis_csv: CSV file with analysis metadata. One line per
         analysisID.
-    :type velocity_profiles_csv: optional
+    :type velocity_profiles_csv: str, pathlib.Path, or file-like object, optional
     :param velocity_profiles_csv: CSV file or path to a folder with velocity
         profile metadata. The folder can contain any number of CSV files.
-    :type quality_index_csv: File name or file like object, optional
-    :param quality_index_csv: CSV file with extra quality-index calculation
+    :type quality_index_csv: str, pathlib.Path, or file-like object, optional
+    :param quality_index_csv: CSV xwith extra quality-index calculation
         inputs. Values are used immediately to calculate SiteXML quality
         indexes and are not stored.
     :type delim: str, optional
     :param delim: CSV file delimiter. Default comma ';' delimeted.
-    :rtype: dictionary of :class:`~obspy.io.sitexml.core.SERASite`
+    :rtype: dict of :class:`~obspy.io.sitexml.core.SERASite`
     :return: Returns a dictionary of SERASite objects. Dictionary keys are the
         unique SiteIDs.
 
@@ -152,12 +152,12 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     * ``analysis``: analysis metadata. Optional.
     * ``qualityIndex``: quality indexes calculation parameters. Optional
 
-    :type path_or_file_object: File name or file like object, required
+    :type path_or_file_object: str, pathlib.Path, or file-like object, required
     :param path_or_file_object: Excel file with site metadata.
     :type velocity_profiles: str, optional
     :param velocity_profiles: Excel file or path to a folder with velocity
         profile metadata.
-    :rtype: dictionary of :class:`~obspy.io.sitexml.core.SERASite`
+    :rtype: dict of :class:`~obspy.io.sitexml.core.SERASite`
     :return: Returns a dictionary of SERASite objects. Dictionary keys are the
         unique SiteIDs.
     
@@ -240,7 +240,7 @@ def _read_site_description(df_site_description):
     """
     Return site-description objects keyed by site ID from tabular metadata.
 
-    :rtype: dictionary of :class:`~obspy.core.io.sitexml.SiteDescription`
+    :rtype: dict of :class:`~obspy.io.sitexml.core.SiteDescription`
     :return: A dictionary of SiteDescription objects. Dictionary keys are the
         unique SiteIDs.
     """
@@ -307,12 +307,12 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
 
     Dictionary key is the siteID.
 
-    :type df_analysis: pandas dataframe, required
+    :type df_analysis: :class:`pandas.DataFrame`, required
     :param df_analysis: Dataframe with analysis metadata for all sites
-    :type df_vp_dict: dictionary of pandas dataframes, optional
-    :param df_vp_dict: Dictionary of pandas dataframes with velocity
+    :type df_vp_dict: dict of :class:`pandas.DataFrame`, optional
+    :param df_vp_dict: Dictionary of :class:`pandas.DataFrame` with velocity
             profile metadata for all sites. Dictionary key is the siteID.
-    :rtype: dictionary of :class:`~obspy.io.sitexml.core.Analysis`
+    :rtype: dict of :class:`~obspy.io.sitexml.core.Analysis`
     :return: A dictionary of Analysis objects. Dictionary keys are the unique
         SiteIDs.
     """
@@ -376,11 +376,11 @@ def _read_velocity_profiles_for_analysis(df_vp, analysis_id):
     """
     Return a list of VelocityProfile objects for a given analysisID.
 
-    :type df_vp: pandas dataframe, required
+    :type df_vp: :class:`pandas.DataFrame`, required
     :param df_vp: Dataframe of velocity profiles for a single site
     :type analysis_id: str, required
     :param analysis_id: The analysis for which to read velocity profiles
-    :rtype: list of :class:`~obspy.io.sitexml.core.velocityProfile`
+    :rtype: list of :class:`~obspy.io.sitexml.core.VelocityProfile`
     """
 
     # 1. Filter the DataFrame to this analysisID
@@ -403,7 +403,7 @@ def _read_velocity_profile(rows):
     Build a VelocityProfile object from rows belonging to a single profile.
 
     :param rows: A group of dataframe rows
-    :rtype: :class:`~obspy.io.sitexml.core.velocityProfile`
+    :rtype: :class:`~obspy.io.sitexml.core.VelocityProfile`
     """
     rows = rows.sort_values("layerCount")
     layer_objects = []
@@ -618,7 +618,7 @@ def _read_external_references(df_row, indicator):
     """
     Return external references for one indicator.
 
-    :rtype: list[:class:`~obspy.io.sitexml.core.ExternalReference`] or None
+    :rtype: list[:class:`~obspy.core.inventory.util.ExternalReference`] or None
     """
 
     uri = _read_cell(df_row, 'uri', indicator)

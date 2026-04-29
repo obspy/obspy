@@ -221,7 +221,8 @@ class SiteIndicator(BaseNode):
         :param name: Indicator type. One of: "siteClassEC8", "h800",
             "bedrockDepth", "geologicalUnit", "velocityS30",
             "resonanceFrequency", "velocityProfile".
-        :type value: str / ValueWithUncertainty / VelocityProfileData, required
+        :type value: str or :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+            or :class:`~obspy.io.sitexml.core.VelocityProfileData`, required
         :param value: Value of the indicator. Type depends on the indicator.
         :type methods: list of str, optional
         :param methods: Methods used for the estimation/calculation of the
@@ -300,7 +301,7 @@ class EC8(SiteIndicator):
                  external_references=None):
         """
         :type value: Enum of type
-            :class:`~obspy.io.sitexml.util.EC8Class`, required
+            :data:`~obspy.io.sitexml.util.EC8Class`, required
         :param value: EC8 class
         :type quality_index: float, optional
         :param quality_index: Quality index of the site indicator. Takes
@@ -442,7 +443,7 @@ class ResonanceFrequency(SiteIndicator):
             values between 0 and 1. Calculated according to the guidelines of
             the SERA D7.2 Deliverable.
         :type methods: List of Enum type
-            :class:`~obspy.io.sitexml.util.ResonanceFrequencyMethod`,
+            :data:`~obspy.io.sitexml.util.ResonanceFrequencyMethod`,
             optional
         :param methods: Methods used for the estimation of ResonanceFrequency
         :type literature_source:
@@ -482,14 +483,15 @@ class VelocityS30(SiteIndicator):
             values between 0 and 1. Calculated according to the guidelines of
             the SERA D7.2 Deliverable.
         :type methods: List of Enum type
-            :class:`~obspy.io.sitexml.util.VelocityS30Method`, optional
+            :data:`~obspy.io.sitexml.util.VelocityS30Method`, optional
         :param methods: Methods used for the estimation of Velocity S30
         :type method_combined_qindex: Enum of type
-            :class:`~obspy.io.sitexml.util.Vs30MethodCombined`, optional
+            :data:`~obspy.io.sitexml.util.Vs30MethodCombined`,
+            optional
         :param method_combined_qindex: Whether a combination of two or more
             methods has been applied to estimate the Vs30 value.
         :type manual_qindex: Enum of type
-            :class:`~obspy.io.sitexml.util.Vs30ManualIndex`, optional
+            :data:`~obspy.io.sitexml.util.Vs30ManualIndex`, optional
         :param manual_qindex: Overall qualitative factor on the knowledge of
             the maximum depth of Vs measurements.
         :type literature_source:
@@ -581,9 +583,9 @@ class VelocityProfile(BaseNode):
             :class:`~obspy.io.sitexml.core.VelocityProfileData`, required
         :param velocity_profile_data: An array of velocity profile data for all
             layers. Must contain at least one layer.
-        :type layer_count: Positive int, optional
-        :param layer_count: Number of layers in velocity profile. If omitted,
-            it is derived from ``velocity_profile_data``.
+        :type layer_count: int, optional
+        :param layer_count: Non-negative int. Number of layers in velocity profile. 
+            If omitted, it is derived from ``velocity_profile_data``.
         """
         self.resource_id = resource_id
         self.velocity_profile_data = velocity_profile_data
@@ -1163,18 +1165,14 @@ class SiteDescription(BaseNode):
         :type morphology: str, optional
         :param morphology: Qualitative description of the shape of the
             earth's surface (free text).
-        :type topographyA: str, optional
+        :type topographyA: Enum of type :data:`~obspy.io.sitexml.util.TopographySchemaA`, optional
         :param topographyA: Quantitative description of the surface according
             to the Italian Code (detailed description of the scheme in SERA
-            Deliverable D7.1 - Appendix I). See
-            :class:`~obspy.io.sitexml.util.TopographySchemaA` for allowed
-            values.
-        :type topographyB: str, optional
+            Deliverable D7.1 - Appendix I).
+        :type topographyB: Enum of type :data:`~obspy.io.sitexml.util.TopographySchemaB`, optional
         :param topographyB: Quantitative description of the shape of the
             earth's surface according to Burjanek et al, 2014 (detailed
             description of the scheme in SERA Deliverable D7.1 - Appendix I).
-            See :class:`~obspy.io.sitexml.util.TopographySchemaB` for allowed
-            values.
         :type preferred_site_analysisID: str or
             :class:`~obspy.core.event.resourceid.ResourceIdentifier`, optional
         :param preferred_site_analysisID: Preferred Site Analysis ID. 
@@ -1316,12 +1314,12 @@ class Analysis(BaseNode):
             :class:`~obspy.io.sitexml.core.VelocityProfileSurvey`, optional
         :param velocity_profile_survey: Velocity Profile Survey.
             Parent object for Velocity Profiles. 
-        :type spt_logs_count: Non-negative int, optional
-        :param spt_logs_count: Number of available SPT profile(s). 
-        :type cpt_logs_count: Non-negative int, optional
-        :param cpt_logs_count: Number of available CPT profile(s). 
-        :type borehole_logs_count: Non-negative int, optional
-        :param borehole_logs_count: Number of available borehole log
+        :type spt_logs_count: int, optional
+        :param spt_logs_count: Non-negative. Number of available SPT profile(s). 
+        :type cpt_logs_count: int, optional
+        :param cpt_logs_count: Non-negative. Number of available CPT profile(s). 
+        :type borehole_logs_count: int, optional
+        :param borehole_logs_count: Non-negative. Number of available borehole log
             profile(s).
         """
         self.resource_id = resource_id        
@@ -1422,10 +1420,10 @@ class SERASite(BaseNode):
             :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
         :param resource_id: SERA SiteXML Unique Identifier (siteID).
         :type site_owner:
-            :class:`~obspy.core.io.sitexml.SERASiteOwner`, required
+            :class:`~obspy.io.sitexml.core.SERASiteOwner`, required
         :param site_owner: The site owner metadata. 
         :type site_description:
-            :class:`~obspy.core.io.sitexml.SiteDescription`, required
+            :class:`~obspy.io.sitexml.core.SiteDescription`, required
         :param site_description: The site description parameters (H800,
             Bedrock depth, EC8 class, geological unit, morphology,
             topography).
@@ -1433,7 +1431,7 @@ class SERASite(BaseNode):
             :class:`~obspy.io.sitexml.core.Analysis`, optional
         :param analysis: The site characterization parameters 
                             (VS30, resonance frequency, velocity profiles).
-        :type created: :class:`~obspy.UTCDateTime`, optional
+        :type created: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param created: Root-level SiteXML document creation time. This
             value is serialization metadata for the XML document itself, not
             the creation time of the underlying site metadata. When
@@ -1658,7 +1656,8 @@ class SERASite(BaseNode):
         a StationXML ``ExternalReference``, and write the updated inventory.
 
         The station code is taken from
-        :attr:`site_description.station_code`, which must use
+        :attr:`site_description.station_code
+        <obspy.io.sitexml.core.SiteDescription.station_code>`, which must use
         ``network.station`` notation.
 
         :type sitexml_url: str, required

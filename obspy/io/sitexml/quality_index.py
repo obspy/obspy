@@ -63,11 +63,10 @@ def quality_index1(method=None, evaluation=None, reliability=None,
     """
     Standalone formula helper for Q_Index1.
 
-    .. rubric:: Object API
-
-    For object-oriented SiteXML workflows, prefer
-    :meth:`~obspy.io.sitexml.core.SiteIndicator.calculate_quality_index1`,
-    which can also store the result on the indicator object.
+    .. note::
+        For object-oriented SiteXML workflows, prefer
+        :meth:`~obspy.io.sitexml.core.SiteIndicator.calculate_quality_index1`,
+        which can also store the result on the indicator object.
 
     This function calculates the Quality Index #1 according to SERA
     Deliverable 7.2.
@@ -75,26 +74,49 @@ def quality_index1(method=None, evaluation=None, reliability=None,
 
     Four criteria are used for the calculation:
 
-    - A: method of acquisition and analysis
-    - B: estimation of indicator
-    - C: reliability of the value
-    - D: report documenting the indicator value
+    +-----------+-----------------------------------------+
+    | Criterion | Meaning                                 |
+    +===========+=========================================+
+    | A         | Method of acquisition and analysis      |
+    +-----------+-----------------------------------------+
+    | B         | Estimation of the indicator             |
+    +-----------+-----------------------------------------+
+    | C         | Reliability of the value                |
+    +-----------+-----------------------------------------+
+    | D         | Report documenting the indicator value  |
+    +-----------+-----------------------------------------+
 
     Accepted values are:
 
-    - ``method="documented"`` or ``method=1``: A = 1
-    - any other ``method`` value, including ``None``: A = 0
-    - ``evaluation="direct"`` or ``evaluation=2``: B = 2
-    - any other ``evaluation`` value, including ``None``: B = 0
-    - ``reliability="yes"`` or ``reliability=1``: C = 1
-    - ``reliability="partial"`` or ``reliability=0.5``: C = 0.5
-    - any other ``reliability`` value, including ``None``: C = 0
-    - ``report="yes"`` or ``report=1``: D = 1
-    - ``report="partial"`` or ``report=0.5``: D = 0.5
-    - any other ``report`` value, including ``None``: D = 0
+    +-------------------+------------------------------+---------+
+    | Parameter         | Accepted value               | Score   |
+    +===================+==============================+=========+
+    | ``method``        | ``"documented"`` or ``1``    | A = 1   |
+    +-------------------+------------------------------+---------+
+    | ``method``        | Any other value              | A = 0   |
+    +-------------------+------------------------------+---------+
+    | ``evaluation``    | ``"direct"`` or ``2``        | B = 2   |
+    +-------------------+------------------------------+---------+
+    | ``evaluation``    | Any other value              | B = 0   |
+    +-------------------+------------------------------+---------+
+    | ``reliability``   | ``"yes"`` or ``1``           | C = 1   |
+    +-------------------+------------------------------+---------+
+    | ``reliability``   | ``"partial"`` or ``0.5``     | C = 0.5 |
+    +-------------------+------------------------------+---------+
+    | ``reliability``   | Any other value              | C = 0   |
+    +-------------------+------------------------------+---------+
+    | ``report``        | ``"yes"`` or ``1``           | D = 1   |
+    +-------------------+------------------------------+---------+
+    | ``report``        | ``"partial"`` or ``0.5``     | D = 0.5 |
+    +-------------------+------------------------------+---------+
+    | ``report``        | Any other value              | D = 0   |
+    +-------------------+------------------------------+---------+
 
-    The Quality Index #1 is then calculated using the following formula
-        Q_Index1 = [ (A + B + C) * D ] / (Amax + Bmax + Cmax)
+    ``None`` is treated as "any other value" for all parameters.
+
+    The Quality Index #1 is then calculated using the following formula::
+
+    >>> Q_Index1 = ((A + B + C) * D) / (Amax + Bmax + Cmax)
 
     :type method: str or float, optional
     :param method: Whether the method of acquisition and analysis is
@@ -146,10 +168,9 @@ def quality_index2(sera_site):
     """
     Standalone formula helper for Q_Index2.
 
-    .. rubric:: Object API
-
-    For object-oriented SiteXML workflows, prefer
-    :meth:`~obspy.io.sitexml.core.SERASite.calculate_quality_index2`.
+    .. note::
+        For object-oriented SiteXML workflows, prefer
+        :meth:`~obspy.io.sitexml.core.SERASite.calculate_quality_index2`.
 
     This function calculates the Quality Index #2 for a site, according to
     SERA Deliverable 7.2.
@@ -158,20 +179,31 @@ def quality_index2(sera_site):
     site indicators evaluated at the target site and varies from 0 to 1.
 
     The formula used for the calculation is:
-    Q_Index2 = (
-        w1*Q_Index1_si1 + w2*Q_Index1_si2 + ... + w7*Q_Index1_si7
-    ) / (w1 + w2 + ... + w7)
+
+    >>> Q_Index2 = (
+    ...    w1*Q_Index1_si1 + w2*Q_Index1_si2 + ... + w7*Q_Index1_si7) / 
+    ...    (w1 + w2 + ... + w7)
 
     The weights used for this calculation for each site indicator, as proposed
     by SERA, are:
 
-    - Resonance Frequency   : 1
-    - Velocity Profile      : 1
-    - Velocity S30          : 0.5
-    - Bedrock Depth         : 0.5
-    - H800                  : 0.5
-    - Geological Unit       : 0.5
-    - Soil Class EC8        : 0.25
+    +---------------------+--------+
+    | Site indicator      | Weight |
+    +=====================+========+
+    | Resonance Frequency | 1      |
+    +---------------------+--------+
+    | Velocity Profile    | 1      |
+    +---------------------+--------+
+    | Velocity S30        | 0.5    |
+    +---------------------+--------+
+    | Bedrock Depth       | 0.5    |
+    +---------------------+--------+
+    | H800                | 0.5    |
+    +---------------------+--------+
+    | Geological Unit     | 0.5    |
+    +---------------------+--------+
+    | Soil Class EC8      | 0.25   |
+    +---------------------+--------+
 
     The velocity-profile term uses the quality index of the
     ``VelocityProfileSurvey`` attached to the preferred analysis. A declared
@@ -225,10 +257,9 @@ def quality_index3(f0_vs30=None, f0_bedrock_depth=None, f0_h800=None,
     """
     Standalone formula helper for Q_Index3.
 
-    .. rubric:: Object API
-
-    For object-oriented SiteXML workflows, prefer
-    :meth:`~obspy.io.sitexml.core.SERASite.calculate_quality_index3`.
+    .. note::
+        For object-oriented SiteXML workflows, prefer
+        :meth:`~obspy.io.sitexml.core.SERASite.calculate_quality_index3`.
 
     This function calculates the Quality Index #3 for a site, according to
     SERA Deliverable 7.2.
@@ -245,9 +276,10 @@ def quality_index3(f0_vs30=None, f0_bedrock_depth=None, f0_h800=None,
     - ``1``: the indicator pair is consistent
     - ``None``: the indicator pair is unavailable or was not evaluated
 
-    Q_Index3 = [cons(f0, Vs30) + cons(f0, seismic_bedrock_depth) +
-                cons(f0, engineering_bedrock_depth) + cons(H800, Vs30) +
-                cons(Vs30, geology)] / n
+    >>> Q_Index3 = [cons(f0, Vs30) + cons(f0, seismic_bedrock_depth) +
+    ...            cons(f0, engineering_bedrock_depth) + cons(H800, Vs30) +
+    ...            cons(Vs30, geology)] / n
+    
     where ``n`` is the number of provided, non-``None`` consistency values.
 
     :type f0_vs30: float or None, optional
@@ -279,10 +311,9 @@ def overall_quality_index(quality_index2=0, quality_index3=0):
     """
     Standalone formula helper for the overall quality index.
 
-    .. rubric:: Object API
-
-    For object-oriented SiteXML workflows, prefer
-    :meth:`~obspy.io.sitexml.core.SERASite.calculate_overall_quality_index`.
+    .. note::
+        For object-oriented SiteXML workflows, prefer
+        :meth:`~obspy.io.sitexml.core.SERASite.calculate_overall_quality_index`.
 
     This function calculates the overall quality index for a site, according
     to SERA Deliverable 7.2.
@@ -290,7 +321,7 @@ def overall_quality_index(quality_index2=0, quality_index3=0):
     The overall quality index is computed as the arithmetic mean between
     Q_Index2 and Q_Index3.
 
-    Overall_Quality_Index = (Q_Index2 + Q_Index3) / 2
+    >>> Overall_Quality_Index = (Q_Index2 + Q_Index3) / 2
 
     If Q_Index2 is zero, the overall quality index is zero and Q_Index3 does
     not affect the result. If Q_Index3 is ``None``, it is treated as zero.
@@ -379,7 +410,7 @@ def apply_quality_index_csv(sera_site_dict, quality_index_csv, delim=';'):
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
     :param sera_site_dict: Dictionary of SERASite objects keyed by site ID.
-    :type quality_index_csv: File name or file-like object, required
+    :type quality_index_csv: str, pathlib.Path, or file-like object, required
     :param quality_index_csv: CSV file with quality-index calculation inputs.
     :type delim: str, optional
     :param delim: CSV file delimiter. Default comma ';' delimeted.
@@ -413,7 +444,7 @@ def apply_quality_index_excel(
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
     :param sera_site_dict: Dictionary of SERASite objects keyed by site ID.
-    :type path_or_file_object: File name or file-like object, required
+    :type path_or_file_object: str, pathlib.Path, or file-like object, required
     :param path_or_file_object: Excel file containing the quality-index sheet.
     :type sheet_name: str, optional
     :param sheet_name: Sheet containing quality-index calculation inputs.
