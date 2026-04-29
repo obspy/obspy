@@ -413,7 +413,7 @@ def apply_quality_index_csv(sera_site_dict, quality_index_csv, delim=';'):
     :type quality_index_csv: str, pathlib.Path, or file-like object, required
     :param quality_index_csv: CSV file with quality-index calculation inputs.
     :type delim: str, optional
-    :param delim: CSV file delimiter. Default comma ';' delimeted.
+    :param delim: CSV file delimiter. Default is semicolon-delimited.
     :rtype: dict
     :return: The input ``sera_site_dict`` after applying calculated values.
     """

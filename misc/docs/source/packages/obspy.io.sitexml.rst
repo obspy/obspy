@@ -1,4 +1,4 @@
-﻿.. currentmodule:: obspy.io.sitexml
+.. currentmodule:: obspy.io.sitexml
 .. automodule:: obspy.io.sitexml
     
     .. comment to end block
@@ -50,9 +50,8 @@
     
         write_sitexml(sera_site, "site_out.xml", validate=True)
     
-    Import site metadata from CSV files. The imported metadata
-    is stored in a dictionary of SERASite objects keyd by the
-    siteID:
+    Import site metadata from CSV files. The imported metadata is stored in a
+    dictionary of ``SERASite`` objects keyed by the ``siteID``:
     
     .. code-block:: python
     
@@ -67,9 +66,8 @@
     
         sera_site = sites["quakeml:domain.ab/site/001"]
     
-    Import site metadata from Excel files.The imported metadata
-    is stored in a dictionary of SERASite objects keyd by the
-    siteID:
+    Import site metadata from Excel files. The imported metadata is stored in a
+    dictionary of ``SERASite`` objects keyed by the ``siteID``:
     
     .. code-block:: python
     
@@ -145,16 +143,45 @@
         sera_site = sites["quakeml:domain.ab/site/001"]
         print(sera_site.site_description.station_code)
     
-    Write a site dictionary created from a CSV or Excel import 
-    back to schema-validated SiteXML:
+    Apply optional quality-index sidecar inputs during CSV import. The sidecar
+    stores Q_Index1 criteria and Q_Index3 consistency checks used for the
+    calculation; only schema-supported calculated outputs are stored on the
+    imported ``SERASite`` objects:
+    
+    .. code-block:: python
+    
+        sites = csv_to_sera_site(
+            site_owner_csv,
+            site_description_csv,
+            analysis_csv=analysis_csv,
+            velocity_profiles_csv=velocity_profiles_dir,
+            quality_index_csv="quality_index.csv",
+            delim=";")
+    
+        sera_site = sites["quakeml:domain.ab/site/001"]
+        print(sera_site.site_description.overall_quality_index)
+    
+    Apply quality-index sidecar inputs later to an existing dictionary, for
+    example after reading SiteXML files:
+    
+    .. code-block:: python
+    
+        from obspy.io.sitexml.quality_index import apply_quality_index_csv
+        from obspy.io.sitexml.sitexml import sitexml_to_sitedict
+    
+        sites = sitexml_to_sitedict("./sitexml_files")
+        apply_quality_index_csv(sites, "quality_index.csv", delim=";")
+    
+    Write a site dictionary created from a CSV or Excel import back to
+    schema-validated SiteXML:
     
     .. code-block:: python
     
         from obspy.io.sitexml.sitexml import sitedict_to_sitexml
     
-        sitedict_to_sitexml(sera_site_dict, "./output_folder")
+        sitedict_to_sitexml(sites, "./output_folder")
     
-    Write an imported site dictionary back to schema-validated SiteXML:
+    Write one imported site back to schema-validated SiteXML:
     
     .. code-block:: python
     
@@ -240,10 +267,12 @@
     when they are explicitly provided but malformed, the import raises a
     SiteXML-specific exception instead of silently ignoring the broken metadata.
     
-    Reference metadata follows the current SiteXML terminology:
-    literature sources use required ``title`` and ``firstAuthor`` fields, and
-    external resources use ``externalReference`` metadata with ``uri`` and
-    ``description`` fields.
+    Reference metadata follows the current SiteXML terminology: literature
+    sources use required ``title`` and ``firstAuthor`` fields, and external
+    resources use ``externalReference`` metadata with ``uri`` and
+    ``description`` fields. Resource identifiers are stored internally as plain
+    strings; ObsPy ``ResourceIdentifier`` values may be passed as input
+    conveniences and are normalized to their string IDs.
     
     Notes
     -----
@@ -289,6 +318,12 @@
        ~sitexml.write_stationxml_reference
        ~read_csv.csv_to_sera_site
        ~read_csv.excel_to_sera_site
+       ~quality_index.quality_index1
+       ~quality_index.quality_index2
+       ~quality_index.quality_index3
+       ~quality_index.overall_quality_index
+       ~quality_index.apply_quality_index_csv
+       ~quality_index.apply_quality_index_excel
        
     .. comment to end block
 

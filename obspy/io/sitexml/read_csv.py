@@ -49,11 +49,11 @@ def csv_to_sera_site(site_owner_csv,
     :param velocity_profiles_csv: CSV file or path to a folder with velocity
         profile metadata. The folder can contain any number of CSV files.
     :type quality_index_csv: str, pathlib.Path, or file-like object, optional
-    :param quality_index_csv: CSV xwith extra quality-index calculation
+    :param quality_index_csv: CSV with extra quality-index calculation
         inputs. Values are used immediately to calculate SiteXML quality
         indexes and are not stored.
     :type delim: str, optional
-    :param delim: CSV file delimiter. Default comma ';' delimeted.
+    :param delim: CSV file delimiter. Default is semicolon-delimited.
     :rtype: dict of :class:`~obspy.io.sitexml.core.SERASite`
     :return: Returns a dictionary of SERASite objects. Dictionary keys are the
         unique SiteIDs.
