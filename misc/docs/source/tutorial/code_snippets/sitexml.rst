@@ -62,6 +62,83 @@ before the file is accepted.
         output_file = Path(tmpdir) / "site.xml"
         write_sitexml(site, output_file, validate=True)
 
+Creating A SiteXML File From Scratch
+------------------------------------
+
+Creating a SiteXML file directly in Python is useful when metadata already
+exists in application objects or another structured source. It is not always
+shorter than preparing CSV or Excel input, but it keeps the object graph
+explicit and lets ObsPy validate the result against the bundled SiteXML schema
+when writing.
+
+A minimal SiteXML document needs a top-level
+:class:`~obspy.io.sitexml.core.SERASite`, a required
+:class:`~obspy.io.sitexml.core.SERASiteOwner`, and a required
+:class:`~obspy.io.sitexml.core.SiteDescription`. Analyses and site indicators
+can then be attached as needed. Resource identifiers are ordinary strings, but
+they should be stable and unique, and relationship fields such as
+``site_descriptionID`` and ``preferred_site_analysisID`` must point to existing
+objects.
+
+The following illustration shows the relationships between the most basic 
+SiteXML objects.
+
+.. figure:: /_images/SERASite.png
+
+The following example creates a small SiteXML site with owner/contact
+metadata, location metadata, a few site-description indicators, one analysis,
+and a Vs30 indicator:
+
+.. code-block:: python
+
+    from pathlib import Path
+    from tempfile import TemporaryDirectory
+
+    from obspy.io.sitexml.core import (
+        Analysis, BedrockDepth, EC8, H800, SERASite, SERASiteOwner,
+        SiteDescription, ValueWithUncertainty, VelocityS30)
+    from obspy.io.sitexml.sitexml import validate_sitexml, write_sitexml
+
+    site_owner = SERASiteOwner(
+        owner_codename="EXAMPLE",
+        owner_fullname="Example Site Owner",
+        person_firstname="Ada",
+        person_lastname="Lovelace",
+        person_mbox="ada@example.org")
+
+    site_description = SiteDescription(
+        resource_id="quakeml:example.org/site_description/001",
+        latitude=45.137174,
+        longitude=5.998905,
+        station_code="XX.ABCD",
+        ec8=EC8("B"),
+        bedrock_depth=BedrockDepth(
+            ValueWithUncertainty(40.0, uncertainty=6.0)),
+        h800=H800(ValueWithUncertainty(10.0, uncertainty=1.0)),
+        preferred_site_analysisID="quakeml:example.org/analysis/001")
+
+    analysis = Analysis(
+        resource_id="quakeml:example.org/analysis/001",
+        site_descriptionID="quakeml:example.org/site_description/001",
+        velocity_s30=VelocityS30(
+            ValueWithUncertainty(620.0, uncertainty=18.0),
+            methods=["MASW"]))
+
+    site = SERASite(
+        resource_id="quakeml:example.org/site/001",
+        site_owner=site_owner,
+        site_description=site_description,
+        analysis=[analysis])
+
+    with TemporaryDirectory() as tmpdir:
+        output_file = Path(tmpdir) / "site.xml"
+        write_sitexml(site, output_file, validate=True)
+
+        valid, errors = validate_sitexml(output_file)
+        if not valid:
+            for error in errors:
+                print(error)
+
 Reading Or Writing Site Dictionaries
 ------------------------------------
 
@@ -83,6 +160,55 @@ SiteXML filename.
         sitedict_to_sitexml(sites, tmpdir)
         print(sorted(Path(tmpdir).glob("*.xml")))
 
+Resource Identifiers And Preferred IDs
+--------------------------------------
+
+SiteXML uses resource identifiers to connect the top-level site object with
+its nested site description, analyses, velocity profiles, owner, and contact
+metadata. ObsPy stores these identifiers internally as plain strings. Values
+passed as ObsPy ``ResourceIdentifier`` objects are accepted as input
+conveniences and normalized to their string IDs.
+
+The current schema keeps the identifier pattern intentionally relaxed, but
+project data should still use stable, unique, URI-like identifiers. The bundled
+fixtures use a QuakeML-style convention:
+
+.. code-block:: text
+
+    quakeml:domain.ab/site/001
+    quakeml:domain.ab/site_description/001
+    quakeml:domain.ab/analysis/001
+    quakeml:domain.ab/velocity_profile/001
+    quakeml:domain.ab/siteOwner/001
+
+The part after the final slash usually identifies the object within its
+collection. The path segment before it names the object type. Keeping this
+shape consistent makes the XML and tabular files easier to audit, but the
+important requirement is that every relationship column points to an existing
+object ID.
+
+The most important relationship and preferred-ID columns are:
+
+* ``siteID`` identifies the top-level ``SERASite`` and is used as the key in
+  dictionaries returned by CSV and Excel import.
+* ``siteDescriptionID`` identifies the ``SiteDescription`` object. Analysis
+  rows must repeat the corresponding ``siteDescriptionID`` so the analysis can
+  be checked against the site description it describes.
+* ``analysisID`` identifies one analysis. A site can have multiple analyses.
+* ``velocityProfileID`` identifies one velocity profile under a specific
+  analysis. An analysis can have multiple velocity profiles.
+* ``preferredSiteAnalysisID`` selects the analysis to use when a site has more
+  than one analysis. Quality-index calculations use this preferred analysis
+  when it is present.
+* ``preferredVelocityProfileID`` selects the preferred velocity profile. **If
+  both preferred IDs are present, the preferred velocity profile must belong to
+  the preferred analysis.**
+
+The generic CSV and Excel importers **do not generate missing relationship IDs**.
+For example, they will not guess ``analysisID`` or
+``preferredSiteAnalysisID`` values, because that would hide user intent when a
+site has several analyses or velocity profiles.
+
 CSV Input Files
 ---------------
 
@@ -90,21 +216,22 @@ CSV import uses one required owner table, one required site-description table,
 and optional analysis, velocity-profile, and quality-index sidecar tables. The
 default delimiter is ``;``.
 
-The owner table describes the data owner and contact person. The minimum
+The **owner** table describes the data owner and contact person. The minimum
 required columns are:
 
 .. code-block:: text
 
     owner_codename;owner_fullname;person_firstname;person_lastname;person_mbox
 
-The site-description table has one row per site. The minimum required columns
+The **site-description** table has **one row per site**. The minimum required columns
 are:
 
 .. code-block:: text
 
     siteID;siteDescriptionID;latitude;longitude
 
-Common optional columns include station association and site indicators:
+Common optional columns include station association, site indicators and the 
+resource ids of the preferred analysis and velocity profile:
 
 .. code-block:: text
 
@@ -114,7 +241,7 @@ Common optional columns include station association and site indicators:
 Station codes use ``network.station`` notation, for example ``XX.ABCD``.
 Bare station codes are rejected because station codes are not globally unique.
 
-The analysis table is optional. When present, each row must identify the site,
+The **analysis** table is optional. When present, each row must identify the site,
 site description, and analysis:
 
 .. code-block:: text
@@ -129,7 +256,7 @@ Analysis rows may also contain indicator columns such as:
     velocityS30_value;velocityS30_uncertainty;velocityS30Method1
     sptLogsCount;cptLogsCount;boreholeLogsCount
 
-Velocity-profile input can be one CSV file or a directory of CSV files. Each
+**Velocity-profile** input can be one CSV file or a directory of CSV files. Each
 row describes one layer in one velocity profile:
 
 .. code-block:: text
@@ -211,11 +338,162 @@ column and the same layer columns used by CSV import.
 Quality Indexes
 ---------------
 
-SiteXML stores calculated indicator-level quality indexes and the final
-overall quality index. The extra calculation inputs for Q_Index1 criteria and
-Q_Index3 consistency checks are not part of the SiteXML object model, so CSV
-and Excel imports can read them from an optional sidecar table and apply them
-immediately.
+Overview
+~~~~~~~~
+
+The SiteXML quality indexes follow the guidelines of the **SERA deliverable 
+D7.1** for describing the reliability and consistency of site-characterization 
+metadata. ObsPy implements four related values:
+
+* Q_Index1 describes the quality of one site indicator.
+* Q_Index2 combines the Q_Index1 values available for one site.
+* Q_Index3 describes consistency between pairs of site indicators.
+* The overall quality index combines Q_Index2 and Q_Index3.
+
+SiteXML stores only the **calculated indicator-level quality indexes (Q_Index1)
+and the final overall quality index**. The extra calculation inputs for Q_Index1 
+criteria and Q_Index3 consistency checks are not part of the SiteXML object model. 
+CSV and Excel imports can read these inputs from an optional sidecar table and 
+apply them immediately.
+
+Quality Index 1
+~~~~~~~~~~~~~~~
+
+Q_Index1 varies from 0 to 1 and refers to a single site indicator, such as
+EC8 class, Vs30, resonance frequency, or a velocity profile. Four criteria are
+used for the calculation:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Parameter
+     - Meaning
+     - Accepted scoring values
+   * - ``method``
+     - Method of acquisition and analysis is documented in peer-reviewed
+       literature.
+     - ``"documented"`` or ``1`` gives A = 1. Any other value, including an
+       empty cell, gives A = 0.
+   * - ``evaluation``
+     - Indicator was evaluated directly from field experiments.
+     - ``"direct"`` or ``2`` gives B = 2. Any other value gives B = 0.
+   * - ``reliability``
+     - Confidence in the indicator value.
+     - ``"yes"`` or ``1`` gives C = 1. ``"partial"`` or ``0.5`` gives
+       C = 0.5. Any other value gives C = 0.
+   * - ``report``
+     - Field survey and data processing are documented in a report.
+     - ``"yes"`` or ``1`` gives D = 1. ``"partial"`` or ``0.5`` gives
+       D = 0.5. Any other value gives D = 0.
+
+Q_Index1 is calculated as:
+
+.. code-block:: text
+
+    Q_Index1 = ((A + B + C) * D) / 4
+
+Because the report criterion is multiplicative, a missing or zero report value
+makes the Q_Index1 contribution zero.
+
+Quality Index 2
+~~~~~~~~~~~~~~~
+
+Q_Index2 varies from 0 to 1 and combines the Q_Index1 values of all site
+indicators evaluated at the target site. It is a weighted mean:
+
+.. code-block:: text
+
+    Q_Index2 = (w1 * Q_Index1_si1 + w2 * Q_Index1_si2 + ...) / (w1 + w2 + ...)
+
+The weights implemented in ObsPy are:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Site indicator
+     - Weight
+   * - Resonance frequency
+     - 1
+   * - Velocity profile
+     - 1
+   * - Velocity S30
+     - 0.5
+   * - Bedrock depth
+     - 0.5
+   * - H800
+     - 0.5
+   * - Geological unit
+     - 0.5
+   * - Soil class EC8
+     - 0.25
+
+When a site has multiple analyses, Q_Index2 uses the analysis selected by
+``preferredSiteAnalysisID``. If no preferred analysis is set, the first
+analysis in document order is used. The velocity-profile contribution uses the
+``VelocityProfileSurvey`` quality index attached to that analysis.
+
+Quality Index 3
+~~~~~~~~~~~~~~~
+
+Q_Index3 varies from 0 to 1 and describes consistency between available pairs
+of site indicators. Each provided consistency value is binary:
+
+* ``1`` means the indicator pair is consistent.
+* ``0`` means the indicator pair is not consistent.
+* An empty value means the pair is unavailable or was not evaluated.
+
+Q_Index3 is calculated as the average of only **the provided, non-empty
+consistency values**:
+
+.. code-block:: text
+
+    Q_Index3 = (
+        cons(f0, Vs30)
+        + cons(f0, seismic_bedrock_depth)
+        + cons(f0, engineering_bedrock_depth)
+        + cons(H800, Vs30)
+        + cons(Vs30, geology)
+    ) / n
+
+where ``n`` is the number of provided consistency values. If no consistency
+values are provided, Q_Index3 is ``None``.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Parameter
+     - Consistency pair
+   * - ``f0_vs30``
+     - Resonance frequency and Vs30.
+   * - ``f0_bedrock_depth``
+     - Resonance frequency and seismic bedrock depth.
+   * - ``f0_h800``
+     - Resonance frequency and engineering bedrock depth H800.
+   * - ``vs30_h800``
+     - Vs30 and H800.
+   * - ``vs30_geology``
+     - Vs30 and surface geology.
+
+Overall Quality Index
+~~~~~~~~~~~~~~~~~~~~~
+
+The overall quality index is the arithmetic mean of Q_Index2 and Q_Index3:
+
+.. code-block:: text
+
+    Overall_Quality_Index = (Q_Index2 + Q_Index3) / 2
+
+If Q_Index2 is zero, the overall quality index is zero. If Q_Index3 is
+``None``, it is treated as zero for the overall calculation.
+
+Import From CSV Or Excel
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The indicator-level quality indexes and the final overall quality index stored
+in SiteXML can be calculated during tabular import. The import helpers read the
+required calculation parameters from an optional CSV or Excel sidecar table,
+apply them immediately, and store only the schema-supported calculated results
+on the imported SiteXML objects.
 
 The quality-index sidecar table is keyed by ``siteID``. Q_Index1 criteria use
 ``<indicator>_<criterion>`` column names:
@@ -229,14 +507,19 @@ The quality-index sidecar table is keyed by ``siteID``. Q_Index1 criteria use
 
 Supported indicator prefixes are ``siteClassEC8``, ``bedrockDepth``, ``h800``,
 ``geologicalUnit``, ``resonanceFrequency``, ``velocityS30``, and
-``velocityProfile``. Q_Index3 consistency columns are:
+``velocityProfile``.
+
+Q_Index3 consistency columns are:
 
 .. code-block:: text
 
     f0_vs30;f0_bedrock_depth;f0_h800;vs30_h800;vs30_geology
 
-Consistency values must be ``0`` or ``1``. Empty cells mean that the pair was
-not evaluated.
+For CSV import, pass the sidecar file as ``quality_index_csv``. For Excel
+import, include an optional ``qualityIndex`` sheet in the workbook.
+
+Examples
+~~~~~~~~
 
 Apply quality-index inputs during CSV import:
 
@@ -272,6 +555,12 @@ The same formulas are available directly through convenience methods on
 
 .. code-block:: python
 
+    ec8_q1 = site.site_description.ec8.calculate_quality_index1(
+        method="documented",
+        evaluation="direct",
+        reliability="yes",
+        report="yes",
+        assign=True)
     q2 = site.calculate_quality_index2()
     q3 = site.calculate_quality_index3(
         f0_vs30=1,
@@ -282,4 +571,4 @@ The same formulas are available directly through convenience methods on
         f0_bedrock_depth=0,
         vs30_geology=1)
 
-    print(q2, q3, overall)
+    print(ec8_q1, q2, q3, overall)
