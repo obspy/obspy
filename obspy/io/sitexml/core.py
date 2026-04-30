@@ -1650,22 +1650,31 @@ class SERASite(BaseNode):
 
         return value
 
-    def get_sitexml_filename(self):
+    def get_sitexml_filename(self, creation_time=None):
         """
         Return the default SiteXML filename for this site.
 
-        Station-backed sites use the associated FDSN station code in
-        ``network.station`` notation. Other sites use this site's resource ID.
+        When ``creation_time`` is provided, return the official SiteXML
+        filename containing the serialization date. Station-backed sites use
+        the associated FDSN station code in ``network.station`` notation.
+        Other sites use this site's resource ID. Without ``creation_time``,
+        the legacy identity-only filename is returned.
 
         :rtype: str
         """
         station_code = self.site_description.station_code
         if station_code:
-            return station_code + ".xml"
+            filename = station_code
+        else:
+            filename = re.sub(
+                r"[^A-Za-z0-9]+", "_", str(self.resource_id)
+            ).strip("_")
 
-        filename = re.sub(
-            r"[^A-Za-z0-9]+", "_", str(self.resource_id)
-        ).strip("_")
+        if creation_time is not None:
+            creation_time = obspy.UTCDateTime(creation_time)
+            date_text = creation_time.strftime("%d-%m-%Y")
+            filename = "Site_%s_%s" % (filename, date_text)
+
         return filename + ".xml"
 
     def validate_references(self):

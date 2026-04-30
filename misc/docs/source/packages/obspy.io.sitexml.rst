@@ -50,10 +50,16 @@
     Write a ``SERASite`` object back to XML:
     
     .. code-block:: python
-    
+
         from obspy.io.sitexml.sitexml import write_sitexml
-    
+
+        write_sitexml(sera_site, validate=True)
         write_sitexml(sera_site, "site_out.xml", validate=True)
+
+    When no output path or file-like object is supplied, the file is written in
+    the current directory using the official SiteXML filename, for example
+    ``Site_XX.ABCD_12-01-2026.xml``. The date in the filename is taken from the
+    same serialization timestamp written to the root ``creationTime`` element.
     
     Import site metadata from CSV files. The imported metadata is stored in a
     dictionary of ``SERASite`` objects keyed by the ``siteID``:
@@ -189,10 +195,10 @@
     Write one imported site back to schema-validated SiteXML:
     
     .. code-block:: python
-    
+
         from obspy.io.sitexml.sitexml import write_sitexml
-    
-        write_sitexml(sera_site, "site.xml", validate=True)
+
+        write_sitexml(sera_site, validate=True)
 
     Uncertainty Values
     ------------------

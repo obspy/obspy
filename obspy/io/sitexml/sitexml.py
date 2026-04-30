@@ -819,14 +819,17 @@ def sitedict_to_sitexml(sera_site_dict, output_folder="."):
         output_file = output_folder / sera_site.get_sitexml_filename()
         write_sitexml(sera_site, output_file, validate=True)
 
-def write_sitexml(sera_site, file_or_file_object, validate=True):
+def write_sitexml(sera_site, file_or_file_object=None, validate=True):
     """
     Writes a sera_site object to a buffer.
 
     :type sera_site: :class:`~obspy.io.sitexml.core.SERASite`, required
     :param sera_site: The sitexml instance to be written.
-    :type file_or_file_object: str or file-like object, required
+    :type file_or_file_object: str, pathlib.Path, file-like object, or None,
+        optional
     :param file_or_file_object: The file or file-like object to be written to.
+        If omitted or None, the file is written to the current directory using
+        this site's official SiteXML filename.
     :type validate: bool, optional
     :param validate: If True, the created document will be validated with the
         SiteXML schema before being written. Defaults to True which is the
@@ -836,8 +839,7 @@ def write_sitexml(sera_site, file_or_file_object, validate=True):
     Example
 
     >>> from obspy.io.sitexml.sitexml import write_sitexml
-    >>> write_sitexml(
-    ...     sera_site, sera_site.get_sitexml_filename(), validate=True)
+    >>> write_sitexml(sera_site, validate=True)
 
     """
     # Validate cross-references in the in-memory SiteXML object graph before
@@ -856,6 +858,9 @@ def write_sitexml(sera_site, file_or_file_object, validate=True):
     creation_time = obspy.UTCDateTime()
     sera_site.created = creation_time
     etree.SubElement(root, "creationTime").text = str(creation_time)
+
+    if file_or_file_object is None:
+        file_or_file_object = sera_site.get_sitexml_filename(creation_time)
 
     if sera_site.external_references:
         for ref in sera_site.external_references:
