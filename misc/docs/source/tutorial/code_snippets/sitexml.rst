@@ -62,6 +62,78 @@ before the file is accepted.
         output_file = Path(tmpdir) / "site.xml"
         write_sitexml(site, output_file, validate=True)
 
+Associating SiteXML With StationXML
+-----------------------------------
+
+SiteXML can be associated with the corresponding StationXML station by adding
+the published SiteXML URL as a station-level StationXML
+``ExternalReference``. The SiteXML file itself stores the station association
+in ``SiteDescription.station_code`` using ``network.station`` notation, for
+example ``XX.ABCD``. The StationXML file stores the reverse link as an external
+reference on the matching station.
+
+Use :func:`~obspy.io.sitexml.sitexml.write_stationxml_reference` when the
+StationXML should be retrieved from an FDSN data center. The helper splits the
+``network.station`` code into FDSN query arguments, requests StationXML at
+``level="response"``, appends the SiteXML URL if it is not already present,
+and writes the updated StationXML file.
+
+.. code-block:: python
+
+    from pathlib import Path
+
+    from obspy.io.sitexml.sitexml import (
+        read_sitexml, write_stationxml_reference)
+
+    site = read_sitexml("XX.ABCD.xml")
+    station_code = site.site_description.station_code
+
+    write_stationxml_reference(
+        station_code=station_code,
+        sitexml_url="https://example.org/sitexml/XX.ABCD.xml",
+        path=Path("XX.ABCD.stationxml.xml"),
+        datacenter="ORFEUS")
+
+The ``sitexml_url`` should be the stable URL where the SiteXML document will be
+published. The local ``path`` is only the output StationXML filename. If the
+default external-reference text is not specific enough, pass a custom
+``description``:
+
+.. code-block:: python
+
+    write_stationxml_reference(
+        station_code="XX.ABCD",
+        sitexml_url="https://example.org/sitexml/XX.ABCD.xml",
+        path="XX.ABCD.stationxml.xml",
+        datacenter="ORFEUS",
+        description="SERA SiteXML site characterization for XX.ABCD")
+
+If the StationXML is already available locally, the same association can be
+made directly on an ObsPy inventory:
+
+.. code-block:: python
+
+    from obspy import read_inventory
+    from obspy.core.inventory.util import ExternalReference
+
+    inventory = read_inventory("XX.ABCD.stationxml.xml")
+    network_code, station_only_code = station_code.split(".", 1)
+    station = inventory.select(
+        network=network_code, station=station_only_code)[0][0]
+
+    sitexml_url = "https://example.org/sitexml/XX.ABCD.xml"
+    if not any(ref.uri == sitexml_url for ref in station.external_references):
+        station.external_references.append(ExternalReference(
+            uri=sitexml_url,
+            description="SERA SiteXML site characterization"))
+
+    inventory.write("XX.ABCD.with_sitexml.stationxml.xml",
+                    format="STATIONXML")
+
+Bare station codes such as ``ABCD`` should not be used for this association,
+because StationXML station codes are only unique together with their network
+code.
+
 Creating A SiteXML File From Scratch
 ------------------------------------
 
