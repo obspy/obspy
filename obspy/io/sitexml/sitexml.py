@@ -829,7 +829,7 @@ def write_sitexml(sera_site, file_or_file_object=None, validate=True):
         optional
     :param file_or_file_object: The file or file-like object to be written to.
         If omitted or None, the file is written to the current directory using
-        this site's official SiteXML filename.
+        a default SiteXML filename.
     :type validate: bool, optional
     :param validate: If True, the created document will be validated with the
         SiteXML schema before being written. Defaults to True which is the

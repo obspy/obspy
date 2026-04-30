@@ -52,22 +52,16 @@ Use :func:`~obspy.io.sitexml.sitexml.write_sitexml` to write one
 before the file is accepted.
 
 When no output path or file-like object is supplied, ObsPy writes the file in
-the current directory using the official SiteXML filename. The filename
+the current directory using using a default filename pattern. The filename
 contains the same serialization date used for the root ``creationTime``
 metadata, for example ``Site_XX.ABCD_12-01-2026.xml``.
 
 .. code-block:: python
 
-    from pathlib import Path
-    from tempfile import TemporaryDirectory
-
     from obspy.io.sitexml.sitexml import write_sitexml
 
     write_sitexml(site, validate=True)
-
-    with TemporaryDirectory() as tmpdir:
-        output_file = Path(tmpdir) / "site.xml"
-        write_sitexml(site, output_file, validate=True)
+    write_sitexml(site, "./site.xml", validate=True)
 
 Associating SiteXML With StationXML
 -----------------------------------

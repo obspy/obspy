@@ -813,7 +813,7 @@ class TestSiteXML():
         assert before <= written_creation_time <= after
         assert sera_site.created == written_creation_time
 
-    def test_write_sitexml_none_uses_official_filename(
+    def test_write_sitexml_none_uses_default_filename(
             self, tmp_path, monkeypatch):
         sera_site = self._minimal_sera_site(station_code="XX.ABCD")
         monkeypatch.chdir(tmp_path)

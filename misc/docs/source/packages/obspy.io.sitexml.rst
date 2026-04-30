@@ -57,7 +57,7 @@
         write_sitexml(sera_site, "site_out.xml", validate=True)
 
     When no output path or file-like object is supplied, the file is written in
-    the current directory using the official SiteXML filename, for example
+    the current directory using a default filename pattern, for example
     ``Site_XX.ABCD_12-01-2026.xml``. The date in the filename is taken from the
     same serialization timestamp written to the root ``creationTime`` element.
     
