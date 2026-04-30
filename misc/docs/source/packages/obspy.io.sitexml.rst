@@ -18,6 +18,11 @@
     :class:`~obspy.io.sitexml.core.Analysis` objects with site-characterization
     indicators such as Vs30, resonance frequency, and velocity profiles.
     
+    The following illustration shows the relationships between the most basic 
+    SiteXML objects.
+
+    .. figure:: /_images/SERASite.png
+    
     Common Workflows
     ----------------
     
