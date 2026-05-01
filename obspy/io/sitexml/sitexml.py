@@ -397,9 +397,9 @@ def _read_site_description(site_description_element):
     - station_code, latitude, longitude, altitude, minDistanceFromStation,
       maxDistanceFromStation
     - OverallQindex
-    - siteTopography
+    - siteTopography (formal topographic/terrain classification)
         - schemaA, schemaB
-    - siteMorphology
+    - siteMorphology (QuakeML-STC-derived site indicator group)
         - morphology
         - siteClassEC8
             - value, qualityIndex, reference
@@ -435,14 +435,13 @@ def _read_site_description(site_description_element):
     site_description.max_distance_from_station = _tag2obj(
         site_description_element, _ns("maxDistanceFromStation"), float)
     
-    # Topography
+    # Formal topographic/terrain classification schemes.
     topography_element = site_description_element.find(_ns("siteTopography"))
     if topography_element is not None:
         site_description.topographyA = _tag2obj(topography_element, _ns("schemaA"), str)
         site_description.topographyB = _tag2obj(topography_element, _ns("schemaB"), str)
 
-    # Morphology
-    #
+    # QuakeML-STC-derived site morphology and near-surface indicators.
     morphology_element = site_description_element.find(_ns("siteMorphology"))
     if morphology_element is not None: 
         _read_morphology(morphology_element, site_description)
@@ -460,7 +459,7 @@ def _read_site_description(site_description_element):
 
 def _read_morphology(morphology_element, site_description_obj):
     """
-    Read the <siteMorphology> element
+    Read the QuakeML-STC-derived <siteMorphology> element.
 
     :rtype: None
 

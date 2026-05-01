@@ -1134,7 +1134,8 @@ class SERASiteOwner(BaseNode):
     
 class SiteDescription(BaseNode):
     """
-    Location, morphology, and near-surface description for a SiteXML site.
+    Location, QuakeML-STC-derived morphology indicators, and topographic
+    classification for a SiteXML site.
     """
 
     resource_id = _resource_id_property(
@@ -1202,16 +1203,16 @@ class SiteDescription(BaseNode):
         :param geological_unit: Brief description of the surface geology
             (free text).
         :type morphology: str, optional
-        :param morphology: Qualitative description of the shape of the
-            earth's surface (free text).
+        :param morphology: Qualitative landform descriptor in the
+            QuakeML-STC-derived site morphology group.
         :type topographyA: Enum of type :data:`~obspy.io.sitexml.util.TopographySchemaA`, optional
-        :param topographyA: Quantitative description of the surface according
-            to the Italian Code (detailed description of the scheme in SERA
-            Deliverable D7.1 - Appendix I).
+        :param topographyA: Formal topographic/terrain classification
+            according to the Italian Code (detailed description of the scheme
+            in SERA Deliverable D7.1 - Appendix I).
         :type topographyB: Enum of type :data:`~obspy.io.sitexml.util.TopographySchemaB`, optional
-        :param topographyB: Quantitative description of the shape of the
-            earth's surface according to Burjanek et al, 2014 (detailed
-            description of the scheme in SERA Deliverable D7.1 - Appendix I).
+        :param topographyB: Formal topographic/terrain classification
+            according to Burjanek et al, 2014 (detailed description of the
+            scheme in SERA Deliverable D7.1 - Appendix I).
         :type preferred_site_analysisID: str or
             :class:`~obspy.core.event.resourceid.ResourceIdentifier`, optional
         :param preferred_site_analysisID: Preferred Site Analysis ID. 

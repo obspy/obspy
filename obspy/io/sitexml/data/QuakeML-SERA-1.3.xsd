@@ -12,7 +12,6 @@
 		Author: Kiriaki Konstantinidou (kiriaki@itsak.gr)	
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.orfeus-eu.org/xml/site/1"
-	xmlns:tns="http://www.orfeus-eu.org/xml/site/1"
 	targetNamespace="http://www.orfeus-eu.org/xml/site/1" elementFormDefault="qualified"
 	attributeFormDefault="unqualified" version="1.3">
 	
@@ -30,29 +29,38 @@
 			<xs:selector xpath=".//*"/>
 			<xs:field xpath="@publicID"/>
 		</xs:unique>
-		<xs:key name="siteDescriptionPublicIDKey">
-			<xs:selector xpath="tns:siteDescription"/>
+		<xs:key name="siteDescriptionPublicIDKey"
+			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
+			<xs:selector xpath="ssx:siteDescription"/>
 			<xs:field xpath="@publicID"/>
 		</xs:key>
-		<xs:key name="analysisPublicIDKey">
-			<xs:selector xpath="tns:analysis"/>
+		<xs:key name="analysisPublicIDKey"
+			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
+			<xs:selector xpath="ssx:analysis"/>
 			<xs:field xpath="@publicID"/>
 		</xs:key>
-		<xs:key name="velocityProfilePublicIDKey">
-			<xs:selector xpath="tns:analysis/tns:velocityProfile/tns:profile"/>
+		<xs:key name="velocityProfilePublicIDKey"
+			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
+			<xs:selector xpath="ssx:analysis/ssx:velocityProfile/ssx:profile"/>
 			<xs:field xpath="@publicID"/>
 		</xs:key>
-		<xs:keyref name="analysisSiteDescriptionRef" refer="tns:siteDescriptionPublicIDKey">
-			<xs:selector xpath="tns:analysis"/>
-			<xs:field xpath="tns:siteDescriptionID"/>
+		<xs:keyref name="analysisSiteDescriptionRef"
+			refer="siteDescriptionPublicIDKey"
+			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
+			<xs:selector xpath="ssx:analysis"/>
+			<xs:field xpath="ssx:siteDescriptionID"/>
 		</xs:keyref>
-		<xs:keyref name="preferredAnalysisRef" refer="tns:analysisPublicIDKey">
-			<xs:selector xpath="tns:siteDescription"/>
-			<xs:field xpath="tns:preferredSiteAnalysisID"/>
+		<xs:keyref name="preferredAnalysisRef"
+			refer="analysisPublicIDKey"
+			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
+			<xs:selector xpath="ssx:siteDescription"/>
+			<xs:field xpath="ssx:preferredSiteAnalysisID"/>
 		</xs:keyref>
-		<xs:keyref name="preferredVelocityProfileRef" refer="tns:velocityProfilePublicIDKey">
-			<xs:selector xpath="tns:siteDescription"/>
-			<xs:field xpath="tns:preferredVelocityProfileID"/>
+		<xs:keyref name="preferredVelocityProfileRef"
+			refer="velocityProfilePublicIDKey"
+			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
+			<xs:selector xpath="ssx:siteDescription"/>
+			<xs:field xpath="ssx:preferredVelocityProfileID"/>
 		</xs:keyref>
 	</xs:element>
 
@@ -78,11 +86,8 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<!--   ************** SITE OWNER *************************     -->
 			<xs:element name="siteOwner" type="SiteOwnerType"/> 
-			<!--   ************** SITE DESCRIPTION *************************     -->
 			<xs:element name="siteDescription" type="SiteDescriptionType"/> 
-			<!--   ************** SITE CONDITION INDICATORS **********     -->
 			<xs:element name="analysis" type="AnalysisType" minOccurs="0" maxOccurs="unbounded">
 				<xs:annotation> 
 					<xs:documentation>Each SiteXML document may include more than one Analysis object.
@@ -382,13 +387,18 @@
 			</xs:element>
 			<xs:element name="siteTopography" type="SiteTopographyType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
-					<xs:documentation>Quantitative description of the surface geology.
+					<xs:documentation>SERA topographic/terrain classification according to one or both
+						supported classification schemes. This is kept as a sibling of siteMorphology to
+						distinguish formal topographic classification from the QuakeML-STC-derived site
+						morphology indicator group.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
 			<xs:element name="siteMorphology" type="SiteMorphologyType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
-					<xs:documentation>Site Indicators related to the morpohology of a site.
+					<xs:documentation>QuakeML-STC-derived group of site morphology and near-surface
+						site indicators, including qualitative morphology, EC8 class, bedrock depth,
+						H800, and geological unit.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
@@ -416,7 +426,8 @@
 			</xs:element>
 			<xs:element name="overallQindex" type="QIndexType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
-					<xs:documentation>The Overall Quality index for this site. Must be a decimal value between 0 an 1.
+					<xs:documentation>The Overall Quality index for this site. 
+						Must be a decimal value between 0 an 1.<br/>
 						<strong>Example: </strong>0.8
 					</xs:documentation>
 				</xs:annotation>
@@ -434,9 +445,11 @@
 	<xs:complexType name="SiteMorphologyType">
 		<xs:annotation>
 			<xs:documentation source="http://www.itsak.gr/SERA_Deliverable7.1.pdf">
-				Site Indicators related to the morpohology of a site, as suggested by SERA.<br/> 
+				QuakeML-STC-derived group of site morphology and near-surface site indicators,
+				as suggested by SERA.<br/>
 				These include:
 				<ul>
+					<li>Qualitative Morphology</li>
 					<li>EC8 class</li>
 					<li>Seismological Bedrock Depth</li>
 					<li>Engineering Bedrock Depth (H800)</li>
@@ -472,7 +485,7 @@
 			<xs:element name="h800" type="H800SiteIndicatorType" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Depth beyond which the shear-wave velocity Vs 
-						exceeds 800 m/s (only if measured).
+						exceeds 800 m/s (only if measured).<br/>
 						<strong>Note:</strong>This in not included in the QuakeML 2.0 draft<br/>
 					</xs:documentation>
 				</xs:annotation>
@@ -483,8 +496,9 @@
 			
 	<xs:complexType name="SiteTopographyType">
 		<xs:annotation>
-					<xs:documentation>Quantitative description of the surface according to two different 
-						schemas. For details on the schemas used see SERA Deliverable D7.1 - Appendix I.
+					<xs:documentation>Formal topographic/terrain classification according to two
+						different schemas. For details on the schemas used see SERA Deliverable
+						D7.1 - Appendix I.
 						You can provide information for schemaA, schemaB or both.
 						<ul><li>Example schema A: <strong>T1</strong></li>
 						<li>Example schema B: <strong>Flat</strong></li></ul>
@@ -898,13 +912,16 @@
 	<xs:simpleType name="TopographySchemaAType">
 		<xs:annotation>
 			<xs:documentation>
-				Topography is a precise (quantitative) description of the ground surface 
-				features of a site. Schema A is the topography description schema of the Italian Code.
+				Topographic class of the site according to the Italian Code 
+				topographic classification scheme.
 				<ul>
-					<li>T1 : Flat surface, isolated slopes and cliffs with average slop angle </li>
+					<li>T1 : Flat surface, isolated slopes and cliffs with 
+						average slope angle </li>
 					<li>T2 : Slopes with average slope angle i&gt;15</li>
-					<li>T3 : Ridges with crest width significantly less than the base width and average slope angle 15</li>
-					<li>T4 : Ridges with crest width significantly less than the base width and average slope angle i&gt;30</li>
+					<li>T3 : Ridges with crest width significantly less than 
+						the base width and average slope angle 15</li>
+					<li>T4 : Ridges with crest width significantly less than 
+						the base width and average slope angle i&gt;30</li>
 				</ul>
 			</xs:documentation>
 		</xs:annotation>
@@ -919,10 +936,11 @@
 	<xs:simpleType name="TopographySchemaBType">
 		<xs:annotation>
 			<xs:documentation>
-				Topography is a precise (quantitative) description of the ground surface 
-				features of a site. Schema B is the one proposed by Burjanek et al. (2014).<br/>
-				For the precise definition of the allowed values refer to <strong>SERA Deliverable D7.1</strong>.
-				<!-- Add URL poinding to the SERA deliverbal or to the SiteXML documentation -->
+				Topographic position class of the site according to the 
+				Burjánek et al. terrain classification scheme. <br/>
+				For the precise definition of the allowed values refer to 
+				<strong>SERA Deliverable D7.1</strong>.
+				<!-- Add URL poinding to the SERA deliverable or to the SiteXML documentation -->
 			</xs:documentation>
 		</xs:annotation>
     	<xs:restriction base="xs:string">
@@ -938,7 +956,8 @@
 	<xs:simpleType name="MorphologyType">
 		<xs:annotation>
 			<xs:documentation>
-				Qualitative description of the shape of the earth's surface
+				Qualitative description of the general landform or
+				surface shape at the site.
 			</xs:documentation>
 		</xs:annotation>
     	<xs:restriction base="xs:string">

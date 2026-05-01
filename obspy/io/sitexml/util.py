@@ -114,10 +114,10 @@ TopographySchemaA = Enum([
     "T4",
 ])
 """
-Topography is a precise (quantitative) description of the ground surface 
-features of a site. 
+Formal topographic/terrain classification of a site.
 
-**Schema A** is the topography description scheme of the **Italian Code**.
+**Schema A** is the topographic classification scheme of the
+**Italian Code**.
 Allowed values are:
 
 * ``"T1"`` : Flat surface, isolated slopes and cliffs with average slop angle 
@@ -135,10 +135,10 @@ TopographySchemaB = Enum([
     "Ridge",
 ])
 """
-Topography is a precise (quantitative) description of the ground surface 
-features of a site. 
+Formal topographic/terrain classification of a site.
 
-**Schema B** is the one proposed by **Burjanek et al. (2014)**.
+**Schema B** is the terrain classification scheme proposed by
+**Burjanek et al. (2014)**.
 For the precise definition of the allowed values
 refer to **SERA Deliverable D7.1, Appendix I**.
 
@@ -159,7 +159,8 @@ MorphologyType = Enum([
     "Ridge",
 ])
 """
-Qualitative description of the shape of the earth's surface.
+Qualitative landform descriptor in the QuakeML-STC-derived site morphology
+group.
 Allowed values are:
 
 * ``"Plain"``
