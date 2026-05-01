@@ -736,34 +736,33 @@ class VelocityProfileData(BaseNode):
     bottom_depth = _wrapped_property("bottom_depth", ValueWithUncertainty)
     density = _wrapped_property("density", ValueWithUncertainty)
     velocityP = _wrapped_property("velocityP", ValueWithUncertainty)
-    velocityS = _wrapped_property("velocityS", ValueWithUncertainty)
+    velocityS = _wrapped_property("velocityS", ValueWithUncertainty,
+                                  allow_none=False)
 
-    # Need to decide which if these arguments besides top_depth will be
-    # mandatory
-    def __init__(self, top_depth, bottom_depth=None, density=None, 
-                velocityP=None, velocityS=None):
+    def __init__(self, velocityS, top_depth, bottom_depth=None,
+                 velocityP=None, density=None):
         """
+        :type velocityS:
+            :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required
+        :param velocityS: Layer velocityS value.
         :type top_depth:
             :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, required
         :param top_depth: Layer top depth.
         :type bottom_depth:
             :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, optional
         :param bottom_depth: Layer bottom depth.
-        :type density:
-            :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, optional
-        :param density: Layer density.
         :type velocityP:
             :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, optional
         :param velocityP: Layer velocityP value.
-        :type velocityS:
+        :type density:
             :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, optional
-        :param velocityS: Layer velocityS value.
+        :param density: Layer density.
         """
-        self.top_depth = top_depth
+        self.velocityS = velocityS
+        self.top_depth = top_depth 
         self.bottom_depth = bottom_depth
-        self.density = density 
-        self.velocityP = velocityP 
-        self.velocityS = velocityS 
+        self.velocityP = velocityP
+        self.density = density
         
 class SERASiteOwner(BaseNode):
     """

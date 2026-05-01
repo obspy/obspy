@@ -623,9 +623,13 @@ def _read_velocity_profile_data(vp_data_element):
     :rtype: :class:`~obspy.io.sitexml.core.VelocityProfileData`
     """
 
-    density = _read_value_with_uncertainty(vp_data_element, "density", float)
     velocityS = _read_value_with_uncertainty(vp_data_element, "velocityS", float)
+    if velocityS is None:
+        raise SiteXMLValidationError(
+            "velocityProfileData requires a velocityS element."
+        )
     velocityP = _read_value_with_uncertainty(vp_data_element, "velocityP", float)
+    density = _read_value_with_uncertainty(vp_data_element, "density", float)
     
     geometry_element = vp_data_element.find(_ns("layerThickness"))
     if geometry_element is None:
@@ -639,13 +643,15 @@ def _read_velocity_profile_data(vp_data_element):
         raise SiteXMLValidationError(
             "velocityProfileData requires layerTopDepth."
         )
-    
-    vp_data = VelocityProfileData(top_depth = top_depth,
-                                bottom_depth = bottom_depth,
-                                density = density,
-                                velocityS = velocityS,
-                                velocityP = velocityP
-                                )
+   
+    vp_data = VelocityProfileData(
+        velocityS = velocityS,
+        velocityP = velocityP,
+        density = density,
+        top_depth = top_depth,
+        bottom_depth = bottom_depth
+        )
+
     return vp_data
 
 def _read_site_indicator(parent, site_indicator_name, site_indicator_cls,
@@ -1032,13 +1038,12 @@ def _write_velocity_profile(parent, velocity_profile_survey):
 
                 for vp_data in vp.velocity_profile_data:
                     vp_data_elem = etree.SubElement(vp_elem, "velocityProfileData")
-                    _write_value_with_uncertainty(vp_data_elem, "velocityP",
-                                                  vp_data.velocityP)
                     _write_value_with_uncertainty(vp_data_elem, "velocityS",
                                                   vp_data.velocityS)
+                    _write_value_with_uncertainty(vp_data_elem, "velocityP",
+                                                  vp_data.velocityP)
                     _write_value_with_uncertainty(vp_data_elem, "density",
                                                   vp_data.density)
-
                     geometry_elem = etree.SubElement(vp_data_elem, "layerThickness")
                     _write_value_with_uncertainty(geometry_elem, "layerTopDepth",
                                                   vp_data.top_depth)

@@ -110,7 +110,7 @@ class TestSiteXMLCSVImport():
         assert site_003.site_description.resource_id == (
             "quakeml:domain.ab/site_description/003")
         assert site_003.site_description.station_code is None
-        assert site_003.site_description.topographyA == "T2"
+        assert site_003.site_description.topographyA == "T1"
         assert site_003.site_description.topographyB == "Flat"
         assert site_003.site_description.morphology == "Plain"
         assert site_003.site_description.preferred_site_analysisID is None

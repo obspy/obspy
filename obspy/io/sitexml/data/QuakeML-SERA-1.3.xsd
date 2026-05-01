@@ -779,8 +779,8 @@
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
+    		<xs:element name="velocityS" type="RealQuantity" minOccurs="1" maxOccurs="1"/>
     		<xs:element name="velocityP" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
-    		<xs:element name="velocityS" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
     		<xs:element name="density" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
     		<xs:element name="layerThickness" type="LayerGeometry" minOccurs="1" maxOccurs="1"/>
 		</xs:sequence>

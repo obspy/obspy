@@ -173,7 +173,9 @@ class TestSiteXML():
         Preferred velocity profile lookup follows SiteDescription references.
         """
         sera_site = self._minimal_sera_site()
-        profile_data = [VelocityProfileData(top_depth=ValueWithUncertainty(0))]
+        profile_data = [VelocityProfileData(
+            velocityS=ValueWithUncertainty(100),
+            top_depth=ValueWithUncertainty(0))]
         profile_001 = VelocityProfile(
             resource_id="quakeml:domain.ab/velocity_profile/001",
             velocity_profile_data=profile_data)
@@ -233,7 +235,9 @@ class TestSiteXML():
         Preferred velocity profile must belong to the preferred analysis.
         """
         sera_site = self._minimal_sera_site()
-        profile_data = [VelocityProfileData(top_depth=ValueWithUncertainty(0))]
+        profile_data = [VelocityProfileData(
+            velocityS=ValueWithUncertainty(100),
+            top_depth=ValueWithUncertainty(0))]
         profile_001 = VelocityProfile(
             resource_id="quakeml:domain.ab/velocity_profile/001",
             velocity_profile_data=profile_data)
@@ -758,8 +762,9 @@ class TestSiteXML():
         velocity_profile = VelocityProfile(
             resource_id=ResourceIdentifier(
                 "quakeml:domain.ab/velocity_profile/001"),
-            velocity_profile_data=[
-                VelocityProfileData(top_depth=ValueWithUncertainty(0.0))
+            velocity_profile_data=[VelocityProfileData(
+                velocityS=ValueWithUncertainty(100),
+                top_depth=ValueWithUncertainty(0))
             ],
         )
         sera_site = SERASite(
@@ -1104,7 +1109,7 @@ class TestSiteXML():
 
         assert sera_site.site_description.topographyA == "T1"
         assert sera_site.site_description.topographyB == "Valley"
-        assert sera_site.site_description.morphology == "Plain"
+        assert sera_site.site_description.morphology == "Valley - Basin"
 
         assert sera_site.site_description.ec8 is not None
         assert sera_site.site_description.ec8.value == "C"
@@ -1198,7 +1203,7 @@ class TestSiteXML():
         assert sera_site.site_description.altitude == 120.0
         assert sera_site.site_description.min_distance_from_station is None
         assert sera_site.site_description.max_distance_from_station is None
-        assert sera_site.site_description.topographyA == "T2"
+        assert sera_site.site_description.topographyA == "T1"
         assert sera_site.site_description.topographyB == "Flat"
         assert sera_site.site_description.morphology == "Plain"
 
@@ -1337,6 +1342,7 @@ class TestSiteXML():
         vpd = vp.velocity_profile_data[7]               # Last Layer
         assert vpd.velocityS.value == 1108.37
         assert vpd.top_depth.value == 209.23
+        assert vpd.bottom_depth is None
 
         # Test first/last layer from second velocity profile
         vp = vps.velocity_profiles[1]
@@ -1353,6 +1359,7 @@ class TestSiteXML():
         vpd = vp.velocity_profile_data[7]               # Last Layer
         assert vpd.velocityS.value == 1097.0
         assert vpd.top_depth.value == 226.6
+        assert vpd.bottom_depth is None
 
         # Write it again and compare to the original file.
         self._write_and_compare(filename, sera_site)
@@ -1391,12 +1398,33 @@ class TestSiteXML():
         assert vp.layer_count == 8
         assert len(vp.velocity_profile_data) == 8
 
+    def test_reading_velocity_profile_requires_velocity_s(
+            self, testdata, tmp_path):
+        """
+        Tests that velocityProfileData requires velocityS.
+        """
+        filename = testdata["full_analysis.xml"]
+        xml_text = filename.read_text(encoding="utf-8")
+        invalid_xml = tmp_path / "missing_velocity_s.xml"
+        invalid_xml.write_text(
+            re.sub(
+                r"\s*<velocityS>\s*<value>118\.08</value>\s*"
+                r"<uncertainty>2\.0</uncertainty>\s*</velocityS>",
+                "",
+                xml_text,
+                count=1),
+            encoding="utf-8")
+
+        with pytest.raises(SiteXMLValidationError, match="velocityS"):
+            read_sitexml(invalid_xml)
+
     def test_velocity_profile_requires_schema_required_fields(self):
         """
         Tests required VelocityProfile and VelocityProfileData fields.
         """
+        velocity_s = ValueWithUncertainty(100.0)
         top_depth = ValueWithUncertainty(0.0)
-        layer = VelocityProfileData(top_depth=top_depth)
+        layer = VelocityProfileData(velocityS=velocity_s, top_depth=top_depth)
 
         with pytest.raises(SiteXMLValidationError, match="resource_id"):
             VelocityProfile(resource_id=None, velocity_profile_data=[layer])
@@ -1412,15 +1440,22 @@ class TestSiteXML():
                 velocity_profile_data=[])
 
         with pytest.raises(SiteXMLValidationError, match="top_depth"):
-            VelocityProfileData(top_depth=None)
+            VelocityProfileData(velocityS=velocity_s, top_depth=None)
+
+        with pytest.raises(SiteXMLValidationError, match="velocityS"):
+            VelocityProfileData(velocityS=None, top_depth=top_depth)
 
     def test_velocity_profile_derives_layer_count_from_data(self):
         """
         Tests that layer_count is derived from velocity_profile_data when omitted.
         """
         layers = [
-            VelocityProfileData(top_depth=ValueWithUncertainty(0.0)),
-            VelocityProfileData(top_depth=ValueWithUncertainty(10.0)),
+            VelocityProfileData(
+                top_depth=ValueWithUncertainty(0.0),
+                velocityS=ValueWithUncertainty(100.0)),
+            VelocityProfileData(
+                top_depth=ValueWithUncertainty(10.0),
+                velocityS=ValueWithUncertainty(200.0)),
         ]
         profile = VelocityProfile(
             resource_id="quakeml:domain.ab/velocity_profile/001",
