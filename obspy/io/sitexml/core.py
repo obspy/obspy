@@ -1535,6 +1535,36 @@ class SERASite(BaseNode):
                     return velocity_profile
         return None
 
+    def get_preferred_velocity_profile(self):
+        """
+        Return the preferred velocity profile, falling back to the first one.
+
+        If ``site_description.preferred_velocity_profileID`` is set, the
+        matching attached velocity profile is returned. If a preferred analysis
+        is also declared, only that analysis is searched. If no preferred
+        velocity profile is declared, the first velocity profile on the
+        preferred analysis is returned. If no matching profile can be found,
+        ``None`` is returned.
+
+        :rtype: :class:`~obspy.io.sitexml.core.VelocityProfile` or None
+        """
+        analysis = self.get_preferred_analysis()
+        if analysis is None:
+            return None
+
+        preferred_id = self.site_description.preferred_velocity_profileID
+        if preferred_id is not None:
+            if self.site_description.preferred_site_analysisID is not None:
+                return self.get_velocity_profile(
+                    preferred_id, analysis=analysis)
+            return self.get_velocity_profile(preferred_id)
+
+        survey = analysis.velocity_profile_survey
+        if survey is None or not survey.velocity_profiles:
+            return None
+
+        return survey.velocity_profiles[0]
+
     def get_indicator_object(self, name):
         """
         Return a site indicator object by SiteXML indicator name.

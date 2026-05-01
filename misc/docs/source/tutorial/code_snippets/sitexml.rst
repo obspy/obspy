@@ -277,6 +277,12 @@ The most important relationship and preferred-ID columns are:
   both preferred IDs are present, the preferred velocity profile must belong to
   the preferred analysis.**
 
+In Python, use ``SERASite.get_preferred_analysis()`` and
+``SERASite.get_preferred_velocity_profile()`` to retrieve the selected objects.
+If no preferred ID is declared, these methods return the first available
+analysis or velocity profile without changing the missing preferred-ID
+metadata.
+
 The generic CSV and Excel importers **do not generate missing relationship IDs**.
 For example, they will not guess ``analysisID`` or
 ``preferredSiteAnalysisID`` values, because that would hide user intent when a

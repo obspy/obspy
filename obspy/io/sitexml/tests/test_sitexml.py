@@ -168,6 +168,48 @@ class TestSiteXML():
             "quakeml:domain.ab/analysis/missing")
         assert sera_site.get_preferred_analysis() is None
 
+    def test_get_preferred_velocity_profile(self):
+        """
+        Preferred velocity profile lookup follows SiteDescription references.
+        """
+        sera_site = self._minimal_sera_site()
+        profile_data = [VelocityProfileData(top_depth=ValueWithUncertainty(0))]
+        profile_001 = VelocityProfile(
+            resource_id="quakeml:domain.ab/velocity_profile/001",
+            velocity_profile_data=profile_data)
+        profile_002 = VelocityProfile(
+            resource_id="quakeml:domain.ab/velocity_profile/002",
+            velocity_profile_data=profile_data)
+        profile_003 = VelocityProfile(
+            resource_id="quakeml:domain.ab/velocity_profile/003",
+            velocity_profile_data=profile_data)
+        analysis_001 = Analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            site_descriptionID=sera_site.site_description.resource_id,
+            velocity_profile_survey=VelocityProfileSurvey(
+                velocity_profiles=[profile_001, profile_002]))
+        analysis_002 = Analysis(
+            resource_id="quakeml:domain.ab/analysis/002",
+            site_descriptionID=sera_site.site_description.resource_id,
+            velocity_profile_survey=VelocityProfileSurvey(
+                velocity_profiles=[profile_003]))
+        sera_site.analysis = [analysis_001, analysis_002]
+
+        assert sera_site.get_preferred_velocity_profile() is profile_001
+
+        sera_site.site_description.preferred_velocity_profileID = (
+            profile_002.resource_id)
+        assert sera_site.get_preferred_velocity_profile() is profile_002
+
+        sera_site.site_description.preferred_site_analysisID = (
+            analysis_002.resource_id)
+        sera_site.site_description.preferred_velocity_profileID = None
+        assert sera_site.get_preferred_velocity_profile() is profile_003
+
+        sera_site.site_description.preferred_velocity_profileID = (
+            "quakeml:domain.ab/velocity_profile/missing")
+        assert sera_site.get_preferred_velocity_profile() is None
+
     def test_get_indicator_object(self, testdata):
         """
         Indicator lookup uses site description and preferred analysis context.
