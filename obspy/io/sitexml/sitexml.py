@@ -1176,43 +1176,65 @@ def _obj2tag(parent, tag_name, tag_value):
 
 ###### Associate SiteXML with the respective StationXML
 #
-def write_stationxml_reference(station_code, sitexml_url, path,
-        datacenter, description=None, client=None):
+def write_stationxml_reference(station_code, sitexml_url, *,
+        description=None, added_time=None,
+        input_path=None, client=None, datacenter=None,
+        output_path=None):
     """
-    Attach the SiteXML URL as a StationXML 
+    Attach a SiteXML remote URL as a StationXML 
     :class:`~obspy.core.inventory.util.ExternalReference`.
+    
+    Use ``station_code`` to select a
+    :class:`~obspy.core.inventory.station.Station` object from either a local
+    StationXML file or an FDSN Web Service client, write an
+    ``ExternalReference`` pointing to the permanent URL of the SiteXML file,
+    and return the updated inventory. If ``output_path`` is provided, the
+    updated inventory is also written to StationXML.
 
-    Attach a SiteXML remote URL as a StationXML
-    :class:`~obspy.core.inventory.util.ExternalReference`, 
-    write and return the updated inventory.
+    The ``ExternalReference.description`` is timestamped with either the
+    date the reference is written or a date provided by the user with 
+    ``added_time``. The helper does not read the SiteXML document to 
+    reuse its root ``creationTime`` for that purpose.
 
     :type station_code: str, required
     :param station_code: FDSN network and station code in ``network.station``
         notation.
     :type sitexml_url: str, required
     :param sitexml_url: URL of the SiteXML document to reference.
-    :type path: str or pathlib.Path or file-like object, required
-    :param path: Local output path or writable file-like object for the
-        updated StationXML.
-    :type datacenter: str, required
-    :param datacenter: FDSN data center used to initialize
-        :class:`~obspy.clients.fdsn.client.Client`, for example
-        ``"EARTHSCOPE"``.
     :type description: str, optional
     :param description: StationXML external-reference description. If
-        omitted, a SERA SiteXML description is used.
+        omitted, a SERA SiteXML description is used. The date the reference
+        was added is appended to the description.
+    :type added_time: :class:`~obspy.core.utcdatetime.UTCDateTime` or
+        compatible, optional
+    :param added_time: Timestamp used for the ``added YYYY-MM-DD`` marker in
+        the external-reference description. Defaults to the current UTC time.
+    :type input_path: str or pathlib.Path or file-like object, optional
+    :param input_path: Local StationXML input path or readable file-like
+        object. If omitted, StationXML is fetched from an FDSN data center.
     :type client: :class:`~obspy.clients.fdsn.client.Client`, optional
     :param client: Existing FDSN client. Mainly useful for tests or for
         callers that already manage client construction.
+    :type datacenter: str, optional
+    :param datacenter: FDSN data center used to initialize
+        :class:`~obspy.clients.fdsn.client.Client`, for example
+        ``"EARTHSCOPE"``. Required when ``input_path`` and ``client`` are
+        omitted.
+    :type output_path: str or pathlib.Path or file-like object, optional
+    :param output_path: Local output path or writable file-like object for the
+        updated StationXML. If omitted, no file is written.
+    
     :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
-    :return: The updated inventory that was written to ``path``.
+    :return: The updated inventory.
 
     Example
 
         >>> from obspy.io.sitexml.sitexml import write_stationxml_reference
-        >>> write_stationxml_reference("XX.ABCD", "https://url/to/site.xml", 
-        ...             path="./updated_stationXML",
-        ...             datacenter="EARTHSCOPE")
+        >>> inventory = write_stationxml_reference(
+        ...     "XX.ABCD", "https://url/to/site.xml", datacenter="EARTHSCOPE")
+        >>> write_stationxml_reference(
+        ...     "XX.ABCD", "https://url/to/site.xml",
+        ...     input_path="./station.xml", output_path="./updated_station.xml")
     """
     if not station_code:
         raise SiteXMLValidationError(
@@ -1226,12 +1248,27 @@ def write_stationxml_reference(station_code, sitexml_url, path,
         "level": "response",
     }
 
-    if client is None:
+    if input_path is not None:
+        if client is not None:
+            raise SiteXMLValidationError(
+                "input_path and client are mutually exclusive StationXML "
+                "sources."
+            )
+        from obspy.core.inventory import read_inventory
+
+        inventory = read_inventory(input_path, format="STATIONXML")
+    elif client is None:
+        if datacenter is None:
+            raise SiteXMLValidationError(
+                "Cannot retrieve StationXML without input_path, datacenter, "
+                "or client."
+            )
         from obspy.clients.fdsn import Client
 
         client = Client(datacenter)
-
-    inventory = client.get_stations(**query)
+        inventory = client.get_stations(**query)
+    else:
+        inventory = client.get_stations(**query)
     matches = [
         (network, station)
         for network in inventory
@@ -1241,23 +1278,22 @@ def write_stationxml_reference(station_code, sitexml_url, path,
 
     if not matches:
         raise SiteXMLValidationError(
-            "FDSN StationXML response did not contain station "
+            "StationXML inventory did not contain station "
             f"{station_code!r}."
         )
 
-    ## TODOs: How to replace an older siteXML with a newer one??
-    # Keep only a specific description to look for, for replacing?
-    #
-    # Maybe add a comment with the addition date.
-    # This could also serve as a history of SiteXML updates.
-    #
     _, station = matches[0]
     description = description or "SERA SiteXML site characterization"
+    added_utc = (obspy.UTCDateTime() if added_time is None
+                 else obspy.UTCDateTime(added_time))
+    added_date = added_utc.date
+    description = f"{description}; added {added_date.isoformat()}"
     if not any(ref.uri == sitexml_url for ref in
                station.external_references):
         station.external_references.append(
             ExternalReference(uri=sitexml_url, description=description)
         )
 
-    inventory.write(path, format="STATIONXML")
+    if output_path is not None:
+        inventory.write(output_path, format="STATIONXML")
     return inventory

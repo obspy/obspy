@@ -66,70 +66,105 @@ metadata, for example ``Site_XX.ABCD_12-01-2026.xml``.
 Associating SiteXML With StationXML
 -----------------------------------
 
-SiteXML can be associated with the corresponding StationXML station by adding
+SiteXML can be associated with the corresponding StationXML by adding
 the published SiteXML URL as a station-level StationXML
 ``ExternalReference``. The SiteXML file itself stores the station association
 in ``SiteDescription.station_code`` using ``network.station`` notation, for
-example ``XX.ABCD``. The StationXML file stores the reverse link as an external
-reference on the matching station.
+example ``XX.ABCD``.
 
-Use :func:`~obspy.io.sitexml.sitexml.write_stationxml_reference` when the
-StationXML should be retrieved from an FDSN data center. The helper splits the
-``network.station`` code into FDSN query arguments, requests StationXML at
-``level="response"``, appends the SiteXML URL if it is not already present,
-and writes the updated StationXML file.
+Use :func:`~obspy.io.sitexml.sitexml.write_stationxml_reference` to add 
+in StationXML the reference that points to SiteXML URL. 
+
+Input Options
+~~~~~~~~~~~~~
+
+The :func:`~obspy.io.sitexml.sitexml.write_stationxml_reference` supports 
+three input options that are mutually exclusive:
+
+* ``input_path`` - Read a local StationXML file 
+* ``client`` - Use an already initialized FDSN Web Service client to fetch StationXML
+* ``datacenter`` - Provide the datacenter of the remote FDSN Web Service from 
+  which to fetch StationXML.
+
+Output Options
+~~~~~~~~~~~~~
+
+The helper always returns an updated :class:`~obspy.core.inventory.inventory.Inventory` 
+object. Optionally, it can write an output StationXML file if ``output_path`` is provided.
+
+Local StationXML Input
+~~~~~~~~~~~~~~~~~~~~~~
+
+If the StationXML is already available locally, provide the filename using 
+``input_path``. This is useful for newly created StationXML files, offline
+workflows, or examples where you do not want to contact an FDSN data center:
 
 .. code-block:: python
 
-    from pathlib import Path
+    from obspy import UTCDateTime
 
-    from obspy.io.sitexml.sitexml import (
-        read_sitexml, write_stationxml_reference)
-
-    site = read_sitexml("XX.ABCD.xml")
-    station_code = site.site_description.station_code
-
-    write_stationxml_reference(
-        station_code=station_code,
+    inventory = write_stationxml_reference(
+        station_code="XX.ABCD",
         sitexml_url="https://example.org/sitexml/XX.ABCD.xml",
-        path=Path("XX.ABCD.stationxml.xml"),
+        input_path="XX.ABCD.stationxml.xml",
+        output_path="XX.ABCD.with_sitexml.stationxml.xml",
+        added_time=UTCDateTime(2026, 5, 2))
+
+Basic Remote Workflow
+~~~~~~~~~~~~~~~~~~~~~
+
+When ``input_path`` is omitted, StationXML is fetched from an FDSN data center.
+The helper splits the ``network.station`` code into FDSN query arguments and
+requests StationXML at ``level="response"``.
+
+.. code-block:: python
+
+    from obspy.io.sitexml.sitexml import write_stationxml_reference
+
+    inventory = write_stationxml_reference(
+        station_code="XX.ABCD",
+        sitexml_url="https://example.org/sitexml/XX.ABCD.xml",
         datacenter="ORFEUS")
 
-The ``sitexml_url`` should be the stable URL where the SiteXML document will be
-published. The local ``path`` is only the output StationXML filename. If the
-default external-reference text is not specific enough, pass a custom
-``description``:
+    station = inventory.select(network="XX", station="ABCD")[0][0]
+    print(station.external_references[-1].description)
+
+This returns the modified inventory but does not write an output file. To write the
+updated StationXML directly, pass ``output_path``:
 
 .. code-block:: python
 
     write_stationxml_reference(
         station_code="XX.ABCD",
         sitexml_url="https://example.org/sitexml/XX.ABCD.xml",
-        path="XX.ABCD.stationxml.xml",
-        datacenter="ORFEUS",
-        description="SERA SiteXML site characterization for XX.ABCD")
+        output_path="XX.ABCD.stationxml.xml",
+        datacenter="ORFEUS")
 
-If the StationXML is already available locally, the same association can be
-made directly on an ObsPy inventory:
+
+
+Reference Description And Date
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``sitexml_url`` should be the stable URL where the SiteXML document will be
+published. ``input_path`` and ``output_path`` are local StationXML filenames.
+
+The StationXML ``ExternalReference.description`` records when the reference was
+added, for example ``SERA SiteXML site characterization; added 2026-05-02``.
+By default the added date is the current UTC date. If you need reproducible
+output or want to use the SiteXML document creation date, pass
+``added_time``. If the default external-reference text is not specific enough,
+pass a custom ``description``; the added-date marker is appended to the custom
+text:
 
 .. code-block:: python
 
-    from obspy import read_inventory
-    from obspy.core.inventory.util import ExternalReference
+    inventory = write_stationxml_reference(
+        station_code="XX.ABCD",
+        sitexml_url="https://example.org/sitexml/XX.ABCD.xml",
+        description="SERA SiteXML site characterization for XX.ABCD",
+        added_time=UTCDateTime(2026, 5, 2))
 
-    inventory = read_inventory("XX.ABCD.stationxml.xml")
-    network_code, station_only_code = station_code.split(".", 1)
-    station = inventory.select(
-        network=network_code, station=station_only_code)[0][0]
-
-    sitexml_url = "https://example.org/sitexml/XX.ABCD.xml"
-    if not any(ref.uri == sitexml_url for ref in station.external_references):
-        station.external_references.append(ExternalReference(
-            uri=sitexml_url,
-            description="SERA SiteXML site characterization"))
-
-    inventory.write("XX.ABCD.with_sitexml.stationxml.xml",
-                    format="STATIONXML")
+    inventory.write("XX.ABCD.stationxml.xml", format="STATIONXML")
 
 Bare station codes such as ``ABCD`` should not be used for this association,
 because StationXML station codes are only unique together with their network

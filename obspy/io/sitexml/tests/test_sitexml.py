@@ -396,9 +396,10 @@ class TestSiteXML():
         returned = write_stationxml_reference(
             "XX.ABCD",
             "https://example.org/site.xml",
-            output,
+            output_path=output,
             datacenter="EARTHSCOPE",
-            client=client)
+            client=client,
+            added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0))
 
         assert returned is inventory
         assert client.query == {
@@ -410,7 +411,73 @@ class TestSiteXML():
         refs = written[0][0].external_references
         assert len(refs) == 1
         assert refs[0].uri == "https://example.org/site.xml"
-        assert refs[0].description == "SERA SiteXML site characterization"
+        assert refs[0].description == (
+            "SERA SiteXML site characterization; added 2026-05-02")
+
+    def test_write_stationxml_reference_path_is_optional(self):
+        """
+        SiteXML URL can be added without writing StationXML to disk.
+        """
+        class DummyClient:
+            def get_stations(self, **kwargs):
+                return Inventory(networks=[
+                    Network(code="XX", stations=[
+                        Station(
+                            code="ABCD", latitude=1.0, longitude=2.0,
+                            elevation=3.0)
+                    ]),
+                ], source="TEST")
+
+        returned = write_stationxml_reference(
+            "XX.ABCD",
+            "https://example.org/site.xml",
+            datacenter="EARTHSCOPE",
+            client=DummyClient(),
+            added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0))
+
+        refs = returned[0][0].external_references
+        assert len(refs) == 1
+        assert refs[0].uri == "https://example.org/site.xml"
+        assert refs[0].description == (
+            "SERA SiteXML site characterization; added 2026-05-02")
+
+    def test_write_stationxml_reference_reads_local_stationxml(
+            self, tmp_path):
+        """
+        SiteXML URL can be added to a local StationXML input file.
+        """
+        station = Station(
+            code="ABCD", latitude=1.0, longitude=2.0, elevation=3.0)
+        inventory = Inventory(
+            networks=[Network(code="XX", stations=[station])],
+            source="TEST")
+        input_file = tmp_path / "input_station.xml"
+        output_file = tmp_path / "output_station.xml"
+        inventory.write(input_file, format="STATIONXML")
+
+        returned = write_stationxml_reference(
+            "XX.ABCD",
+            "https://example.org/site.xml",
+            input_path=input_file,
+            output_path=output_file,
+            added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0))
+
+        assert returned[0][0].external_references[0].uri == (
+            "https://example.org/site.xml")
+        written = read_inventory(output_file, format="STATIONXML")
+        refs = written[0][0].external_references
+        assert len(refs) == 1
+        assert refs[0].description == (
+            "SERA SiteXML site characterization; added 2026-05-02")
+
+    def test_write_stationxml_reference_requires_datacenter_or_client(self):
+        """
+        A StationXML source is required.
+        """
+        with pytest.raises(SiteXMLValidationError, match="input_path"):
+            write_stationxml_reference(
+                "XX.ABCD",
+                "https://example.org/site.xml")
 
     def test_station_code_requires_network_station_notation(self):
         """
@@ -462,7 +529,7 @@ class TestSiteXML():
             write_stationxml_reference(
                 "XX.ABCD",
                 "https://example.org/site.xml",
-                tmp_path / "station.xml",
+                output_path=tmp_path / "station.xml",
                 datacenter="EARTHSCOPE",
                 client=DummyClient())
 
