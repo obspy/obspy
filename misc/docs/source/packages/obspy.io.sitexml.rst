@@ -7,10 +7,10 @@
     --------
     
     ``obspy.io.sitexml`` provides tools for working with seismological station
-    metadata stored in SiteXML files and related tabular inputs. The module reads
-    and writes SiteXML, validates XML files against the bundled schema, and imports
-    metadata from CSV and Excel sources into the internal :class:`~obspy.io.sitexml.core.SERASite`
-    object model.
+    metadata stored in SiteXML files, published SiteXML URLs, and related tabular
+    inputs. The module reads and writes SiteXML, validates XML files against the
+    bundled schema, and imports metadata from CSV and Excel sources into the
+    internal :class:`~obspy.io.sitexml.core.SERASite` object model.
     
     The top-level metadata object is :class:`~obspy.io.sitexml.core.SERASite`.
     It contains required :class:`~obspy.io.sitexml.core.SERASiteOwner` and
@@ -26,7 +26,7 @@
     Common Workflows
     ----------------
     
-    Read a SiteXML file into a ``SERASite`` object:
+    Read a local SiteXML file into a ``SERASite`` object:
     
     .. code-block:: python
     
@@ -35,6 +35,16 @@
         sera_site = read_sitexml("site.xml")
         print(sera_site.resource_id)
         print(sera_site.site_description.latitude)
+
+    The same reader accepts HTTP(S) URLs. ObsPy retrieves the remote XML and
+    then applies the same schema validation and parsing used for local files:
+
+    .. code-block:: python
+
+        from obspy.io.sitexml.sitexml import read_sitexml
+
+        sera_site = read_sitexml(
+            "https://example.org/sitexml/XX.ABCD.xml")
     
     Validate a SiteXML file against the bundled schema:
     

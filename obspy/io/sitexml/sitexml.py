@@ -14,6 +14,9 @@ import inspect
 import io
 from pathlib import Path
 import re
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
+from urllib.request import urlopen
 import warnings
 
 from lxml import etree
@@ -30,6 +33,33 @@ from .util import SiteXMLIOError, SiteXMLValidationError, _split_station_code
 # Define some constants for writing SiteXML files.
 SCHEMA_VERSION = "1.3"
 NAMESPACE = "http://www.orfeus-eu.org/xml/site/1"
+
+
+def _is_url(path_or_file_object):
+    """
+    Return ``True`` for HTTP(S) URL strings accepted by the SiteXML reader.
+
+    :rtype: bool
+    """
+    if not isinstance(path_or_file_object, (str, bytes)):
+        return False
+    parsed = urlparse(path_or_file_object)
+    return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+
+
+def _url_to_bytesio(url):
+    """
+    Fetch a URL and return its body as a seekable bytes buffer.
+
+    :rtype: io.BytesIO
+    """
+    try:
+        with urlopen(url, timeout=30) as response:
+            return io.BytesIO(response.read())
+    except (HTTPError, URLError, TimeoutError, OSError) as e:
+        raise SiteXMLIOError(
+            "Could not retrieve SiteXML URL '%s': %s" % (url, e)
+        )
 
 def _ns(tagname):
     """
@@ -210,20 +240,27 @@ def read_sitexml(path_or_file_object):
     """
     Function reading a SiteXML file.
 
-    :type file_or_file_object: str, pathlib.Path, or file-like object
-    :param file_or_file_object: The file name or file-like object to read from.
+    :type path_or_file_object: str, pathlib.Path, URL, or file-like object
+    :param path_or_file_object: The file name, HTTP(S) URL, or file-like object
+        to read from.
     :rtype: :class:`~obspy.io.sitexml.core.SERASite`
 
     Returns a SERASite object with metadata read from the provided SiteXML
-    file. At least site owner and site description metadata should be present
+    file. Input can be a Path, a URL, or a file-like object. 
+    
+    At least site owner and site description metadata should be present
     in XML file in order to create the SERASite object.
 
     Example
 
     >>> from obspy.io.sitexml.sitexml import read_sitexml
     >>> site = read_sitexml("site.xml")
+    >>> site = read_sitexml("https://example.org/sitexml/XX.ABCD.xml")
 
     """
+    if _is_url(path_or_file_object):
+        path_or_file_object = _url_to_bytesio(path_or_file_object)
+
     validates, errors = validate_sitexml(path_or_file_object)
     if validates is False:
         msg = "The provided SiteXML file fails to validate against the schema.\n"
@@ -1176,10 +1213,14 @@ def _obj2tag(parent, tag_name, tag_value):
 
 ###### Associate SiteXML with the respective StationXML
 #
+## TODOS
+# Maybe it would be a better workflow to read from an inventory 
+# and just return the updated inventory (remove the input/output paths).
+
 def write_stationxml_reference(station_code, sitexml_url, *,
         description=None, added_time=None,
         input_path=None, client=None, datacenter=None,
-        output_path=None):
+        output_path=None):    
     """
     Attach a SiteXML remote URL as a StationXML 
     :class:`~obspy.core.inventory.util.ExternalReference`.

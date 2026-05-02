@@ -781,6 +781,35 @@ class TestSiteXML():
         assert sera_site.site_owner is not None
         assert sera_site.site_description is not None
 
+    def test_read_sitexml_accepts_http_url(self, testdata, monkeypatch):
+        filename = testdata["minimal_sitexml.xml"]
+
+        with open(filename, "rb") as fh:
+            xml = fh.read()
+
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc_value, traceback):
+                return False
+
+            def read(self):
+                return xml
+
+        def fake_urlopen(url, timeout):
+            assert url == "https://example.org/site.xml"
+            assert timeout == 30
+            return FakeResponse()
+
+        monkeypatch.setattr(sitexml_module, "urlopen", fake_urlopen)
+
+        sera_site = read_sitexml("https://example.org/site.xml")
+
+        assert sera_site is not None
+        assert sera_site.site_owner is not None
+        assert sera_site.site_description is not None
+
     def test_read_sitexml_raises_sitexml_validation_error_for_invalid_xml(self):
         xml_buffer = io.BytesIO(b"<not-sitexml />")
 

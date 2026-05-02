@@ -3,7 +3,7 @@ Working With SiteXML
 ====================
 
 SiteXML stores site-characterization metadata for seismic stations and
-locations. ObsPy reads SiteXML files into
+locations. ObsPy reads local SiteXML files and published SiteXML URLs into
 :class:`~obspy.io.sitexml.core.SERASite` objects, writes those objects back to
 schema-validated XML, and can build the same objects from CSV or Excel input
 tables.
@@ -14,9 +14,9 @@ convenient for learning the file layout before using project-specific files.
 Reading And Validating SiteXML
 ------------------------------
 
-Use :func:`~obspy.io.sitexml.sitexml.read_sitexml` to read one SiteXML file.
-The returned object contains the owner, the site description, and optional
-analysis objects.
+Use :func:`~obspy.io.sitexml.sitexml.read_sitexml` to read one SiteXML file or
+HTTP(S) URL. The returned object contains the owner, the site description, and
+optional analysis objects.
 
 .. code-block:: python
 
@@ -30,6 +30,16 @@ analysis objects.
     print(site.site_owner.owner_codename)
     print(site.site_description.station_code)
     print(len(site.analysis))
+
+For a published SiteXML document, pass the URL directly. ObsPy retrieves the
+remote XML and uses the same schema validation and parser as it does for local
+files.
+
+.. code-block:: python
+
+    from obspy.io.sitexml.sitexml import read_sitexml
+
+    site = read_sitexml("https://example.org/sitexml/XX.ABCD.xml")
 
 SiteXML validation is available separately with
 :func:`~obspy.io.sitexml.sitexml.validate_sitexml`. It returns a boolean and a
