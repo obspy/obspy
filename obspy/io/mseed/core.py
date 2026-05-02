@@ -1115,7 +1115,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
         def record_handler(record, reclen, _stream):
             f.write(record[0:reclen])
         # Define Python callback function for use in C function
-        rec_handler = C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int,
+        rec_handler = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int,
                                   C.c_void_p)(record_handler)
 
         # Fill up msr record structure, this is already contained in
