@@ -99,6 +99,7 @@ nitpick_ignore = [
     ('py:class', 'file'),
     ('py:class', 'file-like object'),
     ('py:class', 'open file'),
+     ('py:class', 'URL'),
     ('py:class', 'valid matplotlib color'),
     ('py:class', 'valid matplotlib colormap'),
     ('py:class', 'same class as original object'),
