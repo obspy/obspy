@@ -536,7 +536,7 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="siteClassEC8" type="EC8SiteIndicatorType" 
+			<xs:element name="siteClassEC8" type="EC8IndicatorType" 
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Ground type according to Eurocode 8 
@@ -545,21 +545,21 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="bedrockDepth" type="BedrockDepthSiteIndicatorType" 
+			<xs:element name="bedrockDepth" type="BedrockDepthIndicatorType" 
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Seismological Bedrock Depth.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="h800" type="H800SiteIndicatorType" 
+			<xs:element name="h800" type="H800IndicatorType" 
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>Engineering Bedrock Depth.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="geologicalUnit" type="GeologicalUnitSiteIndicatorType" 
+			<xs:element name="geologicalUnit" type="GeologicalUnitIndicatorType" 
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>
@@ -596,7 +596,7 @@
 		</xs:choice>
 	</xs:complexType>
 
-	<xs:complexType name="EC8SiteIndicatorType">
+	<xs:complexType name="EC8IndicatorType">
 		<xs:annotation>
 			<xs:documentation>
 				Ground type according to Eurocode 8 (EC8 § 3.1.2, Table 3.1),
@@ -609,7 +609,7 @@
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:complexType name="BedrockDepthSiteIndicatorType">
+	<xs:complexType name="BedrockDepthIndicatorType">
 		<xs:annotation>
 			<xs:documentation>
 				Seismological Bedrock Depth.
@@ -621,7 +621,7 @@
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:complexType name="H800SiteIndicatorType">
+	<xs:complexType name="H800IndicatorType">
 		<xs:annotation>
 			<xs:documentation>
 				Depth beyond which the shear-wave velocity Vs exceeds 
@@ -636,7 +636,7 @@
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:complexType name="GeologicalUnitSiteIndicatorType">
+	<xs:complexType name="GeologicalUnitIndicatorType">
 		<xs:annotation>
 			<xs:documentation>
 				Free text description of the surface geology of a site. <br/>
@@ -749,7 +749,7 @@
 				</xs:annotation>
 			</xs:element>
 			<xs:element name="resonanceFrequency" 
-						type="ResonanceFrequencySiteIndicatorType" 
+						type="ResonanceFrequencyIndicatorType" 
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>
@@ -757,7 +757,7 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="velocityS30" type="VelocityS30SiteIndicatorType" 
+			<xs:element name="velocityS30" type="VelocityS30IndicatorType" 
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>
@@ -809,7 +809,7 @@
 				</xs:annotation>
 			</xs:element>
 			<!-- **************** VELOCITY PROFILES *********************** -->
-			<xs:element name="velocityProfileSet" type="VelocityProfileSiteIndicatorType" 
+			<xs:element name="velocityProfileSet" type="VelocityProfileSetIndicatorType" 
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>
@@ -828,7 +828,7 @@
 		</xs:attribute>
 	</xs:complexType>
 
-	<xs:complexType name="ResonanceFrequencySiteIndicatorType">	
+	<xs:complexType name="ResonanceFrequencyIndicatorType">	
 		<xs:sequence>
 			<xs:element name="value" type="RealQuantity"/>
 			<xs:element name="method" type="ResonanceFrequencyMethodType" 
@@ -844,7 +844,7 @@
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:complexType name="VelocityS30SiteIndicatorType">
+	<xs:complexType name="VelocityS30IndicatorType">
 		<xs:sequence>
 			<xs:element name="value" type="RealQuantity"/>
 			<xs:element name="method" type="VelocityS30MethodType" 
@@ -878,7 +878,7 @@
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:complexType name="VelocityProfileSiteIndicatorType">
+	<xs:complexType name="VelocityProfileSetIndicatorType">
 		<xs:annotation>
 			<xs:documentation>
 				Bundles one ot more velocity profiles associated with a 
