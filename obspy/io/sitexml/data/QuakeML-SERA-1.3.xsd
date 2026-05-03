@@ -42,7 +42,7 @@
 		</xs:key>
 		<xs:key name="velocityProfilePublicIDKey"
 			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
-			<xs:selector xpath="ssx:analysis/ssx:velocityProfile/ssx:profile"/>
+			<xs:selector xpath="ssx:analysis/ssx:velocityProfileSet/ssx:velocityProfile"/>
 			<xs:field xpath="@publicID"/>
 		</xs:key>
 		<xs:keyref name="analysisSiteDescriptionRef"
@@ -809,7 +809,7 @@
 				</xs:annotation>
 			</xs:element>
 			<!-- **************** VELOCITY PROFILES *********************** -->
-			<xs:element name="velocityProfile" type="VelocityProfileSiteIndicatorType" 
+			<xs:element name="velocityProfileSet" type="VelocityProfileSiteIndicatorType" 
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>
@@ -888,7 +888,7 @@
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
-			<xs:element name="profile" type="VelocityProfile" 
+			<xs:element name="velocityProfile" type="VelocityProfile" 
 						minOccurs="1" maxOccurs="unbounded">
 				<xs:annotation>
 					<xs:documentation>

@@ -26,7 +26,7 @@ from obspy.io.sitexml.core import (Analysis, EC8, LiteratureSource, SERASite,
                                    ResonanceFrequency,
                                    ValueWithUncertainty, VelocityProfile,
                                    VelocityProfileData,
-                                   VelocityProfileSurvey)
+                                   VelocityProfileSet)
 from obspy.io.sitexml import sitexml as sitexml_module
 from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLValidationError
 from obspy.io.sitexml.quality_index import overall_quality_index
@@ -188,12 +188,12 @@ class TestSiteXML():
         analysis_001 = Analysis(
             resource_id="quakeml:domain.ab/analysis/001",
             site_descriptionID=sera_site.site_description.resource_id,
-            velocity_profile_survey=VelocityProfileSurvey(
+            velocity_profile_set=VelocityProfileSet(
                 velocity_profiles=[profile_001, profile_002]))
         analysis_002 = Analysis(
             resource_id="quakeml:domain.ab/analysis/002",
             site_descriptionID=sera_site.site_description.resource_id,
-            velocity_profile_survey=VelocityProfileSurvey(
+            velocity_profile_set=VelocityProfileSet(
                 velocity_profiles=[profile_003]))
         sera_site.analysis = [analysis_001, analysis_002]
 
@@ -222,8 +222,8 @@ class TestSiteXML():
             sera_site.site_description.ec8)
         assert sera_site.get_indicator_object("velocityS30") is (
             sera_site.get_preferred_analysis().velocity_s30)
-        assert sera_site.get_indicator_object("velocityProfile") is (
-            sera_site.get_preferred_analysis().velocity_profile_survey)
+        assert sera_site.get_indicator_object("velocityProfileSet") is (
+            sera_site.get_preferred_analysis().velocity_profile_set)
 
         with pytest.raises(
                 SiteXMLValidationError,
@@ -247,12 +247,12 @@ class TestSiteXML():
         analysis_001 = Analysis(
             resource_id="quakeml:domain.ab/analysis/001",
             site_descriptionID=sera_site.site_description.resource_id,
-            velocity_profile_survey=VelocityProfileSurvey(
+            velocity_profile_set=VelocityProfileSet(
                 velocity_profiles=[profile_001]))
         analysis_002 = Analysis(
             resource_id="quakeml:domain.ab/analysis/002",
             site_descriptionID=sera_site.site_description.resource_id,
-            velocity_profile_survey=VelocityProfileSurvey(
+            velocity_profile_set=VelocityProfileSet(
                 velocity_profiles=[profile_002]))
         sera_site.analysis = [analysis_001, analysis_002]
         sera_site.site_description.preferred_site_analysisID = (
@@ -1131,7 +1131,7 @@ class TestSiteXML():
             self, testdata):
         sera_site = read_sitexml(testdata["full_analysis.xml"])
         velocity_profiles = (
-            sera_site.analysis[0].velocity_profile_survey.velocity_profiles)
+            sera_site.analysis[0].velocity_profile_set.velocity_profiles)
         velocity_profiles[1].resource_id = velocity_profiles[0].resource_id
 
         with pytest.raises(
@@ -1269,7 +1269,7 @@ class TestSiteXML():
     def test_reading_missing_velocity_profile_quality_index_preserves_none(
             self, testdata):
         """
-        Missing optional velocityProfile qualityIndex stays None.
+        Missing optional velocityProfileSet qualityIndex stays None.
         """
         filename = testdata["full_analysis.xml"]
         xml = filename.read_bytes().replace(
@@ -1279,7 +1279,7 @@ class TestSiteXML():
 
         sera_site = read_sitexml(io.BytesIO(xml))
 
-        assert sera_site.analysis[0].velocity_profile_survey.quality_index is None
+        assert sera_site.analysis[0].velocity_profile_set.quality_index is None
 
     def test_reading_and_writing_full_sitedescription_without_station_tag(
             self, testdata):
@@ -1409,15 +1409,15 @@ class TestSiteXML():
 
     def test_reading_and_writing_velocity_profile_tag(self, testdata):
         """
-        Tests reading and writing a full SiteXML <velocityProfile> tag.
+        Tests reading and writing a full SiteXML <velocityProfileSet> tag.
         """
         filename = testdata["full_analysis.xml"]
         sera_site = read_sitexml(filename)
 
         assert sera_site.analysis[0] is not None
-        assert sera_site.analysis[0].velocity_profile_survey is not None
+        assert sera_site.analysis[0].velocity_profile_set is not None
 
-        vps = sera_site.analysis[0].velocity_profile_survey
+        vps = sera_site.analysis[0].velocity_profile_set
         assert vps.quality_index == 1.0
         assert vps.velocity_profiles is not None
         assert len(vps.velocity_profiles) == 2
@@ -1490,7 +1490,7 @@ class TestSiteXML():
             encoding="utf-8")
 
         sera_site = read_sitexml(invalid_xml)
-        vp = sera_site.analysis[0].velocity_profile_survey.velocity_profiles[0]
+        vp = sera_site.analysis[0].velocity_profile_set.velocity_profiles[0]
         assert vp.layer_count == 8
         assert len(vp.velocity_profile_data) == 8
 

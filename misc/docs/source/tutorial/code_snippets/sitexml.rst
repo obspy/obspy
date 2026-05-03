@@ -422,7 +422,7 @@ of ``SERASite`` objects from CSV files.
 
     site = sites["quakeml:domain.ab/site/001"]
     analysis = site.analysis[0]
-    profile = analysis.velocity_profile_survey.velocity_profiles[0]
+    profile = analysis.velocity_profile_set.velocity_profiles[0]
 
     print(site.site_description.latitude)
     print(analysis.velocity_s30.value.value)
@@ -554,7 +554,7 @@ The weights implemented in ObsPy are:
 When a site has multiple analyses, Q_Index2 uses the analysis selected by
 ``preferredSiteAnalysisID``. If no preferred analysis is set, the first
 analysis in document order is used. The velocity-profile contribution uses the
-``VelocityProfileSurvey`` quality index attached to that analysis.
+``VelocityProfileSet`` quality index attached to that analysis.
 
 Quality Index 3
 ~~~~~~~~~~~~~~~
@@ -631,7 +631,7 @@ The quality-index sidecar table is keyed by ``siteID``. Q_Index1 criteria use
 
 Supported indicator prefixes are ``siteClassEC8``, ``bedrockDepth``, ``h800``,
 ``geologicalUnit``, ``resonanceFrequency``, ``velocityS30``, and
-``velocityProfile``.
+``velocityProfileSet``.
 
 Q_Index3 consistency columns are:
 

@@ -18,7 +18,7 @@ from .util import SiteXMLIOError, SiteXMLImportError
 
 _QUALITY_INDEX2_WEIGHTS = {
     "resonanceFrequency": 1,
-    "velocityProfile": 1,
+    "velocityProfileSet": 1,
     "velocityS30": 0.5,
     "bedrockDepth": 0.5,
     "h800": 0.5,
@@ -33,7 +33,7 @@ _QUALITY_INDEX_INDICATORS = (
     "geologicalUnit",
     "resonanceFrequency",
     "velocityS30",
-    "velocityProfile",
+    "velocityProfileSet",
 )
 
 _QUALITY_INDEX1_CRITERIA = (
@@ -206,7 +206,7 @@ def quality_index2(sera_site):
     +---------------------+--------+
 
     The velocity-profile term uses the quality index of the
-    ``VelocityProfileSurvey`` attached to the preferred analysis. A declared
+    ``VelocityProfileSet`` attached to the preferred analysis. A declared
     preferred velocity profile is expected to belong to that same preferred
     analysis.
 
@@ -242,9 +242,9 @@ def quality_index2(sera_site):
         if analysis.velocity_s30:
             Qindex1["velocityS30"] = _quality_index_or_zero(
                 analysis.velocity_s30)
-        if analysis.velocity_profile_survey:
-            Qindex1["velocityProfile"] = _quality_index_or_zero(
-                analysis.velocity_profile_survey)
+        if analysis.velocity_profile_set:
+            Qindex1["velocityProfileSet"] = _quality_index_or_zero(
+                analysis.velocity_profile_set)
 
     quality_index2_sum = 0
     for key in Qindex1:

@@ -26,7 +26,7 @@ from obspy.io.stationxml.core import _tag2obj, _attr2obj, _tags2obj
 from obspy.core.inventory.util import ExternalReference
 from .core import (SERASite, SERASiteOwner, SiteDescription, Analysis,
                    EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency,
-                   VelocityProfileSurvey, VelocityProfile, VelocityProfileData,
+                   VelocityProfileSet, VelocityProfile, VelocityProfileData,
                    VelocityS30, ValueWithUncertainty, LiteratureSource)
 from .util import SiteXMLIOError, SiteXMLValidationError, _split_station_code
 
@@ -550,8 +550,8 @@ def _read_analysis(analysis_element):
         - sptLogsCount
         - cptLogsCount
         - boreholeLogsCount
-        - velocityProfile
-            - profile [List]
+        - velocityProfileSet
+            - velocityProfile [List]
                 - PublicID (attr)
                 - layerCount
                 - velocityProfileData [List]
@@ -589,53 +589,60 @@ def _read_analysis(analysis_element):
     analysis_obj.borehole_logs_count = \
         _tag2obj(analysis_element, _ns("boreholeLogsCount"), int)
     
-    _read_velocity_profile(analysis_element, analysis_obj)
+    _read_velocity_profile_set(analysis_element, analysis_obj)
 
     return analysis_obj
 
-def _read_velocity_profile(analysis_element, analysis_obj):
+def _read_velocity_profile_set(analysis_element, analysis_obj):
     """
-    Read the <velocityProfile> element
+    Read the <velocityProfileSet> element
 
     :type analysis_element: :class:`~lxml.etree._Element`, required
     :param analysis_element: 
     :type analysis_obj:
         :class:`~obspy.io.sitexml.core.Analysis`, required
     :param analysis_obj: Analysis object to store values read from the
-        <velocityProfile> element. It should be pre-initialized by the calling
-        function.
-    :rtype: :class:`~obspy.io.sitexml.core.VelocityProfileSurvey`
+        <velocityProfileSet> element. It should be pre-initialized by 
+        the calling function.
+    :rtype: :class:`~obspy.io.sitexml.core.VelocityProfileSet`
     """
 
-    velocity_profile_element = analysis_element.find(_ns("velocityProfile"))
-    if velocity_profile_element is None:
+    velocity_profile_set_element = analysis_element.find(
+        _ns("velocityProfileSet"))
+    if velocity_profile_set_element is None:
         return None
 
-    vp_element_list = velocity_profile_element.findall(_ns("profile"))
-    vp_qindex = _tag2obj(velocity_profile_element, _ns("qualityIndex"), float)
-    vp_literature_source = _read_literature_source(velocity_profile_element)
-    vp_external_references = _read_external_references(velocity_profile_element)
+    velocity_profile_element_list = (
+        velocity_profile_set_element.findall(_ns("velocityProfile")))
+    vp_qindex = _tag2obj(
+        velocity_profile_set_element, _ns("qualityIndex"), float)
+    vp_literature_source = _read_literature_source(
+        velocity_profile_set_element)
+    vp_external_references = _read_external_references(
+        velocity_profile_set_element)
 
-    # At least one profile or a reference
-    # should be present in SiteXML in order to create the VelocityProfileSurvey object
-    if len(vp_element_list) == 0 \
+    # At least one velocity profile or a reference should be present in
+    # SiteXML in order to create the VelocityProfileSet object.
+    if len(velocity_profile_element_list) == 0 \
             and vp_literature_source is None \
             and not vp_external_references:
         return None
 
-    analysis_obj.velocity_profile_survey = \
-            VelocityProfileSurvey(velocity_profiles = [],    # We will fill this later
+    analysis_obj.velocity_profile_set = \
+            VelocityProfileSet(velocity_profiles = [],    # We will fill this later
                             quality_index = vp_qindex,
                             literature_source = vp_literature_source,
                             external_references = vp_external_references)
 
-    # Go through the list of Velocity Profiles. 
+    # Go through the nested velocityProfile elements.
     # For each velocityProfile tree element create a VelocityProfile object.
     #
-    for vp_element in vp_element_list:
-        resource_id = _attr2obj(vp_element, "publicID", str)
-        layer_count = _tag2obj(vp_element, _ns("layerCount"), int)
-        vp_data_element_list = vp_element.findall(_ns("velocityProfileData"))
+    for velocity_profile_element in velocity_profile_element_list:
+        resource_id = _attr2obj(velocity_profile_element, "publicID", str)
+        layer_count = _tag2obj(
+            velocity_profile_element, _ns("layerCount"), int)
+        vp_data_element_list = velocity_profile_element.findall(
+            _ns("velocityProfileData"))
         vp_data_list = []
         
         # Go through the velocityProfileData elements. 
@@ -644,14 +651,15 @@ def _read_velocity_profile(analysis_element, analysis_obj):
         #      
         if vp_data_element_list is not None:
             for vp_data_element in vp_data_element_list:
-                vp_data = _read_velocity_profile_data(vp_data_element)
-                vp_data_list.append(vp_data)
+                velocity_profile_data = _read_velocity_profile_data(
+                    vp_data_element)
+                vp_data_list.append(velocity_profile_data)
 
         vp = VelocityProfile(resource_id=resource_id,
                              velocity_profile_data=vp_data_list,
                              layer_count=layer_count)
     
-        analysis_obj.velocity_profile_survey.velocity_profiles.append(vp)
+        analysis_obj.velocity_profile_set.velocity_profiles.append(vp)
 
 def _read_velocity_profile_data(vp_data_element):
     """
@@ -1047,54 +1055,61 @@ def _write_analysis(parent, analysis_list):
         _obj2tag(analysis_elem, "sptLogsCount", analysis.spt_logs_count)
         _obj2tag(analysis_elem, "cptLogsCount", analysis.cpt_logs_count)
         _obj2tag(analysis_elem, "boreholeLogsCount", analysis.borehole_logs_count)
-        _write_velocity_profile(analysis_elem, analysis.velocity_profile_survey)
+        _write_velocity_profile_set(
+            analysis_elem, analysis.velocity_profile_set)
 
 
-def _write_velocity_profile(parent, velocity_profile_survey):
+def _write_velocity_profile_set(parent, velocity_profile_set):
     """
-    Append velocity-profile elements and survey metadata to ``parent``.
+    Append the velocity-profile set and its metadata to ``parent``.
 
     :rtype: None
     """
-    if velocity_profile_survey:
-        velocity_profile_elem = etree.SubElement(parent, "velocityProfile")
-        if velocity_profile_survey.velocity_profiles:
-            for vp in velocity_profile_survey.velocity_profiles:
-                index = velocity_profile_survey.velocity_profiles.index(vp)
+    if velocity_profile_set:
+        velocity_profile_set_elem = etree.SubElement(
+            parent, "velocityProfileSet")
+        if velocity_profile_set.velocity_profiles:
+            for vp in velocity_profile_set.velocity_profiles:
+                index = velocity_profile_set.velocity_profiles.index(vp)
                 comment = etree.Comment(f" Velocity profile # {index + 1} ")
-                velocity_profile_elem.append(comment)
+                velocity_profile_set_elem.append(comment)
 
                 attribs = {"publicID": vp.resource_id}
-                vp_elem = etree.SubElement(velocity_profile_elem, "profile", attribs)
+                velocity_profile_elem = etree.SubElement(
+                    velocity_profile_set_elem, "velocityProfile", attribs)
                 if vp.layer_count != len(vp.velocity_profile_data):
                     raise SiteXMLValidationError(
                         "Number of velocity profile data layers does not "
                         "match the layer_count value."
                     )
-                _obj2tag(vp_elem, "layerCount", vp.layer_count)
+                _obj2tag(velocity_profile_elem, "layerCount", vp.layer_count)
 
                 for vp_data in vp.velocity_profile_data:
-                    vp_data_elem = etree.SubElement(vp_elem, "velocityProfileData")
-                    _write_value_with_uncertainty(vp_data_elem, "velocityS",
-                                                  vp_data.velocityS)
-                    _write_value_with_uncertainty(vp_data_elem, "velocityP",
-                                                  vp_data.velocityP)
-                    _write_value_with_uncertainty(vp_data_elem, "density",
-                                                  vp_data.density)
-                    geometry_elem = etree.SubElement(vp_data_elem, "layerThickness")
-                    _write_value_with_uncertainty(geometry_elem, "layerTopDepth",
-                                                  vp_data.top_depth)
-                    _write_value_with_uncertainty(geometry_elem, "layerBottomDepth",
-                                                  vp_data.bottom_depth)
+                    vp_data_elem = etree.SubElement(
+                        velocity_profile_elem, "velocityProfileData")
+                    _write_value_with_uncertainty(
+                        vp_data_elem, "velocityS", vp_data.velocityS)
+                    _write_value_with_uncertainty(
+                        vp_data_elem, "velocityP", vp_data.velocityP)
+                    _write_value_with_uncertainty(
+                        vp_data_elem, "density", vp_data.density)
+                    geometry_elem = etree.SubElement(
+                        vp_data_elem, "layerThickness")
+                    _write_value_with_uncertainty(
+                        geometry_elem, "layerTopDepth", vp_data.top_depth)
+                    _write_value_with_uncertainty(
+                        geometry_elem, "layerBottomDepth", vp_data.bottom_depth)
 
-        _obj2tag(velocity_profile_elem, "qualityIndex",
-                 velocity_profile_survey.quality_index)
-        if velocity_profile_survey.literature_source:
+        _obj2tag(velocity_profile_set_elem, "qualityIndex",
+                 velocity_profile_set.quality_index)
+        if velocity_profile_set.literature_source:
             _write_literature_source(
-                velocity_profile_elem, velocity_profile_survey.literature_source)
-        if velocity_profile_survey.external_references:
-            for external_reference in velocity_profile_survey.external_references:
-                _write_external_reference(velocity_profile_elem, external_reference)
+                velocity_profile_set_elem,
+                velocity_profile_set.literature_source)
+        if velocity_profile_set.external_references:
+            for external_reference in velocity_profile_set.external_references:
+                _write_external_reference(
+                    velocity_profile_set_elem, external_reference)
 
 
 def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):

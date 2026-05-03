@@ -77,10 +77,10 @@ class TestSiteXMLCSVImport():
         assert analysis_001.velocity_s30.value.value == 620.0
         assert analysis_001.velocity_s30.value.uncertainty == 18.0
         assert analysis_001.velocity_s30.methods == ["MASW", "SPAC/F-K"]
-        assert analysis_001.velocity_profile_survey is not None
-        assert len(analysis_001.velocity_profile_survey.velocity_profiles) == 2
+        assert analysis_001.velocity_profile_set is not None
+        assert len(analysis_001.velocity_profile_set.velocity_profiles) == 2
 
-        first_profile = analysis_001.velocity_profile_survey.velocity_profiles[0]
+        first_profile = analysis_001.velocity_profile_set.velocity_profiles[0]
         assert first_profile.resource_id == (
             "quakeml:domain.ab/velocity_profile/001")
         assert first_profile.layer_count == 8
@@ -101,8 +101,8 @@ class TestSiteXMLCSVImport():
         assert analysis_002.resonance_frequency.value.value == 0.3
         assert analysis_002.velocity_s30.value.value == 497.0
         assert analysis_002.velocity_s30.methods == ["S-REFL"]
-        assert analysis_002.velocity_profile_survey is not None
-        assert len(analysis_002.velocity_profile_survey.velocity_profiles) == 3
+        assert analysis_002.velocity_profile_set is not None
+        assert len(analysis_002.velocity_profile_set.velocity_profiles) == 3
         assert site_002.site_description.h800.quality_index is None
         assert site_002.site_description.geological_unit.quality_index is None
 
@@ -211,7 +211,7 @@ class TestSiteXMLCSVImport():
         self._assert_full_reference_metadata(site_001.site_description.ec8)
         self._assert_full_reference_metadata(analysis_001.resonance_frequency)
         self._assert_full_reference_metadata(
-            analysis_001.velocity_profile_survey)
+            analysis_001.velocity_profile_set)
 
     def test_excel_to_sera_site_imports_sites_analysis_and_velocity_profiles(
             self, datapath):
@@ -245,10 +245,10 @@ class TestSiteXMLCSVImport():
         assert analysis_001.velocity_s30.methods == ["MASW", "SPAC/F-K"]
         assert analysis_001.velocity_s30.method_combined_qindex == "1.2"
         assert analysis_001.velocity_s30.manual_qindex == "1.0"
-        assert analysis_001.velocity_profile_survey is not None
-        assert len(analysis_001.velocity_profile_survey.velocity_profiles) == 2
+        assert analysis_001.velocity_profile_set is not None
+        assert len(analysis_001.velocity_profile_set.velocity_profiles) == 2
 
-        first_profile = analysis_001.velocity_profile_survey.velocity_profiles[0]
+        first_profile = analysis_001.velocity_profile_set.velocity_profiles[0]
         assert first_profile.resource_id == (
             "quakeml:domain.ab/velocity_profile/001")
         assert first_profile.layer_count == 8
@@ -268,8 +268,8 @@ class TestSiteXMLCSVImport():
         assert analysis_002.resonance_frequency.value.value == 0.3
         assert analysis_002.velocity_s30.value.value == 497.0
         assert analysis_002.velocity_s30.methods == ["S-REFL"]
-        assert analysis_002.velocity_profile_survey is not None
-        assert len(analysis_002.velocity_profile_survey.velocity_profiles) == 3
+        assert analysis_002.velocity_profile_set is not None
+        assert len(analysis_002.velocity_profile_set.velocity_profiles) == 3
 
     def test_excel_to_sera_site_imports_full_reference_metadata(self, datapath):
         pytest.importorskip("openpyxl")
@@ -284,7 +284,7 @@ class TestSiteXMLCSVImport():
         self._assert_full_reference_metadata(site_001.site_description.ec8)
         self._assert_full_reference_metadata(analysis_001.resonance_frequency)
         self._assert_full_reference_metadata(
-            analysis_001.velocity_profile_survey)
+            analysis_001.velocity_profile_set)
 
     def test_excel_to_sera_site_applies_quality_index_sheet(self, datapath):
         pytest.importorskip("openpyxl")

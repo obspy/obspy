@@ -190,9 +190,9 @@
         <sptLogsCount>2</sptLogsCount>
         <cptLogsCount>0</cptLogsCount>
         <boreholeLogsCount>0</boreholeLogsCount>
-        <velocityProfile>
+        <velocityProfileSet>
             <!-- Velocity profile # 1 -->
-            <profile publicID="quakeml:domain.ab/velocity_profile/001">
+            <velocityProfile publicID="quakeml:domain.ab/velocity_profile/001">
                 <layerCount>8</layerCount>
                 <velocityProfileData>
                     <velocityS>
@@ -296,9 +296,9 @@
                         </layerTopDepth>
                     </layerThickness>
                 </velocityProfileData>
-            </profile>
+            </velocityProfile>
             <!-- Velocity profile # 2 -->
-            <profile publicID="quakeml:domain.ab/velocity_profile/002">
+            <velocityProfile publicID="quakeml:domain.ab/velocity_profile/002">
                 <layerCount>8</layerCount>
                 <velocityProfileData>
                     <velocityS>
@@ -401,7 +401,7 @@
                         </layerTopDepth>
                     </layerThickness>
                 </velocityProfileData>
-            </profile>
+            </velocityProfile>
             <qualityIndex>1.0</qualityIndex>
             <literatureSource>
                 <title>Some title</title>
@@ -416,6 +416,6 @@
                 <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
                 <description>paper</description>
             </externalReference>
-        </velocityProfile>
+        </velocityProfileSet>
     </analysis>
 </SERA_quakeml>

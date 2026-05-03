@@ -220,7 +220,7 @@ class SiteIndicator(BaseNode):
         :type name: str, required
         :param name: Indicator type. One of: "siteClassEC8", "h800",
             "bedrockDepth", "geologicalUnit", "velocityS30",
-            "resonanceFrequency", "velocityProfile".
+            "resonanceFrequency", "velocityProfileSet".
         :type value: str or :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
             or :class:`~obspy.io.sitexml.core.VelocityProfileData`, required
         :param value: Value of the indicator. Type depends on the indicator.
@@ -308,7 +308,7 @@ class SiteIndicator(BaseNode):
                "\tExternal reference: {external_ref},\n")
         ret = ret.format(
             name=self.name, 
-            value = self.value if self.name != "VelocityProfile" else "None",
+            value = self.value if self.name != "velocityProfileSet" else "None",
             methods = self.methods,     # iterate over methods for printing
             qindex = self.quality_index,
             lit_source=self.literature_source if self.literature_source else "None",
@@ -413,7 +413,8 @@ class BedrockDepth(SiteIndicator):
 
 class GeologicalUnit(SiteIndicator):
     """
-    Surface geology indicator with optional map-scale metadata.
+    Surface geology indicator with optional map-scale metadata
+    and the associated quality assessment metadata..
     """
 
     def __init__(self, value, quality_index=None, 
@@ -488,7 +489,8 @@ class ResonanceFrequency(SiteIndicator):
         
 class VelocityS30(SiteIndicator):
     """
-    Time-averaged shear-wave velocity over the upper 30 meters.
+    Time-averaged shear-wave velocity over the upper 30 meters,
+    and the associated quality assessment metadata.
     """
 
     value = _wrapped_property("value", ValueWithUncertainty)
@@ -549,9 +551,10 @@ class VelocityS30(SiteIndicator):
         )
         return "\n".join(output)
         
-class VelocityProfileSurvey(SiteIndicator):
+class VelocityProfileSet(SiteIndicator):
     """
-    Site indicator containing one or more velocity profiles.
+    Site indicator containing one or more velocity profiles,
+    and the associated quality assessment metadata.
     """
 
     def __init__(self, velocity_profiles=None, quality_index=None, 
@@ -574,8 +577,8 @@ class VelocityProfileSurvey(SiteIndicator):
             indicator.
         """
         self.velocity_profiles = velocity_profiles  # triggers setter/validation
-        super(VelocityProfileSurvey, self).__init__(
-            name="velocityProfile", 
+        super(VelocityProfileSet, self).__init__(
+            name="velocityProfileSet", 
             value=self.velocity_profiles,
             quality_index=quality_index,
             literature_source=literature_source,
@@ -593,7 +596,7 @@ class VelocityProfileSurvey(SiteIndicator):
 
 class VelocityProfile(BaseNode):
     """
-    Layered velocity profile associated with an analysis.
+    Layered velocity profile, part of a :class:`~obspy.io.sitexml.core.VelocityProfileSet`.
     """
 
     resource_id = _resource_id_property(
@@ -1224,7 +1227,7 @@ class SiteDescription(BaseNode):
                 you should use this field to designate the prefered VP. If
                 ``preferred_site_analysisID`` is also provided, the preferred
                 VP must belong to the preferred analysis. The overall quality
-                index calculation uses the Velocity Profile Survey quality
+                index calculation uses the Velocity Profile Set quality
                 index associated with the preferred analysis.
         :type overall_quality_index: float, optional
         :param overall_quality_index: The overall quality index of the site 
@@ -1305,11 +1308,11 @@ class Analysis(BaseNode):
         "site_descriptionID", allow_none=False, allow_empty=False)
     resonance_frequency = _wrapped_property("resonance_frequency", ResonanceFrequency)
     velocity_s30 = _wrapped_property("velocity_s30", VelocityS30)
-    velocity_profile_survey = _wrapped_property("velocity_profile_survey", VelocityProfileSurvey)
+    velocity_profile_set = _wrapped_property("velocity_profile_set", VelocityProfileSet)
 
     def __init__(self, resource_id, site_descriptionID, creation_date=None,
                  resonance_frequency=None, velocity_s30=None, 
-                 velocity_profile_survey=None, spt_logs_count=None,
+                 velocity_profile_set=None, spt_logs_count=None,
                  cpt_logs_count=None, borehole_logs_count=None):
         """
         :type resource_id: str or
@@ -1329,10 +1332,11 @@ class Analysis(BaseNode):
             :class:`~obspy.io.sitexml.core.VelocityS30`, optional
         :param velocity_s30: Average shear-wave velocity between 0 and 30
             meters depth.
-        :type velocity_profile_survey:
-            :class:`~obspy.io.sitexml.core.VelocityProfileSurvey`, optional
-        :param velocity_profile_survey: Velocity Profile Survey.
-            Parent object for Velocity Profiles. 
+        :type velocity_profile_set:
+            :class:`~obspy.io.sitexml.core.VelocityProfileSet`, optional
+        :param velocity_profile_set: Velocity Profile Set.
+            Object that bundles a set of Velocity Profiles with the associated
+            quality assessment metadata. 
         :type spt_logs_count: int, optional
         :param spt_logs_count: Non-negative. Number of available SPT profile(s). 
         :type cpt_logs_count: int, optional
@@ -1349,7 +1353,7 @@ class Analysis(BaseNode):
         self.spt_logs_count = spt_logs_count
         self.cpt_logs_count = cpt_logs_count
         self.borehole_logs_count = borehole_logs_count
-        self.velocity_profile_survey = velocity_profile_survey
+        self.velocity_profile_set = velocity_profile_set
             
     def __str__(self):
         ret = ("Analysis:\n"
@@ -1518,7 +1522,7 @@ class SERASite(BaseNode):
             :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
         :param resource_id: Velocity profile resource ID to look up.
         :type analysis: :class:`~obspy.io.sitexml.core.Analysis`, optional
-        :param analysis: Analysis whose velocity-profile survey should be
+        :param analysis: Analysis whose velocity-profile set should be
             searched.
         :rtype: :class:`~obspy.io.sitexml.core.VelocityProfile` or None
         """
@@ -1527,10 +1531,10 @@ class SERASite(BaseNode):
 
         analyses = [analysis] if analysis is not None else self.analysis or []
         for item in analyses:
-            survey = item.velocity_profile_survey
-            if survey is None or not survey.velocity_profiles:
+            vp_set = item.velocity_profile_set
+            if vp_set is None or not vp_set.velocity_profiles:
                 continue
-            for velocity_profile in survey.velocity_profiles:
+            for velocity_profile in vp_set.velocity_profiles:
                 if velocity_profile.resource_id == resource_id:
                     return velocity_profile
         return None
@@ -1559,11 +1563,11 @@ class SERASite(BaseNode):
                     preferred_id, analysis=analysis)
             return self.get_velocity_profile(preferred_id)
 
-        survey = analysis.velocity_profile_survey
-        if survey is None or not survey.velocity_profiles:
+        vp_set = analysis.velocity_profile_set
+        if vp_set is None or not vp_set.velocity_profiles:
             return None
 
-        return survey.velocity_profiles[0]
+        return vp_set.velocity_profiles[0]
 
     def get_indicator_object(self, name):
         """
@@ -1575,7 +1579,7 @@ class SERASite(BaseNode):
 
         Supported names are ``siteClassEC8``, ``bedrockDepth``, ``h800``,
         ``geologicalUnit``, ``resonanceFrequency``, ``velocityS30``, and
-        ``velocityProfile``.
+        ``velocityProfileSet``.
 
         :type name: str
         :param name: SiteXML indicator name.
@@ -1597,7 +1601,7 @@ class SERASite(BaseNode):
         analysis_indicators = {
             "resonanceFrequency": analysis.resonance_frequency,
             "velocityS30": analysis.velocity_s30,
-            "velocityProfile": analysis.velocity_profile_survey,
+            "velocityProfileSet": analysis.velocity_profile_set,
         }
         if name in analysis_indicators:
             return analysis_indicators[name]
@@ -1731,11 +1735,11 @@ class SERASite(BaseNode):
                 )
             analysis_ids.add(analysis.resource_id)
 
-            survey = analysis.velocity_profile_survey
-            if survey is None or not survey.velocity_profiles:
+            vp_set = analysis.velocity_profile_set
+            if vp_set is None or not vp_set.velocity_profiles:
                 continue
 
-            for velocity_profile in survey.velocity_profiles:
+            for velocity_profile in vp_set.velocity_profiles:
                 if velocity_profile.resource_id in velocity_profile_ids:
                     raise SiteXMLValidationError(
                         "Duplicate velocity profile resource_id: "

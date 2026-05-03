@@ -22,7 +22,7 @@ from obspy.core.inventory.util import ExternalReference
 from .core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
                    EC8, H800, BedrockDepth, GeologicalUnit, 
                    ResonanceFrequency, VelocityS30, 
-                   VelocityProfile, VelocityProfileData, VelocityProfileSurvey, 
+                   VelocityProfile, VelocityProfileData, VelocityProfileSet, 
                    LiteratureSource, ValueWithUncertainty)
 from .quality_index import (apply_quality_index_csv,
                             apply_quality_index_metadata)
@@ -177,7 +177,7 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     try:
         conv_dict = {
             'velocityS30_year': _read_year_cell,
-            'velocityProfile_year': _read_year_cell,
+            'velocityProfileSet_year': _read_year_cell,
             'resonanceFrequency_year': _read_year_cell,
             'siteClassEC8_year': _read_year_cell,
             'bedrockDepth_year': _read_year_cell,
@@ -333,8 +333,8 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
                 row[1], ResonanceFrequency, 'resonanceFrequency')
             analysis_obj.velocity_s30 = _read_site_indicator(
                 row[1], VelocityS30, 'velocityS30')
-            analysis_obj.velocity_profile_survey = _read_site_indicator(
-                row[1], VelocityProfileSurvey, 'velocityProfile')
+            analysis_obj.velocity_profile_set = _read_site_indicator(
+                row[1], VelocityProfileSet, 'velocityProfileSet')
             
             analysis_obj.spt_logs_count = \
                 _read_cell(row[1], "sptLogsCount")
@@ -346,8 +346,8 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
             # Read Velocity Profiles of Analysis
             #
             if df_vp_dict and siteID in df_vp_dict \
-                and analysis_obj.velocity_profile_survey:
-                analysis_obj.velocity_profile_survey.velocity_profiles = \
+                and analysis_obj.velocity_profile_set:
+                analysis_obj.velocity_profile_set.velocity_profiles = \
                     _read_velocity_profiles_for_analysis(
                         df_vp_dict[siteID],
                         analysis_id=analysisID)
@@ -436,7 +436,7 @@ def _read_site_indicator(df_row, cls, indicator):
     :rtype: :class:`~obspy.io.sitexml.core.SiteIndicator` or None
     """
     
-    if indicator != "velocityProfile":
+    if indicator != "velocityProfileSet":
         value_column = indicator + '_value'
         if value_column not in df_row or _empty_value(df_row[value_column]):
             return None
