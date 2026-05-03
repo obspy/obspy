@@ -2,6 +2,9 @@
 """
 Quality-index formula helpers and sidecar import utilities for SiteXML.
 
+For more information refer to `SERA D7.2 Deliverable. 
+<https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
+
 :copyright:
     ORFEUS, 2025
 :license:
@@ -68,8 +71,9 @@ def quality_index1(method=None, evaluation=None, reliability=None,
         :meth:`~obspy.io.sitexml.core.SiteIndicator.calculate_quality_index1`,
         which can also store the result on the indicator object.
 
-    This function calculates the Quality Index #1 according to SERA
-    Deliverable 7.2.
+    This function calculates the Quality Index #1 according to `SERA D7.2 Deliverable. 
+    <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
+
     It varies from 0 to 1 and refers to a single mandatory indicator.
 
     Four criteria are used for the calculation:
@@ -172,8 +176,9 @@ def quality_index2(sera_site):
         For object-oriented SiteXML workflows, prefer
         :meth:`~obspy.io.sitexml.core.SERASite.calculate_quality_index2`.
 
-    This function calculates the Quality Index #2 for a site, according to
-    SERA Deliverable 7.2.
+    This function calculates the Quality Index #2 for a site, 
+    according to `SERA D7.2 Deliverable. 
+    <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
 
     Quality Index #2 is a weighted sum computed on the quality index #1 of all
     site indicators evaluated at the target site and varies from 0 to 1.
@@ -206,9 +211,9 @@ def quality_index2(sera_site):
     +---------------------+--------+
 
     The velocity-profile term uses the quality index of the
-    ``VelocityProfileSet`` attached to the preferred analysis. A declared
+    ``VelocityProfileSet`` attached to the preferred analysis. **A declared
     preferred velocity profile is expected to belong to that same preferred
-    analysis.
+    analysis.**
 
     :type sera_site: :class:`~obspy.io.sitexml.core.SERASite`, required
     :param sera_site: The site for which to calculate quality index #2.
@@ -261,8 +266,9 @@ def quality_index3(f0_vs30=None, f0_bedrock_depth=None, f0_h800=None,
         For object-oriented SiteXML workflows, prefer
         :meth:`~obspy.io.sitexml.core.SERASite.calculate_quality_index3`.
 
-    This function calculates the Quality Index #3 for a site, according to
-    SERA Deliverable 7.2.
+    This function calculates the Quality Index #3 for a site, 
+    according to `SERA D7.2 Deliverable. 
+    <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
 
     Quality Index #3 refers to the overall consistency between the various
     indicators and varies from 0 to 1.
@@ -315,8 +321,9 @@ def overall_quality_index(quality_index2=0, quality_index3=0):
         For object-oriented SiteXML workflows, prefer
         :meth:`~obspy.io.sitexml.core.SERASite.calculate_overall_quality_index`.
 
-    This function calculates the overall quality index for a site, according
-    to SERA Deliverable 7.2.
+    This function calculates the overall quality index for a site,
+    according to `SERA D7.2 Deliverable. 
+    <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
 
     The overall quality index is computed as the arithmetic mean between
     Q_Index2 and Q_Index3.

@@ -138,9 +138,9 @@ TopographySchemaB = Enum([
 Formal topographic/terrain classification of a site.
 
 **Schema B** is the terrain classification scheme proposed by
-**Burjanek et al. (2014)**.
-For the precise definition of the allowed values
-refer to **SERA Deliverable D7.1, Appendix I**.
+**Burjanek et al. (2014)**. For the precise definition of the 
+allowed values refer to `SERA Deliverable 7.1, Appendix I.
+<https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_ 
 
 Allowed values are:
 
@@ -208,6 +208,8 @@ Method used for the estimation of the resonance frequency, f0, of a site.
 .. note::
     Required by **EGD (European Geocharacterization Database)**
     when calculating the EGD specific resonance frequency quality index.
+    For more information refer to `SERA Deliverable 7.1, Appendix II.
+    <https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_ 
 
 Allowed values are:
 
@@ -243,10 +245,12 @@ Method used to estimate the S-wave velocity profile and Vs30.
 
 .. note::
     Required by **EGD (European Geocharacterization Database)**
-    when calculating the EGD specific Vs30 quality index.
+    when calculating the EGD specific Vs30 quality index. For 
+    more information refer to `SERA Deliverable 7.1, Appendix IV.
+    <https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_ 
 
-Vs30 is the average shear-wave velocity in the upper 30 meters of the soil column.
-Allowed values are:
+Vs30 is the average shear-wave velocity in the upper 30 meters of the 
+soil column. Allowed values are:
 
 * ``"Geology"``
 * ``"Topographic Slope"``
@@ -277,12 +281,15 @@ Whether multiple methods were combined to estimate Vs30.
 
 .. note::
     Required by **EGD (European Geocharacterization Database)** 
-    for calculating the EGD specific Vs30 quality index.
+    for calculating the EGD specific Vs30 quality index. For 
+    more information refer to `SERA Deliverable 7.1, Appendix III & IV.
+    <https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_ 
 
 Allowed values are:
 
 * ``"1.0"`` : if only one method has been used to estimate the Vs30 value
-* ``"1.2"`` : if a combination of two or more methods has been applied to estimate the Vs30 value
+* ``"1.2"`` : if a combination of two or more methods has been applied to 
+  estimate the Vs30 value
 """
 
 Vs30ManualIndex = Enum([
@@ -298,10 +305,12 @@ Qualitative factor regarding the maximum Vs measurement depth.
     Required by **EGD (European Geocharacterization Database)** 
     for calculating the EGD specific Vs30 quality index.
 
-This depth is commonly compared with the EC8 engineering bedrock depth, where Vs >= 800 m/s.
+This depth is commonly compared with the EC8 engineering bedrock depth, 
+where Vs >= 800 m/s.
 
-The reasoning for introducing this index and description of its values is provided in 
-**SERA Deliverable 7.1, Appendix III**.
+The reasoning for introducing this index and description of its values is 
+provided in `SERA Deliverable 7.1, Appendix III.
+<https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_
 
 * ``"0.2"`` : Unknown/partly unknown stratigraphy
 * ``"0.4"`` : Maximum depth of Vs measurements < 10m

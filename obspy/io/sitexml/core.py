@@ -148,7 +148,8 @@ class ValueWithUncertainty(BaseNode):
 
 class LiteratureSource(BaseNode):
     """
-    Bibliographic source metadata used by SiteXML indicator references.
+    Bibliographic source metadata used to support the provided site
+    indicator's value/values.
     """
 
     title = _scalar_property("title", allow_none=False, allow_empty=False)
@@ -209,6 +210,10 @@ class LiteratureSource(BaseNode):
 class SiteIndicator(BaseNode):
     """
     Base class for SiteXML site-characterization indicator objects.
+
+    Includes metadata common to the site characterization indicators,
+    like quality assessment metdata and the method used for the 
+    estimation/calculation of the site indicator
     """
 
     literature_source = _wrapped_property("literature_source", LiteratureSource)
@@ -222,7 +227,8 @@ class SiteIndicator(BaseNode):
             "bedrockDepth", "geologicalUnit", "velocityS30",
             "resonanceFrequency", "velocityProfileSet".
         :type value: str or :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
-            or :class:`~obspy.io.sitexml.core.VelocityProfileData`, required
+            or list of
+            :class:`~obspy.io.sitexml.core.VelocityProfile`, required
         :param value: Value of the indicator. Type depends on the indicator.
         :type methods: list of str, optional
         :param methods: Methods used for the estimation/calculation of the
@@ -230,7 +236,8 @@ class SiteIndicator(BaseNode):
         :type quality_index: float, optional
         :param quality_index: Quality index of the site indicator. Takes
             values between 0 and 1. Calculated according to the guidelines of
-            the SERA D7.2 Deliverable.
+            the `SERA D7.2 Deliverable. 
+            <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
         :type literature_source:
             :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
         :param literature_source: Literature source related to the provided
@@ -317,7 +324,8 @@ class SiteIndicator(BaseNode):
 
 class EC8(SiteIndicator):
     """
-    Eurocode 8 ground type indicator.
+    Site indicator containing the Eurocode 8 soil class value
+    and the associated quality assessment metadata.
     """
 
     value = _enum_property("value", EC8Class)
@@ -331,7 +339,8 @@ class EC8(SiteIndicator):
         :type quality_index: float, optional
         :param quality_index: Quality index of the site indicator. Takes
             values between 0 and 1. Calculated according to the guidelines of
-            the SERA D7.2 Deliverable.
+            the `SERA D7.2 Deliverable. 
+            <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
         :type literature_source:
             :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
         :param literature_source: Literature source related to the provided
@@ -347,7 +356,8 @@ class EC8(SiteIndicator):
 
 class H800(SiteIndicator):
     """
-    Engineering bedrock depth indicator for Vs greater than 800 m/s.
+    Site indicator containing the engineering bedrock depth value (for Vs 
+    greater than 800 m/s) and the associated quality assessment metadata.
     """
 
     value = _wrapped_property("value", ValueWithUncertainty)
@@ -362,7 +372,8 @@ class H800(SiteIndicator):
         :type quality_index: float, optional
         :param quality_index: Quality index of the site indicator. Takes
             values between 0 and 1. Calculated according to the guidelines of
-            the SERA D7.2 Deliverable.
+            the `SERA D7.2 Deliverable. 
+            <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
         :type literature_source:
             :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
         :param literature_source: Literature source related to the provided
@@ -380,7 +391,8 @@ class H800(SiteIndicator):
 
 class BedrockDepth(SiteIndicator):
     """
-    Seismological bedrock depth indicator.
+    Site indicator containing the seismological bedrock depth value
+    and the associated quality assessment metadata.
     """
 
     value = _wrapped_property("value", ValueWithUncertainty)
@@ -395,7 +407,8 @@ class BedrockDepth(SiteIndicator):
             :class:`~obspy.io.sitexml.core.ValueWithUncertainty`, optional
         :param quality_index: Quality index of the site indicator. Takes
             values between 0 and 1. Calculated according to the guidelines of
-            the SERA D7.2 Deliverable.
+            the `SERA D7.2 Deliverable. 
+            <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
         :type literature_source:
             :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
         :param literature_source: Literature source related to the provided
@@ -413,8 +426,8 @@ class BedrockDepth(SiteIndicator):
 
 class GeologicalUnit(SiteIndicator):
     """
-    Surface geology indicator with optional map-scale metadata
-    and the associated quality assessment metadata..
+    Site indicator containing description of the surface geology, optional
+    map-scale metadata and the associated quality assessment metadata.
     """
 
     def __init__(self, value, quality_index=None, 
@@ -426,7 +439,8 @@ class GeologicalUnit(SiteIndicator):
         :type quality_index: float, optional
         :param quality_index: Quality index of the site indicator. Takes
             values between 0 and 1. Calculated according to the guidelines of
-            the SERA D7.2 Deliverable.
+            the `SERA D7.2 Deliverable. 
+            <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
         :type geological_map_scale: str, optional
         :param geological_map_scale: Scale of geological map used for the
             description of surface geology.
@@ -452,7 +466,16 @@ class GeologicalUnit(SiteIndicator):
         
 class ResonanceFrequency(SiteIndicator):
     """
-    Site resonance-frequency indicator.
+    Site indicator containing the resonance frequency value,
+    and the associated quality assessment metadata.
+
+    .. note::
+        This site indicator includes parameters which are required by the 
+        **EGD (European Geocharacterization Database)** for the calculation 
+        of the EGD specific resonance frequency quality index.
+
+        * :data:`~obspy.io.sitexml.util.ResonanceFrequencyMethod` - Methods 
+          used for the estimation of resonance frequency.
     """
 
     value = _wrapped_property("value", ValueWithUncertainty)
@@ -467,7 +490,8 @@ class ResonanceFrequency(SiteIndicator):
         :type quality_index: float, optional
         :param quality_index: Quality index of the site indicator. Takes
             values between 0 and 1. Calculated according to the guidelines of
-            the SERA D7.2 Deliverable.
+            the `SERA D7.2 Deliverable. 
+            <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
         :type methods: List of Enum type
             :data:`~obspy.io.sitexml.util.ResonanceFrequencyMethod`,
             optional
@@ -489,8 +513,21 @@ class ResonanceFrequency(SiteIndicator):
         
 class VelocityS30(SiteIndicator):
     """
-    Time-averaged shear-wave velocity over the upper 30 meters,
+    Site indicator containing the velocityS30 value
+    (time-averaged shear-wave velocity over the upper 30 meters),
     and the associated quality assessment metadata.
+
+    .. note::  
+        This site indicator includes parameters which are required by the 
+        **EGD (European Geocharacterization Database)** for the calculation 
+        of the EGD specific Vs30 quality index.
+
+        * :data:`~obspy.io.sitexml.util.VelocityS30Method` - Methods used 
+          for the estimation of Velocity S30
+        * :data:`~obspy.io.sitexml.util.Vs30ManualIndex` - Qualitative factor 
+          regarding the maximum Vs measurement depth.
+        * :data:`~obspy.io.sitexml.util.Vs30MethodCombined` - Whether multiple 
+          methods were combined to estimate Vs30.
     """
 
     value = _wrapped_property("value", ValueWithUncertainty)
@@ -508,7 +545,8 @@ class VelocityS30(SiteIndicator):
         :type quality_index: float, optional
         :param quality_index: Quality index of the site indicator. Takes
             values between 0 and 1. Calculated according to the guidelines of
-            the SERA D7.2 Deliverable.
+            the `SERA D7.2 Deliverable. 
+            <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
         :type methods: List of Enum type
             :data:`~obspy.io.sitexml.util.VelocityS30Method`, optional
         :param methods: Methods used for the estimation of Velocity S30
@@ -566,7 +604,8 @@ class VelocityProfileSet(SiteIndicator):
         :type quality_index: float, optional
         :param quality_index: Quality index of the site indicator. Takes
             values between 0 and 1. Calculated according to the guidelines of
-            the SERA D7.2 Deliverable.
+            the `SERA D7.2 Deliverable. 
+            <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
         :type literature_source:
             :class:`~obspy.io.sitexml.core.LiteratureSource`, optional
         :param literature_source: Literature source related to the provided
@@ -596,7 +635,13 @@ class VelocityProfileSet(SiteIndicator):
 
 class VelocityProfile(BaseNode):
     """
-    Layered velocity profile, part of a :class:`~obspy.io.sitexml.core.VelocityProfileSet`.
+    Layered velocity profile.
+
+    Each ``VelocityProfile`` should be assigned a unique resource identifier.
+    
+    It contains a list of :class:`~obspy.io.sitexml.core.VelocityProfileData` 
+    and the ``layer_count``, which, if provided, must match the length of the 
+    ``VelocityProfileData`` list.
     """
 
     resource_id = _resource_id_property(
@@ -732,6 +777,9 @@ class VelocityProfile(BaseNode):
 class VelocityProfileData(BaseNode):
     """
     Physical properties for a single velocity-profile layer.
+
+    You must provide at least the layer's ``top_depth`` and the ``velocityS``
+    value.
     """
 
     top_depth = _wrapped_property("top_depth", ValueWithUncertainty,
@@ -1138,6 +1186,24 @@ class SiteDescription(BaseNode):
     """
     Location, QuakeML-STC-derived morphology indicators, and topographic
     classification for a SiteXML site.
+
+    Each ``SiteDescription`` should be assigned a unique resource identifier,
+    which is used to associate it with one or more site 
+    :class:`~obspy.io.sitexml.core.Analysis`.
+
+    A ``SiteDescription`` object includes values for the following site metadata:
+
+    * :class:`~obspy.io.sitexml.core.EC8` - Soil class according to Eurocode 8
+    * :class:`~obspy.io.sitexml.core.BedrockDepth` - Seismological bedrock depth
+    * :class:`~obspy.io.sitexml.core.H800` - Enginnering berdock depth
+    * :class:`~obspy.io.sitexml.core.GeologicalUnit` - Geological Unit
+    * Morphology - Qualitative landform description
+    * Topography - Formal topographic/terrain classification according to 
+      two different classification schemas
+
+    Also, it includes the resource identifiers of the ``preferred_site_analysisID``
+    and the ``preferred_velocity_profileID``, if more than one, and the 
+    ``overall_quality_index`` of the site characterization metadata (if available).
     """
 
     resource_id = _resource_id_property(
@@ -1218,20 +1284,22 @@ class SiteDescription(BaseNode):
         :type preferred_site_analysisID: str or
             :class:`~obspy.core.event.resourceid.ResourceIdentifier`, optional
         :param preferred_site_analysisID: Preferred Site Analysis ID. 
-                If you provide one or more analysis for this site 
-                you should use this field to designate the prefered analysis.
+            If you provide one or more analysis for this site 
+            you should use this field to designate the prefered analysis.
         :type preferred_velocity_profileID: str or
             :class:`~obspy.core.event.resourceid.ResourceIdentifier`, optional
         :param preferred_velocity_profileID: Preferred Velocity Profile ID. 
-                If you provide one or more velocity profiles for this site 
-                you should use this field to designate the prefered VP. If
-                ``preferred_site_analysisID`` is also provided, the preferred
-                VP must belong to the preferred analysis. The overall quality
-                index calculation uses the Velocity Profile Set quality
-                index associated with the preferred analysis.
+            If you provide one or more velocity profiles for this site 
+            you should use this field to designate the prefered VP. If
+            ``preferred_site_analysisID`` is also provided, the preferred
+            VP must belong to the preferred analysis. The overall quality
+            index calculation uses the Velocity Profile Set quality
+            index associated with the preferred analysis.
         :type overall_quality_index: float, optional
-        :param overall_quality_index: The overall quality index of the site 
-                characterization parameters.
+        :param overall_quality_index: The overall quality index of the site
+            characterization parameters. Calculated according to the guidelines of
+            the `SERA D7.2 Deliverable. 
+            <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
         """
 
         self.resource_id = resource_id
@@ -1300,6 +1368,17 @@ class SiteDescription(BaseNode):
 class Analysis(BaseNode):
     """
     Site-characterization analysis and related indicator metadata.
+
+    Each ``Analysis`` should be assigned a unique resource identifier
+    and **must** be associated with the site description of the respective 
+    site using the parameter ``Analysis.site_descriptionID``.
+
+    An ``Analysis`` object includes values for the following site metadata:
+
+    * :class:`~obspy.io.sitexml.core.ResonanceFrequency` - Resonance 
+      Frequency of a site
+    * :class:`~obspy.io.sitexml.core.VelocityS30` - Velocity S30 of a site
+    * :class:`~obspy.io.sitexml.core.VelocityProfileSet` - A set of Velocity Profiles
     """
 
     resource_id = _resource_id_property(
@@ -1427,6 +1506,15 @@ class Analysis(BaseNode):
 class SERASite(BaseNode):
     """
     This is the parent class for the siteXML object tree.
+
+    Each ``SERASite`` should be assigned a unique resource identifier.
+
+    Includes a site owner of type :class:`~obspy.io.sitexml.core.SERASiteOwner`,
+    a site description object of class :class:`~obspy.io.sitexml.core.SiteDescription`
+    and one or more analysis objects of class :class:`~obspy.io.sitexml.core.Analysis`.
+
+    Additional sources of information regarding the site can be added using one or more 
+    :class:`~obspy.core.inventory.util.ExternalReference`.
     """
     resource_id = _resource_id_property(
         "resource_id", allow_none=False, allow_empty=False)
