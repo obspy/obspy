@@ -76,7 +76,7 @@
     
     .. code-block:: python
     
-        from obspy.io.sitexml.read_csv import csv_to_sera_site
+        from obspy.io.sitexml.tabular import csv_to_sera_site
     
         sites = csv_to_sera_site(
             "site_owner.csv",
@@ -92,7 +92,7 @@
     
     .. code-block:: python
     
-        from obspy.io.sitexml.read_csv import excel_to_sera_site
+        from obspy.io.sitexml.tabular import excel_to_sera_site
     
         sites = excel_to_sera_site(
             "sera_site_all.xlsx",
@@ -125,7 +125,7 @@
         from pathlib import Path
     
         from obspy.core.util import get_example_file
-        from obspy.io.sitexml.read_csv import csv_to_sera_site
+        from obspy.io.sitexml.tabular import csv_to_sera_site
     
         site_owner_csv = get_example_file("site_owner.csv")
         data_dir = Path(site_owner_csv).parent
@@ -152,7 +152,7 @@
         from pathlib import Path
     
         from obspy.core.util import get_example_file
-        from obspy.io.sitexml.read_csv import excel_to_sera_site
+        from obspy.io.sitexml.tabular import excel_to_sera_site
     
         excel_file = get_example_file("sera_site_all.xlsx")
         data_dir = Path(excel_file).parent
@@ -337,8 +337,8 @@
        ~sitexml.sitedict_to_sitexml
        ~sitexml.sitexml_to_sitedict
        ~sitexml.write_stationxml_reference
-       ~read_csv.csv_to_sera_site
-       ~read_csv.excel_to_sera_site
+       ~tabular.csv_to_sera_site
+       ~tabular.excel_to_sera_site
        ~quality_index.quality_index1
        ~quality_index.quality_index2
        ~quality_index.quality_index3
@@ -373,7 +373,7 @@
     
        core
        sitexml
-       read_csv
+       tabular
        quality_index
        util
 

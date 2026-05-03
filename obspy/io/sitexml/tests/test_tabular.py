@@ -12,8 +12,8 @@ import pytest
 from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLImportError
 from obspy.io.sitexml.quality_index import (apply_quality_index_csv,
                                             apply_quality_index_excel)
-from obspy.io.sitexml.read_csv import (csv_to_sera_site, excel_to_sera_site,
-                                       _read_year_cell)
+from obspy.io.sitexml.tabular import (csv_to_sera_site, excel_to_sera_site,
+                                      _read_year_cell)
 from obspy.io.sitexml.sitexml import sitexml_to_sitedict
 
 

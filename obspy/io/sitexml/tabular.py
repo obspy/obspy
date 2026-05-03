@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Functions dealing with import SiteXML metadata from excel files.
+Functions dealing with tabular SiteXML metadata imports from CSV and Excel
+files.
 
 :copyright:
     ORFEUS, 2025
@@ -60,7 +61,7 @@ def csv_to_sera_site(site_owner_csv,
 
     Example
 
-    >>> from obspy.io.sitexml.read_csv import csv_to_sera_site
+    >>> from obspy.io.sitexml.tabular import csv_to_sera_site
     >>> sera_site_dict = csv_to_sera_site("site_owner.csv",
     ...                     "site_description.csv", "analysis.csv",
     ...                     "velocity_profiles_dir", ';')
@@ -162,7 +163,7 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     
     Example
 
-    >>> from obspy.io.sitexml.read_csv import excel_to_sera_site
+    >>> from obspy.io.sitexml.tabular import excel_to_sera_site
     >>> sera_site_dict = excel_to_sera_site("InputExcel.xlsx",
     ...                         velocity_profiles="vp.xlsx")
     """

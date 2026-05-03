@@ -512,7 +512,7 @@ def _empty_value(value):
     """
     Return whether a tabular cell should be treated as missing.
 
-    This intentionally mirrors ``read_csv._empty_value()`` locally. Keeping it
+    This intentionally mirrors ``tabular._empty_value()`` locally. Keeping it
     here avoids making the lower-level ``util.py`` module depend on
     pandas/tabular import semantics solely for quality-index sidecar parsing.
 

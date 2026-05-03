@@ -400,7 +400,7 @@ source for the Vs30 indicator, while ``velocityS30_uri`` and
 Importing CSV
 -------------
 
-Use :func:`~obspy.io.sitexml.read_csv.csv_to_sera_site` to build a dictionary
+Use :func:`~obspy.io.sitexml.tabular.csv_to_sera_site` to build a dictionary
 of ``SERASite`` objects from CSV files.
 
 .. code-block:: python
@@ -408,7 +408,7 @@ of ``SERASite`` objects from CSV files.
     from pathlib import Path
 
     from obspy.core.util import get_example_file
-    from obspy.io.sitexml.read_csv import csv_to_sera_site
+    from obspy.io.sitexml.tabular import csv_to_sera_site
 
     site_owner_csv = get_example_file("site_owner.csv")
     data_dir = Path(site_owner_csv).parent
@@ -447,7 +447,7 @@ column and the same layer columns used by CSV import.
     from pathlib import Path
 
     from obspy.core.util import get_example_file
-    from obspy.io.sitexml.read_csv import excel_to_sera_site
+    from obspy.io.sitexml.tabular import excel_to_sera_site
 
     excel_file = get_example_file("sera_site_all.xlsx")
     data_dir = Path(excel_file).parent
