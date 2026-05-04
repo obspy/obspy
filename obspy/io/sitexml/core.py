@@ -1647,6 +1647,62 @@ class SERASite(BaseNode):
         self.revision_history.append(revision)
         return revision
 
+    def add_analysis(self, analysis=None, resource_id=None,
+                     set_preferred=False, **kwargs):
+        """
+        Add an analysis tied to this site's site description and return it.
+
+        Pass an existing :class:`~obspy.io.sitexml.core.Analysis` as
+        ``analysis`` or pass ``resource_id`` and optional ``Analysis`` keyword
+        arguments to create one. Created analyses automatically use this site's
+        ``site_description.resource_id`` as ``site_descriptionID``.
+
+        :type analysis: :class:`~obspy.io.sitexml.core.Analysis`, optional
+        :param analysis: Existing analysis to attach.
+        :type resource_id: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, optional
+        :param resource_id: New analysis resource ID, required when
+            ``analysis`` is omitted.
+        :type set_preferred: bool, optional
+        :param set_preferred: Whether to make the added analysis preferred.
+        :rtype: :class:`~obspy.io.sitexml.core.Analysis`
+        """
+        if analysis is not None and resource_id is not None:
+            raise SiteXMLValidationError(
+                "Pass either analysis or resource_id, not both.")
+        if analysis is None:
+            if resource_id is None:
+                raise SiteXMLValidationError(
+                    "resource_id is required when analysis is omitted.")
+            if "site_descriptionID" in kwargs:
+                raise SiteXMLValidationError(
+                    "site_descriptionID is set from this site's "
+                    "site_description.resource_id.")
+            analysis = Analysis(
+                resource_id=resource_id,
+                site_descriptionID=self.site_description.resource_id,
+                **kwargs)
+        elif not isinstance(analysis, Analysis):
+            raise SiteXMLValidationError(
+                "analysis must be an Analysis object.")
+
+        if analysis.site_descriptionID != self.site_description.resource_id:
+            raise SiteXMLValidationError(
+                "Analysis site_descriptionID does not match the parent "
+                "SiteDescription resource_id.")
+        if self.get_analysis(analysis.resource_id) is not None:
+            raise SiteXMLValidationError(
+                f"Duplicate analysis resource_id: {analysis.resource_id}")
+
+        if self.analysis is None:
+            self.analysis = []
+        self.analysis.append(analysis)
+
+        if set_preferred:
+            self.set_preferred_analysis(analysis.resource_id)
+
+        return analysis
+
     def get_analysis(self, resource_id):
         """
         Return the attached analysis with matching resource ID, if present.
@@ -1683,6 +1739,23 @@ class SERASite(BaseNode):
             return self.get_analysis(preferred_id)
 
         return self.analysis[0]
+
+    def set_preferred_analysis(self, analysisID):
+        """
+        Set the preferred analysis after validating it is attached to this site.
+
+        :type analysisID: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
+        :param analysisID: Analysis resource ID to mark as preferred.
+        :rtype: :class:`~obspy.io.sitexml.core.Analysis`
+        """
+        analysis = self.get_analysis(analysisID)
+        if analysis is None:
+            raise SiteXMLValidationError(
+                "preferred_site_analysisID does not match any attached "
+                "analysis resource_id.")
+        self.site_description.preferred_site_analysisID = analysis.resource_id
+        return analysis
 
     def get_velocity_profile(self, resource_id, analysis=None):
         """
@@ -1742,6 +1815,53 @@ class SERASite(BaseNode):
 
         return vp_set.velocity_profiles[0]
 
+    def set_preferred_velocity_profile(self, velocityProfileID,
+                                       analysisID=None):
+        """
+        Set the preferred velocity profile after validating it exists.
+
+        When ``analysisID`` is provided, the profile must belong to that
+        analysis and that analysis is also set as preferred. When it is omitted,
+        all attached analyses are searched.
+
+        :type velocityProfileID: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
+        :param velocityProfileID: Velocity profile resource ID to mark as
+            preferred.
+        :type analysisID: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, optional
+        :param analysisID: Analysis expected to contain the preferred velocity
+            profile.
+        :rtype: :class:`~obspy.io.sitexml.core.VelocityProfile`
+        """
+        if analysisID is None:
+            velocity_profile = self.get_velocity_profile(velocityProfileID)
+            if velocity_profile is None:
+                raise SiteXMLValidationError(
+                    "preferred_velocity_profileID does not match any attached "
+                    "velocity profile resource_id.")
+            self.site_description.preferred_velocity_profileID = (
+                velocity_profile.resource_id)
+            return velocity_profile
+
+        analysis = self.get_analysis(analysisID)
+        if analysis is None:
+            raise SiteXMLValidationError(
+                "preferred_site_analysisID does not match any attached "
+                "analysis resource_id.")
+
+        velocity_profile = self.get_velocity_profile(
+            velocityProfileID, analysis=analysis)
+        if velocity_profile is None:
+            raise SiteXMLValidationError(
+                "preferred_velocity_profileID does not belong to "
+                "preferred_site_analysisID.")
+
+        self.site_description.preferred_site_analysisID = analysis.resource_id
+        self.site_description.preferred_velocity_profileID = (
+            velocity_profile.resource_id)
+        return velocity_profile
+
     def get_indicator_object(self, name):
         """
         Return a site indicator object by SiteXML indicator name.
@@ -1780,6 +1900,40 @@ class SERASite(BaseNode):
             return analysis_indicators[name]
 
         raise SiteXMLValidationError(f"Unknown site indicator name: {name}")
+
+    def iter_site_indicators(self, include_empty=False):
+        """
+        Iterate over this site's indicator slots.
+
+        Yields ``(name, indicator)`` pairs. Site-description indicators are
+        yielded first, followed by indicators from each attached analysis. When
+        ``include_empty`` is true, missing indicator slots are yielded with
+        ``None``.
+
+        :type include_empty: bool, optional
+        :param include_empty: Include supported indicator names that are not
+            present on the site.
+        :rtype: iterator
+        """
+        site_description_indicators = (
+            ("siteClassEC8", self.site_description.ec8),
+            ("bedrockDepth", self.site_description.bedrock_depth),
+            ("h800", self.site_description.h800),
+            ("geologicalUnit", self.site_description.geological_unit),
+        )
+        for name, indicator in site_description_indicators:
+            if include_empty or indicator is not None:
+                yield name, indicator
+
+        for analysis in self.analysis or []:
+            analysis_indicators = (
+                ("resonanceFrequency", analysis.resonance_frequency),
+                ("velocityS30", analysis.velocity_s30),
+                ("velocityProfileSet", analysis.velocity_profile_set),
+            )
+            for name, indicator in analysis_indicators:
+                if include_empty or indicator is not None:
+                    yield name, indicator
 
     def add_site_indicator(self, site_indicators, analysisID=None):
         """

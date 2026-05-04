@@ -168,6 +168,70 @@ class TestSiteXML():
             "quakeml:domain.ab/analysis/missing")
         assert sera_site.get_preferred_analysis() is None
 
+    def test_add_analysis_creates_analysis_for_site_description(self):
+        """
+        SERASite.add_analysis wires new analyses to this site description.
+        """
+        sera_site = self._minimal_sera_site()
+
+        analysis = sera_site.add_analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            velocity_s30=VelocityS30(ValueWithUncertainty(760)),
+            set_preferred=True)
+
+        assert sera_site.analysis == [analysis]
+        assert analysis.site_descriptionID == (
+            sera_site.site_description.resource_id)
+        assert sera_site.site_description.preferred_site_analysisID == (
+            analysis.resource_id)
+
+    def test_add_analysis_rejects_duplicate_or_wrong_parent(self):
+        """
+        Added analyses must be unique and tied to this site's description.
+        """
+        sera_site = self._minimal_sera_site()
+        analysis = sera_site.add_analysis(
+            resource_id="quakeml:domain.ab/analysis/001")
+
+        with pytest.raises(
+                SiteXMLValidationError,
+                match="Duplicate analysis resource_id"):
+            sera_site.add_analysis(analysis=analysis)
+
+        with pytest.raises(
+                SiteXMLValidationError,
+                match="site_descriptionID does not match"):
+            sera_site.add_analysis(analysis=Analysis(
+                resource_id="quakeml:domain.ab/analysis/002",
+                site_descriptionID="quakeml:domain.ab/site_description/other"))
+
+        with pytest.raises(
+                SiteXMLValidationError,
+                match="site_descriptionID is set"):
+            sera_site.add_analysis(
+                resource_id="quakeml:domain.ab/analysis/002",
+                site_descriptionID=sera_site.site_description.resource_id)
+
+    def test_set_preferred_analysis_validates_analysis_id(self):
+        """
+        Preferred analysis helper rejects IDs outside this site.
+        """
+        sera_site = self._minimal_sera_site()
+        analysis = sera_site.add_analysis(
+            resource_id=ResourceIdentifier(
+                "quakeml:domain.ab/analysis/001"))
+
+        assert sera_site.set_preferred_analysis(
+            analysis.resource_id) is analysis
+        assert sera_site.site_description.preferred_site_analysisID == (
+            analysis.resource_id)
+
+        with pytest.raises(
+                SiteXMLValidationError,
+                match="preferred_site_analysisID"):
+            sera_site.set_preferred_analysis(
+                "quakeml:domain.ab/analysis/missing")
+
     def test_get_preferred_velocity_profile(self):
         """
         Preferred velocity profile lookup follows SiteDescription references.
@@ -212,6 +276,45 @@ class TestSiteXML():
             "quakeml:domain.ab/velocity_profile/missing")
         assert sera_site.get_preferred_velocity_profile() is None
 
+    def test_set_preferred_velocity_profile_validates_relationship(self):
+        """
+        Preferred velocity profile helper validates the containing analysis.
+        """
+        sera_site = self._minimal_sera_site()
+        profile_001 = self._velocity_profile(
+            "quakeml:domain.ab/velocity_profile/001")
+        profile_002 = self._velocity_profile(
+            "quakeml:domain.ab/velocity_profile/002")
+        analysis_001 = sera_site.add_analysis(
+            resource_id="quakeml:domain.ab/analysis/001")
+        analysis_002 = sera_site.add_analysis(
+            resource_id="quakeml:domain.ab/analysis/002")
+        sera_site.add_velocity_profiles(
+            [profile_001], analysisID=analysis_001.resource_id)
+        sera_site.add_velocity_profiles(
+            [profile_002], analysisID=analysis_002.resource_id)
+
+        assert sera_site.set_preferred_velocity_profile(
+            profile_002.resource_id,
+            analysisID=analysis_002.resource_id) is profile_002
+        assert sera_site.site_description.preferred_site_analysisID == (
+            analysis_002.resource_id)
+        assert sera_site.site_description.preferred_velocity_profileID == (
+            profile_002.resource_id)
+
+        with pytest.raises(
+                SiteXMLValidationError,
+                match="does not belong"):
+            sera_site.set_preferred_velocity_profile(
+                profile_001.resource_id,
+                analysisID=analysis_002.resource_id)
+
+        with pytest.raises(
+                SiteXMLValidationError,
+                match="preferred_velocity_profileID"):
+            sera_site.set_preferred_velocity_profile(
+                "quakeml:domain.ab/velocity_profile/missing")
+
     def test_get_indicator_object(self, testdata):
         """
         Indicator lookup uses site description and preferred analysis context.
@@ -229,6 +332,29 @@ class TestSiteXML():
                 SiteXMLValidationError,
                 match="Unknown site indicator name"):
             sera_site.get_indicator_object("unknownIndicator")
+
+    def test_iter_site_indicators(self):
+        """
+        Existing site indicators can be iterated for auditing workflows.
+        """
+        sera_site = self._minimal_sera_site()
+        ec8 = EC8("A")
+        velocity_s30 = VelocityS30(ValueWithUncertainty(760))
+        sera_site.site_description.ec8 = ec8
+        sera_site.add_analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            velocity_s30=velocity_s30)
+
+        indicators = list(sera_site.iter_site_indicators())
+        assert indicators == [
+            ("siteClassEC8", ec8),
+            ("velocityS30", velocity_s30),
+        ]
+
+        indicators_with_empty = list(
+            sera_site.iter_site_indicators(include_empty=True))
+        assert ("bedrockDepth", None) in indicators_with_empty
+        assert ("velocityProfileSet", None) in indicators_with_empty
 
     def test_add_site_indicator_routes_by_name(self):
         """

@@ -17,6 +17,9 @@
     :class:`~obspy.io.sitexml.core.SiteDescription` objects, plus optional
     :class:`~obspy.io.sitexml.core.Analysis` objects with site-characterization
     indicators such as Vs30, resonance frequency, and velocity profiles.
+    ``SERASite`` also provides object-level helpers for common relationship
+    edits, including adding analyses, setting preferred analysis/profile IDs,
+    iterating site indicators, and adding velocity profiles to one analysis.
     
     The following illustration shows the relationships between the most basic 
     SiteXML objects.
@@ -109,9 +112,7 @@
         inventory = add_sitexml_reference(
             inventory,
             station_code="XX.ABCD",
-            sitexml_url=(
-                "https://example.org/sitexml/"
-                "Site_XX.ABCD_12-01-2026.xml"))
+            sitexml_url=("Site_XX.ABCD_12-01-2026.xml"))
         inventory.write("XX.ABCD.with_sitexml.stationxml.xml",
                         format="STATIONXML")
 

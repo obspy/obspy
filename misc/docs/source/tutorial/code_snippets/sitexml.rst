@@ -296,6 +296,32 @@ and a Vs30 indicator:
             for error in errors:
                 print(error)
 
+When creating or editing a ``SERASite`` object in Python, use
+``SERASite.iter_site_indicators()`` to apply shared metadata to a selected set
+of existing indicators. The iterator yields SiteXML indicator names such as
+``siteClassEC8``, ``bedrockDepth``, and ``h800``.
+
+.. code-block:: python
+
+    from obspy.core.inventory.util import ExternalReference
+    from obspy.io.sitexml.core import LiteratureSource
+
+    literature_source = LiteratureSource(
+        title="Example site characterization report",
+        first_author="Author A.",
+        year="2026")
+    external_references = [
+        ExternalReference(
+            uri="https://example.org/reports/site-characterization.pdf",
+            description="Site characterization report")]
+
+    shared_reference_indicators = {
+        "siteClassEC8", "bedrockDepth", "h800"}
+    for name, indicator in site.iter_site_indicators():
+        if name in shared_reference_indicators:
+            indicator.literature_source = literature_source
+            indicator.external_references = external_references
+
 Reading Or Writing Site Dictionaries
 ------------------------------------
 
@@ -366,6 +392,36 @@ In Python, use ``SERASite.get_preferred_analysis()`` and
 If no preferred ID is declared, these methods return the first available
 analysis or velocity profile without changing the missing preferred-ID
 metadata.
+
+Use the object-level helpers when editing these relationships in Python.
+``SERASite.add_analysis(...)`` creates an analysis already tied to the site's
+``site_description.resource_id``. ``SERASite.set_preferred_analysis(...)`` and
+``SERASite.set_preferred_velocity_profile(...)`` validate that the referenced
+objects are attached to the site before updating the preferred IDs.
+
+.. code-block:: python
+
+    from obspy.io.sitexml.core import (
+        ValueWithUncertainty, VelocityProfile, VelocityProfileData)
+
+    analysis = site.add_analysis(
+        resource_id="quakeml:domain.ab/analysis/002",
+        set_preferred=True)
+
+    profile = VelocityProfile(
+        resource_id="quakeml:domain.ab/velocity_profile/003",
+        velocity_profile_data=[
+            VelocityProfileData(
+                velocityS=ValueWithUncertainty(400.0),
+                top_depth=ValueWithUncertainty(0.0))])
+    site.add_velocity_profiles(
+        [profile],
+        analysisID=analysis.resource_id)
+
+    site.set_preferred_analysis(analysis.resource_id)
+    site.set_preferred_velocity_profile(
+        profile.resource_id,
+        analysisID=analysis.resource_id)
 
 The generic CSV and Excel importers **do not generate missing relationship IDs**.
 For example, they will not guess ``analysisID`` or
