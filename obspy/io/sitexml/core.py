@@ -1781,6 +1781,74 @@ class SERASite(BaseNode):
 
         raise SiteXMLValidationError(f"Unknown site indicator name: {name}")
 
+    def add_site_indicator(self, site_indicators, analysisID=None):
+        """
+        Add one or more site indicators to their SiteXML object location.
+
+        Indicators are routed by their ``name`` field. Site-description
+        indicators are assigned to ``site_description``. Analysis indicators
+        are assigned to the analysis selected by ``analysisID``. When
+        ``analysisID`` is omitted, analysis indicators are assigned to the
+        preferred analysis, falling back to the first attached analysis when no
+        preferred analysis is declared.
+
+        Supported names are ``siteClassEC8``, ``bedrockDepth``, ``h800``,
+        ``geologicalUnit``, ``resonanceFrequency``, ``velocityS30``, and
+        ``velocityProfileSet``.
+
+        :type site_indicators: list of
+            :class:`~obspy.io.sitexml.core.SiteIndicator`
+        :param site_indicators: Indicator objects to add. Existing indicators
+            in the same slot are replaced.
+        :type analysisID: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, optional
+        :param analysisID: Analysis resource ID to use for analysis-level
+            indicators. Ignored for site-description indicators.
+        """
+        site_description_indicators = {
+            "siteClassEC8": "ec8",
+            "bedrockDepth": "bedrock_depth",
+            "h800": "h800",
+            "geologicalUnit": "geological_unit",
+        }
+        analysis_indicators = {
+            "resonanceFrequency": "resonance_frequency",
+            "velocityS30": "velocity_s30",
+            "velocityProfileSet": "velocity_profile_set",
+        }
+
+        for site_indicator in site_indicators:
+            if not isinstance(site_indicator, SiteIndicator):
+                raise SiteXMLValidationError(
+                    "site_indicators must contain SiteIndicator objects.")
+
+            name = site_indicator.name
+            if name in site_description_indicators:
+                setattr(
+                    self.site_description,
+                    site_description_indicators[name],
+                    site_indicator)
+                continue
+
+            if name in analysis_indicators:
+                if analysisID is None:
+                    analysis = self.get_preferred_analysis()
+                else:
+                    analysis = self.get_analysis(analysisID)
+                if analysis is None:
+                    if analysisID is None:
+                        raise SiteXMLValidationError(
+                            "Cannot add analysis-level site indicator without "
+                            "an attached analysis.")
+                    raise SiteXMLValidationError(
+                        "analysisID does not match any attached analysis "
+                        "resource_id.")
+                setattr(analysis, analysis_indicators[name], site_indicator)
+                continue
+
+            raise SiteXMLValidationError(
+                f"Unknown site indicator name: {name}")
+
     def calculate_quality_index2(self):
         """
         Calculate Q_Index2 for this site.

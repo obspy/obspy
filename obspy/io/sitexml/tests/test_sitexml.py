@@ -26,7 +26,7 @@ from obspy.io.sitexml.core import (Analysis, EC8, LiteratureSource, Revision,
                                    ResonanceFrequency,
                                    ValueWithUncertainty, VelocityProfile,
                                    VelocityProfileData,
-                                   VelocityProfileSet)
+                                   VelocityProfileSet, VelocityS30)
 from obspy.io.sitexml import sitexml as sitexml_module
 from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLValidationError
 from obspy.io.sitexml.quality_index import overall_quality_index
@@ -229,6 +229,78 @@ class TestSiteXML():
                 SiteXMLValidationError,
                 match="Unknown site indicator name"):
             sera_site.get_indicator_object("unknownIndicator")
+
+    def test_add_site_indicator_routes_by_name(self):
+        """
+        Site indicators are assigned to their schema object location.
+        """
+        sera_site = self._minimal_sera_site()
+        analysis_001 = Analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            site_descriptionID=sera_site.site_description.resource_id)
+        analysis_002 = Analysis(
+            resource_id="quakeml:domain.ab/analysis/002",
+            site_descriptionID=sera_site.site_description.resource_id)
+        sera_site.analysis = [analysis_001, analysis_002]
+        sera_site.site_description.preferred_site_analysisID = (
+            analysis_002.resource_id)
+        ec8 = EC8("A")
+        velocity_s30 = VelocityS30(ValueWithUncertainty(760))
+
+        sera_site.add_site_indicator([ec8, velocity_s30])
+
+        assert sera_site.site_description.ec8 is ec8
+        assert analysis_001.velocity_s30 is None
+        assert analysis_002.velocity_s30 is velocity_s30
+
+    def test_add_site_indicator_uses_explicit_analysis_id(self):
+        """
+        analysisID selects the target for analysis-level indicators.
+        """
+        sera_site = self._minimal_sera_site()
+        analysis_001 = Analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            site_descriptionID=sera_site.site_description.resource_id)
+        analysis_002 = Analysis(
+            resource_id=ResourceIdentifier(
+                "quakeml:domain.ab/analysis/002"),
+            site_descriptionID=sera_site.site_description.resource_id)
+        sera_site.analysis = [analysis_001, analysis_002]
+        velocity_s30 = VelocityS30(ValueWithUncertainty(760))
+
+        sera_site.add_site_indicator(
+            [velocity_s30], analysisID=analysis_002.resource_id)
+
+        assert analysis_001.velocity_s30 is None
+        assert analysis_002.velocity_s30 is velocity_s30
+
+    def test_add_site_indicator_rejects_unknown_analysis_id(self):
+        """
+        Explicit analysisID must match an attached analysis.
+        """
+        sera_site = self._minimal_sera_site()
+        sera_site.analysis = [Analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            site_descriptionID=sera_site.site_description.resource_id)]
+
+        with pytest.raises(
+                SiteXMLValidationError,
+                match="analysisID does not match"):
+            sera_site.add_site_indicator(
+                [VelocityS30(ValueWithUncertainty(760))],
+                analysisID="quakeml:domain.ab/analysis/missing")
+
+    def test_add_site_indicator_requires_analysis_for_analysis_indicators(self):
+        """
+        Analysis-level indicators need an attached analysis target.
+        """
+        sera_site = self._minimal_sera_site()
+
+        with pytest.raises(
+                SiteXMLValidationError,
+                match="without an attached analysis"):
+            sera_site.add_site_indicator([
+                VelocityS30(ValueWithUncertainty(760))])
 
     def test_validate_references_requires_preferred_velocity_profile_in_preferred_analysis(self):
         """
