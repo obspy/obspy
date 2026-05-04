@@ -19,7 +19,7 @@ import obspy
 import pytest
 from obspy.core.event import ResourceIdentifier
 from obspy.core.inventory import Inventory, Network, Station, read_inventory
-from obspy.core.inventory.util import Operator, Person
+from obspy.core.inventory.util import ExternalReference, Operator, Person
 from obspy.core.util.obspy_types import FloatWithUncertainties
 from obspy.io.sitexml.core import (Analysis, EC8, LiteratureSource, SERASite,
                                    SERASiteOwner, SiteDescription,
@@ -469,6 +469,109 @@ class TestSiteXML():
         assert len(refs) == 1
         assert refs[0].description == (
             "SERA SiteXML site characterization; added 2026-05-02")
+
+    def test_write_stationxml_reference_replaces_managed_reference(self):
+        """
+        Existing helper-written SiteXML references are kept current.
+        """
+        station = Station(
+            code="ABCD", latitude=1.0, longitude=2.0, elevation=3.0)
+        station.external_references = [
+            ExternalReference(
+                uri="https://example.org/sitexml/"
+                    "Site_XX.ABCD_01-05-2026.xml",
+                description="SERA SiteXML site characterization; "
+                    "added 2026-05-01"),
+            ExternalReference(
+                uri="https://example.org/other.xml",
+                description="Unrelated station metadata"),
+        ]
+        inventory = Inventory(
+            networks=[Network(code="XX", stations=[station])],
+            source="TEST")
+
+        write_stationxml_reference(
+            "XX.ABCD",
+            "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+            client=type("DummyClient", (), {
+                "get_stations": lambda self, **kwargs: inventory
+            })(),
+            added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0))
+
+        refs = station.external_references
+        assert [ref.uri for ref in refs] == [
+            "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+            "https://example.org/other.xml",
+        ]
+        assert refs[0].description == (
+            "SERA SiteXML site characterization; added 2026-05-02")
+
+    def test_write_stationxml_reference_replaces_manual_station_filename(
+            self):
+        """
+        Manual references using the default SiteXML filename are replaced.
+        """
+        station = Station(
+            code="ABCD", latitude=1.0, longitude=2.0, elevation=3.0)
+        station.external_references = [
+            ExternalReference(
+                uri="https://example.org/sitexml/"
+                    "Site_XX.ABCD_01-05-2026.xml",
+                description="Manually added SiteXML link"),
+            ExternalReference(
+                uri="https://example.org/sitexml/"
+                    "Site_YY.ABCD_01-05-2026.xml",
+                description="Different station SiteXML link"),
+        ]
+        inventory = Inventory(
+            networks=[Network(code="XX", stations=[station])],
+            source="TEST")
+
+        write_stationxml_reference(
+            "XX.ABCD",
+            "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+            client=type("DummyClient", (), {
+                "get_stations": lambda self, **kwargs: inventory
+            })(),
+            added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0))
+
+        assert [ref.uri for ref in station.external_references] == [
+            "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+            "https://example.org/sitexml/Site_YY.ABCD_01-05-2026.xml",
+        ]
+        assert station.external_references[0].description == (
+            "SERA SiteXML site characterization; added 2026-05-02")
+
+    def test_write_stationxml_reference_can_append_history(self):
+        """
+        Replacement can be disabled when callers want to keep SiteXML history.
+        """
+        station = Station(
+            code="ABCD", latitude=1.0, longitude=2.0, elevation=3.0)
+        station.external_references = [
+            ExternalReference(
+                uri="https://example.org/sitexml/"
+                    "Site_XX.ABCD_01-05-2026.xml",
+                description="SERA SiteXML site characterization; "
+                    "added 2026-05-01"),
+        ]
+        inventory = Inventory(
+            networks=[Network(code="XX", stations=[station])],
+            source="TEST")
+
+        write_stationxml_reference(
+            "XX.ABCD",
+            "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+            client=type("DummyClient", (), {
+                "get_stations": lambda self, **kwargs: inventory
+            })(),
+            added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0),
+            replace_existing=False)
+
+        assert [ref.uri for ref in station.external_references] == [
+            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml",
+            "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+        ]
 
     def test_write_stationxml_reference_requires_datacenter_or_client(self):
         """

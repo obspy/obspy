@@ -15,7 +15,7 @@ import io
 from pathlib import Path
 import re
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 from urllib.request import urlopen
 import warnings
 
@@ -1232,10 +1232,75 @@ def _obj2tag(parent, tag_name, tag_value):
 # Maybe it would be a better workflow to read from an inventory 
 # and just return the updated inventory (remove the input/output paths).
 
+_STATIONXML_SITEXML_DESCRIPTION = "SERA SiteXML site characterization"
+
+def _is_station_sitexml_uri(uri, station_code):
+    """
+    Return whether ``uri`` looks like the official SiteXML file for station.
+
+    :rtype: bool
+    """
+    if not uri:
+        return False
+    filename = unquote(Path(urlparse(uri).path).name)
+    station = re.escape(station_code)
+    return re.match(
+        r"^(?:Site_%s_[0-3][0-9]-[01][0-9]-[0-9]{4}|%s)\.xml$" %
+        (station, station),
+        filename
+    ) is not None
+
+def _is_managed_sitexml_reference(ref):
+    """
+    Return whether ``ref`` was written by the SiteXML StationXML helper.
+
+    :rtype: bool
+    """
+    description = (ref.description or "").lower()
+    return _STATIONXML_SITEXML_DESCRIPTION.lower() in description
+
+def _add_station_sitexml_reference(station, station_code, sitexml_url,
+                                       description, replace_existing):
+    """
+    Add or replace the station-level SiteXML ``ExternalReference``.
+
+    :rtype: None
+    """
+    new_ref = ExternalReference(uri=sitexml_url, description=description)
+
+    if not replace_existing:
+        # append a new reference unless the exact URL is already present.
+        if not any(ref.uri == sitexml_url for ref in
+                   station.external_references):
+            station.external_references.append(new_ref)
+        return
+
+    updated_refs = []
+    inserted = False
+    for ref in station.external_references:
+        # Search for matching references.
+        replace_ref = (
+            ref.uri == sitexml_url or
+            _is_managed_sitexml_reference(ref) or
+            _is_station_sitexml_uri(ref.uri, station_code)
+        )
+        # If a matching reference is found replace it
+        if replace_ref:
+            if not inserted:
+                updated_refs.append(new_ref)
+                inserted = True
+        else:
+            updated_refs.append(ref)
+
+    # If no matching references were found, add the new reference
+    if not inserted:
+        updated_refs.append(new_ref)
+    station.external_references = updated_refs
+
 def write_stationxml_reference(station_code, sitexml_url, *,
         description=None, added_time=None,
         input_path=None, client=None, datacenter=None,
-        output_path=None):    
+        output_path=None, replace_existing=True):
     """
     Attach a SiteXML remote URL as a StationXML 
     :class:`~obspy.core.inventory.util.ExternalReference`.
@@ -1243,9 +1308,11 @@ def write_stationxml_reference(station_code, sitexml_url, *,
     Use ``station_code`` to select a
     :class:`~obspy.core.inventory.station.Station` object from either a local
     StationXML file or an FDSN Web Service client, write an
-    ``ExternalReference`` pointing to the permanent URL of the SiteXML file,
+    ``ExternalReference`` pointing to the current URL of the SiteXML file,
     and return the updated inventory. If ``output_path`` is provided, the
-    updated inventory is also written to StationXML.
+    updated inventory is also written to StationXML. By default, an existing
+    SiteXML reference for the same station is replaced so the StationXML
+    pointer stays current when dated SiteXML filenames change.
 
     The ``ExternalReference.description`` is timestamped with either the
     date the reference is written or a date provided by the user with 
@@ -1279,6 +1346,12 @@ def write_stationxml_reference(station_code, sitexml_url, *,
     :type output_path: str or pathlib.Path or file-like object, optional
     :param output_path: Local output path or writable file-like object for the
         updated StationXML. If omitted, no file is written.
+    :type replace_existing: bool, optional
+    :param replace_existing: If ``True`` (default), replace an existing
+        SiteXML station reference written by this helper or one whose URL uses
+        the default SiteXML filename pattern for ``station_code``. If
+        ``False``, append a new reference unless the exact URL is already
+        present.
     
     :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
     :return: The updated inventory.
@@ -1339,16 +1412,13 @@ def write_stationxml_reference(station_code, sitexml_url, *,
         )
 
     _, station = matches[0]
-    description = description or "SERA SiteXML site characterization"
+    description = description or _STATIONXML_SITEXML_DESCRIPTION
     added_utc = (obspy.UTCDateTime() if added_time is None
                  else obspy.UTCDateTime(added_time))
     added_date = added_utc.date
     description = f"{description}; added {added_date.isoformat()}"
-    if not any(ref.uri == sitexml_url for ref in
-               station.external_references):
-        station.external_references.append(
-            ExternalReference(uri=sitexml_url, description=description)
-        )
+    _add_station_sitexml_reference(
+        station, station_code, sitexml_url, description, replace_existing)
 
     if output_path is not None:
         inventory.write(output_path, format="STATIONXML")

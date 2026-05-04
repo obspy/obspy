@@ -70,6 +70,32 @@
     the current directory using a default filename pattern, for example
     ``Site_XX.ABCD_12-01-2026.xml``. The date in the filename is taken from the
     same serialization timestamp written to the root ``creationTime`` element.
+
+    Associate the current published SiteXML URL with the corresponding
+    StationXML:
+
+    .. code-block:: python
+
+        from obspy.io.sitexml.sitexml import write_stationxml_reference
+
+        inventory = write_stationxml_reference(
+            station_code="XX.ABCD",
+            sitexml_url=(
+                "https://example.org/sitexml/"
+                "Site_XX.ABCD_12-01-2026.xml"),
+            input_path="XX.ABCD.stationxml.xml",
+            output_path="XX.ABCD.with_sitexml.stationxml.xml")
+
+    The helper writes a station-level StationXML ``ExternalReference`` and
+    returns the updated :class:`~obspy.core.inventory.inventory.Inventory`.
+    Because SiteXML filenames can include the document creation date, an
+    existing SiteXML reference for the same station is replaced by default so
+    StationXML points at the current SiteXML file. References written by this
+    helper are recognized by their standard description, and manually added
+    references can also be replaced when their URL basename follows the
+    default SiteXML filename pattern. Other station external
+    references are preserved. Pass ``replace_existing=False`` to append
+    SiteXML reference history instead.
     
     Import site metadata from CSV files. The imported metadata is stored in a
     dictionary of ``SERASite`` objects keyed by the ``siteID``:

@@ -76,14 +76,16 @@ metadata, for example ``Site_XX.ABCD_12-01-2026.xml``.
 Associating SiteXML With StationXML
 -----------------------------------
 
-SiteXML can be associated with the corresponding StationXML by adding
-the published SiteXML URL as a station-level StationXML
+SiteXML can be associated with the corresponding StationXML by adding the
+current published SiteXML URL as a station-level StationXML
 ``ExternalReference``. The SiteXML file itself stores the station association
 in ``SiteDescription.station_code`` using ``network.station`` notation, for
-example ``XX.ABCD``.
+example ``XX.ABCD``. SiteXML filenames can include the document creation date,
+so the StationXML reference is treated as the current pointer to the latest
+published SiteXML document.
 
-Use :func:`~obspy.io.sitexml.sitexml.write_stationxml_reference` to add 
-in StationXML the reference that points to SiteXML URL. 
+Use :func:`~obspy.io.sitexml.sitexml.write_stationxml_reference` to add or
+update the StationXML reference that points to the SiteXML URL.
 
 Input Options
 ~~~~~~~~~~~~~
@@ -112,10 +114,11 @@ workflows, or examples where you do not want to contact an FDSN data center:
 .. code-block:: python
 
     from obspy import UTCDateTime
+    from obspy.io.sitexml.sitexml import write_stationxml_reference
 
     inventory = write_stationxml_reference(
         station_code="XX.ABCD",
-        sitexml_url="https://example.org/sitexml/XX.ABCD.xml",
+        sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
         input_path="XX.ABCD.stationxml.xml",
         output_path="XX.ABCD.with_sitexml.stationxml.xml",
         added_time=UTCDateTime(2026, 5, 2))
@@ -133,7 +136,7 @@ requests StationXML at ``level="response"``.
 
     inventory = write_stationxml_reference(
         station_code="XX.ABCD",
-        sitexml_url="https://example.org/sitexml/XX.ABCD.xml",
+        sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
         datacenter="ORFEUS")
 
     station = inventory.select(network="XX", station="ABCD")[0][0]
@@ -146,17 +149,39 @@ updated StationXML directly, pass ``output_path``:
 
     write_stationxml_reference(
         station_code="XX.ABCD",
-        sitexml_url="https://example.org/sitexml/XX.ABCD.xml",
+        sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
         output_path="XX.ABCD.stationxml.xml",
         datacenter="ORFEUS")
 
 
 
+Keeping The Reference Current
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``sitexml_url`` should be the URL where the current SiteXML document is
+published.
+By default, :func:`~obspy.io.sitexml.sitexml.write_stationxml_reference`
+replaces an existing SiteXML station reference instead of appending another
+dated URL. It replaces references written by this helper and manually added
+references whose URL basename follows the default SiteXML station filename
+pattern, for example ``Site_XX.ABCD_02-05-2026.xml``. Other station external
+references are left untouched.
+
+If the StationXML file should preserve a history of SiteXML URLs, disable
+replacement explicitly:
+
+.. code-block:: python
+
+    from obspy.io.sitexml.sitexml import write_stationxml_reference
+
+    inventory = write_stationxml_reference(
+        station_code="XX.ABCD",
+        sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+        input_path="XX.ABCD.stationxml.xml",
+        replace_existing=False)
+
 Reference Description And Date
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The ``sitexml_url`` should be the stable URL where the SiteXML document will be
-published. ``input_path`` and ``output_path`` are local StationXML filenames.
 
 The StationXML ``ExternalReference.description`` records when the reference was
 added, for example ``SERA SiteXML site characterization; added 2026-05-02``.
@@ -170,7 +195,7 @@ text:
 
     inventory = write_stationxml_reference(
         station_code="XX.ABCD",
-        sitexml_url="https://example.org/sitexml/XX.ABCD.xml",
+        sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
         description="SERA SiteXML site characterization for XX.ABCD",
         added_time=UTCDateTime(2026, 5, 2))
 
