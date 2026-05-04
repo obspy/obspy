@@ -26,7 +26,8 @@ from .core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
                    LiteratureSource, ValueWithUncertainty)
 from .quality_index import (apply_quality_index_csv,
                             apply_quality_index_metadata)
-from .util import SiteXMLIOError, SiteXMLImportError
+from .util import (SiteXMLIOError, SiteXMLImportError,
+                   SiteXMLValidationError)
 
 
 def csv_to_sera_site(site_owner_csv,
@@ -108,8 +109,8 @@ def csv_to_sera_site(site_owner_csv,
     # Read the velocity profiles and store them
     # in a dictionary of dataframes with key the siteID 
     #
-    df_vp_dict = _csv_import_velocity_profiles(
-        velocity_profiles_csv, delim=delim)
+    df_vp_dict = _import_velocity_profiles(
+        velocity_profiles_csv, kind="CSV", delim=delim)
     
     site_owner = _read_site_owner(df_site_owner)
     site_description_dict = _read_site_description(df_site_description)
@@ -198,7 +199,7 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     # Read the velocity profiles and store them
     # in a dictionary of dataframes with key the siteID
     #
-    df_vp_dict = _excel_import_velocity_profiles(velocity_profiles) \
+    df_vp_dict = _import_velocity_profiles(velocity_profiles, kind="Excel") \
         if velocity_profiles else None
     
     site_owner = _read_site_owner(df_dict['siteOwner'])
@@ -235,6 +236,71 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
         apply_quality_index_metadata(sera_site_dict, df_dict["qualityIndex"])
 
     return sera_site_dict
+
+
+def add_velocity_profiles(sera_sites, velocity_profiles, replace_existing=False,
+                          delim=';'):
+    """
+    Add velocity profiles from CSV or Excel tabular metadata to existing sites.
+
+    The velocity-profile input uses the same columns as ``csv_to_sera_site``
+    and ``excel_to_sera_site`` sidecar velocity-profile inputs, including
+    ``siteID``, ``analysisID``, and ``velocityProfileID``. File type is
+    detected from the input path extension. Directory inputs must contain only
+    CSV files or only Excel files.
+
+    :type sera_sites: :class:`~obspy.io.sitexml.core.SERASite` or dict
+    :param sera_sites: Existing SiteXML object or dictionary keyed by site ID.
+    :type velocity_profiles: str or pathlib.Path, required
+    :param velocity_profiles: CSV/Excel file or directory of CSV/Excel files.
+    :type replace_existing: bool, optional
+    :param replace_existing: Replace the target analysis velocity profiles
+        instead of appending them. Existing ``VelocityProfileSet`` metadata is
+        preserved.
+    :type delim: str, optional
+    :param delim: CSV file delimiter. Default is semicolon-delimited.
+    :return: The original ``sera_sites`` object.
+    """
+    if isinstance(sera_sites, SERASite):
+        sera_site_dict = {sera_sites.resource_id: sera_sites}
+    else:
+        sera_site_dict = sera_sites
+
+    df_vp_dict = _import_velocity_profiles(
+        velocity_profiles, delim=delim)
+    if not df_vp_dict:
+        return sera_sites
+
+    for siteID, df_site in df_vp_dict.items():
+        if siteID not in sera_site_dict:
+            raise SiteXMLImportError(
+                f"Velocity-profile input references unknown siteID {siteID}.")
+        sera_site = sera_site_dict[siteID]
+
+        for analysisID in df_site["analysisID"].dropna().unique():
+            analysis = sera_site.get_analysis(analysisID)
+            if analysis is None:
+                raise SiteXMLImportError(
+                    "Velocity-profile input references unknown analysisID "
+                    f"{analysisID} for siteID {siteID}.")
+
+            new_profiles = _read_velocity_profiles_for_analysis(
+                df_site, analysis_id=analysisID)
+            if not new_profiles:
+                continue
+
+            try:
+                sera_site.add_velocity_profiles(
+                    new_profiles,
+                    analysisID=analysisID,
+                    replace_existing=replace_existing)
+            except SiteXMLValidationError as exc:
+                raise SiteXMLImportError(
+                    "Could not add velocity profiles from tabular input."
+                ) from exc
+
+    return sera_sites
+
 
 def _read_site_description(df_site_description):
     """
@@ -476,58 +542,93 @@ def _read_site_indicator(df_row, cls, indicator):
     
     return obj
 
-def _csv_import_velocity_profiles(path, delim=';'):
-    """
-    Read velocity-profile metadata from CSV files or a CSV directory.
-
-    :rtype: dict or None
-    """
-    return _import_velocity_profiles(
-        path=path,
-        allowed_extensions=(".csv",),
-        read_file=lambda file_path: _read_velocity_profile_csv_file(
-            file_path, delim=delim),
-        kind_name="CSV")
-
-def _excel_import_velocity_profiles(path):
-    """
-    Read velocity-profile metadata from Excel files or an Excel directory.
-
-    :rtype: dict or None
-    """
-    return _import_velocity_profiles(
-        path=path,
-        allowed_extensions=(".xls", ".xlsx", ".xlsm", ".xlsb"),
-        read_file=_read_velocity_profile_excel_file,
-        kind_name="Excel")
-
-
-def _import_velocity_profiles(path, allowed_extensions, read_file, kind_name):
+def _import_velocity_profiles(path, kind=None, delim=';'):
     """
     Read velocity-profile files and return dataframes grouped by site ID.
+
+    If ``kind`` is ``"CSV"`` or ``"Excel"``, only that tabular format is
+    accepted. If ``kind`` is omitted, the format is detected from file suffixes.
 
     :rtype: dict or None
     """
     if not path:
         return None
 
+    importers = {
+        "CSV": {
+            "extensions": (".csv",),
+            "read_file": lambda file_path: _read_velocity_profile_csv_file(
+                file_path, delim=delim),
+        },
+        "Excel": {
+            "extensions": (".xls", ".xlsx", ".xlsm", ".xlsb"),
+            "read_file": _read_velocity_profile_excel_file,
+        },
+    }
+    if kind is not None and kind not in importers:
+        raise SiteXMLImportError(
+            f"Unknown velocity-profile tabular input kind: {kind}")
+
+    def _kind_for_suffix(suffix):
+        for importer_kind, importer in importers.items():
+            if suffix in importer["extensions"]:
+                return importer_kind
+        return None
+
     path_str = os.fspath(path)
     df = pd.DataFrame()
 
     if os.path.isdir(path_str):
-        for filename in os.listdir(path_str):
-            file_path = os.path.join(path_str, filename)
-            if not filename.lower().endswith(allowed_extensions):
+        filenames = [
+            filename for filename in os.listdir(path_str)
+            if os.path.isfile(os.path.join(path_str, filename))
+        ]
+        detected_kinds = {
+            _kind_for_suffix(Path(filename).suffix.lower())
+            for filename in filenames
+        }
+        detected_kinds.discard(None)
+
+        if kind is None:
+            unsupported = [
+                filename for filename in filenames
+                if _kind_for_suffix(Path(filename).suffix.lower()) is None
+            ]
+            if unsupported:
                 raise SiteXMLImportError(
-                    f"Velocity-profile input is not a {kind_name} file: {file_path}"
+                    "Velocity-profile directory contains unsupported file "
+                    "types.")
+            if len(detected_kinds) > 1:
+                raise SiteXMLImportError(
+                    "Velocity-profile directory mixes CSV and Excel files.")
+            if not detected_kinds:
+                return None
+            kind_name = detected_kinds.pop()
+        else:
+            kind_name = kind
+
+        importer = importers[kind_name]
+        for filename in filenames:
+            file_path = os.path.join(path_str, filename)
+            if not filename.lower().endswith(importer["extensions"]):
+                raise SiteXMLImportError(
+                    "Velocity-profile input is not a "
+                    f"{kind_name} file: {file_path}"
                 )
-            df = pd.concat([df, read_file(file_path)], ignore_index=True)
+            df = pd.concat(
+                [df, importer["read_file"](file_path)], ignore_index=True)
     elif os.path.isfile(path_str):
-        if not path_str.lower().endswith(allowed_extensions):
+        suffix = Path(path_str).suffix.lower()
+        kind_name = kind or _kind_for_suffix(suffix)
+        if kind_name is None:
+            raise SiteXMLImportError(
+                f"Velocity-profile input is not a CSV or Excel file: {path_str}")
+        importer = importers[kind_name]
+        if not path_str.lower().endswith(importer["extensions"]):
             raise SiteXMLImportError(
                 f"Velocity-profile input is not a {kind_name} file: {path_str}"
             )
-        df = read_file(path_str)
+        df = importer["read_file"](path_str)
     else:
         raise SiteXMLIOError(f"Velocity-profile path does not exist: {path_str}")
 

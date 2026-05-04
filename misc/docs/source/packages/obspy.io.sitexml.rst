@@ -156,6 +156,24 @@
         sites = excel_to_sera_site(
             "sera_site_all.xlsx",
             velocity_profiles="velocity_profiles.xlsx")
+
+    Velocity profiles can also be added later to existing SiteXML objects. Use
+    :meth:`~obspy.io.sitexml.core.SERASite.add_velocity_profiles` when you
+    already have ``VelocityProfile`` objects for one site and analysis. Use
+    :func:`~obspy.io.sitexml.tabular.add_velocity_profiles` when the profiles
+    are still in CSV or Excel form, or when one sidecar table may update
+    several sites and analyses:
+
+    .. code-block:: python
+
+        from obspy.io.sitexml.sitexml import read_sitexml
+        from obspy.io.sitexml.tabular import add_velocity_profiles
+
+        sera_site = read_sitexml("site.xml")
+        add_velocity_profiles(
+            sera_site,
+            "velocity_profiles.csv",
+            replace_existing=True)
     
     Tutorial With Bundled Test Fixtures
     -----------------------------------
@@ -198,7 +216,7 @@
     
         sera_site = sites["quakeml:domain.ab/site/001"]
         analysis = sera_site.analysis[0]
-        first_profile = analysis.velocity_profile_survey.velocity_profiles[0]
+        first_profile = analysis.velocity_profile_set.velocity_profiles[0]
     
         print(sera_site.site_owner.owner_codename)
         print(analysis.velocity_s30.value.value)
@@ -398,6 +416,7 @@
        ~sitexml.add_sitexml_reference
        ~tabular.csv_to_sera_site
        ~tabular.excel_to_sera_site
+       ~tabular.add_velocity_profiles
        ~quality_index.quality_index1
        ~quality_index.quality_index2
        ~quality_index.quality_index3

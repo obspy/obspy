@@ -498,6 +498,69 @@ column and the same layer columns used by CSV import.
     site = sites["quakeml:domain.ab/site/001"]
     print(site.site_description.station_code)
 
+Adding Velocity Profiles To Existing SiteXML
+--------------------------------------------
+
+Sometimes a SiteXML document already exists, but the velocity profiles are
+available later as a CSV or Excel sidecar table. Use
+:func:`~obspy.io.sitexml.tabular.add_velocity_profiles` to merge those
+profiles into the existing object tree without rebuilding the whole site from
+the owner, site-description, and analysis tables.
+
+The sidecar table uses the same velocity-profile columns described above.
+Rows are matched by ``siteID`` and ``analysisID``, so profiles are attached to
+the correct analysis even when a site has multiple analyses. The helper accepts
+either one ``SERASite`` object or a dictionary of sites keyed by ``siteID`` and
+detects CSV or Excel input from the file extension.
+
+There are two public helpers, depending on where the velocity profiles already
+live:
+
+* Use ``SERASite.add_velocity_profiles(...)`` when you already have
+  :class:`~obspy.io.sitexml.core.VelocityProfile` objects and want to add them
+  to one analysis on one site.
+* Use :func:`~obspy.io.sitexml.tabular.add_velocity_profiles` when the
+  profiles are still in CSV or Excel form, or when one sidecar table may update
+  multiple sites and analyses.
+
+For object-level updates, pass the target ``analysisID`` directly:
+
+.. code-block:: python
+
+    site.add_velocity_profiles(
+        [velocity_profile],
+        analysisID="quakeml:domain.ab/analysis/001")
+
+For tabular updates, pass the existing site or site dictionary and the sidecar
+file:
+
+.. code-block:: python
+
+    from pathlib import Path
+
+    from obspy.core.util import get_example_file
+    from obspy.io.sitexml.sitexml import read_sitexml, write_sitexml
+    from obspy.io.sitexml.tabular import add_velocity_profiles
+
+    filename = get_example_file("full_sitexml.xml")
+    data_dir = Path(filename).parent
+
+    site = read_sitexml(filename)
+
+    # The same function also accepts Excel workbooks such as
+    # data_dir / "velocity_profiles.xlsx".
+    add_velocity_profiles(
+        site,
+        data_dir / "velocity_profiles.csv",
+        replace_existing=True)
+
+    write_sitexml(site, "site_with_velocity_profiles.xml")
+
+By default, new profiles are appended and duplicate ``velocityProfileID``
+values are rejected. Pass ``replace_existing=True`` when the sidecar table
+should replace the profile list on the matching analysis. If the target
+analysis has no ``velocityProfileSet`` yet, the helper creates one.
+
 Quality Indexes
 ---------------
 

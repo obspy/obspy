@@ -1849,6 +1849,96 @@ class SERASite(BaseNode):
             raise SiteXMLValidationError(
                 f"Unknown site indicator name: {name}")
 
+    def add_velocity_profiles(
+            self, velocity_profiles, analysisID=None, replace_existing=False):
+        """
+        Add velocity profiles to an analysis on this site.
+
+        If ``analysisID`` is omitted, profiles are added to the preferred
+        analysis, falling back to the first attached analysis when no preferred
+        analysis is declared. If the target analysis has no
+        ``velocity_profile_set`` yet, one is created.
+
+        :type velocity_profiles: list of
+            :class:`~obspy.io.sitexml.core.VelocityProfile`
+        :param velocity_profiles: Velocity profiles to add.
+        :type analysisID: str or
+            :class:`~obspy.core.event.resourceid.ResourceIdentifier`, optional
+        :param analysisID: Analysis resource ID to use as the target.
+        :type replace_existing: bool, optional
+        :param replace_existing: Replace the target analysis velocity profiles
+            instead of appending them. Existing ``VelocityProfileSet`` metadata
+            is preserved.
+        :return: The target
+            :class:`~obspy.io.sitexml.core.VelocityProfileSet`.
+        """
+        if not isinstance(velocity_profiles, Iterable) or \
+                isinstance(velocity_profiles, (str, bytes)):
+            raise SiteXMLValidationError(
+                "velocity_profiles must be an iterable of VelocityProfile "
+                "objects.")
+
+        velocity_profiles = list(velocity_profiles)
+        for velocity_profile in velocity_profiles:
+            if not isinstance(velocity_profile, VelocityProfile):
+                raise SiteXMLValidationError(
+                    "velocity_profiles must contain VelocityProfile objects.")
+
+        if analysisID is None:
+            analysis = self.get_preferred_analysis()
+        else:
+            analysis = self.get_analysis(analysisID)
+        if analysis is None:
+            if analysisID is None:
+                raise SiteXMLValidationError(
+                    "Cannot add velocity profiles without an attached "
+                    "analysis.")
+            raise SiteXMLValidationError(
+                "analysisID does not match any attached analysis resource_id.")
+
+        new_ids = [velocity_profile.resource_id
+                   for velocity_profile in velocity_profiles]
+        duplicate_new_ids = sorted({
+            resource_id for resource_id in new_ids
+            if new_ids.count(resource_id) > 1
+        })
+        if duplicate_new_ids:
+            raise SiteXMLValidationError(
+                "Duplicate velocity profile resource_id: " +
+                ", ".join(duplicate_new_ids))
+
+        existing_ids = set()
+        for item in self.analysis or []:
+            vp_set = item.velocity_profile_set
+            if vp_set is None or not vp_set.velocity_profiles:
+                continue
+            if replace_existing and item is analysis:
+                continue
+            existing_ids.update(
+                velocity_profile.resource_id
+                for velocity_profile in vp_set.velocity_profiles)
+
+        duplicate_existing_ids = sorted(existing_ids.intersection(new_ids))
+        if duplicate_existing_ids:
+            raise SiteXMLValidationError(
+                "Duplicate velocity profile resource_id: " +
+                ", ".join(duplicate_existing_ids))
+
+        velocity_profile_set = analysis.velocity_profile_set
+        if velocity_profile_set is None:
+            velocity_profile_set = VelocityProfileSet()
+            self.add_site_indicator(
+                [velocity_profile_set], analysisID=analysis.resource_id)
+
+        if replace_existing:
+            velocity_profile_set.velocity_profiles = velocity_profiles
+        else:
+            velocity_profile_set.velocity_profiles = (
+                velocity_profile_set.velocity_profiles or []
+            ) + velocity_profiles
+
+        return velocity_profile_set
+
     def calculate_quality_index2(self):
         """
         Calculate Q_Index2 for this site.

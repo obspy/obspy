@@ -12,8 +12,8 @@ import pytest
 from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLImportError
 from obspy.io.sitexml.quality_index import (apply_quality_index_csv,
                                             apply_quality_index_excel)
-from obspy.io.sitexml.tabular import (csv_to_sera_site, excel_to_sera_site,
-                                      _read_year_cell)
+from obspy.io.sitexml.tabular import (add_velocity_profiles, csv_to_sera_site,
+                                      excel_to_sera_site, _read_year_cell)
 from obspy.io.sitexml.sitexml import sitexml_to_sitedict
 
 
@@ -43,6 +43,78 @@ class TestSiteXMLCSVImport():
         assert external_reference.uri == (
             "https://doi.org/10.1007/s10518-017-0135-5/")
         assert external_reference.description == "paper"
+
+    def _velocity_profile_dataframe(self, analysis_id=None):
+        if analysis_id is None:
+            analysis_id = "quakeml:domain.ab/analysis/001"
+        return pd.DataFrame({
+            "siteID": ["quakeml:domain.ab/site/001"] * 2,
+            "analysisID": [analysis_id] * 2,
+            "velocityProfileID": [
+                "quakeml:domain.ab/velocity_profile/new"] * 2,
+            "layerCount": [1, 2],
+            "density_value": [None, None],
+            "density_uncertainty": [None, None],
+            "velocityP_value": [None, None],
+            "velocityP_uncertainty": [None, None],
+            "velocityS_value": [100.0, 250.0],
+            "velocityS_uncertainty": [None, None],
+            "layerTopDepth_value": [0.0, 5.0],
+            "layerTopDepth_uncertainty": [None, None],
+            "layerBottomDepth_value": [5.0, None],
+            "layerBottomDepth_uncertainty": [None, None],
+        })
+
+    def _site_without_velocity_profiles(self, datapath):
+        sera_site = sitexml_to_sitedict(
+            datapath / "full_sitexml.xml")["quakeml:domain.ab/site/001"]
+        sera_site.get_analysis(
+            "quakeml:domain.ab/analysis/001").velocity_profile_set = None
+        return sera_site
+
+    def test_add_velocity_profiles_detects_csv_and_updates_existing_site(
+            self, datapath, tmp_path):
+        sera_site = self._site_without_velocity_profiles(datapath)
+        csv_path = tmp_path / "velocity_profiles.csv"
+        self._velocity_profile_dataframe().to_csv(
+            csv_path, sep=";", index=False)
+
+        result = add_velocity_profiles(sera_site, csv_path)
+
+        analysis = sera_site.get_analysis("quakeml:domain.ab/analysis/001")
+        profiles = analysis.velocity_profile_set.velocity_profiles
+        assert result is sera_site
+        assert len(profiles) == 1
+        assert profiles[0].resource_id == (
+            "quakeml:domain.ab/velocity_profile/new")
+        assert len(profiles[0].velocity_profile_data) == 2
+        assert profiles[0].velocity_profile_data[0].velocityS.value == 100.0
+
+    def test_add_velocity_profiles_detects_excel_and_updates_existing_site(
+            self, datapath, tmp_path):
+        pytest.importorskip("openpyxl")
+        sera_site = self._site_without_velocity_profiles(datapath)
+        excel_path = tmp_path / "velocity_profiles.xlsx"
+        self._velocity_profile_dataframe().to_excel(
+            excel_path, index=False)
+
+        add_velocity_profiles(sera_site, excel_path)
+
+        analysis = sera_site.get_analysis("quakeml:domain.ab/analysis/001")
+        profiles = analysis.velocity_profile_set.velocity_profiles
+        assert len(profiles) == 1
+        assert profiles[0].velocity_profile_data[1].top_depth.value == 5.0
+
+    def test_add_velocity_profiles_rejects_unknown_analysis(
+            self, datapath, tmp_path):
+        sera_site = self._site_without_velocity_profiles(datapath)
+        csv_path = tmp_path / "velocity_profiles.csv"
+        self._velocity_profile_dataframe(
+            analysis_id="quakeml:domain.ab/analysis/missing").to_csv(
+                csv_path, sep=";", index=False)
+
+        with pytest.raises(SiteXMLImportError, match="unknown analysisID"):
+            add_velocity_profiles(sera_site, csv_path)
 
     def test_csv_to_sera_site_imports_sites_analysis_and_velocity_profiles(
             self, datapath):

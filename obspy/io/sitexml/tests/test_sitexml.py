@@ -302,6 +302,82 @@ class TestSiteXML():
             sera_site.add_site_indicator([
                 VelocityS30(ValueWithUncertainty(760))])
 
+    def _velocity_profile(self, resource_id):
+        profile_data = [VelocityProfileData(
+            velocityS=ValueWithUncertainty(100),
+            top_depth=ValueWithUncertainty(0))]
+        return VelocityProfile(
+            resource_id=resource_id,
+            velocity_profile_data=profile_data)
+
+    def test_add_velocity_profiles_creates_velocity_profile_set(self):
+        """
+        Velocity profiles can be added to an analysis without an existing set.
+        """
+        sera_site = self._minimal_sera_site()
+        analysis = Analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            site_descriptionID=sera_site.site_description.resource_id)
+        sera_site.analysis = [analysis]
+        profile = self._velocity_profile(
+            "quakeml:domain.ab/velocity_profile/new")
+
+        velocity_profile_set = sera_site.add_velocity_profiles(
+            [profile], analysisID=analysis.resource_id)
+
+        assert analysis.velocity_profile_set is velocity_profile_set
+        assert velocity_profile_set.velocity_profiles == [profile]
+
+    def test_add_velocity_profiles_appends_and_rejects_duplicates(self):
+        """
+        Appending profiles preserves site-wide velocity profile ID uniqueness.
+        """
+        sera_site = self._minimal_sera_site()
+        existing_profile = self._velocity_profile(
+            "quakeml:domain.ab/velocity_profile/existing")
+        analysis = Analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            site_descriptionID=sera_site.site_description.resource_id,
+            velocity_profile_set=VelocityProfileSet(
+                velocity_profiles=[existing_profile]))
+        sera_site.analysis = [analysis]
+        new_profile = self._velocity_profile(
+            "quakeml:domain.ab/velocity_profile/new")
+
+        sera_site.add_velocity_profiles([new_profile])
+
+        assert analysis.velocity_profile_set.velocity_profiles == [
+            existing_profile, new_profile]
+
+        with pytest.raises(
+                SiteXMLValidationError,
+                match="Duplicate velocity profile resource_id"):
+            sera_site.add_velocity_profiles([new_profile])
+
+    def test_add_velocity_profiles_can_replace_existing_profiles(self):
+        """
+        Replacement updates the profile list but keeps set-level metadata.
+        """
+        sera_site = self._minimal_sera_site()
+        existing_profile = self._velocity_profile(
+            "quakeml:domain.ab/velocity_profile/existing")
+        analysis = Analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            site_descriptionID=sera_site.site_description.resource_id,
+            velocity_profile_set=VelocityProfileSet(
+                velocity_profiles=[existing_profile],
+                quality_index=0.5))
+        sera_site.analysis = [analysis]
+        new_profile = self._velocity_profile(
+            "quakeml:domain.ab/velocity_profile/new")
+
+        velocity_profile_set = sera_site.add_velocity_profiles(
+            [new_profile], replace_existing=True)
+
+        assert velocity_profile_set is analysis.velocity_profile_set
+        assert velocity_profile_set.quality_index == 0.5
+        assert velocity_profile_set.velocity_profiles == [new_profile]
+
     def test_validate_references_requires_preferred_velocity_profile_in_preferred_analysis(self):
         """
         Preferred velocity profile must belong to the preferred analysis.
