@@ -73,6 +73,25 @@ metadata, for example ``Site_XX.ABCD_12-01-2026.xml``.
     write_sitexml(site, validate=True)
     write_sitexml(site, "./site.xml", validate=True)
 
+SiteXML can also store optional document revision history. Root
+``creationTime`` records when this XML file is generated, while each
+``Revision.revision_time`` records when the described document revision
+occurred. These times can differ when metadata changes are reviewed, migrated,
+or exported later.
+
+.. code-block:: python
+
+    site.add_revision(
+        revision_time="2026-05-02T12:00:00Z",
+        description="Updated velocity profile and quality indexes.",
+        author="ORFEUS",
+        version="2026-05-02",
+        previous_version=(
+            "https://example.org/sitexml/"
+            "Site_XX.ABCD_01-05-2026.xml"))
+
+    write_sitexml(site, validate=True)
+
 Associating SiteXML With StationXML
 -----------------------------------
 
@@ -272,6 +291,11 @@ and a Vs30 indicator:
         site_owner=site_owner,
         site_description=site_description,
         analysis=[analysis])
+
+    site.add_revision(
+        revision_time="2026-05-02T12:00:00Z",
+        description="Created initial SiteXML document.",
+        author="Some Author (email@example.com)")
 
     with TemporaryDirectory() as tmpdir:
         output_file = Path(tmpdir) / "site.xml"

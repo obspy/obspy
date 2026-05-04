@@ -207,6 +207,50 @@ class LiteratureSource(BaseNode):
             )
         self._year = value
 
+
+class Revision(BaseNode):
+    """
+    One root-level SiteXML document revision entry.
+
+    ``revision_time`` records when the described document revision occurred.
+    It can differ from the root ``SERASite.created`` timestamp, which records
+    when a particular XML file was generated or serialized.
+    """
+
+    description = _scalar_property(
+        "description", str, allow_none=False, allow_empty=False)
+    author = _scalar_property("author", str)
+    version = _scalar_property("version", str)
+    previous_version = _scalar_property("previous_version", str)
+    revision_time = _wrapped_property(
+        "revision_time", obspy.UTCDateTime, allow_none=False)
+
+    def __init__(self, revision_time, description, author=None,
+                 version=None, previous_version=None):
+        """
+        :type revision_time: :class:`~obspy.core.utcdatetime.UTCDateTime` or
+            compatible, required
+        :param revision_time: Time when this document revision occurred.
+        :type description: str, required
+        :param description: Human-readable summary of what changed.
+        :type author: str, optional
+        :param author: Person, institution, or system responsible for the
+            revision.
+        :type version: str, optional
+        :param version: Publisher-assigned version label.
+        :type previous_version: str, optional
+        :param previous_version: URI of the previous published SiteXML
+            document version.
+        """
+        self.revision_time = revision_time
+        self.description = description
+        self.author = author
+        self.version = version
+        self.previous_version = previous_version
+
+    def __str__(self):
+        return _pretty_str(self)
+
 class SiteIndicator(BaseNode):
     """
     Base class for SiteXML site-characterization indicator objects.
@@ -1521,11 +1565,13 @@ class SERASite(BaseNode):
     site_owner = _wrapped_property("site_owner", SERASiteOwner)
     site_description = _wrapped_property("site_description", SiteDescription)
     external_references = _wrapped_list_property("external_references", ExternalReference)
+    revision_history = _wrapped_list_property("revision_history", Revision)
     analysis = _wrapped_list_property("analysis", Analysis)
     created = _wrapped_property("created", obspy.UTCDateTime)
     
     def __init__(self, resource_id, site_owner, site_description, 
-                 analysis=None, created=None, external_references=None):
+                 analysis=None, created=None, external_references=None,
+                 revision_history=None):
         """
         :type resource_id: str or
             :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
@@ -1554,6 +1600,9 @@ class SERASite(BaseNode):
             :class:`~obspy.core.inventory.util.ExternalReference`, optional
         :param external_references: Additional resources with site
             characterization metadata.
+        :type revision_history: list of
+            :class:`~obspy.io.sitexml.core.Revision`, optional
+        :param revision_history: Root-level SiteXML document update history.
         """
         self.resource_id = resource_id
         self.site_owner = site_owner
@@ -1561,6 +1610,42 @@ class SERASite(BaseNode):
         self.analysis = analysis
         self.created = created
         self.external_references = external_references
+        self.revision_history = revision_history
+
+    def add_revision(self, revision_time, description, author=None,
+                     version=None, previous_version=None):
+        """
+        Append one document revision entry and return it.
+
+        ``revision_time`` records when the described document revision occurred.
+        It can differ from ``created``, which records when the XML document was
+        generated or serialized.
+
+        :type revision_time: :class:`~obspy.core.utcdatetime.UTCDateTime` or
+            compatible, required
+        :param revision_time: Time when this document revision occurred.
+        :type description: str, required
+        :param description: Human-readable summary of what changed.
+        :type author: str, optional
+        :param author: Person, institution, or system responsible for the
+            revision.
+        :type version: str, optional
+        :param version: Publisher-assigned version label.
+        :type previous_version: str, optional
+        :param previous_version: URI of the previous published SiteXML
+            document version.
+        :rtype: :class:`~obspy.io.sitexml.core.Revision`
+        """
+        revision = Revision(
+            revision_time=revision_time,
+            description=description,
+            author=author,
+            version=version,
+            previous_version=previous_version)
+        if self.revision_history is None:
+            self.revision_history = []
+        self.revision_history.append(revision)
+        return revision
 
     def get_analysis(self, resource_id):
         """

@@ -81,6 +81,14 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
+			<xs:element name="revisionHistory" type="RevisionHistoryType"
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Structured update history for this SiteXML
+						document. It records document-level provenance.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 			<xs:element name="externalReference" type="ExternalReferenceType" 
 						minOccurs="0" maxOccurs="unbounded">
 				<xs:annotation>
@@ -115,6 +123,80 @@
 				</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="RevisionHistoryType">
+		<xs:annotation>
+			<xs:documentation>
+				Document-level revision history for a SiteXML file.
+				Each revision describes a published or generated version of this
+				document.
+				<p><strong>Note: </strong>Document Revision metadata are not included 
+					in the QuakeML 2.0 draft</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="revision" type="RevisionType"
+						minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="RevisionType">
+		<xs:annotation>
+			<xs:documentation>
+				One document revision entry. The entry should summarize what changed
+				in the SiteXML document, when the revision was made, optionally
+				<strong>(but strongly recommented)</strong> who
+				made it and where the previous version can be found.
+				<p><strong>Note: </strong>Document Revision metadata are not included 
+					in the QuakeML 2.0 draft</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="revisionTime" type="xs:dateTime">
+				<xs:annotation>
+					<xs:documentation>Date and time of this document revision.
+						<p><strong>Example: </strong>2026-05-02T12:00:00Z</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="description" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Human-readable summary of the document
+						update.
+						<p><strong>Example: </strong>Updated velocity profile and
+						quality indexes.</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="author" type="xs:string"
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Person, institution, or system responsible for
+						this document revision.
+						<p><strong>Example: </strong>ORFEUS</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="version" type="xs:string"
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Optional version label assigned by the publisher.
+						<p><strong>Example: </strong>2026-05-02</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="previousVersion" type="xs:anyURI"
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>URI of the previous published SiteXML document
+						version, when available.
+						<p><strong>Example: </strong>
+						https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
 	</xs:complexType>
 
 	<!-- Site Owner Type Definition -->

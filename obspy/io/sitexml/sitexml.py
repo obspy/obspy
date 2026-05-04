@@ -27,7 +27,8 @@ from obspy.core.inventory.util import ExternalReference
 from .core import (SERASite, SERASiteOwner, SiteDescription, Analysis,
                    EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency,
                    VelocityProfileSet, VelocityProfile, VelocityProfileData,
-                   VelocityS30, ValueWithUncertainty, LiteratureSource)
+                   VelocityS30, ValueWithUncertainty, LiteratureSource,
+                   Revision)
 from .util import SiteXMLIOError, SiteXMLValidationError, _split_station_code
 
 # Define some constants for writing SiteXML files.
@@ -272,6 +273,7 @@ def read_sitexml(path_or_file_object):
     
     siteID = _attr2obj(root, "publicID", str)
     created = obspy.UTCDateTime(root.find(_ns("creationTime")).text)
+    revision_history = _read_revision_history(root)
 
     site_owner_element = root.find(_ns("siteOwner"))
     if site_owner_element is not None:
@@ -290,7 +292,8 @@ def read_sitexml(path_or_file_object):
         sera_site = SERASite(site_owner = site_owner, 
                          site_description = site_description, 
                          resource_id = siteID,
-                         created = created)
+                         created = created,
+                         revision_history=revision_history)
     else:
         raise SiteXMLValidationError(
             "Missing site owner and/or site description in provided SiteXML file."
@@ -315,6 +318,33 @@ def read_sitexml(path_or_file_object):
         sera_site.external_references = references
 
     return sera_site
+
+def _read_revision_history(root):
+    """
+    Read the optional root-level revisionHistory element.
+
+    :rtype: list[:class:`~obspy.io.sitexml.core.Revision`] or None
+    """
+    revision_history_element = root.find(_ns("revisionHistory"))
+    if revision_history_element is None:
+        return None
+
+    revisions = []
+    for revision_element in revision_history_element.findall(_ns("revision")):
+        revision_time = _tag2obj(
+            revision_element, _ns("revisionTime"), obspy.UTCDateTime)
+        description = _tag2obj(revision_element, _ns("description"), str)
+        author = _tag2obj(revision_element, _ns("author"), str)
+        version = _tag2obj(revision_element, _ns("version"), str)
+        previous_version = _tag2obj(
+            revision_element, _ns("previousVersion"), str)
+        revisions.append(Revision(
+            revision_time=revision_time,
+            description=description,
+            author=author,
+            version=version,
+            previous_version=previous_version))
+    return revisions
 
 def _read_site_owner(owner_element):
     """
@@ -912,6 +942,8 @@ def write_sitexml(sera_site, file_or_file_object=None, validate=True):
     if file_or_file_object is None:
         file_or_file_object = sera_site.get_sitexml_filename(creation_time)
 
+    _write_revision_history(root, sera_site.revision_history)
+
     if sera_site.external_references:
         for ref in sera_site.external_references:
             _write_external_reference(root, ref)
@@ -991,6 +1023,26 @@ def _write_site_owner(parent, site_owner):
             country_elem = etree.SubElement(postal_address_elem, "country")
             _obj2tag(country_elem, "code", site_owner.address_country_code)
             _obj2tag(country_elem, "country", site_owner.address_country)
+
+
+def _write_revision_history(parent, revision_history):
+    """
+    Append a root-level revisionHistory element.
+
+    :rtype: None
+    """
+    if not revision_history:
+        return
+
+    revision_history_elem = etree.SubElement(parent, "revisionHistory")
+    for revision in revision_history:
+        revision_elem = etree.SubElement(revision_history_elem, "revision")
+        _obj2tag(revision_elem, "revisionTime", revision.revision_time)
+        _obj2tag(revision_elem, "description", revision.description)
+        _obj2tag(revision_elem, "author", revision.author)
+        _obj2tag(revision_elem, "version", revision.version)
+        _obj2tag(revision_elem, "previousVersion",
+                 revision.previous_version)
 
 
 def _write_site_description(parent, site_description):

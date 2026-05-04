@@ -71,6 +71,26 @@
     ``Site_XX.ABCD_12-01-2026.xml``. The date in the filename is taken from the
     same serialization timestamp written to the root ``creationTime`` element.
 
+    Add document revision history when the SiteXML file should record what
+    changed across published versions:
+
+    .. code-block:: python
+
+        sera_site.add_revision(
+            revision_time="2026-05-02T12:00:00Z",
+            description="Updated velocity profile and quality indexes.",
+            author="ORFEUS",
+            version="2026-05-02",
+            previous_version=(
+                "https://example.org/sitexml/"
+                "Site_XX.ABCD_01-05-2026.xml"))
+
+        write_sitexml(sera_site, validate=True)
+
+    ``creationTime`` records when a particular XML file is generated.
+    ``Revision.revision_time`` records when one document revision occurred;
+    the two times can differ when metadata changes are exported later.
+
     Associate the current published SiteXML URL with the corresponding
     StationXML:
 
@@ -387,6 +407,7 @@
        ~core.Analysis
        ~core.VelocityProfile
        ~core.VelocityProfileData
+       ~core.Revision
 
     .. comment to end block
 

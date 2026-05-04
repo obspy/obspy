@@ -21,8 +21,8 @@ from obspy.core.event import ResourceIdentifier
 from obspy.core.inventory import Inventory, Network, Station, read_inventory
 from obspy.core.inventory.util import ExternalReference, Operator, Person
 from obspy.core.util.obspy_types import FloatWithUncertainties
-from obspy.io.sitexml.core import (Analysis, EC8, LiteratureSource, SERASite,
-                                   SERASiteOwner, SiteDescription,
+from obspy.io.sitexml.core import (Analysis, EC8, LiteratureSource, Revision,
+                                   SERASite, SERASiteOwner, SiteDescription,
                                    ResonanceFrequency,
                                    ValueWithUncertainty, VelocityProfile,
                                    VelocityProfileData,
@@ -613,6 +613,36 @@ class TestSiteXML():
         with pytest.raises(SiteXMLValidationError):
             read_sitexml(io.BytesIO(xml.encode("utf-8")))
 
+    def test_schema_accepts_revision_history(self, testdata):
+        """
+        The SiteXML schema accepts root-level document revision history.
+        """
+        xml = testdata["minimal_sitexml.xml"].read_text(encoding="utf-8")
+        revision_history = (
+            """
+    <revisionHistory>
+        <revision>
+            <revisionTime>2026-05-02T12:00:00Z</revisionTime>
+            <description>Updated velocity profile and quality indexes.</description>
+            <author>ORFEUS</author>
+            <version>2026-05-02</version>
+            <previousVersion>"""
+            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml"
+            """</previousVersion>
+        </revision>
+    </revisionHistory>"""
+        )
+        xml = xml.replace(
+            "    <siteOwner>",
+            revision_history + "\n    <siteOwner>",
+            1)
+
+        valid, errors = sitexml_module.validate_sitexml(
+            io.BytesIO(xml.encode("utf-8")))
+
+        assert valid
+        assert errors == ()
+
     def test_write_stationxml_reference_rejects_missing_station(
             self, tmp_path):
         """
@@ -1031,6 +1061,90 @@ class TestSiteXML():
                     latitude=1.0,
                     longitude=2.0),
                 created=object())
+
+    def test_revision_requires_schema_required_fields(self):
+        """
+        Revision objects require a time and non-empty description.
+        """
+        revision = Revision(
+            revision_time="2026-05-02T12:00:00Z",
+            description="Updated velocity profile.",
+            author="ORFEUS",
+            version=20260502,
+            previous_version=(
+                "https://example.org/sitexml/"
+                "Site_XX.ABCD_01-05-2026.xml"))
+
+        assert revision.revision_time == obspy.UTCDateTime(
+            2026, 5, 2, 12, 0, 0)
+        assert revision.description == "Updated velocity profile."
+        assert revision.author == "ORFEUS"
+        assert revision.version == "20260502"
+        assert revision.previous_version == (
+            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml")
+
+        with pytest.raises(SiteXMLValidationError):
+            Revision(None, "Updated velocity profile.")
+
+        with pytest.raises(SiteXMLValidationError):
+            Revision("2026-05-02T12:00:00Z", "")
+
+    def test_revision_history_round_trips(self):
+        """
+        Root-level revision history is written and read as Revision objects.
+        """
+        sera_site = self._minimal_sera_site(station_code="XX.ABCD")
+        sera_site.revision_history = [
+            Revision(
+                revision_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0),
+                description="Updated velocity profile and quality indexes.",
+                author="ORFEUS",
+                version="2026-05-02",
+                previous_version=(
+                    "https://example.org/sitexml/"
+                    "Site_XX.ABCD_01-05-2026.xml")),
+        ]
+
+        xml_buffer = io.BytesIO()
+        write_sitexml(sera_site, xml_buffer, validate=True)
+        xml_buffer.seek(0)
+
+        reread = read_sitexml(xml_buffer)
+
+        assert len(reread.revision_history) == 1
+        revision = reread.revision_history[0]
+        assert revision.revision_time == obspy.UTCDateTime(
+            2026, 5, 2, 12, 0, 0)
+        assert revision.description == (
+            "Updated velocity profile and quality indexes.")
+        assert revision.author == "ORFEUS"
+        assert revision.version == "2026-05-02"
+        assert revision.previous_version == (
+            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml")
+
+    def test_sera_site_add_revision(self):
+        """
+        SERASite.add_revision appends and returns a Revision object.
+        """
+        sera_site = self._minimal_sera_site(station_code="XX.ABCD")
+
+        revision = sera_site.add_revision(
+            revision_time="2026-05-02T12:00:00Z",
+            description="Updated velocity profile.",
+            author="ORFEUS",
+            version="2026-05-02",
+            previous_version=(
+                "https://example.org/sitexml/"
+                "Site_XX.ABCD_01-05-2026.xml"))
+
+        assert sera_site.revision_history == [revision]
+        assert revision.revision_time == obspy.UTCDateTime(
+            2026, 5, 2, 12, 0, 0)
+        assert revision.description == "Updated velocity profile."
+        assert revision.author == "ORFEUS"
+        assert revision.version == "2026-05-02"
+        assert revision.previous_version == (
+            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml")
 
     def test_write_sitexml_uses_serialization_time(self):
         sera_site = SERASite(
