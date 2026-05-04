@@ -103,83 +103,70 @@ example ``XX.ABCD``. SiteXML filenames can include the document creation date,
 so the StationXML reference is treated as the current pointer to the latest
 published SiteXML document.
 
-Use :func:`~obspy.io.sitexml.sitexml.write_stationxml_reference` to add or
+Use :func:`~obspy.io.sitexml.sitexml.add_sitexml_reference` to add or
 update the StationXML reference that points to the SiteXML URL.
 
-Input Options
-~~~~~~~~~~~~~
+Inventory Input
+~~~~~~~~~~~~~~~
 
-The :func:`~obspy.io.sitexml.sitexml.write_stationxml_reference` supports 
-three input options that are mutually exclusive:
-
-* ``input_path`` - Read a local StationXML file 
-* ``client`` - Use an already initialized FDSN Web Service client to fetch StationXML
-* ``datacenter`` - Provide the datacenter of the remote FDSN Web Service from 
-  which to fetch StationXML.
-
-Output Options
-~~~~~~~~~~~~~
-
-The helper always returns an updated :class:`~obspy.core.inventory.inventory.Inventory` 
-object. Optionally, it can write an output StationXML file if ``output_path`` is provided.
+The helper operates on an existing
+:class:`~obspy.core.inventory.inventory.Inventory` object and returns the same
+updated inventory. Read StationXML before calling the helper, and write the
+updated StationXML afterwards if you need a file on disk.
 
 Local StationXML Input
 ~~~~~~~~~~~~~~~~~~~~~~
 
-If the StationXML is already available locally, provide the filename using 
-``input_path``. This is useful for newly created StationXML files, offline
-workflows, or examples where you do not want to contact an FDSN data center:
+If the StationXML is already available locally, read it with
+:func:`~obspy.core.inventory.inventory.read_inventory` first. This is useful
+for newly created StationXML files, offline workflows, or examples where you
+do not want to contact an FDSN data center:
 
 .. code-block:: python
 
-    from obspy import UTCDateTime
-    from obspy.io.sitexml.sitexml import write_stationxml_reference
+    from obspy import UTCDateTime, read_inventory
+    from obspy.io.sitexml.sitexml import add_sitexml_reference
 
-    inventory = write_stationxml_reference(
+    inventory = read_inventory("XX.ABCD.stationxml.xml")
+    inventory = add_sitexml_reference(
+        inventory,
         station_code="XX.ABCD",
         sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
-        input_path="XX.ABCD.stationxml.xml",
-        output_path="XX.ABCD.with_sitexml.stationxml.xml",
         added_time=UTCDateTime(2026, 5, 2))
+    inventory.write("XX.ABCD.with_sitexml.stationxml.xml",
+                    format="STATIONXML")
 
 Basic Remote Workflow
 ~~~~~~~~~~~~~~~~~~~~~
 
-When ``input_path`` is omitted, StationXML is fetched from an FDSN data center.
-The helper splits the ``network.station`` code into FDSN query arguments and
-requests StationXML at ``level="response"``.
+To update StationXML from an FDSN data center, fetch the inventory first and
+then pass it to the helper:
 
 .. code-block:: python
 
-    from obspy.io.sitexml.sitexml import write_stationxml_reference
+    from obspy.clients.fdsn import Client
+    from obspy.io.sitexml.sitexml import add_sitexml_reference
 
-    inventory = write_stationxml_reference(
+    client = Client("ORFEUS")
+    inventory = client.get_stations(
+        network="XX", station="ABCD", level="response")
+    inventory = add_sitexml_reference(
+        inventory,
         station_code="XX.ABCD",
-        sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
-        datacenter="ORFEUS")
+        sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml")
 
     station = inventory.select(network="XX", station="ABCD")[0][0]
     print(station.external_references[-1].description)
 
-This returns the modified inventory but does not write an output file. To write the
-updated StationXML directly, pass ``output_path``:
-
-.. code-block:: python
-
-    write_stationxml_reference(
-        station_code="XX.ABCD",
-        sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
-        output_path="XX.ABCD.stationxml.xml",
-        datacenter="ORFEUS")
-
-
+The helper does not perform file I/O. Use ``inventory.write(...)`` when you
+want to export the updated StationXML.
 
 Keeping The Reference Current
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``sitexml_url`` should be the URL where the current SiteXML document is
 published.
-By default, :func:`~obspy.io.sitexml.sitexml.write_stationxml_reference`
+By default, :func:`~obspy.io.sitexml.sitexml.add_sitexml_reference`
 replaces an existing SiteXML station reference instead of appending another
 dated URL. It replaces references written by this helper and manually added
 references whose URL basename follows the default SiteXML station filename
@@ -191,12 +178,14 @@ replacement explicitly:
 
 .. code-block:: python
 
-    from obspy.io.sitexml.sitexml import write_stationxml_reference
+    from obspy import read_inventory
+    from obspy.io.sitexml.sitexml import add_sitexml_reference
 
-    inventory = write_stationxml_reference(
+    inventory = read_inventory("XX.ABCD.stationxml.xml")
+    inventory = add_sitexml_reference(
+        inventory,
         station_code="XX.ABCD",
         sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
-        input_path="XX.ABCD.stationxml.xml",
         replace_existing=False)
 
 Reference Description And Date
@@ -212,7 +201,8 @@ text:
 
 .. code-block:: python
 
-    inventory = write_stationxml_reference(
+    inventory = add_sitexml_reference(
+        inventory,
         station_code="XX.ABCD",
         sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
         description="SERA SiteXML site characterization for XX.ABCD",

@@ -26,6 +26,9 @@
     Common Workflows
     ----------------
     
+    Read/Write SiteXML
+    ~~~~~~~~~~~~~~~~~~
+
     Read a local SiteXML file into a ``SERASite`` object:
     
     .. code-block:: python
@@ -91,23 +94,30 @@
     ``Revision.revision_time`` records when one document revision occurred;
     the two times can differ when metadata changes are exported later.
 
+    Associate with StationXML
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+
     Associate the current published SiteXML URL with the corresponding
     StationXML:
 
     .. code-block:: python
 
-        from obspy.io.sitexml.sitexml import write_stationxml_reference
+        from obspy import read_inventory
+        from obspy.io.sitexml.sitexml import add_sitexml_reference
 
-        inventory = write_stationxml_reference(
+        inventory = read_inventory("XX.ABCD.stationxml.xml")
+        inventory = add_sitexml_reference(
+            inventory,
             station_code="XX.ABCD",
             sitexml_url=(
                 "https://example.org/sitexml/"
-                "Site_XX.ABCD_12-01-2026.xml"),
-            input_path="XX.ABCD.stationxml.xml",
-            output_path="XX.ABCD.with_sitexml.stationxml.xml")
+                "Site_XX.ABCD_12-01-2026.xml"))
+        inventory.write("XX.ABCD.with_sitexml.stationxml.xml",
+                        format="STATIONXML")
 
-    The helper writes a station-level StationXML ``ExternalReference`` and
+    The helper adds a station-level StationXML ``ExternalReference`` and
     returns the updated :class:`~obspy.core.inventory.inventory.Inventory`.
+    Read and write the StationXML outside the helper when file I/O is needed.
     Because SiteXML filenames can include the document creation date, an
     existing SiteXML reference for the same station is replaced by default so
     StationXML points at the current SiteXML file. References written by this
@@ -117,6 +127,9 @@
     references are preserved. Pass ``replace_existing=False`` to append
     SiteXML reference history instead.
     
+    Import from CSV/Excel
+    ~~~~~~~~~~~~~~~~~~~~~
+
     Import site metadata from CSV files. The imported metadata is stored in a
     dictionary of ``SERASite`` objects keyed by the ``siteID``:
     
@@ -382,7 +395,7 @@
        ~sitexml.write_sitexml
        ~sitexml.sitedict_to_sitexml
        ~sitexml.sitexml_to_sitedict
-       ~sitexml.write_stationxml_reference
+       ~sitexml.add_sitexml_reference
        ~tabular.csv_to_sera_site
        ~tabular.excel_to_sera_site
        ~quality_index.quality_index1

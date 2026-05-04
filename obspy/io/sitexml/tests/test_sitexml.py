@@ -18,7 +18,7 @@ from lxml import etree
 import obspy
 import pytest
 from obspy.core.event import ResourceIdentifier
-from obspy.core.inventory import Inventory, Network, Station, read_inventory
+from obspy.core.inventory import Inventory, Network, Station
 from obspy.core.inventory.util import ExternalReference, Operator, Person
 from obspy.core.util.obspy_types import FloatWithUncertainties
 from obspy.io.sitexml.core import (Analysis, EC8, LiteratureSource, Revision,
@@ -31,10 +31,10 @@ from obspy.io.sitexml import sitexml as sitexml_module
 from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLValidationError
 from obspy.io.sitexml.quality_index import overall_quality_index
 from obspy.io.sitexml.sitexml import (_is_sitexml, _read_site_description,
-                                      _read_site_owner, read_sitexml,
+                                      _read_site_owner, add_sitexml_reference,
+                                      read_sitexml,
                                       sitedict_to_sitexml,
-                                      sitexml_to_sitedict,
-                                      write_stationxml_reference)
+                                      sitexml_to_sitedict)
 from obspy.io.sitexml.sitexml import write_sitexml
 
 class TestSiteXML():
@@ -372,105 +372,30 @@ class TestSiteXML():
         """
         assert overall_quality_index(0, 1) == 0
 
-    def test_write_stationxml_reference(self, tmp_path):
+    def test_add_sitexml_reference(self):
         """
         SiteXML URL is added as StationXML station ExternalReference.
         """
-        class DummyClient:
-            def __init__(self, inventory):
-                self.inventory = inventory
-                self.query = None
-
-            def get_stations(self, **kwargs):
-                self.query = kwargs
-                return self.inventory
-
         station = Station(
             code="ABCD", latitude=1.0, longitude=2.0, elevation=3.0)
         inventory = Inventory(
             networks=[Network(code="XX", stations=[station])],
             source="TEST")
-        client = DummyClient(inventory)
-        output = tmp_path / "station.xml"
 
-        returned = write_stationxml_reference(
+        returned = add_sitexml_reference(
+            inventory,
             "XX.ABCD",
             "https://example.org/site.xml",
-            output_path=output,
-            datacenter="EARTHSCOPE",
-            client=client,
             added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0))
 
         assert returned is inventory
-        assert client.query == {
-            "station": "ABCD",
-            "level": "response",
-            "network": "XX",
-        }
-        written = read_inventory(output, format="STATIONXML")
-        refs = written[0][0].external_references
+        refs = station.external_references
         assert len(refs) == 1
         assert refs[0].uri == "https://example.org/site.xml"
         assert refs[0].description == (
             "SERA SiteXML site characterization; added 2026-05-02")
 
-    def test_write_stationxml_reference_path_is_optional(self):
-        """
-        SiteXML URL can be added without writing StationXML to disk.
-        """
-        class DummyClient:
-            def get_stations(self, **kwargs):
-                return Inventory(networks=[
-                    Network(code="XX", stations=[
-                        Station(
-                            code="ABCD", latitude=1.0, longitude=2.0,
-                            elevation=3.0)
-                    ]),
-                ], source="TEST")
-
-        returned = write_stationxml_reference(
-            "XX.ABCD",
-            "https://example.org/site.xml",
-            datacenter="EARTHSCOPE",
-            client=DummyClient(),
-            added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0))
-
-        refs = returned[0][0].external_references
-        assert len(refs) == 1
-        assert refs[0].uri == "https://example.org/site.xml"
-        assert refs[0].description == (
-            "SERA SiteXML site characterization; added 2026-05-02")
-
-    def test_write_stationxml_reference_reads_local_stationxml(
-            self, tmp_path):
-        """
-        SiteXML URL can be added to a local StationXML input file.
-        """
-        station = Station(
-            code="ABCD", latitude=1.0, longitude=2.0, elevation=3.0)
-        inventory = Inventory(
-            networks=[Network(code="XX", stations=[station])],
-            source="TEST")
-        input_file = tmp_path / "input_station.xml"
-        output_file = tmp_path / "output_station.xml"
-        inventory.write(input_file, format="STATIONXML")
-
-        returned = write_stationxml_reference(
-            "XX.ABCD",
-            "https://example.org/site.xml",
-            input_path=input_file,
-            output_path=output_file,
-            added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0))
-
-        assert returned[0][0].external_references[0].uri == (
-            "https://example.org/site.xml")
-        written = read_inventory(output_file, format="STATIONXML")
-        refs = written[0][0].external_references
-        assert len(refs) == 1
-        assert refs[0].description == (
-            "SERA SiteXML site characterization; added 2026-05-02")
-
-    def test_write_stationxml_reference_replaces_managed_reference(self):
+    def test_add_sitexml_reference_replaces_managed_reference(self):
         """
         Existing helper-written SiteXML references are kept current.
         """
@@ -490,12 +415,10 @@ class TestSiteXML():
             networks=[Network(code="XX", stations=[station])],
             source="TEST")
 
-        write_stationxml_reference(
+        add_sitexml_reference(
+            inventory,
             "XX.ABCD",
             "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
-            client=type("DummyClient", (), {
-                "get_stations": lambda self, **kwargs: inventory
-            })(),
             added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0))
 
         refs = station.external_references
@@ -506,7 +429,7 @@ class TestSiteXML():
         assert refs[0].description == (
             "SERA SiteXML site characterization; added 2026-05-02")
 
-    def test_write_stationxml_reference_replaces_manual_station_filename(
+    def test_add_sitexml_reference_replaces_manual_station_filename(
             self):
         """
         Manual references using the default SiteXML filename are replaced.
@@ -527,12 +450,10 @@ class TestSiteXML():
             networks=[Network(code="XX", stations=[station])],
             source="TEST")
 
-        write_stationxml_reference(
+        add_sitexml_reference(
+            inventory,
             "XX.ABCD",
             "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
-            client=type("DummyClient", (), {
-                "get_stations": lambda self, **kwargs: inventory
-            })(),
             added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0))
 
         assert [ref.uri for ref in station.external_references] == [
@@ -542,7 +463,7 @@ class TestSiteXML():
         assert station.external_references[0].description == (
             "SERA SiteXML site characterization; added 2026-05-02")
 
-    def test_write_stationxml_reference_can_append_history(self):
+    def test_add_sitexml_reference_can_append_history(self):
         """
         Replacement can be disabled when callers want to keep SiteXML history.
         """
@@ -559,12 +480,10 @@ class TestSiteXML():
             networks=[Network(code="XX", stations=[station])],
             source="TEST")
 
-        write_stationxml_reference(
+        add_sitexml_reference(
+            inventory,
             "XX.ABCD",
             "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
-            client=type("DummyClient", (), {
-                "get_stations": lambda self, **kwargs: inventory
-            })(),
             added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0),
             replace_existing=False)
 
@@ -572,15 +491,6 @@ class TestSiteXML():
             "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml",
             "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
         ]
-
-    def test_write_stationxml_reference_requires_datacenter_or_client(self):
-        """
-        A StationXML source is required.
-        """
-        with pytest.raises(SiteXMLValidationError, match="input_path"):
-            write_stationxml_reference(
-                "XX.ABCD",
-                "https://example.org/site.xml")
 
     def test_station_code_requires_network_station_notation(self):
         """
@@ -643,28 +553,23 @@ class TestSiteXML():
         assert valid
         assert errors == ()
 
-    def test_write_stationxml_reference_rejects_missing_station(
-            self, tmp_path):
+    def test_add_sitexml_reference_rejects_missing_station(self):
         """
-        The FDSN response must contain the exact network.station code.
+        The inventory must contain the exact network.station code.
         """
-        class DummyClient:
-            def get_stations(self, **kwargs):
-                return Inventory(networks=[
-                    Network(code="YY", stations=[
-                        Station(
-                            code="ABCD", latitude=1.0, longitude=2.0,
-                            elevation=3.0)
-                    ]),
-                ], source="TEST")
+        inventory = Inventory(networks=[
+            Network(code="YY", stations=[
+                Station(
+                    code="ABCD", latitude=1.0, longitude=2.0,
+                    elevation=3.0)
+            ]),
+        ], source="TEST")
 
         with pytest.raises(SiteXMLValidationError, match="XX.ABCD"):
-            write_stationxml_reference(
+            add_sitexml_reference(
+                inventory,
                 "XX.ABCD",
-                "https://example.org/site.xml",
-                output_path=tmp_path / "station.xml",
-                datacenter="EARTHSCOPE",
-                client=DummyClient())
+                "https://example.org/site.xml")
 
     def test_value_with_uncertainty_to_float_with_uncertainties(self):
         """

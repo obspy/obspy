@@ -1280,16 +1280,18 @@ def _obj2tag(parent, tag_name, tag_value):
 
 ###### Associate SiteXML with the respective StationXML
 #
-## TODOS
-# Maybe it would be a better workflow to read from an inventory 
-# and just return the updated inventory (remove the input/output paths).
-
 _STATIONXML_SITEXML_DESCRIPTION = "SERA SiteXML site characterization"
 
 def _is_station_sitexml_uri(uri, station_code):
     """
     Return whether ``uri`` looks like the official SiteXML file for station.
 
+    :type uri: str or None
+    :param uri: External-reference URI to inspect.
+    :type station_code: str
+    :param station_code: FDSN network and station code in ``network.station``
+        notation. The full station code is matched against the default
+        SiteXML filename patterns.
     :rtype: bool
     """
     if not uri:
@@ -1306,6 +1308,8 @@ def _is_managed_sitexml_reference(ref):
     """
     Return whether ``ref`` was written by the SiteXML StationXML helper.
 
+    :type ref: :class:`~obspy.core.inventory.util.ExternalReference`
+    :param ref: Station-level external reference to inspect.
     :rtype: bool
     """
     description = (ref.description or "").lower()
@@ -1316,6 +1320,22 @@ def _add_station_sitexml_reference(station, station_code, sitexml_url,
     """
     Add or replace the station-level SiteXML ``ExternalReference``.
 
+    :type station: :class:`~obspy.core.inventory.station.Station`
+    :param station: StationXML station object whose ``external_references``
+        list will be updated in place.
+    :type station_code: str
+    :param station_code: FDSN network and station code in ``network.station``
+        notation. Used to recognize existing default SiteXML filenames.
+    :type sitexml_url: str
+    :param sitexml_url: URL of the SiteXML document to store in the new
+        external reference.
+    :type description: str
+    :param description: Complete external-reference description, including
+        the ``added YYYY-MM-DD`` marker.
+    :type replace_existing: bool
+    :param replace_existing: If ``True``, replace matching SiteXML references;
+        if ``False``, append the new reference unless its URL is already
+        present.
     :rtype: None
     """
     new_ref = ExternalReference(uri=sitexml_url, description=description)
@@ -1349,28 +1369,28 @@ def _add_station_sitexml_reference(station, station_code, sitexml_url,
         updated_refs.append(new_ref)
     station.external_references = updated_refs
 
-def write_stationxml_reference(station_code, sitexml_url, *,
-        description=None, added_time=None,
-        input_path=None, client=None, datacenter=None,
-        output_path=None, replace_existing=True):
+def add_sitexml_reference(inventory, station_code, sitexml_url, *,
+        description=None, added_time=None, replace_existing=True):
     """
-    Attach a SiteXML remote URL as a StationXML 
+    Add a station-level SiteXML reference to a StationXML inventory.
+
+    Attach a SiteXML remote URL as a StationXML
     :class:`~obspy.core.inventory.util.ExternalReference`.
     
     Use ``station_code`` to select a
-    :class:`~obspy.core.inventory.station.Station` object from either a local
-    StationXML file or an FDSN Web Service client, write an
-    ``ExternalReference`` pointing to the current URL of the SiteXML file,
-    and return the updated inventory. If ``output_path`` is provided, the
-    updated inventory is also written to StationXML. By default, an existing
-    SiteXML reference for the same station is replaced so the StationXML
-    pointer stays current when dated SiteXML filenames change.
+    :class:`~obspy.core.inventory.station.Station` object from ``inventory``,
+    add an ``ExternalReference`` pointing to the current URL of the SiteXML
+    file, and return the updated inventory. By default, an existing SiteXML
+    reference for the same station is replaced so the StationXML pointer stays
+    current when dated SiteXML filenames change.
 
     The ``ExternalReference.description`` is timestamped with either the
     date the reference is written or a date provided by the user with 
     ``added_time``. The helper does not read the SiteXML document to 
     reuse its root ``creationTime`` for that purpose.
 
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+    :param inventory: StationXML inventory to update in place.
     :type station_code: str, required
     :param station_code: FDSN network and station code in ``network.station``
         notation.
@@ -1384,20 +1404,6 @@ def write_stationxml_reference(station_code, sitexml_url, *,
         compatible, optional
     :param added_time: Timestamp used for the ``added YYYY-MM-DD`` marker in
         the external-reference description. Defaults to the current UTC time.
-    :type input_path: str or pathlib.Path or file-like object, optional
-    :param input_path: Local StationXML input path or readable file-like
-        object. If omitted, StationXML is fetched from an FDSN data center.
-    :type client: :class:`~obspy.clients.fdsn.client.Client`, optional
-    :param client: Existing FDSN client. Mainly useful for tests or for
-        callers that already manage client construction.
-    :type datacenter: str, optional
-    :param datacenter: FDSN data center used to initialize
-        :class:`~obspy.clients.fdsn.client.Client`, for example
-        ``"EARTHSCOPE"``. Required when ``input_path`` and ``client`` are
-        omitted.
-    :type output_path: str or pathlib.Path or file-like object, optional
-    :param output_path: Local output path or writable file-like object for the
-        updated StationXML. If omitted, no file is written.
     :type replace_existing: bool, optional
     :param replace_existing: If ``True`` (default), replace an existing
         SiteXML station reference written by this helper or one whose URL uses
@@ -1410,46 +1416,18 @@ def write_stationxml_reference(station_code, sitexml_url, *,
 
     Example
 
-        >>> from obspy.io.sitexml.sitexml import write_stationxml_reference
-        >>> inventory = write_stationxml_reference(
-        ...     "XX.ABCD", "https://url/to/site.xml", datacenter="EARTHSCOPE")
-        >>> write_stationxml_reference(
-        ...     "XX.ABCD", "https://url/to/site.xml",
-        ...     input_path="./station.xml", output_path="./updated_station.xml")
+        >>> from obspy import read_inventory
+        >>> from obspy.io.sitexml.sitexml import add_sitexml_reference
+        >>> inventory = read_inventory("./station.xml")
+        >>> inventory = add_sitexml_reference(
+        ...     inventory, "XX.ABCD", "https://url/to/site.xml")
+        >>> inventory.write("./updated_station.xml", format="STATIONXML")
     """
     if not station_code:
         raise SiteXMLValidationError(
-            "Cannot retrieve StationXML without station_code."
+            "Cannot add SiteXML reference without station_code."
         )
     network_code, station_only_code = _split_station_code(station_code)
-
-    query = {
-        "network": network_code,
-        "station": station_only_code,
-        "level": "response",
-    }
-
-    if input_path is not None:
-        if client is not None:
-            raise SiteXMLValidationError(
-                "input_path and client are mutually exclusive StationXML "
-                "sources."
-            )
-        from obspy.core.inventory import read_inventory
-
-        inventory = read_inventory(input_path, format="STATIONXML")
-    elif client is None:
-        if datacenter is None:
-            raise SiteXMLValidationError(
-                "Cannot retrieve StationXML without input_path, datacenter, "
-                "or client."
-            )
-        from obspy.clients.fdsn import Client
-
-        client = Client(datacenter)
-        inventory = client.get_stations(**query)
-    else:
-        inventory = client.get_stations(**query)
     matches = [
         (network, station)
         for network in inventory
@@ -1471,7 +1449,4 @@ def write_stationxml_reference(station_code, sitexml_url, *,
     description = f"{description}; added {added_date.isoformat()}"
     _add_station_sitexml_reference(
         station, station_code, sitexml_url, description, replace_existing)
-
-    if output_path is not None:
-        inventory.write(output_path, format="STATIONXML")
     return inventory
