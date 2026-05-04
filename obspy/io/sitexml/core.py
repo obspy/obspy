@@ -1666,6 +1666,14 @@ class SERASite(BaseNode):
         :type set_preferred: bool, optional
         :param set_preferred: Whether to make the added analysis preferred.
         :rtype: :class:`~obspy.io.sitexml.core.Analysis`
+
+        Example:
+
+        >>> analysis = site.add_analysis(
+        ...     resource_id="quakeml:example.org/analysis/002",
+        ...     set_preferred=True)
+        >>> analysis.site_descriptionID == site.site_description.resource_id
+        True
         """
         if analysis is not None and resource_id is not None:
             raise SiteXMLValidationError(
@@ -1748,6 +1756,11 @@ class SERASite(BaseNode):
             :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
         :param analysisID: Analysis resource ID to mark as preferred.
         :rtype: :class:`~obspy.io.sitexml.core.Analysis`
+
+        Example:
+
+        >>> site.set_preferred_analysis(
+        ...     "quakeml:example.org/analysis/002")
         """
         analysis = self.get_analysis(analysisID)
         if analysis is None:
@@ -1833,6 +1846,12 @@ class SERASite(BaseNode):
         :param analysisID: Analysis expected to contain the preferred velocity
             profile.
         :rtype: :class:`~obspy.io.sitexml.core.VelocityProfile`
+
+        Example:
+
+        >>> site.set_preferred_velocity_profile(
+        ...     "quakeml:example.org/velocity_profile/003",
+        ...     analysisID="quakeml:example.org/analysis/002")
         """
         if analysisID is None:
             velocity_profile = self.get_velocity_profile(velocityProfileID)
@@ -1877,6 +1896,11 @@ class SERASite(BaseNode):
         :type name: str
         :param name: SiteXML indicator name.
         :rtype: :class:`~obspy.io.sitexml.core.SiteIndicator` or None
+
+        Example:
+
+        >>> ec8 = site.get_indicator_object("siteClassEC8")
+        >>> velocity_s30 = site.get_indicator_object("velocityS30")
         """
         site_description_indicators = {
             "siteClassEC8": self.site_description.ec8,
@@ -1909,6 +1933,25 @@ class SERASite(BaseNode):
         yielded first, followed by indicators from each attached analysis. When
         ``include_empty`` is true, missing indicator slots are yielded with
         ``None``.
+
+        Example: apply the same literature source and external reference to
+        selected site-description indicators.
+
+        >>> from obspy.core.inventory.util import ExternalReference
+        >>> from obspy.io.sitexml.core import LiteratureSource
+        >>> literature_source = LiteratureSource(
+        ...     title="Example site characterization report",
+        ...     first_author="Author A.",
+        ...     year="2026")
+        >>> external_references = [ExternalReference(
+        ...     uri="https://example.org/reports/site-characterization.pdf",
+        ...     description="Site characterization report")]
+        >>> shared_reference_indicators = {
+        ...     "siteClassEC8", "bedrockDepth", "h800"}
+        >>> for name, indicator in site.iter_site_indicators():
+        ...     if name in shared_reference_indicators:
+        ...         indicator.literature_source = literature_source
+        ...         indicator.external_references = external_references
 
         :type include_empty: bool, optional
         :param include_empty: Include supported indicator names that are not
@@ -1958,6 +2001,14 @@ class SERASite(BaseNode):
             :class:`~obspy.core.event.resourceid.ResourceIdentifier`, optional
         :param analysisID: Analysis resource ID to use for analysis-level
             indicators. Ignored for site-description indicators.
+
+        Example:
+
+        >>> from obspy.io.sitexml.core import EC8, ValueWithUncertainty, VelocityS30
+        >>> site.add_site_indicator([EC8("B")])
+        >>> site.add_site_indicator(
+        ...     [VelocityS30(ValueWithUncertainty(620.0))],
+        ...     analysisID="quakeml:example.org/analysis/001")
         """
         site_description_indicators = {
             "siteClassEC8": "ec8",
@@ -2025,6 +2076,19 @@ class SERASite(BaseNode):
             is preserved.
         :return: The target
             :class:`~obspy.io.sitexml.core.VelocityProfileSet`.
+
+        Example:
+
+        >>> from obspy.io.sitexml.core import (
+        ...     ValueWithUncertainty, VelocityProfile, VelocityProfileData)
+        >>> profile = VelocityProfile(
+        ...     resource_id="quakeml:example.org/velocity_profile/003",
+        ...     velocity_profile_data=[VelocityProfileData(
+        ...         velocityS=ValueWithUncertainty(400.0),
+        ...         top_depth=ValueWithUncertainty(0.0))])
+        >>> site.add_velocity_profiles(
+        ...     [profile],
+        ...     analysisID="quakeml:example.org/analysis/001")
         """
         if not isinstance(velocity_profiles, Iterable) or \
                 isinstance(velocity_profiles, (str, bytes)):

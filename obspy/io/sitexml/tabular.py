@@ -260,6 +260,16 @@ def add_velocity_profiles(sera_sites, velocity_profiles, replace_existing=False,
     :type delim: str, optional
     :param delim: CSV file delimiter. Default is semicolon-delimited.
     :return: The original ``sera_sites`` object.
+
+    Example:
+
+    >>> from obspy.io.sitexml.sitexml import read_sitexml
+    >>> from obspy.io.sitexml.tabular import add_velocity_profiles
+    >>> site = read_sitexml("site.xml")
+    >>> add_velocity_profiles(
+    ...     site,
+    ...     "velocity_profiles.csv",
+    ...     replace_existing=True)
     """
     if isinstance(sera_sites, SERASite):
         sera_site_dict = {sera_sites.resource_id: sera_sites}
