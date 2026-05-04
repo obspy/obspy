@@ -63,22 +63,22 @@ class TestSiteXML():
 
     def test_get_sitexml_filename(self):
         """
-        The default SiteXML filename follows station or site-ID identity.
+        The default SiteXML filename is deterministic, with an optional date.
         """
         station_site = self._minimal_sera_site(station_code="XX.ABCD")
-        assert station_site.get_sitexml_filename() == "XX.ABCD.xml"
+        assert station_site.get_sitexml_filename() == "Site_XX.ABCD.xml"
         assert station_site.get_sitexml_filename(
             obspy.UTCDateTime(2026, 1, 12, 3, 4, 5)) == (
                 "Site_XX.ABCD_12-01-2026.xml")
 
         non_station_site = self._minimal_sera_site(station_code=None)
         assert non_station_site.get_sitexml_filename() == (
-            "quakeml_domain_ab_site_001.xml")
+            "Site_quakeml_domain_ab_site_001.xml")
         assert non_station_site.get_sitexml_filename(
             obspy.UTCDateTime(2026, 1, 12, 3, 4, 5)) == (
                 "Site_quakeml_domain_ab_site_001_12-01-2026.xml")
 
-    def test_sitedict_to_sitexml_uses_network_station_filename(
+    def test_sitedict_to_sitexml_uses_default_site_filename(
             self, tmp_path, monkeypatch):
         output_calls = []
 
@@ -98,8 +98,8 @@ class TestSiteXML():
             "quakeml:domain.ab/site/without_station": non_station_site,
         }, output_folder=tmp_path)
 
-        assert [tmp_path / "XX.ABCD.xml",
-                tmp_path / "quakeml_domain_ab_site_without_station.xml"] == [
+        assert [tmp_path / "Site_XX.ABCD.xml",
+                tmp_path / "Site_quakeml_domain_ab_site_without_station.xml"] == [
                     Path(filename) for _, filename, _ in output_calls]
         assert [validate for _, _, validate in output_calls] == [True, True]
 
@@ -713,7 +713,7 @@ class TestSiteXML():
         station.external_references = [
             ExternalReference(
                 uri="https://example.org/sitexml/"
-                    "Site_XX.ABCD_01-05-2026.xml",
+                    "Site_XX.ABCD.xml",
                 description="Manually added SiteXML link"),
             ExternalReference(
                 uri="https://example.org/sitexml/"

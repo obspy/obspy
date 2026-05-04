@@ -50,7 +50,7 @@
         from obspy.io.sitexml.sitexml import read_sitexml
 
         sera_site = read_sitexml(
-            "https://example.org/sitexml/XX.ABCD.xml")
+            "https://example.org/sitexml/Site_XX.ABCD.xml")
     
     Validate a SiteXML file against the bundled schema:
     

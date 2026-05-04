@@ -39,7 +39,7 @@ files.
 
     from obspy.io.sitexml.sitexml import read_sitexml
 
-    site = read_sitexml("https://example.org/sitexml/XX.ABCD.xml")
+    site = read_sitexml("https://example.org/sitexml/Site_XX.ABCD.xml")
 
 SiteXML validation is available separately with
 :func:`~obspy.io.sitexml.sitexml.validate_sitexml`. It returns a boolean and a

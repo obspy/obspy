@@ -256,7 +256,7 @@ def read_sitexml(path_or_file_object):
 
     >>> from obspy.io.sitexml.sitexml import read_sitexml
     >>> site = read_sitexml("site.xml")
-    >>> site = read_sitexml("https://example.org/sitexml/XX.ABCD.xml")
+    >>> site = read_sitexml("https://example.org/sitexml/Site_XX.ABCD.xml")
 
     """
     if _is_url(path_or_file_object):
@@ -880,11 +880,9 @@ def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     Exports a dictionary of SERASite objects to SiteXML files.
 
     The files are written to a folder given with argument ``output_folder``.
-    The name of each SiteXML file is either:
-
-    * The station code in ``network.station`` notation if the metadata belong
-      to a station site
-    * The siteID otherwise
+    The name of each SiteXML file uses
+    :meth:`~obspy.io.sitexml.core.SERASite.get_sitexml_filename`, currently
+    ``Site_<station-or-site-id>.xml``.
 
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
@@ -1299,7 +1297,7 @@ def _is_station_sitexml_uri(uri, station_code):
     filename = unquote(Path(urlparse(uri).path).name)
     station = re.escape(station_code)
     return re.match(
-        r"^(?:Site_%s_[0-3][0-9]-[01][0-9]-[0-9]{4}|%s)\.xml$" %
+        r"^(?:Site_%s(?:_[0-3][0-9]-[01][0-9]-[0-9]{4})?|%s)\.xml$" %
         (station, station),
         filename
     ) is not None
