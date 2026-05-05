@@ -10,7 +10,8 @@ import pandas as pd
 import pytest
 
 from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLImportError
-from obspy.io.sitexml.quality_index import (apply_quality_index_csv,
+from obspy.io.sitexml.quality_index import (apply_quality_index_dataframe,
+                                            apply_quality_index_csv,
                                             apply_quality_index_excel)
 from obspy.io.sitexml.tabular import (add_velocity_profiles, csv_to_sera_site,
                                       excel_to_sera_site, _read_year_cell)
@@ -239,6 +240,28 @@ class TestSiteXMLCSVImport():
                 sera_site_dict,
                 datapath / "quality_index.csv",
                 delim=";")
+
+        site = sera_site_dict["quakeml:domain.ab/site/001"]
+        q2 = site.calculate_quality_index2()
+        q3 = site.calculate_quality_index3(
+            f0_vs30=1, f0_bedrock_depth=0, vs30_geology=1)
+
+        assert result is sera_site_dict
+        assert site.site_description.ec8.quality_index == 0.875
+        assert site.site_description.overall_quality_index == pytest.approx(
+            (q2 + q3) / 2)
+        assert any("unknown siteID quakeml:domain.ab/site/002" in
+                   str(w.message) for w in caught)
+
+    def test_apply_quality_index_dataframe_updates_existing_sitexml_dict(
+            self, datapath):
+        sera_site_dict = sitexml_to_sitedict(datapath / "full_sitexml.xml")
+        df_quality_index = pd.read_csv(datapath / "quality_index.csv", sep=";")
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = apply_quality_index_dataframe(
+                sera_site_dict, df_quality_index)
 
         site = sera_site_dict["quakeml:domain.ab/site/001"]
         q2 = site.calculate_quality_index2()
@@ -482,7 +505,9 @@ class TestSiteXMLCSVImport():
             "quakeml:test/site/001;;quakeml:test/site_description/001;250\n",
             encoding="utf-8")
 
-        with pytest.raises(SiteXMLImportError):
+        with pytest.raises(
+                SiteXMLImportError,
+                match="Analysis metadata is missing required"):
             csv_to_sera_site(
                 site_owner_csv=site_owner_csv,
                 site_description_csv=site_description_csv,
@@ -511,7 +536,9 @@ class TestSiteXMLCSVImport():
             "quakeml:test/site_description/001;300;Some title\n",
             encoding="utf-8")
 
-        with pytest.raises(SiteXMLImportError):
+        with pytest.raises(
+                SiteXMLImportError,
+                match="requires both title and firstAuthor"):
             csv_to_sera_site(
                 site_owner_csv=site_owner_csv,
                 site_description_csv=site_description_csv,

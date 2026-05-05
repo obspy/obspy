@@ -16,7 +16,7 @@ import warnings
 
 import pandas as pd
 
-from .util import SiteXMLIOError, SiteXMLImportError
+from .util import SiteXMLImportError
 
 
 _QUALITY_INDEX2_WEIGHTS = {
@@ -349,14 +349,22 @@ def overall_quality_index(quality_index2=0, quality_index3=0):
     return (quality_index2 + quality_index3) / 2
 
 
-def apply_quality_index_metadata(sera_site_dict, df_quality_index):
+def apply_quality_index_dataframe(sera_site_dict, df_quality_index):
     """
-    Apply tabular quality-index calculation inputs to imported sites.
+    Apply dataframe quality-index inputs to existing SERASite objects.
 
-    Q_Index1 criteria and Q_Index3 consistency values are not stored. Only the
-    calculated indicator quality indexes and overall quality index are assigned
-    to the SiteXML object model.
+    This is the dataframe-level quality-index API. Use it when quality-index
+    calculation inputs are already available as a :class:`pandas.DataFrame`,
+    for example after custom loading, cleaning, or programmatic construction.
+    The input dataframe is not stored on the SiteXML objects. Q_Index1 criteria
+    and Q_Index3 consistency values are used immediately to calculate indicator
+    quality indexes and overall quality index.
 
+    :type sera_site_dict: dict of
+        :class:`~obspy.io.sitexml.core.SERASite`, required
+    :param sera_site_dict: Dictionary of SERASite objects keyed by site ID.
+    :type df_quality_index: :class:`pandas.DataFrame`, required
+    :param df_quality_index: Dataframe with quality-index calculation inputs.
     :rtype: dict
     :return: The input ``sera_site_dict`` after applying calculated values.
     """
@@ -410,9 +418,12 @@ def apply_quality_index_csv(sera_site_dict, quality_index_csv, delim=';'):
     """
     Apply CSV quality-index calculation inputs to existing SERASite objects.
 
-    The sidecar values are used immediately to calculate SiteXML quality
-    indexes and are not stored. The input dictionary is mutated in place and
-    returned for convenience.
+    This is the CSV file convenience wrapper. It reads ``quality_index_csv`` as
+    a dataframe, translating file and parser failures to SiteXML exceptions,
+    then delegates the calculation to
+    :func:`~obspy.io.sitexml.quality_index.apply_quality_index_dataframe`.
+    The sidecar values are used immediately and are not stored on the SiteXML
+    objects.
 
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
@@ -424,19 +435,12 @@ def apply_quality_index_csv(sera_site_dict, quality_index_csv, delim=';'):
     :rtype: dict
     :return: The input ``sera_site_dict`` after applying calculated values.
     """
-    try:
-        df_quality_index = pd.read_csv(quality_index_csv, sep=delim)
-    except OSError as e:
-        raise SiteXMLIOError(
-            f"Could not access quality-index CSV metadata: "
-            f"{quality_index_csv}"
-        ) from e
-    except Exception as e:
-        raise SiteXMLImportError(
-            f"Could not read quality-index CSV metadata: {quality_index_csv}"
-        ) from e
+    from .tabular import _csv_to_dataframe
 
-    return apply_quality_index_metadata(sera_site_dict, df_quality_index)
+    df_quality_index = _csv_to_dataframe(
+        quality_index_csv, "quality-index CSV metadata", delim=delim)
+
+    return apply_quality_index_dataframe(sera_site_dict, df_quality_index)
 
 
 def apply_quality_index_excel(
@@ -444,9 +448,12 @@ def apply_quality_index_excel(
     """
     Apply Excel quality-index calculation inputs to existing SERASite objects.
 
-    The sidecar values are used immediately to calculate SiteXML quality
-    indexes and are not stored. The input dictionary is mutated in place and
-    returned for convenience.
+    This is the Excel file convenience wrapper. It reads one sheet from
+    ``path_or_file_object`` as a dataframe, translating file, sheet, and parser
+    failures to SiteXML exceptions, then delegates the calculation to
+    :func:`~obspy.io.sitexml.quality_index.apply_quality_index_dataframe`.
+    The sidecar values are used immediately and are not stored on the SiteXML
+    objects.
 
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
@@ -459,25 +466,15 @@ def apply_quality_index_excel(
     :rtype: dict
     :return: The input ``sera_site_dict`` after applying calculated values.
     """
-    try:
-        df_quality_index = pd.read_excel(
-            path_or_file_object, sheet_name=sheet_name)
-    except OSError as e:
-        raise SiteXMLIOError(
-            f"Could not access quality-index Excel metadata: "
-            f"{path_or_file_object}"
-        ) from e
-    except ValueError as e:
-        raise SiteXMLImportError(
-            f"Could not find quality-index Excel sheet: {sheet_name}"
-        ) from e
-    except Exception as e:
-        raise SiteXMLImportError(
-            f"Could not read quality-index Excel metadata: "
-            f"{path_or_file_object}"
-        ) from e
+    from .tabular import _excel_to_dataframe
 
-    return apply_quality_index_metadata(sera_site_dict, df_quality_index)
+    df_quality_index = _excel_to_dataframe(
+        path_or_file_object, "quality-index Excel metadata",
+        sheet_name=sheet_name,
+        missing_sheet_message=(
+            f"Could not find quality-index Excel sheet: {sheet_name}"))
+
+    return apply_quality_index_dataframe(sera_site_dict, df_quality_index)
 
 
 def _read_quality_index_consistency(row, name):

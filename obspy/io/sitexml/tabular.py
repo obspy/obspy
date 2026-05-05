@@ -24,10 +24,68 @@ from .core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
                    ResonanceFrequency, VelocityS30, 
                    VelocityProfile, VelocityProfileData, VelocityProfileSet, 
                    LiteratureSource, ValueWithUncertainty)
-from .quality_index import (apply_quality_index_csv,
-                            apply_quality_index_metadata)
+from .quality_index import apply_quality_index_dataframe
 from .util import (SiteXMLIOError, SiteXMLImportError,
                    SiteXMLValidationError)
+
+
+def _csv_to_dataframe(path_or_file_object, label, delim=';'):
+    """
+    Read CSV tabular metadata as a dataframe with SiteXML exceptions.
+
+    :rtype: :class:`pandas.DataFrame`
+    """
+    try:
+        return pd.read_csv(path_or_file_object, sep=delim)
+    except OSError as e:
+        raise SiteXMLIOError(
+            f"Could not access {label}: {path_or_file_object}"
+        ) from e
+    except Exception as e:
+        raise SiteXMLImportError(
+            f"Could not read {label}: {path_or_file_object}"
+        ) from e
+
+
+def _excel_to_dataframe(path_or_file_object, label, sheet_name=0,
+                        converters=None, missing_sheet_message=None):
+    """
+    Read Excel tabular metadata as dataframe(s) with SiteXML exceptions.
+
+    :rtype: :class:`pandas.DataFrame` or dict
+    """
+    try:
+        xls = pd.ExcelFile(path_or_file_object)
+    except OSError as e:
+        raise SiteXMLIOError(
+            f"Could not access {label}: {path_or_file_object}"
+        ) from e
+
+    try:
+        return pd.read_excel(
+            xls, sheet_name=sheet_name, converters=converters)
+    except ValueError as e:
+        if missing_sheet_message is not None:
+            raise SiteXMLImportError(missing_sheet_message) from e
+        raise SiteXMLImportError(
+            f"Could not read {label}: {path_or_file_object}"
+        ) from e
+    except Exception as e:
+        raise SiteXMLImportError(
+            f"Could not read {label}: {path_or_file_object}"
+        ) from e
+
+
+def _read_dataframe_metadata(reader, *args, context, **kwargs):
+    """
+    Convert dataframe metadata to SiteXML objects with phase context.
+    """
+    try:
+        return reader(*args, **kwargs)
+    except SiteXMLImportError:
+        raise
+    except Exception as e:
+        raise SiteXMLImportError(f"Could not build {context}.") from e
 
 
 def csv_to_sera_site(site_owner_csv,
@@ -74,34 +132,17 @@ def csv_to_sera_site(site_owner_csv,
             "The site owner and site description metadata are mandatory."
         )
     
-    try:
-        df_site_owner = pd.read_csv(site_owner_csv, sep=delim)
-        df_site_description = pd.read_csv(site_description_csv, sep=delim)
-    except OSError as e:
-        raise SiteXMLIOError(
-            "Could not access the required site owner or site description CSV "
-            "metadata."
-        ) from e
-    except Exception as e:
-        raise SiteXMLImportError(
-            "Could not read the required site owner or site description CSV "
-            "metadata."
-        ) from e
+    df_site_owner = _csv_to_dataframe(
+        site_owner_csv, "site owner CSV metadata", delim=delim)
+    df_site_description = _csv_to_dataframe(
+        site_description_csv, "site description CSV metadata", delim=delim)
     
     # Try to read the analysis metadata if a csv is provided.
     #
     if analysis_csv:
-        try:
-            df_analysis = pd.read_csv(analysis_csv, sep=delim)
-            exists_analysis = True
-        except OSError as e:
-            raise SiteXMLIOError(
-                f"Could not access analysis CSV metadata: {analysis_csv}"
-            ) from e
-        except Exception as e:
-            raise SiteXMLImportError(
-                f"Could not read analysis CSV metadata: {analysis_csv}"
-            ) from e
+        df_analysis = _csv_to_dataframe(
+            analysis_csv, "analysis CSV metadata", delim=delim)
+        exists_analysis = True
     else:
         warnings.warn("Analysis metadata not provided.", UserWarning)
         exists_analysis = False
@@ -112,17 +153,16 @@ def csv_to_sera_site(site_owner_csv,
     df_vp_dict = _import_velocity_profiles(
         velocity_profiles_csv, kind="CSV", delim=delim)
     
-    site_owner = _read_site_owner(df_site_owner)
-    site_description_dict = _read_site_description(df_site_description)
+    site_owner = _read_dataframe_metadata(
+        _read_site_owner, df_site_owner, context="site owner metadata")
+    site_description_dict = _read_dataframe_metadata(
+        _read_site_description, df_site_description,
+        context="site description metadata")
 
     if exists_analysis:
-        try:
-            analysis_dict = _read_analysis(
-                df_analysis, df_vp_dict, skip_invalid_rows=False)
-        except Exception as e:
-            raise SiteXMLImportError(
-                "Could not build analysis metadata from the provided CSV input."
-            ) from e
+        analysis_dict = _read_dataframe_metadata(
+            _read_analysis, df_analysis, df_vp_dict,
+            skip_invalid_rows=False, context="analysis metadata")
         
     # All dictionaries use the unique SiteID for key.
     #
@@ -137,8 +177,9 @@ def csv_to_sera_site(site_owner_csv,
             sera_site_dict[siteID].analysis = analysis_dict[siteID]
 
     if quality_index_csv:
-        apply_quality_index_csv(
-            sera_site_dict, quality_index_csv, delim=delim)
+        df_quality_index = _csv_to_dataframe(
+            quality_index_csv, "quality-index CSV metadata", delim=delim)
+        apply_quality_index_dataframe(sera_site_dict, df_quality_index)
 
     return sera_site_dict
 
@@ -168,28 +209,18 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     >>> sera_site_dict = excel_to_sera_site("InputExcel.xlsx",
     ...                         velocity_profiles="vp.xlsx")
     """
-    try:
-        xls = pd.ExcelFile(path_or_file_object)
-    except OSError as e:
-        raise SiteXMLIOError(
-            f"Could not access Site metadata Excel file: {path_or_file_object}"
-        ) from e
-    
-    try:
-        conv_dict = {
-            'velocityS30_year': _read_year_cell,
-            'velocityProfileSet_year': _read_year_cell,
-            'resonanceFrequency_year': _read_year_cell,
-            'siteClassEC8_year': _read_year_cell,
-            'bedrockDepth_year': _read_year_cell,
-            'h800_year': _read_year_cell,
-            'geologicalUnit_year': _read_year_cell,
-        }
-        df_dict = pd.read_excel(xls, None, converters=conv_dict)
-    except Exception as e:
-        raise SiteXMLImportError(
-            "Could not read the Excel file with site metadata."
-        ) from e
+    conv_dict = {
+        'velocityS30_year': _read_year_cell,
+        'velocityProfileSet_year': _read_year_cell,
+        'resonanceFrequency_year': _read_year_cell,
+        'siteClassEC8_year': _read_year_cell,
+        'bedrockDepth_year': _read_year_cell,
+        'h800_year': _read_year_cell,
+        'geologicalUnit_year': _read_year_cell,
+    }
+    df_dict = _excel_to_dataframe(
+        path_or_file_object, "Site metadata Excel file", sheet_name=None,
+        converters=conv_dict)
 
     if not all(k in df_dict for k in ("siteOwner", "siteDescription")):
         raise SiteXMLImportError(
@@ -202,20 +233,20 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     df_vp_dict = _import_velocity_profiles(velocity_profiles, kind="Excel") \
         if velocity_profiles else None
     
-    site_owner = _read_site_owner(df_dict['siteOwner'])
-    site_description_dict = _read_site_description(df_dict['siteDescription'])
+    site_owner = _read_dataframe_metadata(
+        _read_site_owner, df_dict['siteOwner'],
+        context="site owner metadata")
+    site_description_dict = _read_dataframe_metadata(
+        _read_site_description, df_dict['siteDescription'],
+        context="site description metadata")
 
     # Read the analysis metadata if the 'analysis' sheet exists.
     #
     if 'analysis' in df_dict:
         exists_analysis = True
-        try:
-            analysis_dict = _read_analysis(
-                df_dict['analysis'], df_vp_dict, skip_invalid_rows=False)
-        except Exception as e:
-            raise SiteXMLImportError(
-                "Could not build analysis metadata from the provided Excel input."
-            ) from e
+        analysis_dict = _read_dataframe_metadata(
+            _read_analysis, df_dict['analysis'], df_vp_dict,
+            skip_invalid_rows=False, context="analysis metadata")
     else:
         warnings.warn("Analysis metadata not provided.", UserWarning)
         exists_analysis = False
@@ -233,7 +264,7 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
             sera_site_dict[siteID].analysis = analysis_dict[siteID]
 
     if "qualityIndex" in df_dict:
-        apply_quality_index_metadata(sera_site_dict, df_dict["qualityIndex"])
+        apply_quality_index_dataframe(sera_site_dict, df_dict["qualityIndex"])
 
     return sera_site_dict
 
@@ -653,16 +684,8 @@ def _read_velocity_profile_csv_file(file_path, delim=';'):
 
     :rtype: :class:`pandas.DataFrame`
     """
-    try:
-        return pd.read_csv(file_path, sep=delim)
-    except OSError as e:
-        raise SiteXMLIOError(
-            f"Could not access velocity-profile CSV file: {file_path}"
-        ) from e
-    except Exception as e:
-        raise SiteXMLImportError(
-            f"Could not read velocity-profile CSV file: {file_path}"
-        ) from e
+    return _csv_to_dataframe(
+        file_path, "velocity-profile CSV file", delim=delim)
 
 
 def _read_velocity_profile_excel_file(file_path):
@@ -671,16 +694,8 @@ def _read_velocity_profile_excel_file(file_path):
 
     :rtype: :class:`pandas.DataFrame`
     """
-    try:
-        df_dict = pd.read_excel(file_path, None)
-    except OSError as e:
-        raise SiteXMLIOError(
-            f"Could not access velocity-profile Excel file: {file_path}"
-        ) from e
-    except Exception as e:
-        raise SiteXMLImportError(
-            f"Could not read velocity-profile Excel file: {file_path}"
-        ) from e
+    df_dict = _excel_to_dataframe(
+        file_path, "velocity-profile Excel file", sheet_name=None)
 
     df = pd.DataFrame()
     for sheet_name, sheet_df in df_dict.items():
