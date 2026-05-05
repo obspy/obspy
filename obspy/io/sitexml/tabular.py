@@ -88,6 +88,33 @@ def _read_dataframe_metadata(reader, *args, context, **kwargs):
         raise SiteXMLImportError(f"Could not build {context}.") from e
 
 
+def _require_dataframe_columns(df, columns, context):
+    """
+    Raise if required dataframe columns are missing.
+    """
+    missing = [column for column in columns if column not in df.columns]
+    if missing:
+        raise SiteXMLImportError(
+            f"{context} is missing required column(s): "
+            + ", ".join(missing)
+        )
+
+
+def _require_row_values(row, columns, context):
+    """
+    Raise if required row values are missing or empty.
+    """
+    missing = [
+        column for column in columns
+        if column not in row or _empty_value(row[column])
+    ]
+    if missing:
+        raise SiteXMLImportError(
+            f"{context} is missing required value(s): "
+            + ", ".join(missing)
+        )
+
+
 def csv_to_sera_site(site_owner_csv,
                      site_description_csv, 
                      analysis_csv=None, 
@@ -351,55 +378,55 @@ def _read_site_description(df_site_description):
     :return: A dictionary of SiteDescription objects. Dictionary keys are the
         unique SiteIDs.
     """
-    
+    required_columns = ("siteID", "siteDescriptionID", "latitude", "longitude")
+    _require_dataframe_columns(
+        df_site_description, required_columns, "Site description metadata")
+
     site_description_dict = {}
 
-    for row in df_site_description.iterrows():
+    for index, row in df_site_description.iterrows():
 
-        siteID = _read_cell(row[1], "siteID")
-        resource_id =  _read_cell(row[1], "siteDescriptionID")
-        latitude = _read_cell(row[1], "latitude")
-        longitude = _read_cell(row[1], "longitude")
-        if (siteID is None or resource_id is None or
-                latitude is None or longitude is None):
-            warnings.warn("Missing siteID, siteDescriptionID, latitude or " \
-                        "longitude value. " \
-                        "Processing of site description element " \
-                        "will be skipped.", UserWarning)
-            continue
+        _require_row_values(
+            row, required_columns,
+            f"Site description metadata row {index}")
+
+        siteID = _read_cell(row, "siteID")
+        resource_id =  _read_cell(row, "siteDescriptionID")
+        latitude = _read_cell(row, "latitude")
+        longitude = _read_cell(row, "longitude")
         
-        station_code = _read_cell(row[1], "station")
+        station_code = _read_cell(row, "station")
         
         site_description_obj = SiteDescription(resource_id=resource_id,
                                        station_code=station_code, 
                                        latitude=latitude, 
                                        longitude=longitude)
         
-        site_description_obj.altitude = _read_cell(row[1], 
+        site_description_obj.altitude = _read_cell(row,
                                             "altitude")
-        site_description_obj.min_distance_from_station = _read_cell(row[1], 
+        site_description_obj.min_distance_from_station = _read_cell(row,
                                             "minDistanceFromStation")
-        site_description_obj.max_distance_from_station = _read_cell(row[1], 
+        site_description_obj.max_distance_from_station = _read_cell(row,
                                             "maxDistanceFromStation")
-        site_description_obj.morphology = _read_cell(row[1], 
+        site_description_obj.morphology = _read_cell(row,
                                             "siteMorphology")
-        site_description_obj.topographyA = _read_cell(row[1], 
+        site_description_obj.topographyA = _read_cell(row,
                                             "siteTopography_schemaA")
-        site_description_obj.topographyB = _read_cell(row[1], 
+        site_description_obj.topographyB = _read_cell(row,
                                             "siteTopography_schemaB")
-        site_description_obj.preferred_site_analysisID = _read_cell(row[1], 
+        site_description_obj.preferred_site_analysisID = _read_cell(row,
                                             "preferredSiteAnalysisID")
-        site_description_obj.preferred_velocity_profileID = _read_cell(row[1], 
+        site_description_obj.preferred_velocity_profileID = _read_cell(row,
                                             "preferredVelocityProfileID")
         
         site_description_obj.ec8 = \
-            _read_site_indicator(row[1], EC8, 'siteClassEC8')
+            _read_site_indicator(row, EC8, 'siteClassEC8')
         site_description_obj.bedrock_depth = \
-            _read_site_indicator(row[1], BedrockDepth, 'bedrockDepth')
+            _read_site_indicator(row, BedrockDepth, 'bedrockDepth')
         site_description_obj.h800 = \
-            _read_site_indicator(row[1], H800, 'h800')
+            _read_site_indicator(row, H800, 'h800')
         site_description_obj.geological_unit = \
-            _read_site_indicator(row[1], GeologicalUnit, 'geologicalUnit')
+            _read_site_indicator(row, GeologicalUnit, 'geologicalUnit')
         
         site_description_dict[siteID] = site_description_obj
 
@@ -410,6 +437,9 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
     Return a dictionary of Analysis objects for all sites.
 
     Dictionary key is the siteID.
+    Analysis rows can be skipped only when ``skip_invalid_rows`` is true.
+    The public CSV/Excel importers pass ``False`` so malformed analysis rows
+    stop import.
 
     :type df_analysis: :class:`pandas.DataFrame`, required
     :param df_analysis: Dataframe with analysis metadata for all sites
@@ -420,15 +450,19 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
     :return: A dictionary of Analysis objects. Dictionary keys are the unique
         SiteIDs.
     """
+    required_columns = ("siteID", "analysisID", "siteDescriptionID")
+    _require_dataframe_columns(
+        df_analysis, required_columns, "Analysis metadata")
+
     analysis_dict = defaultdict(list)
 
-    for row in df_analysis.iterrows():
+    for index, row in df_analysis.iterrows():
 
         # TODOs What if they don't provide the IDs in the csv file??
         #
-        siteID = _read_cell(row[1], "siteID")
-        analysisID = _read_cell(row[1], "analysisID")
-        site_descriptionID = _read_cell(row[1], "siteDescriptionID")
+        siteID = _read_cell(row, "siteID")
+        analysisID = _read_cell(row, "analysisID")
+        site_descriptionID = _read_cell(row, "siteDescriptionID")
         
         if siteID and analysisID and site_descriptionID:
             analysis_obj = Analysis(
@@ -437,18 +471,18 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
                 
             # Go on reading the site characterization indicators
             analysis_obj.resonance_frequency = _read_site_indicator(
-                row[1], ResonanceFrequency, 'resonanceFrequency')
+                row, ResonanceFrequency, 'resonanceFrequency')
             analysis_obj.velocity_s30 = _read_site_indicator(
-                row[1], VelocityS30, 'velocityS30')
+                row, VelocityS30, 'velocityS30')
             analysis_obj.velocity_profile_set = _read_site_indicator(
-                row[1], VelocityProfileSet, 'velocityProfileSet')
+                row, VelocityProfileSet, 'velocityProfileSet')
             
             analysis_obj.spt_logs_count = \
-                _read_cell(row[1], "sptLogsCount")
+                _read_cell(row, "sptLogsCount")
             analysis_obj.cpt_logs_count = \
-                _read_cell(row[1], "cptLogsCount")
+                _read_cell(row, "cptLogsCount")
             analysis_obj.borehole_logs_count = \
-                _read_cell(row[1], "boreholeLogsCount")
+                _read_cell(row, "boreholeLogsCount")
            
             # Read Velocity Profiles of Analysis
             #
@@ -469,8 +503,9 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
                               "skipped.", UserWarning)
                 continue
             raise SiteXMLImportError(
-                "Analysis metadata is missing required siteID, analysisID or "
-                "siteDescriptionID values. Abording further processing."
+                f"Analysis metadata row {index} is missing required "
+                "siteID, analysisID or siteDescriptionID values. "
+                "Abording further processing."
             )
     
     return analysis_dict
@@ -479,6 +514,10 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
 def _read_velocity_profiles_for_analysis(df_vp, analysis_id):
     """
     Return a list of VelocityProfile objects for a given analysisID.
+
+    Velocity-profile rows are not skipped. A malformed layer would make the
+    containing velocity profile ambiguous, so required columns and values are
+    validated before this reader groups rows into profiles.
 
     :type df_vp: :class:`pandas.DataFrame`, required
     :param df_vp: Dataframe of velocity profiles for a single site
@@ -509,16 +548,18 @@ def _read_velocity_profile(rows):
     :param rows: A group of dataframe rows
     :rtype: :class:`~obspy.io.sitexml.core.VelocityProfile`
     """
-    rows = rows.sort_values("layerCount")
+    if "layerCount" in rows.columns:
+        rows = rows.sort_values("layerCount")
     layer_objects = []
 
     for idx, row in rows.iterrows():
 
         density = _read_value_with_uncertainty(row, "density")        
         velP = _read_value_with_uncertainty(row, "velocityP")
-        velS = _read_value_with_uncertainty(row, "velocityS")
+        velS = _read_value_with_uncertainty(row, "velocityS", required=True)
         
-        top_depth = _read_value_with_uncertainty(row, "layerTopDepth")
+        top_depth = _read_value_with_uncertainty(
+            row, "layerTopDepth", required=True)
         bottom_depth = _read_value_with_uncertainty(row, "layerBottomDepth")
 
         layer_obj = VelocityProfileData(
@@ -542,7 +583,6 @@ def _read_site_indicator(df_row, cls, indicator):
 
     :rtype: :class:`~obspy.io.sitexml.core.SiteIndicator` or None
     """
-    
     if indicator != "velocityProfileSet":
         value_column = indicator + '_value'
         if value_column not in df_row or _empty_value(df_row[value_column]):
@@ -674,8 +714,24 @@ def _import_velocity_profiles(path, kind=None, delim=';'):
         raise SiteXMLIOError(f"Velocity-profile path does not exist: {path_str}")
 
     if not df.empty:
+        _validate_velocity_profile_dataframe(df, path_str)
         return {site_id: group for site_id, group in df.groupby("siteID")}
     return None
+
+
+def _validate_velocity_profile_dataframe(df, source):
+    """
+    Validate required velocity-profile columns and row values.
+    """
+    required_columns = (
+        "siteID", "analysisID", "velocityProfileID",
+        "velocityS_value", "layerTopDepth_value")
+    _require_dataframe_columns(
+        df, required_columns, f"Velocity-profile metadata in {source}")
+    for index, row in df.iterrows():
+        _require_row_values(
+            row, required_columns,
+            f"Velocity-profile metadata row {index} in {source}")
 
 
 def _read_velocity_profile_csv_file(file_path, delim=';'):
@@ -750,18 +806,28 @@ def _read_external_references(df_row, indicator):
         return [ExternalReference(uri=uri, description=description)]
     return None
 
-def _read_value_with_uncertainty(row, name):
+def _read_value_with_uncertainty(row, name, required=False):
     """
     Return a ValueWithUncertainty read from ``<name>_value`` columns.
 
     :rtype: :class:`~obspy.io.sitexml.core.ValueWithUncertainty` or None
     """
 
-    metric = ValueWithUncertainty(row[name+"_value"]) \
-        if not _empty_value(row[name+"_value"]) else None
+    value_column = name + "_value"
+    uncertainty_column = name + "_uncertainty"
+    value = _read_cell(row, value_column)
+    if value is None:
+        if required:
+            raise SiteXMLImportError(
+                f"Velocity-profile metadata is missing required value: "
+                f"{value_column}")
+        return None
+
+    metric = ValueWithUncertainty(value)
     
-    if metric and not _empty_value(row[name+"_uncertainty"]):
-        metric.uncertainty = row[name+"_uncertainty"]
+    uncertainty = _read_cell(row, uncertainty_column)
+    if uncertainty is not None:
+        metric.uncertainty = uncertainty
 
     return metric
 

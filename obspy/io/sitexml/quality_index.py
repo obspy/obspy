@@ -358,7 +358,9 @@ def apply_quality_index_dataframe(sera_site_dict, df_quality_index):
     for example after custom loading, cleaning, or programmatic construction.
     The input dataframe is not stored on the SiteXML objects. Q_Index1 criteria
     and Q_Index3 consistency values are used immediately to calculate indicator
-    quality indexes and overall quality index.
+    quality indexes and overall quality index. The ``siteID`` column is
+    required. Rows with empty ``siteID`` values or unknown site IDs are skipped
+    with a warning because quality-index metadata is optional enrichment.
 
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
@@ -368,12 +370,17 @@ def apply_quality_index_dataframe(sera_site_dict, df_quality_index):
     :rtype: dict
     :return: The input ``sera_site_dict`` after applying calculated values.
     """
-    for _, row in df_quality_index.iterrows():
+    from .tabular import _read_cell, _require_dataframe_columns
+
+    _require_dataframe_columns(
+        df_quality_index, ("siteID",), "Quality-index metadata")
+
+    for index, row in df_quality_index.iterrows():
         site_id = _read_cell(row, "siteID")
         if site_id is None:
             warnings.warn(
-                "Missing siteID value. Processing of quality-index row will "
-                "be skipped.",
+                f"Quality-index metadata row {index} is missing siteID value. "
+                "Processing of quality-index row will be skipped.",
                 UserWarning)
             continue
         if site_id not in sera_site_dict:
@@ -402,7 +409,7 @@ def apply_quality_index_dataframe(sera_site_dict, df_quality_index):
             has_quality_input = True
 
         q3_values = {
-            name: _read_quality_index_consistency(row, name)
+            name: _read_quality_index_consistency(row, name, _read_cell)
             for name in _QUALITY_INDEX3_COLUMNS
         }
         if any(value is not None for value in q3_values.values()):
@@ -477,13 +484,13 @@ def apply_quality_index_excel(
     return apply_quality_index_dataframe(sera_site_dict, df_quality_index)
 
 
-def _read_quality_index_consistency(row, name):
+def _read_quality_index_consistency(row, name, read_cell):
     """
     Return one Q_Index3 consistency value from a tabular quality-index row.
 
     :rtype: int or None
     """
-    value = _read_cell(row, name)
+    value = read_cell(row, name)
     if value is None:
         return None
     if isinstance(value, str):
@@ -499,31 +506,3 @@ def _read_quality_index_consistency(row, name):
             f"Q_Index3 consistency value {name!r} must be 0 or 1."
         )
     return int(value)
-
-
-def _read_cell(df_row, argument):
-    """
-    Return a non-empty cell value from a quality-index row.
-
-    :rtype: object or None
-    """
-    if argument in df_row and not _empty_value(df_row[argument]):
-        return df_row[argument]
-    return None
-
-
-def _empty_value(value):
-    """
-    Return whether a tabular cell should be treated as missing.
-
-    This intentionally mirrors ``tabular._empty_value()`` locally. Keeping it
-    here avoids making the lower-level ``util.py`` module depend on
-    pandas/tabular import semantics solely for quality-index sidecar parsing.
-
-    :rtype: bool
-    """
-    if pd.isna(value):
-        return True
-    if isinstance(value, str) and not value.strip():
-        return True
-    return False
