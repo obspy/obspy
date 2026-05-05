@@ -163,7 +163,6 @@ from collections import namedtuple
 from glob import glob
 from multiprocessing import Pool
 from os.path import relpath
-from sqlalchemy import orm
 from sqlalchemy.exc import ResourceClosedError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
@@ -224,11 +223,6 @@ class Client(object):
         # Create and configure the data extraction
         self.data_extractor = _MiniseedDataExtractor(
             dp_replace=datapath_replace)
-
-    def __del__(self):
-        if hasattr(self, 'request_handler') and \
-                hasattr(self.request_handler, 'engine'):
-            self.request_handler.engine.dispose()
 
     def get_waveforms(self, network, station, location,
                       channel, starttime, endtime, merge=-1):
@@ -953,10 +947,6 @@ class Indexer(object):
             raise OSError("Root path `{}` does not exists."
                           .format(self.root_path))
 
-    def __del__(self):
-        if hasattr(self, 'request_handler'):
-            self.request_handler.engine.dispose()
-
     def run(self, build_summary=True, relative_paths=False, reindex=False):
         """
         Execute the file discovery and indexing.
@@ -1207,12 +1197,6 @@ class TSIndexDatabaseHandler(object):
 
         self.sqlite = True if 'sqlite' in self.engine.dialect.name.lower() \
             else False
-
-    def __del__(self):
-        if hasattr(self, 'session') and isinstance(self.session, orm.Session):
-            self.session.close()
-        if hasattr(self, 'engine'):
-            self.engine.dispose()
 
     def get_tsindex_summary_cte(self):
         """
