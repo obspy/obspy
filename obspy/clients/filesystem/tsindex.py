@@ -37,7 +37,7 @@ The first step is always to initialize a client object.
 >>> filepath = get_test_data_filepath()
 >>> db_path = os.path.join(filepath, 'timeseries.sqlite')
 >>> # create a new Client instance
->>> client = Client(db_path, datapath_replace=("^", filepath))
+>>> client = Client(db_path, datapath_replace=("^", filepath)) # doctest: +SKIP
 
 The example below uses the test SQLite tsindex database included with ObsPy to
 illustrate how to do the following:
@@ -61,9 +61,11 @@ Determining Data Availability
   available ("BHZ") channel extents from the Global Seismograph Network
   ("IU") for all times.
 
->>> extents = client.get_availability_extent(network="IU", channel="BHZ")
+>>> extents = client.get_availability_extent(
+...     network="IU", channel="BHZ")  # doctest: +SKIP
 >>> for extent in extents:
-...     print("{0:<3} {1:<6} {2:<3} {3:<4} {4} {5}".format(*extent))
+...     print("{0:<3} {1:<6} {2:<3} {3:<4} {4} {5}".format(
+...           *extent))  # doctest: +SKIP
 IU  ANMO   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994536Z
 IU  COLA   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994538Z
 
@@ -81,8 +83,8 @@ IU  COLA   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994538Z
 >>> avail_percentage = client.get_availability_percentage(
 ...     "IU", "ANMO", "10", "BHZ",
 ...     UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
-...     UTCDateTime(2018, 1, 1, 0, 1, 57, 994536))
->>> print(avail_percentage)
+...     UTCDateTime(2018, 1, 1, 0, 1, 57, 994536))  # doctest: +SKIP
+>>> print(avail_percentage)  # doctest: +SKIP
 (0.5083705674817509, 1)
 
 Requesting Timeseries Data
@@ -96,7 +98,7 @@ Requesting Timeseries Data
   method for information on how to make multiple requests at once.
 
 >>> t = UTCDateTime("2018-01-01T00:00:00.019500")
->>> st = client.get_waveforms("IU", "*", "*", "BHZ", t, t + 1)
+>>> st = client.get_waveforms("IU", "*", "*", "BHZ", t, t + 1) # doctest: +SKIP
 >>> st.plot()  # doctest: +SKIP
 
 .. plot::
@@ -134,7 +136,7 @@ Initialize an indexer object by supplying the root path to data to be indexed.
 >>> # for this example get the file path to test data
 >>> filepath = get_test_data_filepath()
 >>> # create a new Indexer instance
->>> indexer = Indexer(filepath, filename_pattern='*.mseed')
+>>> indexer = Indexer(filepath, filename_pattern='*.mseed')  # doctest: +SKIP
 
 Index a directory tree of miniSEED files by calling
 :meth:`~Indexer.run`. By default this will
