@@ -802,8 +802,8 @@ class TestTSIndexDatabaseHandler():
         db_path = os.path.join(filepath, 'timeseries.sqlite')
         # supply an existing session
         engine = sa.create_engine("sqlite:///{}".format(db_path))
-        session = sessionmaker(bind=engine)
-        request_handler = TSIndexDatabaseHandler(session=session)
+        Session = sessionmaker(bind=engine)
+        request_handler = TSIndexDatabaseHandler(session=Session)
 
         ts_summary_cte = request_handler.get_tsindex_summary_cte()
 
@@ -817,7 +817,8 @@ class TestTSIndexDatabaseHandler():
              ("IU", "COLA", "10", "BHZ",
               "2018-01-01T00:00:00.019500",
               "2018-01-01T00:00:59.994538")]
-        query_results = (session().query(ts_summary_cte))
+        with Session() as session:
+            query_results = session.query(ts_summary_cte)
         for idx, r in enumerate(query_results):
             result = r[:6]  # ignore updt date
             assert result == expected_ts_summary_data[idx]
