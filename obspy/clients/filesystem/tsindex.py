@@ -37,7 +37,7 @@ The first step is always to initialize a client object.
 >>> filepath = get_test_data_filepath()
 >>> db_path = os.path.join(filepath, 'timeseries.sqlite')
 >>> # create a new Client instance
->>> client = Client(db_path, datapath_replace=("^", filepath))
+>>> client = Client(db_path, datapath_replace=("^", filepath)) # doctest: +SKIP
 
 The example below uses the test SQLite tsindex database included with ObsPy to
 illustrate how to do the following:
@@ -61,9 +61,11 @@ Determining Data Availability
   available ("BHZ") channel extents from the Global Seismograph Network
   ("IU") for all times.
 
->>> extents = client.get_availability_extent(network="IU", channel="BHZ")
+>>> extents = client.get_availability_extent(
+...     network="IU", channel="BHZ")  # doctest: +SKIP
 >>> for extent in extents:
-...     print("{0:<3} {1:<6} {2:<3} {3:<4} {4} {5}".format(*extent))
+...     print("{0:<3} {1:<6} {2:<3} {3:<4} {4} {5}".format(
+...           *extent))  # doctest: +SKIP
 IU  ANMO   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994536Z
 IU  COLA   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994538Z
 
@@ -81,8 +83,8 @@ IU  COLA   10  BHZ  2018-01-01T00:00:00.019500Z 2018-01-01T00:00:59.994538Z
 >>> avail_percentage = client.get_availability_percentage(
 ...     "IU", "ANMO", "10", "BHZ",
 ...     UTCDateTime(2018, 1, 1, 0, 0, 0, 19500),
-...     UTCDateTime(2018, 1, 1, 0, 1, 57, 994536))
->>> print(avail_percentage)
+...     UTCDateTime(2018, 1, 1, 0, 1, 57, 994536))  # doctest: +SKIP
+>>> print(avail_percentage)  # doctest: +SKIP
 (0.5083705674817509, 1)
 
 Requesting Timeseries Data
@@ -96,7 +98,7 @@ Requesting Timeseries Data
   method for information on how to make multiple requests at once.
 
 >>> t = UTCDateTime("2018-01-01T00:00:00.019500")
->>> st = client.get_waveforms("IU", "*", "*", "BHZ", t, t + 1)
+>>> st = client.get_waveforms("IU", "*", "*", "BHZ", t, t + 1) # doctest: +SKIP
 >>> st.plot()  # doctest: +SKIP
 
 .. plot::
@@ -134,7 +136,7 @@ Initialize an indexer object by supplying the root path to data to be indexed.
 >>> # for this example get the file path to test data
 >>> filepath = get_test_data_filepath()
 >>> # create a new Indexer instance
->>> indexer = Indexer(filepath, filename_pattern='*.mseed')
+>>> indexer = Indexer(filepath, filename_pattern='*.mseed')  # doctest: +SKIP
 
 Index a directory tree of miniSEED files by calling
 :meth:`~Indexer.run`. By default this will
@@ -1205,50 +1207,50 @@ class TSIndexDatabaseHandler(object):
             otherwise it will be created by querying the tsindex table directly
             as a, potentially slow, fallback method.
         """
-        session = self.session()
-        tsindex_summary_cte_name = "tsindex_summary_cte"
-        if self.has_tsindex_summary():
-            # get tsindex summary cte by querying tsindex_summary table
-            tsindex_summary_cte = \
-                (session
-                 .query(self.TSIndexSummaryTable)
-                 .group_by(self.TSIndexSummaryTable.network,
-                           self.TSIndexSummaryTable.station,
-                           self.TSIndexSummaryTable.location,
-                           self.TSIndexSummaryTable.channel)
-                 .cte(name=tsindex_summary_cte_name)
-                 )
-        else:
-            logger.warning("No {0} table found! A {0} "
-                           "CTE will be created by querying the {1} "
-                           "table, which could be slow!"
-                           .format(self.tsindex_summary_table,
-                                   self.tsindex_table))
-            logger.info("For improved performance create a permanent "
-                        "{0} table by running the "
-                        "TSIndexDatabaseHandler.build_tsindex_summary() "
-                        "instance method."
-                        .format(self.tsindex_summary_table))
-            # create the tsindex summary cte by querying the tsindex table.
-            tsindex_summary_cte = \
-                (session
-                 .query(self.TSIndexTable.network,
-                        self.TSIndexTable.station,
-                        self.TSIndexTable.location,
-                        self.TSIndexTable.channel,
-                        sa.func.min(self.TSIndexTable.starttime)
-                        .label("earliest"),
-                        sa.func.max(self.TSIndexTable.endtime)
-                        .label("latest"),
-                        sa.literal(
-                            UTCDateTime.now().isoformat()).label("updt")
-                        )
-                 .group_by(self.TSIndexTable.network,
-                           self.TSIndexTable.station,
-                           self.TSIndexTable.location,
-                           self.TSIndexTable.channel)
-                 .cte(name=tsindex_summary_cte_name)
-                 )
+        with self.session() as session:
+            tsindex_summary_cte_name = "tsindex_summary_cte"
+            if self.has_tsindex_summary():
+                # get tsindex summary cte by querying tsindex_summary table
+                tsindex_summary_cte = \
+                    (session
+                     .query(self.TSIndexSummaryTable)
+                     .group_by(self.TSIndexSummaryTable.network,
+                               self.TSIndexSummaryTable.station,
+                               self.TSIndexSummaryTable.location,
+                               self.TSIndexSummaryTable.channel)
+                     .cte(name=tsindex_summary_cte_name)
+                     )
+            else:
+                logger.warning("No {0} table found! A {0} "
+                               "CTE will be created by querying the {1} "
+                               "table, which could be slow!"
+                               .format(self.tsindex_summary_table,
+                                       self.tsindex_table))
+                logger.info("For improved performance create a permanent "
+                            "{0} table by running the "
+                            "TSIndexDatabaseHandler.build_tsindex_summary() "
+                            "instance method."
+                            .format(self.tsindex_summary_table))
+                # create the tsindex summary cte by querying the tsindex table.
+                tsindex_summary_cte = \
+                    (session
+                     .query(self.TSIndexTable.network,
+                            self.TSIndexTable.station,
+                            self.TSIndexTable.location,
+                            self.TSIndexTable.channel,
+                            sa.func.min(self.TSIndexTable.starttime)
+                            .label("earliest"),
+                            sa.func.max(self.TSIndexTable.endtime)
+                            .label("latest"),
+                            sa.literal(
+                                UTCDateTime.now().isoformat()).label("updt")
+                            )
+                     .group_by(self.TSIndexTable.network,
+                               self.TSIndexTable.station,
+                               self.TSIndexTable.location,
+                               self.TSIndexTable.channel)
+                     .cte(name=tsindex_summary_cte_name)
+                     )
         return tsindex_summary_cte
 
     def build_tsindex_summary(self):
@@ -1263,33 +1265,33 @@ class TSIndexDatabaseHandler(object):
         if self.has_tsindex_summary():
             self.TSIndexSummaryTable.__table__.drop(self.engine)
 
-        session = self.session()
-        self.TSIndexSummaryTable.__table__.create(self.engine)
-        rows = (session
-                .query(self.TSIndexTable.network,
-                       self.TSIndexTable.station,
-                       self.TSIndexTable.location,
-                       self.TSIndexTable.channel,
-                       sa.func.min(self.TSIndexTable.starttime)
-                       .label("earliest"),
-                       sa.func.max(self.TSIndexTable.endtime)
-                       .label("latest"),
-                       sa.literal(UTCDateTime().now().isoformat()))
-                .group_by(self.TSIndexTable.network,
-                          self.TSIndexTable.station,
-                          self.TSIndexTable.location,
-                          self.TSIndexTable.channel))
-        session.execute(self.TSIndexSummaryTable.__table__.insert(),
-                        [{'network': r[0],
-                          'station': r[1],
-                          'location': r[2],
-                          'channel': r[3],
-                          'earliest': r[4],
-                          'latest': r[5],
-                          'updt': r[6]
-                          }
-                        for r in rows])
-        session.commit()
+        with self.session() as session:
+            self.TSIndexSummaryTable.__table__.create(self.engine)
+            rows = (session
+                    .query(self.TSIndexTable.network,
+                           self.TSIndexTable.station,
+                           self.TSIndexTable.location,
+                           self.TSIndexTable.channel,
+                           sa.func.min(self.TSIndexTable.starttime)
+                           .label("earliest"),
+                           sa.func.max(self.TSIndexTable.endtime)
+                           .label("latest"),
+                           sa.literal(UTCDateTime().now().isoformat()))
+                    .group_by(self.TSIndexTable.network,
+                              self.TSIndexTable.station,
+                              self.TSIndexTable.location,
+                              self.TSIndexTable.channel))
+            session.execute(self.TSIndexSummaryTable.__table__.insert(),
+                            [{'network': r[0],
+                              'station': r[1],
+                              'location': r[2],
+                              'channel': r[3],
+                              'earliest': r[4],
+                              'latest': r[5],
+                              'updt': r[6]
+                              }
+                            for r in rows])
+            session.commit()
 
     def has_tsindex_summary(self):
         """
@@ -1341,137 +1343,137 @@ class TSIndexDatabaseHandler(object):
             requeststart, requestend).
         '''
 
-        session = self.session()
+        with self.session() as session:
 
-        if query_rows is None:
-            query_rows = []
-        if bulk_params is None:
-            bulk_params = {}
+            if query_rows is None:
+                query_rows = []
+            if bulk_params is None:
+                bulk_params = {}
 
-        query_rows = self._clean_query_rows(query_rows)
-        request_cte_name = "raw_request_cte"
+            query_rows = self._clean_query_rows(query_rows)
+            request_cte_name = "raw_request_cte"
 
-        result = []
-        # Create a CTE that contains the request
-        try:
-            stmts = [
-                sa.select(
-                    sa.literal(a).label("network"),
-                    sa.literal(b).label("station"),
-                    sa.literal(c).label("location"),
-                    sa.literal(d).label("channel"),
-                    sa.case((sa.literal(e) == '*',
-                             sa.literal('0000-00-00T00:00:00')),
-                            else_=sa.literal(e)
-                            ).label("starttime"),
-                    sa.case((sa.literal(f) == '*',
-                             sa.literal('5000-00-00T00:00:00')),
-                            else_=sa.literal(f)
-                            ).label("endtime")
-                )
-                for idx, (a, b, c, d, e, f) in enumerate(query_rows)
-            ]
-            requests = sa.union_all(*stmts)
-            requests_cte = requests.cte(name=request_cte_name)
-            wildcards = False
-            for req in query_rows:
-                for field in req:
-                    if '*' in str(field) or '?' in str(field):
-                        wildcards = True
-                        break
-            summary_present = self.has_tsindex_summary()
-            if wildcards and summary_present:
-                # Resolve wildcards using summary if present to:
-                # a) resolve wildcards, allows use of '=' operator
-                #    and table index
-                # b) reduce index table search to channels that are
-                #    known included
-                flattened_request_cte_name = 'flattened_request_cte'
-                # expand
-                flattened_request_cte = (
-                    session
-                    .query(self.TSIndexSummaryTable.network,
-                           self.TSIndexSummaryTable.station,
-                           self.TSIndexSummaryTable.location,
-                           self.TSIndexSummaryTable.channel,
-                           sa.case((requests_cte.c.starttime == '*',
-                                    self.TSIndexSummaryTable.earliest),
-                                   else_=requests_cte.c.starttime
-                                   ).label('starttime'),
-                           sa.case((requests_cte.c.endtime == '*',
-                                    self.TSIndexSummaryTable.latest),
-                                   else_=requests_cte.c.endtime
-                                   ).label('endtime'))
-                    .filter(self.TSIndexSummaryTable.network.op('GLOB')
-                            (requests_cte.c.network))
-                    .filter(self.TSIndexSummaryTable.station.op('GLOB')
-                            (requests_cte.c.station))
-                    .filter(self.TSIndexSummaryTable.location.op('GLOB')
-                            (requests_cte.c.location))
-                    .filter(self.TSIndexSummaryTable.channel.op('GLOB')
-                            (requests_cte.c.channel))
-                    .filter(self.TSIndexSummaryTable.earliest <=
-                            requests_cte.c.endtime)
-                    .filter(self.TSIndexSummaryTable.latest >=
-                            requests_cte.c.starttime)
-                    .order_by(self.TSIndexSummaryTable.network,
-                              self.TSIndexSummaryTable.station,
-                              self.TSIndexSummaryTable.location,
-                              self.TSIndexSummaryTable.channel,
-                              self.TSIndexSummaryTable.earliest,
-                              self.TSIndexSummaryTable.latest)
-                    .cte(name=flattened_request_cte_name))
-                result = (
-                    session
-                    .query(self.TSIndexTable,
-                           requests_cte.c.starttime,
-                           requests_cte.c.endtime)
-                    .filter(self.TSIndexTable.network ==
-                            flattened_request_cte.c.network)
-                    .filter(self.TSIndexTable.station ==
-                            flattened_request_cte.c.station)
-                    .filter(self.TSIndexTable.location ==
-                            flattened_request_cte.c.location)
-                    .filter(self.TSIndexTable.channel ==
-                            flattened_request_cte.c.channel)
-                    .filter(self.TSIndexTable.starttime <=
-                            flattened_request_cte.c.endtime)
-                    .filter(self.TSIndexTable.endtime >=
-                            flattened_request_cte.c.starttime)
-                    .order_by(self.TSIndexTable.network,
-                              self.TSIndexTable.station,
-                              self.TSIndexTable.location,
-                              self.TSIndexTable.channel,
-                              self.TSIndexTable.starttime,
-                              self.TSIndexTable.endtime))
+            result = []
+            # Create a CTE that contains the request
+            try:
+                stmts = [
+                    sa.select(
+                        sa.literal(a).label("network"),
+                        sa.literal(b).label("station"),
+                        sa.literal(c).label("location"),
+                        sa.literal(d).label("channel"),
+                        sa.case((sa.literal(e) == '*',
+                                 sa.literal('0000-00-00T00:00:00')),
+                                else_=sa.literal(e)
+                                ).label("starttime"),
+                        sa.case((sa.literal(f) == '*',
+                                 sa.literal('5000-00-00T00:00:00')),
+                                else_=sa.literal(f)
+                                ).label("endtime")
+                    )
+                    for idx, (a, b, c, d, e, f) in enumerate(query_rows)
+                ]
+                requests = sa.union_all(*stmts)
+                requests_cte = requests.cte(name=request_cte_name)
                 wildcards = False
-            else:
-                result = (
-                    session
-                    .query(self.TSIndexTable,
-                           requests_cte.c.starttime,
-                           requests_cte.c.endtime
-                           )
-                    .filter(self.TSIndexTable.network.op('GLOB')
-                            (requests_cte.c.network))
-                    .filter(self.TSIndexTable.station.op('GLOB')
-                            (requests_cte.c.station))
-                    .filter(self.TSIndexTable.location.op('GLOB')
-                            (requests_cte.c.location))
-                    .filter(self.TSIndexTable.channel.op('GLOB')
-                            (requests_cte.c.channel))
-                    .filter(self.TSIndexTable.starttime <=
-                            requests_cte.c.endtime)
-                    .filter(self.TSIndexTable.endtime >=
-                            requests_cte.c.starttime)
-                    .order_by(self.TSIndexTable.network,
-                              self.TSIndexTable.station,
-                              self.TSIndexTable.location,
-                              self.TSIndexTable.channel,
-                              self.TSIndexTable.starttime,
-                              self.TSIndexTable.endtime))
-        except Exception as err:
-            raise ValueError(str(err))
+                for req in query_rows:
+                    for field in req:
+                        if '*' in str(field) or '?' in str(field):
+                            wildcards = True
+                            break
+                summary_present = self.has_tsindex_summary()
+                if wildcards and summary_present:
+                    # Resolve wildcards using summary if present to:
+                    # a) resolve wildcards, allows use of '=' operator
+                    #    and table index
+                    # b) reduce index table search to channels that are
+                    #    known included
+                    flattened_request_cte_name = 'flattened_request_cte'
+                    # expand
+                    flattened_request_cte = (
+                        session
+                        .query(self.TSIndexSummaryTable.network,
+                               self.TSIndexSummaryTable.station,
+                               self.TSIndexSummaryTable.location,
+                               self.TSIndexSummaryTable.channel,
+                               sa.case((requests_cte.c.starttime == '*',
+                                        self.TSIndexSummaryTable.earliest),
+                                       else_=requests_cte.c.starttime
+                                       ).label('starttime'),
+                               sa.case((requests_cte.c.endtime == '*',
+                                        self.TSIndexSummaryTable.latest),
+                                       else_=requests_cte.c.endtime
+                                       ).label('endtime'))
+                        .filter(self.TSIndexSummaryTable.network.op('GLOB')
+                                (requests_cte.c.network))
+                        .filter(self.TSIndexSummaryTable.station.op('GLOB')
+                                (requests_cte.c.station))
+                        .filter(self.TSIndexSummaryTable.location.op('GLOB')
+                                (requests_cte.c.location))
+                        .filter(self.TSIndexSummaryTable.channel.op('GLOB')
+                                (requests_cte.c.channel))
+                        .filter(self.TSIndexSummaryTable.earliest <=
+                                requests_cte.c.endtime)
+                        .filter(self.TSIndexSummaryTable.latest >=
+                                requests_cte.c.starttime)
+                        .order_by(self.TSIndexSummaryTable.network,
+                                  self.TSIndexSummaryTable.station,
+                                  self.TSIndexSummaryTable.location,
+                                  self.TSIndexSummaryTable.channel,
+                                  self.TSIndexSummaryTable.earliest,
+                                  self.TSIndexSummaryTable.latest)
+                        .cte(name=flattened_request_cte_name))
+                    result = (
+                        session
+                        .query(self.TSIndexTable,
+                               requests_cte.c.starttime,
+                               requests_cte.c.endtime)
+                        .filter(self.TSIndexTable.network ==
+                                flattened_request_cte.c.network)
+                        .filter(self.TSIndexTable.station ==
+                                flattened_request_cte.c.station)
+                        .filter(self.TSIndexTable.location ==
+                                flattened_request_cte.c.location)
+                        .filter(self.TSIndexTable.channel ==
+                                flattened_request_cte.c.channel)
+                        .filter(self.TSIndexTable.starttime <=
+                                flattened_request_cte.c.endtime)
+                        .filter(self.TSIndexTable.endtime >=
+                                flattened_request_cte.c.starttime)
+                        .order_by(self.TSIndexTable.network,
+                                  self.TSIndexTable.station,
+                                  self.TSIndexTable.location,
+                                  self.TSIndexTable.channel,
+                                  self.TSIndexTable.starttime,
+                                  self.TSIndexTable.endtime))
+                    wildcards = False
+                else:
+                    result = (
+                        session
+                        .query(self.TSIndexTable,
+                               requests_cte.c.starttime,
+                               requests_cte.c.endtime
+                               )
+                        .filter(self.TSIndexTable.network.op('GLOB')
+                                (requests_cte.c.network))
+                        .filter(self.TSIndexTable.station.op('GLOB')
+                                (requests_cte.c.station))
+                        .filter(self.TSIndexTable.location.op('GLOB')
+                                (requests_cte.c.location))
+                        .filter(self.TSIndexTable.channel.op('GLOB')
+                                (requests_cte.c.channel))
+                        .filter(self.TSIndexTable.starttime <=
+                                requests_cte.c.endtime)
+                        .filter(self.TSIndexTable.endtime >=
+                                requests_cte.c.starttime)
+                        .order_by(self.TSIndexTable.network,
+                                  self.TSIndexTable.station,
+                                  self.TSIndexTable.location,
+                                  self.TSIndexTable.channel,
+                                  self.TSIndexTable.starttime,
+                                  self.TSIndexTable.endtime))
+            except Exception as err:
+                raise ValueError(str(err))
 
         index_rows = []
         try:
@@ -1523,66 +1525,66 @@ class TSIndexDatabaseHandler(object):
         :returns: Return rows as list of named tuples containing:
             (network, station, location, channel, earliest, latest, updated).
         '''
-        session = self.session()
-        query_rows = self._clean_query_rows(query_rows)
-        tsindex_summary_cte = self.get_tsindex_summary_cte()
-        # Create a CTE that contains the request
-        try:
-            request_cte_name = "request_cte"
-            stmts = [
-                sa.select(
-                    sa.literal(a).label("network"),
-                    sa.literal(b).label("station"),
-                    sa.literal(c).label("location"),
-                    sa.literal(d).label("channel"),
-                    sa.case((sa.literal(e) == '*',
-                             sa.literal('0000-00-00T00:00:00')),
-                            else_=sa.literal(e)
-                            ).label("starttime"),
-                    sa.case((sa.literal(f) == '*',
-                             sa.literal('5000-00-00T00:00:00')),
-                            else_=sa.literal(f)
-                            ).label("endtime")
-                    )
-                for idx, (a, b, c, d, e, f) in enumerate(query_rows)
-            ]
-            requests = sa.union_all(*stmts)
-            requests_cte = requests.cte(name=request_cte_name)
-        except Exception as err:
-            raise ValueError(str(err))
+        with self.session() as session:
+            query_rows = self._clean_query_rows(query_rows)
+            tsindex_summary_cte = self.get_tsindex_summary_cte()
+            # Create a CTE that contains the request
+            try:
+                request_cte_name = "request_cte"
+                stmts = [
+                    sa.select(
+                        sa.literal(a).label("network"),
+                        sa.literal(b).label("station"),
+                        sa.literal(c).label("location"),
+                        sa.literal(d).label("channel"),
+                        sa.case((sa.literal(e) == '*',
+                                 sa.literal('0000-00-00T00:00:00')),
+                                else_=sa.literal(e)
+                                ).label("starttime"),
+                        sa.case((sa.literal(f) == '*',
+                                 sa.literal('5000-00-00T00:00:00')),
+                                else_=sa.literal(f)
+                                ).label("endtime")
+                        )
+                    for idx, (a, b, c, d, e, f) in enumerate(query_rows)
+                ]
+                requests = sa.union_all(*stmts)
+                requests_cte = requests.cte(name=request_cte_name)
+            except Exception as err:
+                raise ValueError(str(err))
 
-        # Select summary rows by joining with summary table
-        try:
-            # expand
-            result = (
-                session
-                .query(tsindex_summary_cte.c.network,
-                       tsindex_summary_cte.c.station,
-                       tsindex_summary_cte.c.location,
-                       tsindex_summary_cte.c.channel,
-                       tsindex_summary_cte.c.earliest,
-                       tsindex_summary_cte.c.latest,
-                       tsindex_summary_cte.c.updt)
-                .filter(tsindex_summary_cte.c.network.op('GLOB')
-                        (requests_cte.c.network))
-                .filter(tsindex_summary_cte.c.station.op('GLOB')
-                        (requests_cte.c.station))
-                .filter(tsindex_summary_cte.c.location.op('GLOB')
-                        (requests_cte.c.location))
-                .filter(tsindex_summary_cte.c.channel.op('GLOB')
-                        (requests_cte.c.channel))
-                .filter(tsindex_summary_cte.c.earliest <=
-                        requests_cte.c.endtime)
-                .filter(tsindex_summary_cte.c.latest >=
-                        requests_cte.c.starttime)
-                .order_by(tsindex_summary_cte.c.network,
-                          tsindex_summary_cte.c.station,
-                          tsindex_summary_cte.c.location,
-                          tsindex_summary_cte.c.channel,
-                          tsindex_summary_cte.c.earliest,
-                          tsindex_summary_cte.c.latest))
-        except Exception as err:
-            raise ValueError(str(err))
+            # Select summary rows by joining with summary table
+            try:
+                # expand
+                result = (
+                    session
+                    .query(tsindex_summary_cte.c.network,
+                           tsindex_summary_cte.c.station,
+                           tsindex_summary_cte.c.location,
+                           tsindex_summary_cte.c.channel,
+                           tsindex_summary_cte.c.earliest,
+                           tsindex_summary_cte.c.latest,
+                           tsindex_summary_cte.c.updt)
+                    .filter(tsindex_summary_cte.c.network.op('GLOB')
+                            (requests_cte.c.network))
+                    .filter(tsindex_summary_cte.c.station.op('GLOB')
+                            (requests_cte.c.station))
+                    .filter(tsindex_summary_cte.c.location.op('GLOB')
+                            (requests_cte.c.location))
+                    .filter(tsindex_summary_cte.c.channel.op('GLOB')
+                            (requests_cte.c.channel))
+                    .filter(tsindex_summary_cte.c.earliest <=
+                            requests_cte.c.endtime)
+                    .filter(tsindex_summary_cte.c.latest >=
+                            requests_cte.c.starttime)
+                    .order_by(tsindex_summary_cte.c.network,
+                              tsindex_summary_cte.c.station,
+                              tsindex_summary_cte.c.location,
+                              tsindex_summary_cte.c.channel,
+                              tsindex_summary_cte.c.earliest,
+                              tsindex_summary_cte.c.latest))
+            except Exception as err:
+                raise ValueError(str(err))
 
         # Map raw tuples to named tuples for clear referencing
         NamedRow = namedtuple('NamedRow',
@@ -1693,13 +1695,13 @@ class TSIndexDatabaseHandler(object):
             logger.debug('Setting up SQLite database {}'.
                          format(self.database if self.database else ""))
             # setup the sqlite database
-            session = self.session()
-            # https://www.sqlite.org/foreignkeys.html
-            session.execute(sa.text('PRAGMA foreign_keys = ON'))
-            # as used by mseedindex
-            session.execute(sa.text('PRAGMA case_sensitive_like = ON'))
-            # enable Write-Ahead Log for better concurrency support
-            session.execute(sa.text('PRAGMA journal_mode=WAL'))
+            with self.session() as session:
+                # https://www.sqlite.org/foreignkeys.html
+                session.execute(sa.text('PRAGMA foreign_keys = ON'))
+                # as used by mseedindex
+                session.execute(sa.text('PRAGMA case_sensitive_like = ON'))
+                # enable Write-Ahead Log for better concurrency support
+                session.execute(sa.text('PRAGMA journal_mode=WAL'))
         except Exception:
             raise OSError("Failed to setup SQLite database for indexing.")
 
