@@ -1956,7 +1956,7 @@ class SERASite(BaseNode):
         :type include_empty: bool, optional
         :param include_empty: Include supported indicator names that are not
             present on the site.
-        :rtype: iterator
+        :return: Yields ``(name, indicator)`` pairs.
         """
         site_description_indicators = (
             ("siteClassEC8", self.site_description.ec8),

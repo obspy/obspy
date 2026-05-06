@@ -61,11 +61,6 @@ Use :func:`~obspy.io.sitexml.sitexml.write_sitexml` to write one
 ``SERASite``. Validation is enabled by default, so schema problems are reported
 before the file is accepted.
 
-When no output path or file-like object is supplied, ObsPy writes the file in
-the current directory using using a default filename pattern. The filename
-contains the same serialization date used for the root ``creationTime``
-metadata, for example ``Site_XX.ABCD_12-01-2026.xml``.
-
 .. code-block:: python
 
     from obspy.io.sitexml.sitexml import write_sitexml
@@ -73,24 +68,475 @@ metadata, for example ``Site_XX.ABCD_12-01-2026.xml``.
     write_sitexml(site, validate=True)
     write_sitexml(site, "./site.xml", validate=True)
 
-SiteXML can also store optional document revision history. Root
-``creationTime`` records when this XML file is generated, while each
+When no output path or file-like object is supplied, ObsPy writes the file in
+the current directory using the default filename pattern described in
+:ref:`sitexml-filenames-and-revision-history` **dated with current date**.
+
+Reading Or Writing Site Dictionaries
+------------------------------------
+
+A directory of SiteXML files can be read as a dictionary keyed by
+``SERASite.resource_id``. The reverse helper writes each site to its default
+SiteXML filename.
+
+.. code-block:: python
+
+    from pathlib import Path
+    from tempfile import TemporaryDirectory
+
+    from obspy.io.sitexml.sitexml import (
+        sitedict_to_sitexml, sitexml_to_sitedict)
+
+    sites = sitexml_to_sitedict(filename)
+
+    with TemporaryDirectory() as tmpdir:
+        sitedict_to_sitexml(sites, tmpdir)
+        print(sorted(Path(tmpdir).glob("*.xml")))
+
+.. _sitexml-filenames-and-revision-history:
+
+SiteXML filenames and revision history
+--------------------------------------
+
+SiteXML filenames identify the site and, for ObsPy generated files, **the
+publication date**. For a station-backed site, the base filename is built
+from ``Site_`` and the ``network.station`` code stored in
+``SiteDescription.station_code``:
+
+.. code-block:: text
+
+    Site_XX.ABCD.xml                    # Default filename - no date
+    Site_XX.ABCD_05-05-2026.xml         # Default filename - publication date
+
+For sites without an associated station code, the base filename is derived from
+the ``SERASite.resource_id`` by replacing non-alphanumeric characters with
+underscores:
+
+.. code-block:: text
+
+    quakeml:example.org/site/001
+    Site_quakeml_example_org_site_001.xml
+    Site_quakeml_example_org_site_001_05-05-2026.xml
+
+Use
+:meth:`~obspy.io.sitexml.core.SERASite.get_sitexml_filename` when you need to
+preview or choose the default filename yourself. If you provide a date, this will
+be appended in the base filename.
+
+.. code-block:: python
+
+    output_file = site.get_sitexml_filename()
+    # Output filename is Site_XX.ABCD.xml 
+
+    output_file = site.get_sitexml_filename("2026-05-02")
+    # Output filename is Site_XX.ABCD_02-05-2026.xml 
+    
+    write_sitexml(site, output_file, validate=True)
+
+.. note::
+
+    The date appended to the filename is the document's publication date. It
+    is not necessarily the date when the site was measured, or
+    characterized.
+
+SiteXML can also store optional document revision history. 
+``SERASite.created`` records when this XML file is generated, while each
 ``Revision.revision_time`` records when the described document revision
 occurred. These times can differ when metadata changes are reviewed, migrated,
-or exported later.
+or exported later. Revision entries can include the update time, a short
+description, the responsible author or institution, a version label, and the
+URL of the previous published version.
 
 .. code-block:: python
 
     site.add_revision(
         revision_time="2026-05-02T12:00:00Z",
         description="Updated velocity profile and quality indexes.",
-        author="ORFEUS",
+        author="Author Name",
         version="2026-05-02",
         previous_version=(
-            "https://example.org/sitexml/"
-            "Site_XX.ABCD_01-05-2026.xml"))
+            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml"))
 
-    write_sitexml(site, validate=True)
+
+Resource Identifiers And Preferred IDs
+--------------------------------------
+
+SiteXML uses resource identifiers to connect the top-level site object with
+its nested site description, analyses, velocity profiles, owner, and contact
+metadata. ObsPy stores these identifiers internally as plain strings. Values
+passed as ObsPy ``ResourceIdentifier`` objects are accepted as input
+conveniences and normalized to their string IDs.
+
+The current schema keeps the identifier pattern intentionally relaxed, but
+project data should still use stable, unique, URI-like identifiers. The bundled
+fixtures use a QuakeML-style convention:
+
+.. code-block:: text
+
+    quakeml:domain.ab/site/001
+    quakeml:domain.ab/site_description/001
+    quakeml:domain.ab/analysis/001
+    quakeml:domain.ab/velocity_profile/001
+    quakeml:domain.ab/siteOwner/001
+
+The part after the final slash usually identifies the object within its
+collection. The path segment before it names the object type. Keeping this
+shape consistent makes the XML and tabular files easier to audit, but the
+important requirement is that every relationship column points to an existing
+object ID.
+
+The most important relationship and preferred-ID columns are:
+
+* ``siteID`` identifies the top-level ``SERASite`` and is used as the key in
+  dictionaries returned by CSV and Excel import.
+* ``siteDescriptionID`` identifies the ``SiteDescription`` object. Analysis
+  rows must repeat the corresponding ``siteDescriptionID`` so the analysis can
+  be checked against the site description it describes.
+* ``analysisID`` identifies one analysis. A site can have multiple analyses.
+* ``velocityProfileID`` identifies one velocity profile under a specific
+  analysis. An analysis can have multiple velocity profiles.
+* ``preferredSiteAnalysisID`` selects the analysis to use when a site has more
+  than one analysis. Quality-index calculations use this preferred analysis
+  when it is present.
+* ``preferredVelocityProfileID`` selects the preferred velocity profile. 
+
+.. important::
+
+    If both preferred IDs are present, the preferred velocity profile must 
+    belong to the preferred analysis.
+
+In Python, use ``SERASite.get_preferred_analysis()`` and
+``SERASite.get_preferred_velocity_profile()`` to retrieve the selected objects.
+If no preferred ID is declared, these methods return the first available
+analysis or velocity profile without changing the missing preferred-ID
+metadata.
+
+Use the object-level helpers when editing these relationships in Python.
+``SERASite.add_analysis(...)`` creates an analysis already tied to the site's
+``site_description.resource_id``. ``SERASite.set_preferred_analysis(...)`` and
+``SERASite.set_preferred_velocity_profile(...)`` validate that the referenced
+objects are attached to the site before updating the preferred IDs.
+
+.. code-block:: python
+
+    from obspy.io.sitexml.core import (
+        ValueWithUncertainty, VelocityProfile, VelocityProfileData)
+
+    analysis = site.add_analysis(
+        resource_id="quakeml:domain.ab/analysis/002",
+        set_preferred=True)
+
+    profile = VelocityProfile(
+        resource_id="quakeml:domain.ab/velocity_profile/003",
+        velocity_profile_data=[
+            VelocityProfileData(
+                velocityS=ValueWithUncertainty(400.0),
+                top_depth=ValueWithUncertainty(0.0))])
+    site.add_velocity_profiles(
+        [profile],
+        analysisID=analysis.resource_id)
+
+    site.set_preferred_analysis(analysis.resource_id)
+    site.set_preferred_velocity_profile(
+        profile.resource_id,
+        analysisID=analysis.resource_id)
+
+Creating A SiteXML File From Scratch
+------------------------------------
+
+Creating a SiteXML file directly in Python is useful when metadata already
+exists in application objects or another structured source. It is not always
+shorter than preparing CSV or Excel input, but it keeps the object graph
+explicit and lets ObsPy validate the result against the bundled SiteXML schema
+when writing.
+
+A minimal SiteXML document needs a top-level
+:class:`~obspy.io.sitexml.core.SERASite`, a required
+:class:`~obspy.io.sitexml.core.SERASiteOwner`, and a required
+:class:`~obspy.io.sitexml.core.SiteDescription`. Analyses and site indicators
+can then be attached as needed. Resource identifiers are ordinary strings, but
+they should be stable and unique, and relationship fields such as
+``site_descriptionID`` and ``preferred_site_analysisID`` must point to existing
+objects.
+
+The following illustration shows the relationships between the most basic 
+SiteXML objects.
+
+.. figure:: /_images/SERASite.png
+
+The following example creates a small SiteXML site with owner/contact
+metadata, location metadata, a few site-description indicators, one analysis,
+and a Vs30 indicator:
+
+.. code-block:: python
+
+    from pathlib import Path
+    from tempfile import TemporaryDirectory
+
+    from obspy.io.sitexml.core import (
+        Analysis, BedrockDepth, EC8, H800, SERASite, SERASiteOwner,
+        SiteDescription, ValueWithUncertainty, VelocityS30)
+    from obspy.io.sitexml.sitexml import validate_sitexml, write_sitexml
+
+    site_owner = SERASiteOwner(
+        owner_codename="EXAMPLE",
+        owner_fullname="Example Site Owner",
+        person_firstname="Ada",
+        person_lastname="Lovelace",
+        person_mbox="ada@example.org")
+
+    site_description = SiteDescription(
+        resource_id="quakeml:example.org/site_description/001",
+        latitude=45.137174,
+        longitude=5.998905,
+        station_code="XX.ABCD",
+        ec8=EC8("B"),
+        bedrock_depth=BedrockDepth(
+            ValueWithUncertainty(40.0, uncertainty=6.0)),
+        h800=H800(ValueWithUncertainty(10.0, uncertainty=1.0)),
+        preferred_site_analysisID="quakeml:example.org/analysis/001")
+
+    analysis = Analysis(
+        resource_id="quakeml:example.org/analysis/001",
+        site_descriptionID="quakeml:example.org/site_description/001",
+        velocity_s30=VelocityS30(
+            ValueWithUncertainty(620.0, uncertainty=18.0),
+            methods=["MASW"]))
+
+    site = SERASite(
+        resource_id="quakeml:example.org/site/001",
+        site_owner=site_owner,
+        site_description=site_description,
+        analysis=[analysis])
+
+    site.add_revision(
+        revision_time="2026-05-02T12:00:00Z",
+        description="Created initial SiteXML document.",
+        author="Some Author (email@example.com)")
+
+    with TemporaryDirectory() as tmpdir:
+        output_file = Path(tmpdir) / "site.xml"
+        write_sitexml(site, output_file, validate=True)
+
+        valid, errors = validate_sitexml(output_file)
+        if not valid:
+            for error in errors:
+                print(error)
+
+The ``add_revision`` call records the initial document version. The 
+revision fields are described in :ref:`sitexml-filenames-and-revision-history`.
+
+When creating or editing a ``SERASite`` object in Python, use
+``SERASite.iter_site_indicators()`` to apply shared metadata to a selected set
+of existing indicators. The iterator yields SiteXML indicator names such as
+``siteClassEC8``, ``bedrockDepth``, and ``h800``.
+
+.. code-block:: python
+
+    from obspy.core.inventory.util import ExternalReference
+    from obspy.io.sitexml.core import LiteratureSource
+
+    literature_source = LiteratureSource(
+        title="Example site characterization report",
+        first_author="Author A.",
+        year="2026")
+    external_references = [
+        ExternalReference(
+            uri="https://example.org/reports/site-characterization.pdf",
+            description="Site characterization report")]
+
+    shared_reference_indicators = {
+        "siteClassEC8", "bedrockDepth", "h800"}
+    for name, indicator in site.iter_site_indicators():
+        if name in shared_reference_indicators:
+            indicator.literature_source = literature_source
+            indicator.external_references = external_references
+
+CSV Input Files
+---------------
+
+CSV import uses one required owner CSV file, one required site-description CSV
+file, plus optional analysis, velocity-profile, and quality-index sidecar
+files. The default delimiter is ``;``.
+
+The importer distinguishes between missing structure and missing optional
+metadata:
+
+.. list-table::
+    :header-rows: 1
+
+    * - Input
+      - Required columns
+      - Row handling
+    * - Owner
+      - ``owner_codename``, ``owner_fullname``, ``person_firstname``,
+        ``person_lastname``, ``person_mbox``
+      - Strict. Missing required columns or values stop import.
+    * - Site description
+      - ``siteID``, ``siteDescriptionID``, ``latitude``, ``longitude``
+      - Strict. These rows create the ``SERASite`` objects.
+    * - Analysis
+      - ``siteID``, ``siteDescriptionID``, ``analysisID``
+      - Strict in the public CSV importer when the file is provided.
+    * - Velocity profile
+      - ``siteID``, ``analysisID``, ``velocityProfileID``,
+        ``velocityS_value``, ``layerTopDepth_value``
+      - Strict. A malformed layer invalidates the velocity profile.
+    * - Quality index
+      - ``siteID``
+      - Lenient by row. Empty or unknown ``siteID`` values are skipped with a
+        warning.
+
+Optional columns may be present with empty cells or omitted entirely. Missing
+optional values are imported as absent metadata.
+
+Site Owner
+~~~~~~~~~
+
+The owner CSV describes the data owner and contact person:
+
+.. code-block:: text
+
+    owner_codename;owner_fullname;person_firstname;person_lastname;person_mbox
+
+Site Description
+~~~~~~~~~~~~~~~
+
+The site-description CSV has one row per site:
+
+.. code-block:: text
+
+    siteID;siteDescriptionID;latitude;longitude
+
+Common optional columns include station association, site indicators, and the
+resource IDs of the preferred analysis and velocity profile:
+
+.. code-block:: text
+
+    station;altitude;siteClassEC8_value;bedrockDepth_value;h800_value
+    geologicalUnit_value;preferredSiteAnalysisID;preferredVelocityProfileID
+
+Station codes use ``network.station`` notation, for example ``XX.ABCD``.
+Bare station codes are rejected because station codes are not globally unique.
+
+Analysis
+~~~~~~~~
+
+The analysis CSV is optional. When provided, each row identifies the site, site
+description, and analysis:
+
+.. code-block:: text
+
+    siteID;siteDescriptionID;analysisID
+
+Analysis rows may also contain indicator columns such as:
+
+.. code-block:: text
+
+    resonanceFrequency_value;resonanceFrequencyMethod1
+    velocityS30_value;velocityS30_uncertainty;velocityS30Method1
+    sptLogsCount;cptLogsCount;boreholeLogsCount
+
+Velocity Profiles
+~~~~~~~~~~~~~~~~~
+
+Velocity-profile input can be one CSV file or a directory of CSV files. Each row
+describes one layer in one velocity profile:
+
+.. code-block:: text
+
+    siteID;analysisID;velocityProfileID;layerCount
+    density_value;density_uncertainty
+    velocityP_value;velocityP_uncertainty
+    velocityS_value;velocityS_uncertainty
+    layerTopDepth_value;layerTopDepth_uncertainty
+    layerBottomDepth_value;layerBottomDepth_uncertainty
+
+``layerCount``, density, ``velocityP``, uncertainty columns, and
+``layerBottomDepth_value`` are optional. A missing bottom depth represents an
+open-ended final layer.
+
+Quality Index Sidecar
+~~~~~~~~~~~~~~~~~~~~~
+
+The optional quality-index CSV is keyed by ``siteID``. All Q_Index1 criteria
+and Q_Index3 consistency columns are optional. Rows with an empty ``siteID``
+value or an unknown site ID are skipped with a warning because quality-index
+inputs are optional enrichment.
+
+Indicator reference metadata uses the indicator name as a prefix. For example,
+``velocityS30_title`` and ``velocityS30_firstAuthor`` create a literature
+source for the Vs30 indicator, while ``velocityS30_uri`` and
+``velocityS30_description`` create an external reference.
+
+.. important::
+
+    The generic CSV and Excel importers **do not generate missing relationship IDs**.
+    For example, they will not guess ``preferredSiteAnalysisID`` or
+    ``preferredVelocityProfileID`` values, because that would hide user intent when a
+    site has several analyses or velocity profiles.
+
+Importing CSV
+-------------
+
+Use :func:`~obspy.io.sitexml.tabular.csv_to_sera_site` to build a dictionary
+of ``SERASite`` objects from CSV files.
+
+.. code-block:: python
+
+    from pathlib import Path
+
+    from obspy.core.util import get_example_file
+    from obspy.io.sitexml.tabular import csv_to_sera_site
+
+    site_owner_csv = get_example_file("site_owner.csv")
+    data_dir = Path(site_owner_csv).parent
+
+    sites = csv_to_sera_site(
+        site_owner_csv=site_owner_csv,
+        site_description_csv=data_dir / "site_description.csv",
+        analysis_csv=data_dir / "site_analysis.csv",
+        velocity_profiles_csv=data_dir / "velocity_profiles",
+        delim=";")
+
+    site = sites["quakeml:domain.ab/site/001"]
+    analysis = site.analysis[0]
+    profile = analysis.velocity_profile_set.velocity_profiles[0]
+
+    print(site.site_description.latitude)
+    print(analysis.velocity_s30.value.value)
+    print(profile.layer_count)
+
+Importing Excel
+---------------
+
+Excel import uses the same logical tables. The main workbook should contain:
+
+* ``siteOwner``: required owner and contact metadata.
+* ``siteDescription``: required site rows.
+* ``analysis``: optional analysis rows.
+* ``qualityIndex``: optional quality-index calculation inputs.
+
+Velocity profiles can be supplied in a separate workbook or a directory of
+workbooks. Each non-empty velocity-profile sheet must contain a ``siteID``
+column and the same layer columns used by CSV import.
+
+.. code-block:: python
+
+    from pathlib import Path
+
+    from obspy.core.util import get_example_file
+    from obspy.io.sitexml.tabular import excel_to_sera_site
+
+    excel_file = get_example_file("sera_site_all.xlsx")
+    data_dir = Path(excel_file).parent
+
+    sites = excel_to_sera_site(
+        excel_file,
+        velocity_profiles=data_dir / "velocity_profiles.xlsx")
+
+    site = sites["quakeml:domain.ab/site/001"]
+    print(site.site_description.station_code)
 
 Associating SiteXML With StationXML
 -----------------------------------
@@ -99,9 +545,9 @@ SiteXML can be associated with the corresponding StationXML by adding the
 current published SiteXML URL as a station-level StationXML
 ``ExternalReference``. The SiteXML file itself stores the station association
 in ``SiteDescription.station_code`` using ``network.station`` notation, for
-example ``XX.ABCD``. SiteXML filenames can include the document creation date,
-so the StationXML reference is treated as the current pointer to the latest
-published SiteXML document.
+example ``XX.ABCD``. Because SiteXML filenames can include a publication date
+(:ref:`sitexml-filenames-and-revision-history`), the StationXML reference is
+treated as the current pointer to the latest published SiteXML document.
 
 Use :func:`~obspy.io.sitexml.sitexml.add_sitexml_reference` to add or
 update the StationXML reference that points to the SiteXML URL.
@@ -214,345 +660,83 @@ Bare station codes such as ``ABCD`` should not be used for this association,
 because StationXML station codes are only unique together with their network
 code.
 
-Creating A SiteXML File From Scratch
-------------------------------------
+Updating a SiteXML file
+-----------------------
 
-Creating a SiteXML file directly in Python is useful when metadata already
-exists in application objects or another structured source. It is not always
-shorter than preparing CSV or Excel input, but it keeps the object graph
-explicit and lets ObsPy validate the result against the bundled SiteXML schema
-when writing.
+Existing SiteXML files can be read from a local path or from a published
+HTTP(S) URL, modified in memory, and written back to a new XML file. This is
+useful when one indicator needs to be corrected or when new site
+characterization metadata become available.
 
-A minimal SiteXML document needs a top-level
-:class:`~obspy.io.sitexml.core.SERASite`, a required
-:class:`~obspy.io.sitexml.core.SERASiteOwner`, and a required
-:class:`~obspy.io.sitexml.core.SiteDescription`. Analyses and site indicators
-can then be attached as needed. Resource identifiers are ordinary strings, but
-they should be stable and unique, and relationship fields such as
-``site_descriptionID`` and ``preferred_site_analysisID`` must point to existing
-objects.
-
-The following illustration shows the relationships between the most basic 
-SiteXML objects.
-
-.. figure:: /_images/SERASite.png
-
-The following example creates a small SiteXML site with owner/contact
-metadata, location metadata, a few site-description indicators, one analysis,
-and a Vs30 indicator:
+Use :meth:`~obspy.io.sitexml.core.SERASite.add_site_indicator` to add or
+replace site indicators. The method routes each indicator to the correct
+SiteXML object location by its indicator name. For example, ``EC8`` is written
+to ``site.site_description.ec8`` and ``BedrockDepth`` is written to
+``site.site_description.bedrock_depth``.
 
 .. code-block:: python
 
-    from pathlib import Path
-    from tempfile import TemporaryDirectory
-
-    from obspy.io.sitexml.core import (
-        Analysis, BedrockDepth, EC8, H800, SERASite, SERASiteOwner,
-        SiteDescription, ValueWithUncertainty, VelocityS30)
-    from obspy.io.sitexml.sitexml import validate_sitexml, write_sitexml
-
-    site_owner = SERASiteOwner(
-        owner_codename="EXAMPLE",
-        owner_fullname="Example Site Owner",
-        person_firstname="Ada",
-        person_lastname="Lovelace",
-        person_mbox="ada@example.org")
-
-    site_description = SiteDescription(
-        resource_id="quakeml:example.org/site_description/001",
-        latitude=45.137174,
-        longitude=5.998905,
-        station_code="XX.ABCD",
-        ec8=EC8("B"),
-        bedrock_depth=BedrockDepth(
-            ValueWithUncertainty(40.0, uncertainty=6.0)),
-        h800=H800(ValueWithUncertainty(10.0, uncertainty=1.0)),
-        preferred_site_analysisID="quakeml:example.org/analysis/001")
-
-    analysis = Analysis(
-        resource_id="quakeml:example.org/analysis/001",
-        site_descriptionID="quakeml:example.org/site_description/001",
-        velocity_s30=VelocityS30(
-            ValueWithUncertainty(620.0, uncertainty=18.0),
-            methods=["MASW"]))
-
-    site = SERASite(
-        resource_id="quakeml:example.org/site/001",
-        site_owner=site_owner,
-        site_description=site_description,
-        analysis=[analysis])
-
-    site.add_revision(
-        revision_time="2026-05-02T12:00:00Z",
-        description="Created initial SiteXML document.",
-        author="Some Author (email@example.com)")
-
-    with TemporaryDirectory() as tmpdir:
-        output_file = Path(tmpdir) / "site.xml"
-        write_sitexml(site, output_file, validate=True)
-
-        valid, errors = validate_sitexml(output_file)
-        if not valid:
-            for error in errors:
-                print(error)
-
-When creating or editing a ``SERASite`` object in Python, use
-``SERASite.iter_site_indicators()`` to apply shared metadata to a selected set
-of existing indicators. The iterator yields SiteXML indicator names such as
-``siteClassEC8``, ``bedrockDepth``, and ``h800``.
-
-.. code-block:: python
-
+    from obspy import UTCDateTime
     from obspy.core.inventory.util import ExternalReference
-    from obspy.io.sitexml.core import LiteratureSource
-
-    literature_source = LiteratureSource(
-        title="Example site characterization report",
-        first_author="Author A.",
-        year="2026")
-    external_references = [
-        ExternalReference(
-            uri="https://example.org/reports/site-characterization.pdf",
-            description="Site characterization report")]
-
-    shared_reference_indicators = {
-        "siteClassEC8", "bedrockDepth", "h800"}
-    for name, indicator in site.iter_site_indicators():
-        if name in shared_reference_indicators:
-            indicator.literature_source = literature_source
-            indicator.external_references = external_references
-
-Reading Or Writing Site Dictionaries
-------------------------------------
-
-A directory of SiteXML files can be read as a dictionary keyed by
-``SERASite.resource_id``. The reverse helper writes each site to its default
-SiteXML filename.
-
-.. code-block:: python
-
-    from pathlib import Path
-    from tempfile import TemporaryDirectory
-
-    from obspy.io.sitexml.sitexml import (
-        sitedict_to_sitexml, sitexml_to_sitedict)
-
-    sites = sitexml_to_sitedict(filename)
-
-    with TemporaryDirectory() as tmpdir:
-        sitedict_to_sitexml(sites, tmpdir)
-        print(sorted(Path(tmpdir).glob("*.xml")))
-
-Resource Identifiers And Preferred IDs
---------------------------------------
-
-SiteXML uses resource identifiers to connect the top-level site object with
-its nested site description, analyses, velocity profiles, owner, and contact
-metadata. ObsPy stores these identifiers internally as plain strings. Values
-passed as ObsPy ``ResourceIdentifier`` objects are accepted as input
-conveniences and normalized to their string IDs.
-
-The current schema keeps the identifier pattern intentionally relaxed, but
-project data should still use stable, unique, URI-like identifiers. The bundled
-fixtures use a QuakeML-style convention:
-
-.. code-block:: text
-
-    quakeml:domain.ab/site/001
-    quakeml:domain.ab/site_description/001
-    quakeml:domain.ab/analysis/001
-    quakeml:domain.ab/velocity_profile/001
-    quakeml:domain.ab/siteOwner/001
-
-The part after the final slash usually identifies the object within its
-collection. The path segment before it names the object type. Keeping this
-shape consistent makes the XML and tabular files easier to audit, but the
-important requirement is that every relationship column points to an existing
-object ID.
-
-The most important relationship and preferred-ID columns are:
-
-* ``siteID`` identifies the top-level ``SERASite`` and is used as the key in
-  dictionaries returned by CSV and Excel import.
-* ``siteDescriptionID`` identifies the ``SiteDescription`` object. Analysis
-  rows must repeat the corresponding ``siteDescriptionID`` so the analysis can
-  be checked against the site description it describes.
-* ``analysisID`` identifies one analysis. A site can have multiple analyses.
-* ``velocityProfileID`` identifies one velocity profile under a specific
-  analysis. An analysis can have multiple velocity profiles.
-* ``preferredSiteAnalysisID`` selects the analysis to use when a site has more
-  than one analysis. Quality-index calculations use this preferred analysis
-  when it is present.
-* ``preferredVelocityProfileID`` selects the preferred velocity profile. **If
-  both preferred IDs are present, the preferred velocity profile must belong to
-  the preferred analysis.**
-
-In Python, use ``SERASite.get_preferred_analysis()`` and
-``SERASite.get_preferred_velocity_profile()`` to retrieve the selected objects.
-If no preferred ID is declared, these methods return the first available
-analysis or velocity profile without changing the missing preferred-ID
-metadata.
-
-Use the object-level helpers when editing these relationships in Python.
-``SERASite.add_analysis(...)`` creates an analysis already tied to the site's
-``site_description.resource_id``. ``SERASite.set_preferred_analysis(...)`` and
-``SERASite.set_preferred_velocity_profile(...)`` validate that the referenced
-objects are attached to the site before updating the preferred IDs.
-
-.. code-block:: python
-
     from obspy.io.sitexml.core import (
-        ValueWithUncertainty, VelocityProfile, VelocityProfileData)
+        BedrockDepth, EC8, LiteratureSource, ValueWithUncertainty)
+    from obspy.io.sitexml.sitexml import read_sitexml, write_sitexml
 
-    analysis = site.add_analysis(
-        resource_id="quakeml:domain.ab/analysis/002",
-        set_preferred=True)
+    # Use either a local file path ...
+    site = read_sitexml("Site_XX.ABCD_01-05-2026.xml")
 
-    profile = VelocityProfile(
-        resource_id="quakeml:domain.ab/velocity_profile/003",
-        velocity_profile_data=[
-            VelocityProfileData(
-                velocityS=ValueWithUncertainty(400.0),
-                top_depth=ValueWithUncertainty(0.0))])
-    site.add_velocity_profiles(
-        [profile],
-        analysisID=analysis.resource_id)
+    # ... or a published SiteXML URL.
+    # site = read_sitexml(
+    #     "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml")
 
-    site.set_preferred_analysis(analysis.resource_id)
-    site.set_preferred_velocity_profile(
-        profile.resource_id,
-        analysisID=analysis.resource_id)
+    updated_ec8 = EC8(
+        "C",
+        quality_index=0.75,
+        literature_source=LiteratureSource(
+            title="Updated site classification report",
+            first_author="Example",
+            year=2026),
+        external_references=[ExternalReference(
+            uri="https://example.org/reports/XX.ABCD-ec8-2026.pdf",
+            description="Updated EC8 classification report")])
 
-The generic CSV and Excel importers **do not generate missing relationship IDs**.
-For example, they will not guess ``analysisID`` or
-``preferredSiteAnalysisID`` values, because that would hide user intent when a
-site has several analyses or velocity profiles.
+    new_bedrock_depth = BedrockDepth(
+        ValueWithUncertainty(42.0, uncertainty=5.0),
+        quality_index=0.8,
+        literature_source=LiteratureSource(
+            title="Bedrock depth reassessment",
+            first_author="Example",
+            year=2026),
+        external_references=[ExternalReference(
+            uri="https://example.org/reports/XX.ABCD-bedrock-2026.pdf",
+            description="Bedrock depth reassessment")])
 
-CSV Input Files
----------------
+    site.add_site_indicator([updated_ec8, new_bedrock_depth])
 
-CSV import uses one required owner table, one required site-description table,
-and optional analysis, velocity-profile, and quality-index sidecar tables. The
-default delimiter is ``;``.
+    revision_time = UTCDateTime("2026-05-05T10:30:00Z")
+    site.add_revision(
+        revision_time=revision_time,
+        description="Updated EC8 class and added bedrock depth.",
+        author="ORFEUS",
+        version="2026-05-05",
+        previous_version=(
+            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml")))
 
-The **owner** table describes the data owner and contact person. The minimum
-required columns are:
+    output_file = site.get_sitexml_filename(revision_time)
+    write_sitexml(site, output_file, validate=True)
 
-.. code-block:: text
+Adding an indicator to a slot that is already populated replaces the old
+indicator object. For example, ``site.add_site_indicator([EC8("C")])`` creates
+a new EC8 indicator and the previous EC8 indicator's quality-assessment
+metadata is no longer attached to the site. That includes any
+``literature_source``, ``external_references``, and ``quality_index`` stored on
+the previous indicator. Add fresh assessment metadata to the replacement
+indicator, or edit the existing indicator directly if the original assessment
+metadata still applies.
 
-    owner_codename;owner_fullname;person_firstname;person_lastname;person_mbox
-
-The **site-description** table has **one row per site**. The minimum required columns
-are:
-
-.. code-block:: text
-
-    siteID;siteDescriptionID;latitude;longitude
-
-Common optional columns include station association, site indicators and the 
-resource ids of the preferred analysis and velocity profile:
-
-.. code-block:: text
-
-    station;altitude;siteClassEC8_value;bedrockDepth_value;h800_value
-    geologicalUnit_value;preferredSiteAnalysisID;preferredVelocityProfileID
-
-Station codes use ``network.station`` notation, for example ``XX.ABCD``.
-Bare station codes are rejected because station codes are not globally unique.
-
-The **analysis** table is optional. When present, each row must identify the site,
-site description, and analysis:
-
-.. code-block:: text
-
-    siteID;siteDescriptionID;analysisID
-
-Analysis rows may also contain indicator columns such as:
-
-.. code-block:: text
-
-    resonanceFrequency_value;resonanceFrequencyMethod1
-    velocityS30_value;velocityS30_uncertainty;velocityS30Method1
-    sptLogsCount;cptLogsCount;boreholeLogsCount
-
-**Velocity-profile** input can be one CSV file or a directory of CSV files. Each
-row describes one layer in one velocity profile:
-
-.. code-block:: text
-
-    siteID;analysisID;velocityProfileID;layerCount
-    density_value;density_uncertainty
-    velocityP_value;velocityP_uncertainty
-    velocityS_value;velocityS_uncertainty
-    layerTopDepth_value;layerTopDepth_uncertainty
-    layerBottomDepth_value;layerBottomDepth_uncertainty
-
-Indicator reference metadata uses the indicator name as a prefix. For example,
-``velocityS30_title`` and ``velocityS30_firstAuthor`` create a literature
-source for the Vs30 indicator, while ``velocityS30_uri`` and
-``velocityS30_description`` create an external reference.
-
-Importing CSV
--------------
-
-Use :func:`~obspy.io.sitexml.tabular.csv_to_sera_site` to build a dictionary
-of ``SERASite`` objects from CSV files.
-
-.. code-block:: python
-
-    from pathlib import Path
-
-    from obspy.core.util import get_example_file
-    from obspy.io.sitexml.tabular import csv_to_sera_site
-
-    site_owner_csv = get_example_file("site_owner.csv")
-    data_dir = Path(site_owner_csv).parent
-
-    sites = csv_to_sera_site(
-        site_owner_csv=site_owner_csv,
-        site_description_csv=data_dir / "site_description.csv",
-        analysis_csv=data_dir / "site_analysis.csv",
-        velocity_profiles_csv=data_dir / "velocity_profiles",
-        delim=";")
-
-    site = sites["quakeml:domain.ab/site/001"]
-    analysis = site.analysis[0]
-    profile = analysis.velocity_profile_set.velocity_profiles[0]
-
-    print(site.site_description.latitude)
-    print(analysis.velocity_s30.value.value)
-    print(profile.layer_count)
-
-Importing Excel
----------------
-
-Excel import uses the same logical tables. The main workbook should contain:
-
-* ``siteOwner``: required owner and contact metadata.
-* ``siteDescription``: required site rows.
-* ``analysis``: optional analysis rows.
-* ``qualityIndex``: optional quality-index calculation inputs.
-
-Velocity profiles can be supplied in a separate workbook or a directory of
-workbooks. Each non-empty velocity-profile sheet must contain a ``siteID``
-column and the same layer columns used by CSV import.
-
-.. code-block:: python
-
-    from pathlib import Path
-
-    from obspy.core.util import get_example_file
-    from obspy.io.sitexml.tabular import excel_to_sera_site
-
-    excel_file = get_example_file("sera_site_all.xlsx")
-    data_dir = Path(excel_file).parent
-
-    sites = excel_to_sera_site(
-        excel_file,
-        velocity_profiles=data_dir / "velocity_profiles.xlsx")
-
-    site = sites["quakeml:domain.ab/site/001"]
-    print(site.site_description.station_code)
+For details on ``revisionHistory``, ``creationTime``, and dated output names
+such as ``Site_XX.ABCD_05-05-2026.xml``, see
+:ref:`sitexml-filenames-and-revision-history`.
 
 Adding Velocity Profiles To Existing SiteXML
 --------------------------------------------

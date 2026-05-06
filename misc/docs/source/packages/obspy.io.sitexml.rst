@@ -10,9 +10,12 @@
     metadata stored in SiteXML files, published SiteXML URLs, and related tabular
     inputs. The module reads and writes SiteXML, validates XML files against the
     bundled schema, and imports metadata from CSV and Excel sources into the
-    internal :class:`~obspy.io.sitexml.core.SERASite` object model. The public
-    SiteXML schema documentation is available at
-    `https://www.itsak.gr/SiteXML/ <https://www.itsak.gr/SiteXML/>`_.
+    internal :class:`~obspy.io.sitexml.core.SERASite` object model.
+
+    .. seealso::
+
+        The public SiteXML schema documentation is available at
+        `https://www.itsak.gr/SiteXML/ <https://www.itsak.gr/SiteXML/>`_.
     
     The top-level metadata object is :class:`~obspy.io.sitexml.core.SERASite`.
     It contains required :class:`~obspy.io.sitexml.core.SERASiteOwner` and
@@ -424,6 +427,7 @@
        ~quality_index.quality_index2
        ~quality_index.quality_index3
        ~quality_index.overall_quality_index
+       ~quality_index.apply_quality_index_dataframe
        ~quality_index.apply_quality_index_csv
        ~quality_index.apply_quality_index_excel
        
