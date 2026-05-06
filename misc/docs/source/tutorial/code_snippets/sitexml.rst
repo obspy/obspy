@@ -395,26 +395,59 @@ Site Owner
 
 The owner CSV describes the data owner and contact person:
 
-.. code-block:: text
+.. list-table::
+    :header-rows: 1
 
-    owner_codename;owner_fullname;person_firstname;person_lastname;person_mbox
+    * - Type
+      - Column names
+    * - Required
+      - ``owner_codename``, ``owner_fullname``, ``person_firstname``,
+        ``person_lastname``, ``person_mbox``
+    * - Optional
+      - All other columns are optional, including the resource identifiers.
 
 Site Description
 ~~~~~~~~~~~~~~~
 
-The site-description CSV has one row per site:
+The site-description CSV has one row per site. The site this description
+refers to is designated by the ``siteID``. The unique resource identifier
+``siteDescriptionID`` must also be present.
 
-.. code-block:: text
+.. list-table::
+    :header-rows: 1
 
-    siteID;siteDescriptionID;latitude;longitude
+    * - Type
+      - Column names
+      - Description
+    * - Required
+      - ``siteID``, ``siteDescriptionID``, ``latitude``, ``longitude``
+      - Required for every site description row.
+    * - Location
+      - ``station``, ``altitude``, ``minDistanceFromStation``, ``maxDistanceFromStation``,
+      - Optional. Use ``station`` for station-backed sites.
+    * - Site indicators
+      - ``siteClassEC8_*``, ``bedrockDepth_*``, ``h800_*``, ``geologicalUnit_*``
+      - Optional. Use these columns for site-level characterization values.
+    * - References
+      - ``preferredSiteAnalysisID``, ``preferredVelocityProfileID``
+      - Optional but necessary when more than one analysis or velocity
+        profile is present.
 
-Common optional columns include station association, site indicators, and the
-resource IDs of the preferred analysis and velocity profile:
+Indicator metadata columns use the indicator name as a prefix.
 
-.. code-block:: text
+.. list-table::
+    :header-rows: 1
 
-    station;altitude;siteClassEC8_value;bedrockDepth_value;h800_value
-    geologicalUnit_value;preferredSiteAnalysisID;preferredVelocityProfileID
+    * - Indicator
+      - Column name
+    * - EC8
+      - ``siteClassEC8_value``, ``siteClassEC8Qindex1``, ``siteClassEC8_title``, etc.
+    * - Bedrock depth
+      - ``bedrockDepth_value``, ``bedrockDepthQindex1``, ``bedrockDepth_title``, etc.
+    * - H800
+      - ``h800_value``, ``h800Qindex1``, ``h800_title``, etc.
+    * - Geological unit
+      - ``geologicalUnit_value``, ``geologicalUnitQindex1``, ``geologicalUnit_title``, etc.
 
 Station codes use ``network.station`` notation, for example ``XX.ABCD``.
 Bare station codes are rejected because station codes are not globally unique.
@@ -422,20 +455,38 @@ Bare station codes are rejected because station codes are not globally unique.
 Analysis
 ~~~~~~~~
 
-The analysis CSV is optional. When provided, each row identifies the site, site
-description, and analysis:
+The analysis CSV is optional. When provided, each row identifies the site with ``siteID``,
+site description with ``siteDescriptionID``, and analysis with ``analysisID``.
 
-.. code-block:: text
+.. list-table::
+    :header-rows: 1
 
-    siteID;siteDescriptionID;analysisID
+    * - Type
+      - Column names
+      - Description
+    * - Required
+      - ``siteID``, ``siteDescriptionID``, ``analysisID``
+      - Required for every analysis row.
+    * - Site indicators
+      - ``resonanceFrequency_*``, ``velocityS30_*``, ``velocityProfileSet_*``
+      - Optional. Use these columns for site-level characterization values.
+    * - Logs counts
+      - ``sptLogsCount``, ``cptLogsCount``, ``boreholeLogsCount``
+      - Optional count of available logs.
 
-Analysis rows may also contain indicator columns such as:
+Indicator metadata columns use the indicator name as a prefix.
 
-.. code-block:: text
+.. list-table::
+    :header-rows: 1
 
-    resonanceFrequency_value;resonanceFrequencyMethod1
-    velocityS30_value;velocityS30_uncertainty;velocityS30Method1
-    sptLogsCount;cptLogsCount;boreholeLogsCount
+    * - Indicator
+      - Column name
+    * - Resonance Frequency
+      - ``resonanceFrequency_value``, ``resonanceFrequencyQindex1``, ``resonanceFrequency_title``, etc.
+    * - Velocity S30
+      - ``velocityS30_value``, ``velocityS30Qindex1``, ``velocityS30_title``, etc.
+    * - Velocity Profile Set
+      - ``velocityProfileSet_value``, ``velocityProfileSetQindex1``, ``velocityProfileSet_title``, etc.
 
 Velocity Profiles
 ~~~~~~~~~~~~~~~~~
@@ -443,31 +494,55 @@ Velocity Profiles
 Velocity-profile input can be one CSV file or a directory of CSV files. Each row
 describes one layer in one velocity profile:
 
-.. code-block:: text
+.. list-table::
+    :header-rows: 1
 
-    siteID;analysisID;velocityProfileID;layerCount
-    density_value;density_uncertainty
-    velocityP_value;velocityP_uncertainty
-    velocityS_value;velocityS_uncertainty
-    layerTopDepth_value;layerTopDepth_uncertainty
-    layerBottomDepth_value;layerBottomDepth_uncertainty
-
-``layerCount``, density, ``velocityP``, uncertainty columns, and
-``layerBottomDepth_value`` are optional. A missing bottom depth represents an
-open-ended final layer.
+    * - Type
+      - Column names
+      - Description
+    * - Required references
+      - ``siteID``, ``analysisID``, ``velocityProfileID``
+      - Required for every velocity profile row.
+    * - Required values
+      - ``layerTopDepth_value`` and ``velocityS_value``
+      - Required for every velocity profile row.
+    * - Optional values
+      - ``layerBottomDepth_value``, ``velocityP_value``, ``density_value``
+      - All other velocity profile values are optional
+    * - Optional uncertainties
+      - ``layerTopDepth_uncertainty``, ``velocityS_uncertainty``, etc.
+      - All uncertainty columns are optional
+    * - Layer counter
+      - ``layerCount``
+      - Optional counter of the velocity profile layer
+    
+A missing layer bottom depth value represents an open-ended final layer.
 
 Quality Index Sidecar
 ~~~~~~~~~~~~~~~~~~~~~
 
-The optional quality-index CSV is keyed by ``siteID``. All Q_Index1 criteria
-and Q_Index3 consistency columns are optional. Rows with an empty ``siteID``
-value or an unknown site ID are skipped with a warning because quality-index
-inputs are optional enrichment.
+The optional quality-index CSV is keyed by ``siteID``. All Quality index #1 
+criteria and Quality index #3 consistency columns are optional. Rows with an 
+empty ``siteID`` value or an unknown site ID are skipped with a warning because 
+quality-index inputs are optional enrichment.
 
-Indicator reference metadata uses the indicator name as a prefix. For example,
-``velocityS30_title`` and ``velocityS30_firstAuthor`` create a literature
-source for the Vs30 indicator, while ``velocityS30_uri`` and
-``velocityS30_description`` create an external reference.
+All columns use the indicator name as a prefix followed by the name of the 
+parameter used to calculate the quality index. For example, the column name 
+``EC8_method``, refers to the method used for the estimation of ``EC8`` value. 
+The following table summarizes the parameter names.
+
+.. list-table::
+    :header-rows: 1
+
+    * - Quality index
+      - Parameter names
+    * - Quality index #1
+      - ``method``, ``evaluation``, ``reliability``, ``report``
+    * - Quality index #3
+      - ``f0_vs30``, ``f0_bedrock_depth``, ``f0_h800``, ``vs30_h800``, ``vs30_geology``
+
+For more information on the parameters, their meaning and the calculation of
+quality indexes refer to :ref:`quality-indexes`
 
 .. important::
 
@@ -800,6 +875,8 @@ By default, new profiles are appended and duplicate ``velocityProfileID``
 values are rejected. Pass ``replace_existing=True`` when the sidecar table
 should replace the profile list on the matching analysis. If the target
 analysis has no ``velocityProfileSet`` yet, the helper creates one.
+
+.. _quality-indexes:
 
 Quality Indexes
 ---------------
