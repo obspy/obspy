@@ -2,6 +2,9 @@ maintenance_1.5.x
 =================
 
 Changes:
+ - obspy.clients.filesystem:
+   * tsindex: improve handling of sql sessions, less connections staying open
+     (see #3736)
  - obspy.io.mseed:
    * fix the type of exception raised when trying to read an empty file
      (see #3709)
