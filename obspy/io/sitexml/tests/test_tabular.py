@@ -2,6 +2,12 @@
 # -*- coding: utf-8 -*-
 """
 Tests for SiteXML CSV and Excel import helpers.
+
+:author:
+    Kiriaki Konstantinidou (kiriaki@itsak.gr), 2026
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 
 import warnings

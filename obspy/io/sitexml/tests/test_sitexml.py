@@ -4,7 +4,7 @@
 Test suite for the SiteXML reader and writer.
 
 :author:
-    Kiriaki Konstantinidou (kiriaki@itsak.gr), 2025
+    Kiriaki Konstantinidou (kiriaki@itsak.gr), 2026
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
