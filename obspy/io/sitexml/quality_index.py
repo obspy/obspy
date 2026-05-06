@@ -6,7 +6,7 @@ For more information refer to `SERA D7.2 Deliverable.
 <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ 
 
 :copyright:
-    ORFEUS, 2025
+    ORFEUS, 2026
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)

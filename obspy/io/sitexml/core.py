@@ -4,7 +4,7 @@
 Provides the SERASite class.
 
 :copyright:
-    ORFEUS, 2025
+    ORFEUS, 2026
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)

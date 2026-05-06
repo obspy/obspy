@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Functions dealing with reading SiteXML.
+Functions dealing with reading and writing SiteXML.
 Metadata is stored in a SERASite object.
 
 :copyright:
-    ORFEUS, 2025
+    ORFEUS, 2026
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)

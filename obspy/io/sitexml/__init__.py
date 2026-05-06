@@ -6,7 +6,7 @@ obspy.io.sitexml - SiteXML read and write support for ObsPy
 :author:
     Kiriaki Konstantinidou (kiriaki@itsak.gr), Apr 2026
 :copyright:
-    ORFEUS, 2025
+    ORFEUS, 2026
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
