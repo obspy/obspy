@@ -456,7 +456,8 @@ class TestSiteXMLCSVImport():
         with pytest.raises(SiteXMLImportError):
             excel_to_sera_site(datapath / "sera_site_no_sd.xlsx")
 
-    def test_csv_to_sera_site_skips_invalid_site_description_rows(self, tmp_path):
+    def test_csv_to_sera_site_raises_for_invalid_site_description_rows(
+            self, tmp_path):
         site_owner_csv = tmp_path / "site_owner.csv"
         site_owner_csv.write_text(
             "owner_codename;owner_fullname;person_firstname;"
@@ -472,17 +473,21 @@ class TestSiteXMLCSVImport():
             "quakeml:test/site/003;;47.0;9.0;XX.CCC\n",
             encoding="utf-8")
 
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            sera_site_dict = csv_to_sera_site(
+        analysis_csv = tmp_path / "site_analysis.csv"
+        analysis_csv.write_text(
+            "siteID;analysisID;siteDescriptionID\n"
+            "quakeml:test/site/001;quakeml:test/analysis/001;"
+            "quakeml:test/site_description/001\n",
+            encoding="utf-8")
+
+        with pytest.raises(
+                SiteXMLImportError,
+                match="Site description metadata row"):
+            csv_to_sera_site(
                 site_owner_csv=site_owner_csv,
                 site_description_csv=site_description_csv,
+                analysis_csv=analysis_csv,
                 delim=";")
-
-        assert set(sera_site_dict) == {"quakeml:test/site/001"}
-        assert any("Missing siteID, siteDescriptionID, latitude or longitude"
-                   in str(w.message)
-                   for w in caught)
 
     def test_csv_to_sera_site_raises_for_invalid_optional_analysis_rows(self, tmp_path):
         site_owner_csv = tmp_path / "site_owner.csv"
@@ -507,12 +512,130 @@ class TestSiteXMLCSVImport():
 
         with pytest.raises(
                 SiteXMLImportError,
-                match="Analysis metadata is missing required"):
+                match="Analysis metadata row"):
             csv_to_sera_site(
                 site_owner_csv=site_owner_csv,
                 site_description_csv=site_description_csv,
                 analysis_csv=analysis_csv,
                 delim=";")
+
+    def test_csv_to_sera_site_allows_missing_optional_columns(self, tmp_path):
+        site_owner_csv = tmp_path / "site_owner.csv"
+        site_owner_csv.write_text(
+            "owner_codename;owner_fullname;person_firstname;"
+            "person_lastname;person_mbox\n"
+            "TEST;Test Owner;Name;Surname;someemail@domain.ab\n",
+            encoding="utf-8")
+
+        site_description_csv = tmp_path / "site_description.csv"
+        site_description_csv.write_text(
+            "siteID;siteDescriptionID;latitude;longitude\n"
+            "quakeml:test/site/001;quakeml:test/site_description/001;45.0;7.0\n",
+            encoding="utf-8")
+
+        analysis_csv = tmp_path / "site_analysis.csv"
+        analysis_csv.write_text(
+            "siteID;analysisID;siteDescriptionID;velocityProfileSetQindex1\n"
+            "quakeml:test/site/001;quakeml:test/analysis/001;"
+            "quakeml:test/site_description/001;1\n",
+            encoding="utf-8")
+
+        velocity_profiles_csv = tmp_path / "velocity_profiles.csv"
+        velocity_profiles_csv.write_text(
+            "siteID;analysisID;velocityProfileID;velocityS_value;"
+            "layerTopDepth_value\n"
+            "quakeml:test/site/001;quakeml:test/analysis/001;"
+            "quakeml:test/velocity_profile/001;120;0\n",
+            encoding="utf-8")
+
+        quality_index_csv = tmp_path / "quality_index.csv"
+        quality_index_csv.write_text(
+            "siteID\n"
+            "quakeml:test/site/001\n",
+            encoding="utf-8")
+
+        sera_site_dict = csv_to_sera_site(
+            site_owner_csv=site_owner_csv,
+            site_description_csv=site_description_csv,
+            analysis_csv=analysis_csv,
+            velocity_profiles_csv=velocity_profiles_csv,
+            quality_index_csv=quality_index_csv,
+            delim=";")
+
+        site = sera_site_dict["quakeml:test/site/001"]
+        profile = site.analysis[0].velocity_profile_set.velocity_profiles[0]
+        layer = profile.velocity_profile_data[0]
+        assert layer.velocityS.value == 120
+        assert layer.velocityS.uncertainty is None
+        assert layer.bottom_depth is None
+
+    def test_csv_to_sera_site_raises_for_missing_required_velocity_profile_column(
+            self, tmp_path):
+        site_owner_csv = tmp_path / "site_owner.csv"
+        site_owner_csv.write_text(
+            "owner_codename;owner_fullname;person_firstname;"
+            "person_lastname;person_mbox\n"
+            "TEST;Test Owner;Name;Surname;someemail@domain.ab\n",
+            encoding="utf-8")
+
+        site_description_csv = tmp_path / "site_description.csv"
+        site_description_csv.write_text(
+            "siteID;siteDescriptionID;latitude;longitude\n"
+            "quakeml:test/site/001;quakeml:test/site_description/001;45.0;7.0\n",
+            encoding="utf-8")
+
+        analysis_csv = tmp_path / "site_analysis.csv"
+        analysis_csv.write_text(
+            "siteID;analysisID;siteDescriptionID;velocityProfileSetQindex1\n"
+            "quakeml:test/site/001;quakeml:test/analysis/001;"
+            "quakeml:test/site_description/001;1\n",
+            encoding="utf-8")
+
+        velocity_profiles_csv = tmp_path / "velocity_profiles.csv"
+        velocity_profiles_csv.write_text(
+            "siteID;analysisID;velocityProfileID;layerTopDepth_value\n"
+            "quakeml:test/site/001;quakeml:test/analysis/001;"
+            "quakeml:test/velocity_profile/001;0\n",
+            encoding="utf-8")
+
+        with pytest.raises(
+                SiteXMLImportError,
+                match="Velocity-profile metadata.*velocityS_value"):
+            csv_to_sera_site(
+                site_owner_csv=site_owner_csv,
+                site_description_csv=site_description_csv,
+                analysis_csv=analysis_csv,
+                velocity_profiles_csv=velocity_profiles_csv,
+                delim=";")
+
+    def test_apply_quality_index_dataframe_requires_site_id_column(
+            self, datapath):
+        sera_site_dict = sitexml_to_sitedict(datapath / "full_sitexml.xml")
+        df_quality_index = pd.DataFrame([{"f0_vs30": 1}])
+
+        with pytest.raises(
+                SiteXMLImportError,
+                match="Quality-index metadata.*siteID"):
+            apply_quality_index_dataframe(sera_site_dict, df_quality_index)
+
+    def test_apply_quality_index_dataframe_skips_missing_site_id_value(
+            self, datapath):
+        sera_site_dict = sitexml_to_sitedict(datapath / "full_sitexml.xml")
+        df_quality_index = pd.DataFrame([{
+            "siteID": "",
+            "siteClassEC8_method": "documented",
+            "siteClassEC8_evaluation": "direct",
+            "siteClassEC8_reliability": "yes",
+            "siteClassEC8_report": "yes",
+        }])
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = apply_quality_index_dataframe(
+                sera_site_dict, df_quality_index)
+
+        assert result is sera_site_dict
+        assert any("missing siteID value" in str(w.message) for w in caught)
 
     def test_csv_to_sera_site_raises_for_incomplete_literature_source(self, tmp_path):
         site_owner_csv = tmp_path / "site_owner.csv"
