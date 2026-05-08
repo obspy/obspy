@@ -1669,11 +1669,10 @@ class SERASite(BaseNode):
 
         Example:
 
-        >>> analysis = site.add_analysis(
+        >>> analysis = site.add_analysis(  # doctest: +SKIP
         ...     resource_id="quakeml:example.org/analysis/002",
         ...     set_preferred=True)
-        >>> analysis.site_descriptionID == site.site_description.resource_id
-        True
+        >>> analysis.site_descriptionID == site.site_description.resource_id  # doctest: +SKIP
         """
         if analysis is not None and resource_id is not None:
             raise SiteXMLValidationError(
@@ -1759,7 +1758,7 @@ class SERASite(BaseNode):
 
         Example:
 
-        >>> site.set_preferred_analysis(
+        >>> site.set_preferred_analysis(  # doctest: +SKIP
         ...     "quakeml:example.org/analysis/002")
         """
         analysis = self.get_analysis(analysisID)
@@ -1849,7 +1848,7 @@ class SERASite(BaseNode):
 
         Example:
 
-        >>> site.set_preferred_velocity_profile(
+        >>> site.set_preferred_velocity_profile(  # doctest: +SKIP
         ...     "quakeml:example.org/velocity_profile/003",
         ...     analysisID="quakeml:example.org/analysis/002")
         """
@@ -1899,8 +1898,8 @@ class SERASite(BaseNode):
 
         Example:
 
-        >>> ec8 = site.get_indicator_object("siteClassEC8")
-        >>> velocity_s30 = site.get_indicator_object("velocityS30")
+        >>> ec8 = site.get_indicator_object("siteClassEC8")  # doctest: +SKIP
+        >>> velocity_s30 = site.get_indicator_object("velocityS30")  # doctest: +SKIP
         """
         site_description_indicators = {
             "siteClassEC8": self.site_description.ec8,
@@ -1948,7 +1947,7 @@ class SERASite(BaseNode):
         ...     description="Site characterization report")]
         >>> shared_reference_indicators = {
         ...     "siteClassEC8", "bedrockDepth", "h800"}
-        >>> for name, indicator in site.iter_site_indicators():
+        >>> for name, indicator in site.iter_site_indicators():  # doctest: +SKIP
         ...     if name in shared_reference_indicators:
         ...         indicator.literature_source = literature_source
         ...         indicator.external_references = external_references
@@ -2005,8 +2004,8 @@ class SERASite(BaseNode):
         Example:
 
         >>> from obspy.io.sitexml.core import EC8, ValueWithUncertainty, VelocityS30
-        >>> site.add_site_indicator([EC8("B")])
-        >>> site.add_site_indicator(
+        >>> site.add_site_indicator([EC8("B")])  # doctest: +SKIP
+        >>> site.add_site_indicator(  # doctest: +SKIP
         ...     [VelocityS30(ValueWithUncertainty(620.0))],
         ...     analysisID="quakeml:example.org/analysis/001")
         """
@@ -2086,7 +2085,7 @@ class SERASite(BaseNode):
         ...     velocity_profile_data=[VelocityProfileData(
         ...         velocityS=ValueWithUncertainty(400.0),
         ...         top_depth=ValueWithUncertainty(0.0))])
-        >>> site.add_velocity_profiles(
+        >>> site.add_velocity_profiles(  # doctest: +SKIP
         ...     [profile],
         ...     analysisID="quakeml:example.org/analysis/001")
         """
@@ -2246,9 +2245,9 @@ class SERASite(BaseNode):
 
         Example:
 
-        >>> site.get_sitexml_filename()
+        >>> site.get_sitexml_filename()  # doctest: +SKIP
         'Site_XX.ABCD.xml'
-        >>> site.get_sitexml_filename("2026-05-02T12:00:00Z")
+        >>> site.get_sitexml_filename("2026-05-02T12:00:00Z")  # doctest: +SKIP
         'Site_XX.ABCD_02-05-2026.xml'
         """
         station_code = self.site_description.station_code

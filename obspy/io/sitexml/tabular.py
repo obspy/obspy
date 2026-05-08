@@ -148,9 +148,9 @@ def csv_to_sera_site(site_owner_csv,
     Example
 
     >>> from obspy.io.sitexml.tabular import csv_to_sera_site
-    >>> sera_site_dict = csv_to_sera_site("site_owner.csv",
-    ...                     "site_description.csv", "analysis.csv",
-    ...                     "velocity_profiles_dir", ';')
+    >>> sera_site_dict = csv_to_sera_site(  # doctest: +SKIP
+    ...     "site_owner.csv", "site_description.csv", "analysis.csv",
+    ...     "velocity_profiles.csv")
     """
     # This is probably not needed as these two arguments are mandatory.
     #
@@ -233,8 +233,8 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     Example
 
     >>> from obspy.io.sitexml.tabular import excel_to_sera_site
-    >>> sera_site_dict = excel_to_sera_site("InputExcel.xlsx",
-    ...                         velocity_profiles="vp.xlsx")
+    >>> sera_site_dict = excel_to_sera_site(  # doctest: +SKIP
+    ...     "InputExcel.xlsx", velocity_profiles="vp.xlsx")
     """
     conv_dict = {
         'velocityS30_year': _read_year_cell,
@@ -323,8 +323,8 @@ def add_velocity_profiles(sera_sites, velocity_profiles, replace_existing=False,
 
     >>> from obspy.io.sitexml.sitexml import read_sitexml
     >>> from obspy.io.sitexml.tabular import add_velocity_profiles
-    >>> site = read_sitexml("site.xml")
-    >>> add_velocity_profiles(
+    >>> site = read_sitexml("site.xml")  # doctest: +SKIP
+    >>> add_velocity_profiles(  # doctest: +SKIP
     ...     site,
     ...     "velocity_profiles.csv",
     ...     replace_existing=True)

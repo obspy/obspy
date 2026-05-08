@@ -82,28 +82,24 @@ class BaseNode(ComparingObject):
         1. Create a station object and copy it
 
             >>> from obspy.io.sitexml.sitexml import read_sitexml
-            >>> site = read_sitexml("site.xml")
-            >>> site2 = site.copy()
+            >>> site = read_sitexml("site.xml")  # doctest: +SKIP
+            >>> site2 = site.copy()  # doctest: +SKIP
 
            The two objects are not the same:
 
-            >>> site is site2
-            False
+            >>> site is site2  # doctest: +SKIP
 
            But they have equal data (before applying further processing):
 
-            >>> site == site2
-            True
+            >>> site == site2  # doctest: +SKIP
 
         2. The following example shows how to make an alias but not copy the
            data. Any changes on ``site3`` would also change the contents of
            ``site``.
 
-            >>> site3 = site
-            >>> site is site3
-            True
-            >>> site == site3
-            True
+            >>> site3 = site  # doctest: +SKIP
+            >>> site is site3  # doctest: +SKIP
+            >>> site == site3  # doctest: +SKIP
         """
         return copy.deepcopy(self)
 

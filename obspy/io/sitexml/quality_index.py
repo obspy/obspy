@@ -120,7 +120,7 @@ def quality_index1(method=None, evaluation=None, reliability=None,
 
     The Quality Index #1 is then calculated using the following formula::
 
-    >>> Q_Index1 = ((A + B + C) * D) / (Amax + Bmax + Cmax)
+        Q_Index1 = ((A + B + C) * D) / (Amax + Bmax + Cmax)
 
     :type method: str or float, optional
     :param method: Whether the method of acquisition and analysis is
@@ -183,11 +183,11 @@ def quality_index2(sera_site):
     Quality Index #2 is a weighted sum computed on the quality index #1 of all
     site indicators evaluated at the target site and varies from 0 to 1.
 
-    The formula used for the calculation is:
+    The formula used for the calculation is::
 
-    >>> Q_Index2 = (
-    ...    w1*Q_Index1_si1 + w2*Q_Index1_si2 + ... + w7*Q_Index1_si7) / 
-    ...    (w1 + w2 + ... + w7)
+        Q_Index2 = (
+            w1 * Q_Index1_si1 + w2 * Q_Index1_si2 + ... +
+            w7 * Q_Index1_si7) / (w1 + w2 + ... + w7)
 
     The weights used for this calculation for each site indicator, as proposed
     by SERA, are:
@@ -282,9 +282,12 @@ def quality_index3(f0_vs30=None, f0_bedrock_depth=None, f0_h800=None,
     - ``1``: the indicator pair is consistent
     - ``None``: the indicator pair is unavailable or was not evaluated
 
-    >>> Q_Index3 = [cons(f0, Vs30) + cons(f0, seismic_bedrock_depth) +
-    ...            cons(f0, engineering_bedrock_depth) + cons(H800, Vs30) +
-    ...            cons(Vs30, geology)] / n
+    ::
+
+        Q_Index3 = (
+            cons(f0, Vs30) + cons(f0, seismic_bedrock_depth) +
+            cons(f0, engineering_bedrock_depth) + cons(H800, Vs30) +
+            cons(Vs30, geology)) / n
     
     where ``n`` is the number of provided, non-``None`` consistency values.
 
@@ -328,7 +331,9 @@ def overall_quality_index(quality_index2=0, quality_index3=0):
     The overall quality index is computed as the arithmetic mean between
     Q_Index2 and Q_Index3.
 
-    >>> Overall_Quality_Index = (Q_Index2 + Q_Index3) / 2
+    ::
+
+        Overall_Quality_Index = (Q_Index2 + Q_Index3) / 2
 
     If Q_Index2 is zero, the overall quality index is zero and Q_Index3 does
     not affect the result. If Q_Index3 is ``None``, it is treated as zero.

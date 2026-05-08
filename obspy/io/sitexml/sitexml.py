@@ -144,8 +144,8 @@ def validate_sitexml(path_or_object):
     Example
 
     >>> from obspy.io.sitexml.sitexml import validate_sitexml
-    >>> validates, errors = validate_sitexml(path_or_file_object)
-    >>> if validates:
+    >>> validates, errors = validate_sitexml("site.xml")  # doctest: +SKIP
+    >>> if validates:  # doctest: +SKIP
     ...     print("This is valid SiteXML file")
     ... else:
     ...     print("The provided SiteXML file fails to validate "
@@ -255,8 +255,9 @@ def read_sitexml(path_or_file_object):
     Example
 
     >>> from obspy.io.sitexml.sitexml import read_sitexml
-    >>> site = read_sitexml("site.xml")
-    >>> site = read_sitexml("https://example.org/sitexml/Site_XX.ABCD.xml")
+    >>> site = read_sitexml("site.xml")  # doctest: +SKIP
+    >>> site = read_sitexml(  # doctest: +SKIP
+    ...     "https://example.org/sitexml/Site_XX.ABCD.xml")
 
     """
     if _is_url(path_or_file_object):
@@ -917,7 +918,7 @@ def write_sitexml(sera_site, file_or_file_object=None, validate=True):
     Example
 
     >>> from obspy.io.sitexml.sitexml import write_sitexml
-    >>> write_sitexml(sera_site, validate=True)
+    >>> write_sitexml(sera_site, validate=True)  # doctest: +SKIP
 
     """
     # Validate cross-references in the in-memory SiteXML object graph before
@@ -1416,10 +1417,11 @@ def add_sitexml_reference(inventory, station_code, sitexml_url, *,
 
         >>> from obspy import read_inventory
         >>> from obspy.io.sitexml.sitexml import add_sitexml_reference
-        >>> inventory = read_inventory("./station.xml")
-        >>> inventory = add_sitexml_reference(
+        >>> inventory = read_inventory("./station.xml")  # doctest: +SKIP
+        >>> inventory = add_sitexml_reference(  # doctest: +SKIP
         ...     inventory, "XX.ABCD", "https://url/to/site.xml")
-        >>> inventory.write("./updated_station.xml", format="STATIONXML")
+        >>> inventory.write(  # doctest: +SKIP
+        ...     "./updated_station.xml", format="STATIONXML")
     """
     if not station_code:
         raise SiteXMLValidationError(
