@@ -1,14 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- 
-	The SERA_quakeML schema has been created to exchange site charactterization 
-	information. It is based on QuakeML Draft 2.0 and fulfills required information 
-	by the European Geotechnical Database (EGD) and by EU-SERA.
+	The SERA_quakeML schema has been created to facilitate the exchange of 
+	site characterization information. It is based on the QuakeML 2.0 Draft and 
+	complies with the requirements set by the European Geotechnical Database 
+	(EGD) and by EU-SERA.
 
 	Schema versions:
-	1.2: Created in the context of the SERA Project (Tasks 7.1-7.4)
+	1.2: Created in the context of the SERA Project (Tasks 7.1-7.5)
 		Author: Cecile Cornou (cecile.cornou@univ-grenoble-alpes.fr)
-	1.3: Updated in the context of an ORFEUS grand regarding a software implementation
-		for handling site characterization metadata. 
+	1.3: Updated in the context of a software implementation
+		for handling site characterization metadata funded by ORFEUS.
 		Author: Kiriaki Konstantinidou (kiriaki@itsak.gr)	
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.orfeus-eu.org/xml/site/1"
@@ -19,9 +20,9 @@
 	<xs:element name="SERA_quakeml" type="RootType">
 		<xs:annotation>
 			<xs:documentation>
-				The <strong>SERA_quakeML</strong> schema has been created to exchange 
-				information on site charactterization information. It is based on QuakeML 
-				Draft 2.0 and fulfills required information by the European Geotechnical 
+				The <strong>SERA_quakeML</strong> schema has been created to facilitate 
+				the exchange of site characterization information. It is based on the QuakeML 
+				2.0 Draft and complies with the requirements set by the European Geotechnical 
 				Database (EGD) and by EU-SERA.
 			</xs:documentation>
 		</xs:annotation>
@@ -132,7 +133,7 @@
 				Each revision describes a published or generated version of this
 				document.
 				<p><strong>Note: </strong>Document Revision metadata are not included 
-					in the QuakeML 2.0 draft</p>
+					in the QuakeML 2.0 Draft</p>
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
@@ -149,7 +150,7 @@
 				<strong>(but strongly recommented)</strong> who
 				made it and where the previous version can be found.
 				<p><strong>Note: </strong>Document Revision metadata are not included 
-					in the QuakeML 2.0 draft</p>
+					in the QuakeML 2.0 Draft</p>
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
@@ -207,7 +208,7 @@
 				Owner of the site. You must provide at least the Institution 
 				and a contact person.
 				<p><strong>Note: </strong>SiteOwnerType is based on 
-				QuakeML 2.0 draft <strong>stc:SiteOwner</strong></p>
+				QuakeML 2.0 Draft <strong>stc:SiteOwner</strong></p>
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
@@ -436,7 +437,7 @@
 		<xs:annotation>
 			<xs:documentation>
 				<p><strong>Note: </strong>SiteDescriptionType is loosely 
-				based on QuakeML 2.0 draft
+				based on QuakeML 2.0 Draft
 				<strong>stc:StationDescription</strong></p>
 			</xs:documentation>
 		</xs:annotation>
@@ -589,7 +590,7 @@
 				Group of site morphology and near-surface site indicators,
 				as suggested by SERA.
 				<p><strong>Note: </strong>SiteMorphologyType is based on QuakeML 
-				2.0 draft <strong>stc:SiteMorphology</strong></p>
+				2.0 Draft <strong>stc:SiteMorphology</strong></p>
 				These include:
 				<ul>
 					<li>Qualitative Morphology</li>
@@ -661,7 +662,7 @@
 						different schemas.<br/>
 						You can provide information for schemaA, schemaB or both.
 						<p><strong>Note: </strong>This in not included in the QuakeML 
-							2.0 draft</p>
+							2.0 Draft</p>
 						<ul>
 							<li>Example schema A: <strong>T1</strong></li>
 							<li>Example schema B: <strong>Flat</strong></li>
@@ -709,7 +710,7 @@
 				Depth beyond which the shear-wave velocity Vs exceeds 
 				800 m/s (only if measured).
 				<p><strong>Note: </strong>This in not included in the 
-				QuakeML 2.0 draft</p>
+				QuakeML 2.0 Draft</p>
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
@@ -811,7 +812,7 @@
 		<xs:annotation>
 			<xs:documentation>
 				<p><strong>Note: </strong>AnalysisType is based on QuakeML 
-				2.0 draft <strong>sic:Analysis</strong></p>
+				2.0 Draft <strong>sic:Analysis</strong></p>
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
@@ -987,7 +988,7 @@
 			<xs:documentation>
 				Data of <strong>one</strong> velocity profile.
 				<p><strong>Note: </strong>VelocityProfile is based on QuakeML 
-				2.0 draft <strong>sic:VelocityProfile</strong></p>
+				2.0 Draft <strong>sic:VelocityProfile</strong></p>
 			</xs:documentation>
 		</xs:annotation>
     	<xs:sequence>
@@ -1026,7 +1027,7 @@
 			<xs:documentation>
 				Velocity Profile data for each layer.
 				<p><strong>Note: </strong>VelocityProfileData is based on QuakeML 
-				2.0 draft <strong>sic:VelocityProfileData</strong></p>
+				2.0 Draft <strong>sic:VelocityProfileData</strong></p>
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
@@ -1042,7 +1043,7 @@
 			<xs:documentation>
 				Geometry of the Velocity Profile layer.
 				<p><strong>Note: </strong>LayerGeometry is based on QuakeML 
-				2.0 draft <strong>sic:LayerGeometry</strong></p>
+				2.0 Draft <strong>sic:LayerGeometry</strong></p>
 			</xs:documentation>
 		</xs:annotation>
     	<xs:sequence>
@@ -1059,7 +1060,7 @@
 			<xs:documentation>
 				This type is used to provide information on a published resource.
 				<p><strong>Note: </strong>LiteratureSourceType is based on QuakeML 
-				2.0 draft <strong>rm:LiteratureSource</strong></p>
+				2.0 Draft <strong>rm:LiteratureSource</strong></p>
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
