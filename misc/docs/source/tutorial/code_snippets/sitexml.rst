@@ -1060,6 +1060,59 @@ Q_Index3 consistency columns are:
 For CSV import, pass the sidecar file as ``quality_index_csv``. For Excel
 import, include an optional ``qualityIndex`` sheet in the workbook.
 
+Automatic Calculation Of Overall QI
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tabular import is conservative about the overall quality index. If a CSV file
+or Excel sheet contains indicator-level ``...Qindex1`` columns but does not
+provide an ``overallQindex`` value and does not provide the optional
+quality-index sidecar table, ObsPy imports and writes the indicator-level
+quality indexes only. It does **not** automatically synthesize
+``overallQualityIndex`` in the output XML.
+
+This distinction is important because Q_Index2 gives missing indicator
+Q_Index1 values a zero contribution, and Q_Index3 needs consistency inputs
+that are only available from the sidecar table or from explicit Python
+arguments. Automatically calculating an overall value from partial tabular
+metadata could therefore make absent information look like an evaluated site
+quality.
+
+Use one of these explicit workflows when the output XML should contain
+``overallQualityIndex``:
+
+* provide an ``overallQindex`` column in the site-description table;
+* provide the quality-index sidecar CSV or Excel ``qualityIndex`` sheet, so
+  ObsPy can calculate Q_Index1/Q_Index3-derived results during import;
+* call :meth:`~obspy.io.sitexml.core.SERASite.calculate_overall_quality_index`
+  yourself on the imported ``SERASite`` objects before writing SiteXML.
+
+For example, after importing tabular files with some indicator-level
+``...Qindex1`` values, calculate and store the overall quality index
+explicitly before producing XML output:
+
+.. code-block:: python
+
+    from obspy.io.sitexml.sitexml import sitedict_to_sitexml
+
+    sites = csv_to_sera_site(
+        site_owner_csv=site_owner_csv,
+        site_description_csv=data_dir / "site_description.csv",
+        analysis_csv=data_dir / "site_analysis.csv",
+        velocity_profiles_csv=data_dir / "velocity_profiles",
+        delim=";")
+
+    for site in sites.values():
+        site.calculate_overall_quality_index(
+            f0_vs30=1,
+            f0_bedrock_depth=0,
+            vs30_geology=1)
+
+    sitedict_to_sitexml(sites, "./sitexml_output")
+
+If no Q_Index3 consistency pairs are passed,
+``calculate_overall_quality_index()`` treats Q_Index3 as zero for the final
+formula. Pass consistency values only when they have actually been evaluated.
+
 Examples
 ~~~~~~~~
 
@@ -1097,6 +1150,7 @@ The same formulas are available directly through convenience methods on
 
 .. code-block:: python
 
+    # site is an existing SERASite object
     ec8_q1 = site.site_description.ec8.calculate_quality_index1(
         method="documented",
         evaluation="direct",
@@ -1114,3 +1168,42 @@ The same formulas are available directly through convenience methods on
         vs30_geology=1)
 
     print(ec8_q1, q2, q3, overall)
+
+If site metadata for all your sites are produced using the same methodology,
+you can calculate and apply manually the quality indexes:
+
+.. code-block:: python
+
+    from obspy.io.sitexml.quality_index import quality_index1
+    from obspy.io.sitexml.sitexml import sitedict_to_sitexml
+
+    ec8_quality_index = quality_index1(
+        method="documented",
+        evaluation="direct",
+        reliability="yes",
+        report="yes")
+    h800_quality_index = quality_index1(
+        method="documented",
+        evaluation="direct",
+        reliability="partial",
+        report="yes")
+    vs30_quality_index = quality_index1(
+        method="documented",
+        evaluation="direct",
+        reliability="yes",
+        report="partial")
+
+    # sites is a dictionary of SERASite objects
+    for site in sites.values():
+        if site.site_description.ec8 is not None:
+            site.site_description.ec8.quality_index = ec8_quality_index
+        if site.site_description.h800 is not None:
+            site.site_description.h800.quality_index = h800_quality_index
+
+        analysis = site.get_preferred_analysis()
+        if analysis is not None and analysis.velocity_s30 is not None:
+            analysis.velocity_s30.quality_index = vs30_quality_index
+
+        site.calculate_overall_quality_index()
+
+    sitedict_to_sitexml(sites, "./sitexml_output")
