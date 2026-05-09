@@ -883,7 +883,8 @@ def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     The files are written to a folder given with argument ``output_folder``.
     The name of each SiteXML file uses
     :meth:`~obspy.io.sitexml.core.SERASite.get_sitexml_filename`, currently
-    ``Site_<station-or-site-id>.xml``.
+    ``Site_<station-or-site-id>_<DD-MM-YYYY>.xml``. The date is the same
+    creation time written to the root ``creationTime`` element.
 
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
@@ -895,10 +896,15 @@ def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     """
     output_folder = Path(output_folder)
     for sera_site in sera_site_dict.values():
-        output_file = output_folder / sera_site.get_sitexml_filename()
-        write_sitexml(sera_site, output_file, validate=True)
+        creation_time = obspy.UTCDateTime()
+        output_file = output_folder / sera_site.get_sitexml_filename(
+            creation_time)
+        write_sitexml(
+            sera_site, output_file, validate=True,
+            creation_time=creation_time)
 
-def write_sitexml(sera_site, file_or_file_object=None, validate=True):
+def write_sitexml(sera_site, file_or_file_object=None, validate=True,
+                  creation_time=None):
     """
     Writes a sera_site object to a buffer.
 
@@ -913,6 +919,12 @@ def write_sitexml(sera_site, file_or_file_object=None, validate=True):
     :param validate: If True, the created document will be validated with the
         SiteXML schema before being written. Defaults to True which is the
         recommended usage.
+    :type creation_time: :class:`~obspy.core.utcdatetime.UTCDateTime` or
+        convertible, optional
+    :param creation_time: Creation time to stamp into the root
+        ``creationTime`` element. If omitted, the current time is used. 
+        Use this parameter if you provide an already timestamped  
+        output filename.
     :rtype: None
 
     Example
@@ -934,7 +946,10 @@ def write_sitexml(sera_site, file_or_file_object=None, validate=True):
     # Root-level creationTime is document serialization metadata. Always
     # stamp it with the current write time, even when rewriting an unchanged
     # SERASite object that was read from an existing XML document.
-    creation_time = obspy.UTCDateTime()
+    if creation_time is None:
+        creation_time = obspy.UTCDateTime()
+    else:
+        creation_time = obspy.UTCDateTime(creation_time)
     sera_site.created = creation_time
     etree.SubElement(root, "creationTime").text = str(creation_time)
 
