@@ -12,6 +12,7 @@ Tests for SiteXML CSV and Excel import helpers.
 
 import warnings
 
+import obspy
 import pandas as pd
 import pytest
 
@@ -19,6 +20,9 @@ from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLImportError
 from obspy.io.sitexml.quality_index import (apply_quality_index_dataframe,
                                             apply_quality_index_csv,
                                             apply_quality_index_excel)
+from obspy.io.sitexml.scripts.csv2serasite import main as csv2serasite_main
+from obspy.io.sitexml.scripts.excel2serasite import (
+    main as excel2serasite_main)
 from obspy.io.sitexml.tabular import (add_velocity_profiles, csv_to_sera_site,
                                       excel_to_sera_site, _read_year_cell)
 from obspy.io.sitexml.sitexml import sitexml_to_sitedict
@@ -314,6 +318,26 @@ class TestSiteXMLCSVImport():
         self._assert_full_reference_metadata(
             analysis_001.velocity_profile_set)
 
+    def test_csv2serasite_main_writes_sitexml_files(
+            self, datapath, tmp_path):
+        output_folder = tmp_path / "sitexml"
+
+        result = csv2serasite_main([
+            "-o", str(datapath / "site_owner.csv"),
+            "-d", str(datapath / "site_description.csv"),
+            "-a", str(datapath / "site_analysis.csv"),
+            "-p", str(datapath / "velocity_profiles"),
+            "--output-folder", str(output_folder),
+        ])
+
+        date_text = obspy.UTCDateTime().strftime("%d-%m-%Y")
+        assert result == 0
+        assert sorted(path.name for path in output_folder.glob("*.xml")) == [
+            "Site_XX.ABCD_%s.xml" % date_text,
+            "Site_YY.WXYZ_%s.xml" % date_text,
+            "Site_domain.ab.003_%s.xml" % date_text,
+        ]
+
     def test_excel_to_sera_site_imports_sites_analysis_and_velocity_profiles(
             self, datapath):
         pytest.importorskip("openpyxl")
@@ -386,6 +410,24 @@ class TestSiteXMLCSVImport():
         self._assert_full_reference_metadata(analysis_001.resonance_frequency)
         self._assert_full_reference_metadata(
             analysis_001.velocity_profile_set)
+
+    def test_excel2serasite_main_writes_sitexml_files(
+            self, datapath, tmp_path):
+        pytest.importorskip("openpyxl")
+        output_folder = tmp_path / "sitexml"
+
+        result = excel2serasite_main([
+            str(datapath / "sera_site_all.xlsx"),
+            "-p", str(datapath / "velocity_profiles.xlsx"),
+            "--output-folder", str(output_folder),
+        ])
+
+        date_text = obspy.UTCDateTime().strftime("%d-%m-%Y")
+        assert result == 0
+        assert sorted(path.name for path in output_folder.glob("*.xml")) == [
+            "Site_XX.ABCD_%s.xml" % date_text,
+            "Site_YY.ZWXY_%s.xml" % date_text,
+        ]
 
     def test_excel_to_sera_site_applies_quality_index_sheet(self, datapath):
         pytest.importorskip("openpyxl")
