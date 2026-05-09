@@ -402,22 +402,24 @@ def _read_site_description(df_site_description):
                                        latitude=latitude, 
                                        longitude=longitude)
         
-        site_description_obj.altitude = _read_cell(row,
-                                            "altitude")
-        site_description_obj.min_distance_from_station = _read_cell(row,
-                                            "minDistanceFromStation")
-        site_description_obj.max_distance_from_station = _read_cell(row,
-                                            "maxDistanceFromStation")
-        site_description_obj.morphology = _read_cell(row,
-                                            "siteMorphology")
-        site_description_obj.topographyA = _read_cell(row,
-                                            "siteTopography_schemaA")
-        site_description_obj.topographyB = _read_cell(row,
-                                            "siteTopography_schemaB")
-        site_description_obj.preferred_site_analysisID = _read_cell(row,
-                                            "preferredSiteAnalysisID")
-        site_description_obj.preferred_velocity_profileID = _read_cell(row,
-                                            "preferredVelocityProfileID")
+        site_description_obj.altitude = \
+            _read_cell(row, "altitude")
+        site_description_obj.min_distance_from_station = \
+            _read_cell(row, "minDistanceFromStation")
+        site_description_obj.max_distance_from_station = \
+            _read_cell(row, "maxDistanceFromStation")
+        site_description_obj.morphology = \
+            _read_cell(row, "siteMorphology")
+        site_description_obj.topographyA = \
+            _read_cell(row, "siteTopography_schemaA")
+        site_description_obj.topographyB = \
+            _read_cell(row, "siteTopography_schemaB")
+        site_description_obj.preferred_site_analysisID = \
+            _read_cell(row, "preferredSiteAnalysisID")
+        site_description_obj.preferred_velocity_profileID = \
+            _read_cell(row, "preferredVelocityProfileID")
+        site_description_obj.overall_quality_index = \
+            _read_cell(row, "overallQindex")
         
         site_description_obj.ec8 = \
             _read_site_indicator(row, EC8, 'siteClassEC8')
