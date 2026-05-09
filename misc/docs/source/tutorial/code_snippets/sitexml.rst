@@ -240,6 +240,79 @@ objects are attached to the site before updating the preferred IDs.
         profile.resource_id,
         analysisID=analysis.resource_id)
 
+Reference Validation And Preserving User Intent
+-----------------------------------------------
+
+SiteXML contains internal references between objects: a top-level site points
+to one site description, each analysis points back to that site description,
+velocity-profile rows belong to a specific analysis, and preferred IDs select 
+one analysis or velocity profile. **ObsPy validates these relationships, but
+it does not repair them by guessing what the user meant.**
+
+This is a deliberate design choice. When a site has several analyses or
+velocity profiles, a missing or inconsistent ID is ambiguous. Automatically
+choosing as preferred the first available or a random object could create 
+valid-looking XML that no longer represents the user's intended data. Instead, 
+ObsPy preserves missing optional metadata as missing, preserves explicit IDs 
+as written, and raises a clear validation error when an explicit relationship 
+points to an object that does not exist or belongs somewhere else.
+
+Use :meth:`~obspy.io.sitexml.core.SERASite.validate_references` to check the
+internal object graph before writing or after programmatic edits:
+
+.. code-block:: python
+
+    site.validate_references()
+
+:func:`~obspy.io.sitexml.sitexml.write_sitexml` calls this validation
+automatically before XML serialization, so broken internal references fail
+before a file is emitted.
+
+Reference validation checks that:
+
+* every ``Analysis.site_descriptionID`` matches the parent
+  ``SiteDescription.resource_id``;
+* analysis resource IDs are unique within the site;
+* velocity-profile resource IDs are unique within the site;
+* ``preferredSiteAnalysisID`` points to an attached analysis when it is set;
+* ``preferredVelocityProfileID`` points to an attached velocity profile when it
+  is set;
+* if both preferred IDs are set, the preferred velocity profile belongs to the
+  preferred analysis.
+
+The tabular importers follow the same principle. They require explicit
+relationship columns such as ``siteDescriptionID``, ``analysisID``, and
+``velocityProfileID`` where those relationships are needed. They do not
+generate missing relationship IDs, and they do not infer
+``preferredSiteAnalysisID`` or ``preferredVelocityProfileID`` from the first
+available row.
+
+If you want ObsPy to set preferred relationships for you, use the explicit
+object helpers. These helpers validate the selected objects before changing
+the preferred-ID metadata:
+
+.. code-block:: python
+
+    analysis = site.add_analysis(
+        resource_id="quakeml:domain.ab/analysis/002",
+        set_preferred=True)
+
+    site.set_preferred_analysis(analysis.resource_id)
+    site.set_preferred_velocity_profile(
+        "quakeml:domain.ab/velocity_profile/003",
+        analysisID=analysis.resource_id)
+
+Some convenience methods do use **fallback behavior** for lookup or calculation.
+For example, ``get_preferred_analysis()`` returns the first attached analysis
+when no preferred analysis has been declared, and quality-index calculations
+use that same lookup behavior. 
+
+.. important::
+
+  These fallbacks are read-time conveniences: they do not write guessed preferred 
+  IDs back into ``SiteDescription`` and do not change the XML metadata unless you 
+  explicitly assign those fields.
+
 Creating A SiteXML File From Scratch
 ------------------------------------
 
