@@ -73,20 +73,26 @@ class TestSiteXML():
 
         non_station_site = self._minimal_sera_site(station_code=None)
         assert non_station_site.get_sitexml_filename() == (
-            "Site_quakeml_domain_ab_site_001.xml")
+            "Site_domain.ab.001.xml")
         assert non_station_site.get_sitexml_filename(
             obspy.UTCDateTime(2026, 1, 12, 3, 4, 5)) == (
-                "Site_quakeml_domain_ab_site_001_12-01-2026.xml")
+                "Site_domain.ab.001_12-01-2026.xml")
 
-    def test_sitedict_to_sitexml_uses_default_site_filename(
+    def test_sitedict_to_sitexml_uses_dated_site_filename(
             self, tmp_path, monkeypatch):
         output_calls = []
+        creation_time = obspy.UTCDateTime(2026, 5, 9, 12, 0, 0)
 
-        def fake_write_sitexml(sera_site, filename, validate):
-            output_calls.append((sera_site, filename, validate))
+        def fake_write_sitexml(sera_site, filename, validate,
+                               creation_time=None):
+            output_calls.append((sera_site, filename, validate,
+                                 creation_time))
 
         monkeypatch.setattr(
             sitexml_module, "write_sitexml", fake_write_sitexml)
+        monkeypatch.setattr(
+            sitexml_module.obspy, "UTCDateTime",
+            lambda *args, **kwargs: creation_time)
 
         station_site = self._minimal_sera_site(
             "XX.ABCD", resource_id="quakeml:domain.ab/site/001")
@@ -98,10 +104,13 @@ class TestSiteXML():
             "quakeml:domain.ab/site/without_station": non_station_site,
         }, output_folder=tmp_path)
 
-        assert [tmp_path / "Site_XX.ABCD.xml",
-                tmp_path / "Site_quakeml_domain_ab_site_without_station.xml"] == [
-                    Path(filename) for _, filename, _ in output_calls]
-        assert [validate for _, _, validate in output_calls] == [True, True]
+        assert [tmp_path / "Site_XX.ABCD_09-05-2026.xml",
+                tmp_path / (
+                    "Site_domain.ab.without_station_09-05-2026.xml")] == [
+                    Path(filename) for _, filename, _, _ in output_calls]
+        assert [validate for _, _, validate, _ in output_calls] == [True, True]
+        assert [time for _, _, _, time in output_calls] == [
+            creation_time, creation_time]
 
     def test_sitexml_to_sitedict_reads_single_file(self, tmp_path):
         sera_site = self._minimal_sera_site()
@@ -1373,6 +1382,22 @@ class TestSiteXML():
         assert filename.name == (
             "Site_XX.ABCD_%s.xml" %
             written_creation_time.strftime("%d-%m-%Y"))
+
+    def test_write_sitexml_uses_provided_creation_time(self):
+        sera_site = self._minimal_sera_site()
+        xml_buffer = io.BytesIO()
+        creation_time = obspy.UTCDateTime(2026, 5, 9, 12, 0, 0)
+
+        write_sitexml(
+            sera_site, xml_buffer, validate=True,
+            creation_time=creation_time)
+
+        root = etree.fromstring(xml_buffer.getvalue())
+        written_creation_time = obspy.UTCDateTime(
+            root.find("{http://www.orfeus-eu.org/xml/site/1}creationTime").text)
+
+        assert written_creation_time == creation_time
+        assert sera_site.created == creation_time
 
     def test_site_description_requires_schema_required_fields(self):
         with pytest.raises(SiteXMLValidationError):
