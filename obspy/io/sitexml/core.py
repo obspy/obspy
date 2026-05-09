@@ -2254,9 +2254,14 @@ class SERASite(BaseNode):
         if station_code:
             filename = station_code
         else:
-            filename = re.sub(
-                r"[^A-Za-z0-9]+", "_", str(self.resource_id)
-            ).strip("_")
+            resource_id = str(self.resource_id)
+            match = re.match(r"^quakeml:([^/]+)/site/([^/]+)$", resource_id)
+            if match:
+                filename = "%s.%s" % match.groups()
+            else:
+                filename = re.sub(
+                    r"[^A-Za-z0-9]+", "_", resource_id
+                ).strip("_")
         filename = "Site_%s" % filename
 
         # Append serialization date

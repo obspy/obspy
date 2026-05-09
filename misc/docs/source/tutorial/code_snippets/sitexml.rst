@@ -109,14 +109,13 @@ from ``Site_`` and the ``network.station`` code stored in
     Site_XX.ABCD_05-05-2026.xml         # Default filename - publication date
 
 For sites without an associated station code, the base filename is derived from
-the ``SERASite.resource_id`` by replacing non-alphanumeric characters with
-underscores:
+the ``SERASite.resource_id`` using the compact SiteXML site identifier:
 
 .. code-block:: text
 
     quakeml:example.org/site/001
-    Site_quakeml_example_org_site_001.xml
-    Site_quakeml_example_org_site_001_05-05-2026.xml
+    Site_example.org.001.xml
+    Site_example.org.001_05-05-2026.xml
 
 Use
 :meth:`~obspy.io.sitexml.core.SERASite.get_sitexml_filename` when you need to
