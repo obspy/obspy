@@ -10,10 +10,10 @@ Metadata is stored in a SERASite object.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 
-import inspect
 import io
 from pathlib import Path
 import re
+import sys
 from urllib.error import HTTPError, URLError
 from urllib.parse import unquote, urlparse
 from urllib.request import urlopen
@@ -69,6 +69,25 @@ def _ns(tagname):
     :rtype: str
     """
     return "{%s}%s" % (NAMESPACE, tagname)
+
+def _package_data_path(*parts):
+    """
+    Resolve SiteXML package data in source trees and PyInstaller bundles.
+
+    :rtype: :class:`pathlib.Path`
+    """
+    package_path = Path(__file__).resolve().parent.joinpath(*parts)
+    if package_path.exists():
+        return package_path
+
+    bundle_root = getattr(sys, "_MEIPASS", None)
+    if bundle_root is not None:
+        bundle_path = Path(bundle_root) / "obspy" / "io" / "sitexml"
+        bundle_path = bundle_path.joinpath(*parts)
+        if bundle_path.exists():
+            return bundle_path
+
+    return package_path
 
 def _get_version_from_xmldoc(xmldoc):
     """
@@ -168,17 +187,14 @@ def validate_sitexml(path_or_object):
         version = _get_version_from_xmldoc(xmldoc)
 
         # Get the schema location.
-        schema_location = Path(
-            inspect.getfile(inspect.currentframe())).parent
-        schema_location = schema_location / "data"
-        schema_location = str(
-            schema_location / ("QuakeML-SERA-%s.xsd" % version))
+        schema_location = _package_data_path(
+            "data", "QuakeML-SERA-%s.xsd" % version)
         
-        if not Path(schema_location).exists():
+        if not schema_location.exists():
             msg = "No schema file found to validate SiteXML version '%s'"
             raise SiteXMLValidationError(msg % version)
 
-        xmlschema = etree.XMLSchema(etree.parse(schema_location))
+        xmlschema = etree.XMLSchema(etree.parse(str(schema_location)))
 
         valid = xmlschema.validate(xmldoc)
 

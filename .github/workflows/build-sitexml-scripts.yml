@@ -44,18 +44,19 @@ jobs:
           python -m pip install -e .
           python -m pip install pyinstaller pandas openpyxl
 
+      - name: Remove old build products
+        run: |
+          rm -rf build dist
+
       # Build the CSV executable.
       - name: Build csv2serasite
         shell: bash
         run: |
-          # Remove old build products.
-          rm -rf build dist
-
           # Build executable.
           # pyinstaller --clean --onedir --name csv2serasite --collect-submodules obspy.io.sitexml --collect-data obspy.io.sitexml --add-data "obspy/RELEASE-VERSION${{ matrix.data_sep }}obspy" obspy/io/sitexml/scripts/csv2serasite.py
           pyinstaller --clean --onedir --name csv2serasite \
             --collect-data obspy.io.sitexml \
-            --add-data "obspy/RELEASE-VERSION:obspy" \
+            --add-data "obspy/RELEASE-VERSION${{ matrix.data_sep }}obspy" \
             --collect-all pandas \
             --exclude-module scipy \
             --exclude-module sqlalchemy \
@@ -68,14 +69,11 @@ jobs:
       - name: Build excel2serasite
         shell: bash
         run: |
-          # Remove old build products.
-          rm -rf build dist
-
           # Build executable.
-          #pyinstaller --clean --onedir --name excel2serasite --collect-submodules obspy.io.sitexml --collect-data obspy.io.sitexml --collect-all openpyxl --add-data "obspy/RELEASE-VERSION${{ matrix.data_sep }}obspy" obspy/io/sitexml/scripts/excel2serasite.py
+          # pyinstaller --clean --onedir --name excel2serasite --collect-submodules obspy.io.sitexml --collect-data obspy.io.sitexml --collect-all openpyxl --add-data "obspy/RELEASE-VERSION${{ matrix.data_sep }}obspy" obspy/io/sitexml/scripts/excel2serasite.py
           pyinstaller --clean --onedir --name excel2serasite \
             --collect-data obspy.io.sitexml \
-            --add-data "obspy/RELEASE-VERSION:obspy" \
+            --add-data "obspy/RELEASE-VERSION${{ matrix.data_sep }}obspy" \
             --collect-all pandas \
             --collect-all openpyxl \
             --exclude-module scipy \

@@ -836,6 +836,25 @@ class TestSiteXML():
         assert valid
         assert errors == ()
 
+    def test_package_data_path_supports_pyinstaller_bundle(
+            self, tmp_path, monkeypatch):
+        """
+        SiteXML schema data can be resolved from a PyInstaller bundle.
+        """
+        bundle_schema = (
+            tmp_path / "obspy" / "io" / "sitexml" / "data" /
+            "QuakeML-SERA-1.3.xsd")
+        bundle_schema.parent.mkdir(parents=True)
+        bundle_schema.write_text("schema", encoding="ascii")
+
+        monkeypatch.setattr(
+            sitexml_module, "__file__", str(tmp_path / "missing.py"))
+        monkeypatch.setattr(
+            sitexml_module.sys, "_MEIPASS", str(tmp_path), raising=False)
+
+        assert sitexml_module._package_data_path(
+            "data", "QuakeML-SERA-1.3.xsd") == bundle_schema
+
     def test_add_sitexml_reference_rejects_missing_station(self):
         """
         The inventory must contain the exact network.station code.
