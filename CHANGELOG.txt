@@ -8,6 +8,7 @@ Changes:
  - obspy.io.mseed:
    * fix the type of exception raised when trying to read an empty file
      (see #3709)
+   * fix a void return type in write mseed ctypes wrapper (see #3735)
  - obspy.clients:
    * SDS client: fix handling of empty files (see #3709)
  - obspy.taup:
