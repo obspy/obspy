@@ -61,7 +61,7 @@ jobs:
             --exclude-module sqlalchemy \
             --exclude-module matplotlib \
             --exclude-module tkinter \
-            --exclude-module IPython 
+            --exclude-module IPython \
             obspy/io/sitexml/scripts/csv2serasite.py
 
       # Build the Excel executable.
@@ -82,7 +82,7 @@ jobs:
             --exclude-module sqlalchemy \
             --exclude-module matplotlib \
             --exclude-module tkinter \
-            --exclude-module IPython 
+            --exclude-module IPython \
             obspy/io/sitexml/scripts/excel2serasite.py
 
       - uses: actions/upload-artifact@v7
