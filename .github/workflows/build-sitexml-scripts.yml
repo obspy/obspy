@@ -45,6 +45,7 @@ jobs:
           python -m pip install pyinstaller pandas openpyxl
 
       - name: Remove old build products
+        shell: bash
         run: |
           rm -rf build dist
 
