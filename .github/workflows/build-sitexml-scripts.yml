@@ -1,0 +1,92 @@
+name: Build SiteXML scripts
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "sitexml-scripts-*"
+
+# Build one bundle per operating system.
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            artifact: sitexml-scripts-macos-arm64
+            data_sep: ":"
+          - os: macos-15-intel
+            artifact: sitexml-scripts-macos-x86_64
+            data_sep: ":"
+          - os: ubuntu-latest
+            artifact: sitexml-scripts-linux-x86_64
+            data_sep: ":"
+          - os: windows-latest
+            artifact: sitexml-scripts-windows-x86_64
+            data_sep: ";"
+
+    steps:
+      # Get the repository code.
+      - uses: actions/checkout@v6
+
+      # Install Python for this runner.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install -U pip setuptools wheel
+          python -m pip install -e .
+          python -m pip install pyinstaller pandas openpyxl
+
+      # Build the CSV executable.
+      - name: Build csv2serasite
+        shell: bash
+        run: |
+          # Remove old build products.
+          rm -rf build dist
+
+          # Build executable.
+          # pyinstaller --clean --onedir --name csv2serasite --collect-submodules obspy.io.sitexml --collect-data obspy.io.sitexml --add-data "obspy/RELEASE-VERSION${{ matrix.data_sep }}obspy" obspy/io/sitexml/scripts/csv2serasite.py
+          pyinstaller --clean --onedir --name csv2serasite \
+            --collect-data obspy.io.sitexml \
+            --add-data "obspy/RELEASE-VERSION:obspy" \
+            --collect-all pandas \
+            --exclude-module scipy \
+            --exclude-module sqlalchemy \
+            --exclude-module matplotlib \
+            --exclude-module tkinter \
+            --exclude-module IPython 
+            obspy/io/sitexml/scripts/csv2serasite.py
+
+      # Build the Excel executable.
+      - name: Build excel2serasite
+        shell: bash
+        run: |
+          # Remove old build products.
+          rm -rf build dist
+
+          # Build executable.
+          #pyinstaller --clean --onedir --name excel2serasite --collect-submodules obspy.io.sitexml --collect-data obspy.io.sitexml --collect-all openpyxl --add-data "obspy/RELEASE-VERSION${{ matrix.data_sep }}obspy" obspy/io/sitexml/scripts/excel2serasite.py
+          pyinstaller --clean --onedir --name excel2serasite \
+            --collect-data obspy.io.sitexml \
+            --add-data "obspy/RELEASE-VERSION:obspy" \
+            --collect-all pandas \
+            --collect-all openpyxl \
+            --exclude-module scipy \
+            --exclude-module sqlalchemy \
+            --exclude-module matplotlib \
+            --exclude-module tkinter \
+            --exclude-module IPython 
+            obspy/io/sitexml/scripts/excel2serasite.py
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/
+
