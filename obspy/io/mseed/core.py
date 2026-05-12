@@ -444,7 +444,12 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     if isinstance(mseed_object, str):
         # Read to NumPy array which is used as a buffer.
         # use memmap, faster than fromfile, same functionality
-        bfr_np = np.memmap(mseed_object, dtype=np.int8, mode="c")
+
+        # handling for emtpy files
+        if os.path.getsize(mseed_object) == 0:
+            bfr_np = np.array([], dtype=np.int8)
+        else:
+            bfr_np = np.memmap(mseed_object, dtype=np.int8, mode="c")
 
     elif hasattr(mseed_object, 'read'):
         bfr_np = from_buffer(mseed_object.read(), dtype=np.int8)
@@ -1110,7 +1115,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
         def record_handler(record, reclen, _stream):
             f.write(record[0:reclen])
         # Define Python callback function for use in C function
-        rec_handler = C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int,
+        rec_handler = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int,
                                   C.c_void_p)(record_handler)
 
         # Fill up msr record structure, this is already contained in

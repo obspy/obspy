@@ -8,7 +8,18 @@ maintenance_1.5.x
 =================
 
 Changes:
- - ...
+ - obspy.clients.filesystem:
+   * tsindex: improve handling of sql sessions, less connections staying open
+     (see #3736)
+ - obspy.io.mseed:
+   * fix the type of exception raised when trying to read an empty file
+     (see #3709)
+   * fix a void return type in write mseed ctypes wrapper (see #3735)
+ - obspy.clients:
+   * SDS client: fix handling of empty files (see #3709)
+ - obspy.taup:
+   * fix an issue with obspy.taup not being usable with specific Python
+     versions 3.13.10 and 3.14.1 (see #3650)
 
 1.5.0 (doi: 10.5281/zenodo.19005357)
 ====================================

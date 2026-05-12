@@ -12,6 +12,7 @@ on:
   push:
     branches:
       - master
+      - 'maintenance_*.*.x'
     tags-ignore:
       - '**'
 
@@ -148,7 +149,7 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
-      - uses: conda-incubator/setup-miniconda@v3
+      - uses: conda-incubator/setup-miniconda@v4
         with:
           miniforge-version: latest
           activate-environment: test
@@ -203,7 +204,7 @@ jobs:
           obspy-runtests --cov obspy --cov-report=xml:${GITHUB_WORKSPACE}/coverage.xml --cov-append --report ${{ env.runtest_options }}
 
       - name: upload coverage
-        uses: codecov/codecov-action@v5.5.2
+        uses: codecov/codecov-action@v6.0.0
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure')
         with:
           flags: ${{ contains(matrix.options, 'network') && 'unittests_network' || 'unittests' }}
