@@ -964,7 +964,7 @@
 	<xs:complexType name="VelocityProfileSetIndicatorType">
 		<xs:annotation>
 			<xs:documentation>
-				Bundles one ot more velocity profiles associated with a 
+				Bundles zero or more velocity profiles associated with a 
 				specific analysis. 
 				<p><strong>Note: </strong>literatureSource, externalReference 
 				and qualityIndex refer to the bundle of velocity profiles.</p>
@@ -972,7 +972,7 @@
 		</xs:annotation>
 		<xs:sequence>
 			<xs:element name="velocityProfile" type="VelocityProfile" 
-						minOccurs="1" maxOccurs="unbounded">
+						minOccurs="0" maxOccurs="unbounded">
 				<xs:annotation>
 					<xs:documentation>
 						Velocity profiles associated with this analysis.

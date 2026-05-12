@@ -970,7 +970,6 @@ def write_sitexml(sera_site, file_or_file_object=None, validate=True,
         _write_analysis(root, sera_site.analysis)
 
     tree = root.getroottree()
-
     if validate is True:
         buf = io.BytesIO()
         tree.write(buf)
@@ -1131,7 +1130,7 @@ def _write_velocity_profile_set(parent, velocity_profile_set):
 
     :rtype: None
     """
-    if velocity_profile_set:
+    if _has_velocity_profile_set_content(velocity_profile_set):
         velocity_profile_set_elem = etree.SubElement(
             parent, "velocityProfileSet")
         if velocity_profile_set.velocity_profiles:
@@ -1176,6 +1175,23 @@ def _write_velocity_profile_set(parent, velocity_profile_set):
             for external_reference in velocity_profile_set.external_references:
                 _write_external_reference(
                     velocity_profile_set_elem, external_reference)
+
+
+def _has_velocity_profile_set_content(velocity_profile_set):
+    """
+    Return whether a velocity-profile set has schema-meaningful content.
+
+    Quality index alone is not sufficient because it must qualify either
+    embedded profile data or a supporting reference.
+
+    :rtype: bool
+    """
+    if not velocity_profile_set:
+        return False
+    return bool(
+        velocity_profile_set.velocity_profiles or
+        velocity_profile_set.literature_source or
+        velocity_profile_set.external_references)
 
 
 def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):

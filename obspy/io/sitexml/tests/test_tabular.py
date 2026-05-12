@@ -318,6 +318,78 @@ class TestSiteXMLCSVImport():
         self._assert_full_reference_metadata(
             analysis_001.velocity_profile_set)
 
+    def test_csv_to_sera_site_preserves_reference_only_velocity_profile_set(
+            self, tmp_path):
+        site_owner_csv = tmp_path / "site_owner.csv"
+        site_owner_csv.write_text(
+            "owner_codename;owner_fullname;person_firstname;"
+            "person_lastname;person_mbox\n"
+            "TEST;Test Owner;Name;Surname;someemail@domain.ab\n",
+            encoding="utf-8")
+
+        site_description_csv = tmp_path / "site_description.csv"
+        site_description_csv.write_text(
+            "siteID;siteDescriptionID;latitude;longitude\n"
+            "quakeml:test/site/001;quakeml:test/site_description/001;45.0;7.0\n",
+            encoding="utf-8")
+
+        analysis_csv = tmp_path / "site_analysis.csv"
+        analysis_csv.write_text(
+            "siteID;analysisID;siteDescriptionID;velocityProfileSetQindex1;"
+            "velocityProfileSet_title;velocityProfileSet_firstAuthor;"
+            "velocityProfileSet_year\n"
+            "quakeml:test/site/001;quakeml:test/analysis/001;"
+            "quakeml:test/site_description/001;0.7;Velocity profile study;"
+            "Author A.;2026\n",
+            encoding="utf-8")
+
+        sera_site_dict = csv_to_sera_site(
+            site_owner_csv=site_owner_csv,
+            site_description_csv=site_description_csv,
+            analysis_csv=analysis_csv,
+            delim=";")
+
+        velocity_profile_set = (
+            sera_site_dict["quakeml:test/site/001"]
+            .analysis[0].velocity_profile_set)
+        assert velocity_profile_set is not None
+        assert velocity_profile_set.velocity_profiles is None
+        assert velocity_profile_set.quality_index == 0.7
+        assert velocity_profile_set.literature_source.title == (
+            "Velocity profile study")
+
+    def test_csv_to_sera_site_drops_quality_only_velocity_profile_set(
+            self, tmp_path):
+        site_owner_csv = tmp_path / "site_owner.csv"
+        site_owner_csv.write_text(
+            "owner_codename;owner_fullname;person_firstname;"
+            "person_lastname;person_mbox\n"
+            "TEST;Test Owner;Name;Surname;someemail@domain.ab\n",
+            encoding="utf-8")
+
+        site_description_csv = tmp_path / "site_description.csv"
+        site_description_csv.write_text(
+            "siteID;siteDescriptionID;latitude;longitude\n"
+            "quakeml:test/site/001;quakeml:test/site_description/001;45.0;7.0\n",
+            encoding="utf-8")
+
+        analysis_csv = tmp_path / "site_analysis.csv"
+        analysis_csv.write_text(
+            "siteID;analysisID;siteDescriptionID;velocityProfileSetQindex1\n"
+            "quakeml:test/site/001;quakeml:test/analysis/001;"
+            "quakeml:test/site_description/001;0.7\n",
+            encoding="utf-8")
+
+        sera_site_dict = csv_to_sera_site(
+            site_owner_csv=site_owner_csv,
+            site_description_csv=site_description_csv,
+            analysis_csv=analysis_csv,
+            delim=";")
+
+        assert (
+            sera_site_dict["quakeml:test/site/001"]
+            .analysis[0].velocity_profile_set) is None
+
     def test_csv2serasite_main_writes_sitexml_files(
             self, datapath, tmp_path):
         output_folder = tmp_path / "sitexml"
@@ -426,7 +498,7 @@ class TestSiteXMLCSVImport():
         assert result == 0
         assert sorted(path.name for path in output_folder.glob("*.xml")) == [
             "Site_XX.ABCD_%s.xml" % date_text,
-            "Site_YY.ZWXY_%s.xml" % date_text,
+            "Site_YY.WXYZ_%s.xml" % date_text,
         ]
 
     def test_excel_to_sera_site_applies_quality_index_sheet(self, datapath):

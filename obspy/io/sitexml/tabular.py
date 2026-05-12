@@ -494,6 +494,9 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
                     _read_velocity_profiles_for_analysis(
                         df_vp_dict[siteID],
                         analysis_id=analysisID)
+            if not _has_velocity_profile_set_content(
+                    analysis_obj.velocity_profile_set):
+                analysis_obj.velocity_profile_set = None
             
             # Add analysis object in analysis_dict using as key the siteID
             analysis_dict[siteID].append(analysis_obj)
@@ -511,6 +514,20 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
             )
     
     return analysis_dict
+
+
+def _has_velocity_profile_set_content(velocity_profile_set):
+    """
+    Return whether a velocity-profile set has profile data or references.
+
+    :rtype: bool
+    """
+    if velocity_profile_set is None:
+        return False
+    return bool(
+        velocity_profile_set.velocity_profiles or
+        velocity_profile_set.literature_source or
+        velocity_profile_set.external_references)
 
 
 def _read_velocity_profiles_for_analysis(df_vp, analysis_id):

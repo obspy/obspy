@@ -1399,6 +1399,62 @@ class TestSiteXML():
         assert written_creation_time == creation_time
         assert sera_site.created == creation_time
 
+    def test_write_sitexml_skips_empty_velocity_profile_set(self):
+        sera_site = self._minimal_sera_site()
+        sera_site.add_analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            velocity_profile_set=VelocityProfileSet())
+        xml_buffer = io.BytesIO()
+
+        write_sitexml(sera_site, xml_buffer, validate=True)
+
+        root = etree.fromstring(xml_buffer.getvalue())
+        assert root.find(
+            ".//{http://www.orfeus-eu.org/xml/site/1}"
+            "velocityProfileSet") is None
+
+    def test_write_sitexml_skips_quality_only_velocity_profile_set(self):
+        sera_site = self._minimal_sera_site()
+        sera_site.add_analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            velocity_profile_set=VelocityProfileSet(quality_index=0.8))
+        xml_buffer = io.BytesIO()
+
+        write_sitexml(sera_site, xml_buffer, validate=True)
+
+        root = etree.fromstring(xml_buffer.getvalue())
+        assert root.find(
+            ".//{http://www.orfeus-eu.org/xml/site/1}"
+            "velocityProfileSet") is None
+
+    def test_write_sitexml_writes_reference_only_velocity_profile_set(self):
+        sera_site = self._minimal_sera_site()
+        sera_site.add_analysis(
+            resource_id="quakeml:domain.ab/analysis/001",
+            velocity_profile_set=VelocityProfileSet(
+                quality_index=0.8,
+                literature_source=LiteratureSource(
+                    title="Velocity profile study",
+                    first_author="Author A.",
+                    year="2026")))
+        xml_buffer = io.BytesIO()
+
+        write_sitexml(sera_site, xml_buffer, validate=True)
+
+        root = etree.fromstring(xml_buffer.getvalue())
+        velocity_profile_set = root.find(
+            ".//{http://www.orfeus-eu.org/xml/site/1}"
+            "velocityProfileSet")
+        assert velocity_profile_set is not None
+        assert velocity_profile_set.find(
+            "{http://www.orfeus-eu.org/xml/site/1}velocityProfile") is None
+        assert velocity_profile_set.find(
+            "{http://www.orfeus-eu.org/xml/site/1}qualityIndex").text == "0.8"
+        assert velocity_profile_set.find(
+            "{http://www.orfeus-eu.org/xml/site/1}literatureSource/"
+            "{http://www.orfeus-eu.org/xml/site/1}title").text == (
+                "Velocity profile study")
+
     def test_site_description_requires_schema_required_fields(self):
         with pytest.raises(SiteXMLValidationError):
             SiteDescription(resource_id=None, latitude=45.0, longitude=7.0)
@@ -1880,6 +1936,42 @@ class TestSiteXML():
 
         # Write it again and compare to the original file.
         self._write_and_compare(filename, sera_site)
+
+    def test_reading_reference_only_velocity_profile_set(self, testdata):
+        """
+        A velocityProfileSet can point to supporting literature without
+        embedding velocity profile layer values.
+        """
+        filename = testdata["full_analysis.xml"]
+        xml = filename.read_bytes()
+        xml = xml.replace(
+            b"        <preferredVelocityProfileID>"
+            b"quakeml:domain.ab/velocity_profile/001"
+            b"</preferredVelocityProfileID>\n",
+            b"",
+            1)
+        start = xml.index(b"        <velocityProfileSet>")
+        end = xml.index(b"        </velocityProfileSet>", start)
+        end += len(b"        </velocityProfileSet>\n")
+        reference_only = (
+            b"        <velocityProfileSet>\n"
+            b"            <literatureSource>\n"
+            b"                <title>Velocity profile study</title>\n"
+            b"                <firstAuthor>Author A.</firstAuthor>\n"
+            b"                <year>2026</year>\n"
+            b"            </literatureSource>\n"
+            b"        </velocityProfileSet>\n"
+        )
+        xml = xml[:start] + reference_only + xml[end:]
+
+        sera_site = read_sitexml(io.BytesIO(xml))
+
+        velocity_profile_set = sera_site.analysis[0].velocity_profile_set
+        assert velocity_profile_set is not None
+        assert velocity_profile_set.velocity_profiles == []
+        assert velocity_profile_set.literature_source.title == (
+            "Velocity profile study")
+        assert velocity_profile_set.quality_index is None
 
     def test_reading_velocity_profile_validates_layer_count(
             self, testdata, tmp_path):
