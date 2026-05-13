@@ -287,6 +287,15 @@ generate missing relationship IDs, and they do not infer
 ``preferredSiteAnalysisID`` or ``preferredVelocityProfileID`` from the first
 available row.
 
+There is one lenient case for optional tabular inputs. If the analysis CSV or
+Excel sheet is omitted, any ``preferredSiteAnalysisID`` and
+``preferredVelocityProfileID`` values in the site-description table are ignored
+with a warning, because there is no analysis or velocity-profile object to
+reference. If analysis metadata is present but velocity-profile metadata is
+omitted, ``preferredSiteAnalysisID`` is preserved when valid, while
+``preferredVelocityProfileID`` is ignored with a warning. The ignored preferred
+values are not written to generated SiteXML.
+
 If you want ObsPy to set preferred relationships for you, use the explicit
 object helpers. These helpers validate the selected objects before changing
 the preferred-ID metadata:
@@ -505,6 +514,11 @@ refers to is designated by the ``siteID``. The unique resource identifier
       - Optional but necessary when more than one analysis or velocity
         profile is present.
 
+If you omit the optional analysis input, these preferred-ID values cannot be
+resolved and are ignored with a warning. If you provide analysis metadata but
+omit velocity-profile metadata, ``preferredVelocityProfileID`` is ignored with
+a warning.
+
 Indicator metadata columns use the indicator name as a prefix.
 
 .. list-table::
@@ -529,6 +543,9 @@ Analysis
 
 The analysis CSV is optional. When provided, each row identifies the site with ``siteID``,
 site description with ``siteDescriptionID``, and analysis with ``analysisID``.
+If the analysis CSV or Excel sheet is omitted, any ``preferredSiteAnalysisID``
+and ``preferredVelocityProfileID`` values from the site-description table are
+ignored with a warning and omitted from generated SiteXML.
 
 .. list-table::
     :header-rows: 1
@@ -565,6 +582,9 @@ Velocity Profiles
 
 Velocity-profile input can be one CSV file or a directory of CSV files. Each row
 describes one layer in one velocity profile:
+If velocity-profile input is omitted while analysis metadata is provided, any
+``preferredVelocityProfileID`` values from the site-description table are
+ignored with a warning and omitted from generated SiteXML.
 
 .. list-table::
     :header-rows: 1

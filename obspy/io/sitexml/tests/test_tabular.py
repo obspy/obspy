@@ -425,6 +425,57 @@ class TestSiteXMLCSVImport():
             "Site_domain.ab.003_%s.xml" % date_text,
         ]
 
+    def test_csv2serasite_main_ignores_preferred_ids_without_analysis(
+            self, datapath, tmp_path):
+        output_folder = tmp_path / "sitexml"
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = csv2serasite_main([
+                "-o", str(datapath / "site_owner.csv"),
+                "-d", str(datapath / "site_description.csv"),
+                "--output-folder", str(output_folder),
+            ])
+
+        date_text = obspy.UTCDateTime().strftime("%d-%m-%Y")
+        site_dict = sitexml_to_sitedict(
+            output_folder / ("Site_XX.ABCD_%s.xml" % date_text))
+        site = site_dict["quakeml:domain.ab/site/001"]
+
+        assert result == 0
+        assert site.analysis is None
+        assert site.site_description.preferred_site_analysisID is None
+        assert site.site_description.preferred_velocity_profileID is None
+        assert any("Ignoring preferredSiteAnalysisID" in str(w.message)
+                   for w in caught)
+        assert any("Ignoring preferredVelocityProfileID" in str(w.message)
+                   for w in caught)
+
+    def test_csv2serasite_main_ignores_preferred_velocity_without_profiles(
+            self, datapath, tmp_path):
+        output_folder = tmp_path / "sitexml"
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = csv2serasite_main([
+                "-o", str(datapath / "site_owner.csv"),
+                "-d", str(datapath / "site_description.csv"),
+                "-a", str(datapath / "site_analysis.csv"),
+                "--output-folder", str(output_folder),
+            ])
+
+        date_text = obspy.UTCDateTime().strftime("%d-%m-%Y")
+        site_dict = sitexml_to_sitedict(
+            output_folder / ("Site_XX.ABCD_%s.xml" % date_text))
+        site = site_dict["quakeml:domain.ab/site/001"]
+
+        assert result == 0
+        assert site.site_description.preferred_site_analysisID == (
+            "quakeml:domain.ab/analysis/001")
+        assert site.site_description.preferred_velocity_profileID is None
+        assert any("velocity-profile metadata was not provided" in
+                   str(w.message) for w in caught)
+
     def test_csv2serasite_main_does_not_write_overall_qindex_without_qindex1(
             self, datapath, tmp_path):
         output_folder = tmp_path / "sitexml"
@@ -580,20 +631,34 @@ class TestSiteXMLCSVImport():
                    str(w.message) for w in caught)
 
     def test_excel_to_sera_site_warns_when_analysis_sheet_is_missing(
-            self, datapath):
+            self, datapath, tmp_path):
         pytest.importorskip("openpyxl")
+        excel_path = tmp_path / "sera_site_no_analysis.xlsx"
+        with pd.ExcelWriter(excel_path) as writer:
+            pd.read_csv(datapath / "site_owner.csv", sep=";").to_excel(
+                writer, sheet_name="siteOwner", index=False)
+            pd.read_csv(datapath / "site_description.csv", sep=";").to_excel(
+                writer, sheet_name="siteDescription", index=False)
 
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             sera_site_dict = excel_to_sera_site(
-                path_or_file_object=datapath / "sera_site_no_analysis.xlsx",
+                path_or_file_object=excel_path,
                 velocity_profiles=datapath / "velocity_profiles.xlsx")
 
         assert set(sera_site_dict) == {
             "quakeml:domain.ab/site/001",
             "quakeml:domain.ab/site/002",
+            "quakeml:domain.ab/site/003",
         }
+        site = sera_site_dict["quakeml:domain.ab/site/001"]
+        assert site.site_description.preferred_site_analysisID is None
+        assert site.site_description.preferred_velocity_profileID is None
         assert any("Analysis metadata not provided." in str(w.message)
+                   for w in caught)
+        assert any("Ignoring preferredSiteAnalysisID" in str(w.message)
+                   for w in caught)
+        assert any("Ignoring preferredVelocityProfileID" in str(w.message)
                    for w in caught)
 
     def test_excel_to_sera_site_raises_for_missing_required_owner_sheet(

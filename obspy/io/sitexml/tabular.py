@@ -131,10 +131,13 @@ def csv_to_sera_site(site_owner_csv,
         line per station/location.
     :type analysis_csv: str, pathlib.Path, or file-like object, optional
     :param analysis_csv: CSV file with analysis metadata. One line per
-        analysisID.
+        analysisID. If omitted, preferred analysis and velocity-profile IDs
+        read from the site-description CSV are ignored with a warning.
     :type velocity_profiles_csv: str, pathlib.Path, or file-like object, optional
     :param velocity_profiles_csv: CSV file or path to a folder with velocity
-        profile metadata. The folder can contain any number of CSV files.
+        profile metadata. The folder can contain any number of CSV files. If
+        omitted, preferred velocity-profile IDs read from the site-description
+        CSV are ignored with a warning.
     :type quality_index_csv: str, pathlib.Path, or file-like object, optional
     :param quality_index_csv: CSV with extra quality-index calculation
         inputs. Values are used immediately to calculate SiteXML quality
@@ -203,6 +206,11 @@ def csv_to_sera_site(site_owner_csv,
         if exists_analysis and siteID in analysis_dict:
             sera_site_dict[siteID].analysis = analysis_dict[siteID]
 
+    _clear_preferred_ids_without_target_metadata(
+        sera_site_dict,
+        has_analysis_metadata=exists_analysis,
+        has_velocity_profile_metadata=df_vp_dict is not None)
+
     if quality_index_csv:
         df_quality_index = _csv_to_dataframe(
             quality_index_csv, "quality-index CSV metadata", delim=delim)
@@ -220,6 +228,12 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     * ``siteDescription``: site description metadata. Mandatory.
     * ``analysis``: analysis metadata. Optional.
     * ``qualityIndex``: quality indexes calculation parameters. Optional
+
+    If the optional analysis sheet is omitted, preferred analysis and
+    velocity-profile IDs read from ``siteDescription`` are ignored with a
+    warning. If velocity-profile metadata is omitted, preferred
+    velocity-profile IDs read from ``siteDescription`` are ignored with a
+    warning.
 
     :type path_or_file_object: str, pathlib.Path, or file-like object, required
     :param path_or_file_object: Excel file with site metadata.
@@ -290,10 +304,49 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
         if exists_analysis and siteID in analysis_dict:
             sera_site_dict[siteID].analysis = analysis_dict[siteID]
 
+    _clear_preferred_ids_without_target_metadata(
+        sera_site_dict,
+        has_analysis_metadata=exists_analysis,
+        has_velocity_profile_metadata=df_vp_dict is not None)
+
     if "qualityIndex" in df_dict:
         apply_quality_index_dataframe(sera_site_dict, df_dict["qualityIndex"])
 
     return sera_site_dict
+
+
+def _clear_preferred_ids_without_target_metadata(
+        sera_site_dict, has_analysis_metadata, has_velocity_profile_metadata):
+    """
+    Drop preferred IDs that point to metadata tables omitted from tabular input.
+    """
+    for site_id, sera_site in sera_site_dict.items():
+        site_description = sera_site.site_description
+        if not has_analysis_metadata:
+            preferred_id = site_description.preferred_site_analysisID
+            if preferred_id is not None:
+                warnings.warn(
+                    f"Site {site_id} provides preferredSiteAnalysisID "
+                    f"{preferred_id}, but analysis metadata was not provided. "
+                    "Ignoring preferredSiteAnalysisID for this import; the "
+                    "generated SiteXML will omit that unresolved preference.",
+                    UserWarning)
+                site_description.preferred_site_analysisID = None
+
+        if not has_analysis_metadata or not has_velocity_profile_metadata:
+            preferred_id = site_description.preferred_velocity_profileID
+            if preferred_id is not None:
+                missing = (
+                    "analysis metadata"
+                    if not has_analysis_metadata
+                    else "velocity-profile metadata")
+                warnings.warn(
+                    f"Site {site_id} provides preferredVelocityProfileID "
+                    f"{preferred_id}, but {missing} was not provided. "
+                    "Ignoring preferredVelocityProfileID for this import; the "
+                    "generated SiteXML will omit that unresolved preference.",
+                    UserWarning)
+                site_description.preferred_velocity_profileID = None
 
 
 def add_velocity_profiles(sera_sites, velocity_profiles, replace_existing=False,
