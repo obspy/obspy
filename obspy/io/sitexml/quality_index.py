@@ -363,9 +363,12 @@ def apply_quality_index_dataframe(sera_site_dict, df_quality_index):
     for example after custom loading, cleaning, or programmatic construction.
     The input dataframe is not stored on the SiteXML objects. Q_Index1 criteria
     and Q_Index3 consistency values are used immediately to calculate indicator
-    quality indexes and overall quality index. The ``siteID`` column is
-    required. Rows with empty ``siteID`` values or unknown site IDs are skipped
-    with a warning because quality-index metadata is optional enrichment.
+    quality indexes and overall quality index. Q_Index1 criteria for an
+    existing indicator replace any quality index already stored on that
+    indicator. Missing criteria leave existing indicator quality indexes
+    unchanged. The ``siteID`` column is required. Rows with empty ``siteID``
+    values or unknown site IDs are skipped with a warning because quality-index
+    metadata is optional enrichment.
 
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
@@ -396,6 +399,9 @@ def apply_quality_index_dataframe(sera_site_dict, df_quality_index):
             continue
 
         sera_site = sera_site_dict[site_id]
+        if not sera_site.has_indicators():
+            continue
+
         has_quality_input = False
 
         for indicator_name in _QUALITY_INDEX_INDICATORS:

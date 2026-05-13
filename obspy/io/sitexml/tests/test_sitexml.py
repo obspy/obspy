@@ -606,6 +606,16 @@ class TestSiteXML():
         assert overall == pytest.approx((q2 + q3) / 2)
         assert sera_site.site_description.overall_quality_index == overall
 
+    def test_sera_site_has_indicators(self):
+        """
+        SERASite reports whether any site indicator object is present.
+        """
+        sera_site = self._minimal_sera_site()
+        assert not sera_site.has_indicators()
+
+        sera_site.add_site_indicator([EC8("A")])
+        assert sera_site.has_indicators()
+
     def test_sera_site_quality_index3_uses_provided_consistency_pairs(
             self, testdata):
         """

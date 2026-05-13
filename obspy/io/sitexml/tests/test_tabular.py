@@ -240,6 +240,21 @@ class TestSiteXMLCSVImport():
         assert site_002.site_description.bedrock_depth.quality_index == 0.375
         assert site_002.site_description.overall_quality_index is not None
 
+    def test_quality_index_sidecar_recalculates_existing_qindex1(
+            self, datapath):
+        sera_site_dict = csv_to_sera_site(
+            site_owner_csv=datapath / "site_owner.csv",
+            site_description_csv=datapath / "site_description.csv",
+            analysis_csv=datapath / "site_analysis.csv",
+            velocity_profiles_csv=datapath / "velocity_profiles",
+            quality_index_csv=datapath / "quality_index.csv",
+            delim=";")
+
+        site = sera_site_dict["quakeml:domain.ab/site/001"]
+
+        assert site.site_description.ec8.quality_index == 0.875
+        assert site.site_description.bedrock_depth.quality_index == 0.25
+
     def test_apply_quality_index_csv_updates_existing_sitexml_dict(
             self, datapath):
         sera_site_dict = sitexml_to_sitedict(datapath / "full_sitexml.xml")
@@ -409,6 +424,25 @@ class TestSiteXMLCSVImport():
             "Site_YY.WXYZ_%s.xml" % date_text,
             "Site_domain.ab.003_%s.xml" % date_text,
         ]
+
+    def test_csv2serasite_main_does_not_write_overall_qindex_without_qindex1(
+            self, datapath, tmp_path):
+        output_folder = tmp_path / "sitexml"
+
+        result = csv2serasite_main([
+            "-o", str(datapath / "site_owner.csv"),
+            "-d", str(datapath / "minimal_site_description.csv"),
+            "-q", str(datapath / "quality_index.csv"),
+            "--output-folder", str(output_folder),
+        ])
+
+        date_text = obspy.UTCDateTime().strftime("%d-%m-%Y")
+        site_dict = sitexml_to_sitedict(
+            output_folder / ("Site_XX.ABCD_%s.xml" % date_text))
+        site = site_dict["quakeml:domain.ab/site/001"]
+
+        assert result == 0
+        assert site.site_description.overall_quality_index is None
 
     def test_excel_to_sera_site_imports_sites_analysis_and_velocity_profiles(
             self, datapath):

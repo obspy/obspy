@@ -600,7 +600,8 @@ quality-index inputs are optional enrichment.
 
 All columns use the indicator name as a prefix followed by the name of the 
 parameter used to calculate the quality index. For example, the column name 
-``EC8_method``, refers to the method used for the estimation of ``EC8`` value. 
+``siteClassEC8_method`` refers to the method used for the estimation of the
+``siteClassEC8`` value. 
 The following table summarizes the parameter names.
 
 .. list-table::
@@ -1133,6 +1134,15 @@ Q_Index3 consistency columns are:
 For CSV import, pass the sidecar file as ``quality_index_csv``. For Excel
 import, include an optional ``qualityIndex`` sheet in the workbook.
 
+If both schema-shaped ``...Qindex1`` columns and a quality-index sidecar are
+provided, ObsPy imports the direct ``...Qindex1`` values first and then applies
+the sidecar. Sidecar Q_Index1 criteria for an existing indicator recalculate
+that indicator's stored quality index and replace the direct ``...Qindex1``
+value. If the sidecar row has no Q_Index1 criteria for an indicator, the direct
+``...Qindex1`` value is preserved. Sidecar rows for sites without any indicator
+objects are skipped because there is no target indicator to calculate or
+combine.
+
 Automatic Calculation Of Overall QI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1141,7 +1151,7 @@ or Excel sheet contains indicator-level ``...Qindex1`` columns but does not
 provide an ``overallQindex`` value and does not provide the optional
 quality-index sidecar table, ObsPy imports and writes the indicator-level
 quality indexes only. It does **not** automatically synthesize
-``overallQualityIndex`` in the output XML.
+``overallQindex`` in the output XML.
 
 This distinction is important because Q_Index2 gives missing indicator
 Q_Index1 values a zero contribution, and Q_Index3 needs consistency inputs
@@ -1151,7 +1161,7 @@ metadata could therefore make absent information look like an evaluated site
 quality.
 
 Use one of these explicit workflows when the output XML should contain
-``overallQualityIndex``:
+``overallQindex``:
 
 * provide an ``overallQindex`` column in the site-description table;
 * provide the quality-index sidecar CSV or Excel ``qualityIndex`` sheet, so

@@ -1977,6 +1977,14 @@ class SERASite(BaseNode):
                 if include_empty or indicator is not None:
                     yield name, indicator
 
+    def has_indicators(self):
+        """
+        Return whether this site has at least one site indicator object.
+
+        :rtype: bool
+        """
+        return any(True for _name, _indicator in self.iter_site_indicators())
+
     def add_site_indicator(self, site_indicators, analysisID=None):
         """
         Add one or more site indicators to their SiteXML object location.
