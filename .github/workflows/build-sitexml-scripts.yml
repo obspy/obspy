@@ -83,6 +83,10 @@ jobs:
             --exclude-module IPython \
             obspy/io/sitexml/scripts/excel2serasite.py
 
+      - name: Add usage guide to artifact
+        run: |
+          python -c "import shutil; shutil.copyfile('obspy/io/sitexml/docs/standalone-executable-usage-guide.md', 'dist/SiteXML-Standalone-Usage-Guide.md')"
+
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
