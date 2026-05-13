@@ -45,9 +45,8 @@ jobs:
           python -m pip install pyinstaller pandas openpyxl
 
       - name: Remove old build products
-        shell: bash
         run: |
-          rm -rf build dist
+          python -c "import shutil; [shutil.rmtree(path, ignore_errors=True) for path in ('build', 'dist')]"
 
       # Build the CSV executable.
       - name: Build csv2serasite
@@ -88,4 +87,3 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: dist/
-
