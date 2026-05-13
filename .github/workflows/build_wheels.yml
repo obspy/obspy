@@ -29,7 +29,7 @@ jobs:
       # this does not apply to tags
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-2025-vs2026, macos-latest]
         build: [cp38, cp39, cp310, cp311, cp312, cp313, cp314]
         exclude-flag:
           - ${{ github.ref_name == 'master' && github.event_name == 'push' }}

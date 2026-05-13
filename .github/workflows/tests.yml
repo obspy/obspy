@@ -87,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-2025-vs2026]
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
         options: [default]
         include:
@@ -102,7 +102,7 @@ jobs:
           - os: macos-latest
             python-version: '3.10'
             options: default mindepversion
-          - os: windows-latest
+          - os: windows-2025-vs2026
             python-version: '3.10'
             options: default mindepversion
           # For push events and for test_network labels, options is set to 'network' and runs for network tests are added.
@@ -116,7 +116,7 @@ jobs:
           - os: macos-latest
             python-version: '3.14'
             options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network' || 'default' }}
-          - os: windows-latest
+          - os: windows-2025-vs2026
             python-version: '3.14'
             options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network' || 'default' }}
           # With warnings option pytest will fail on warnings.
