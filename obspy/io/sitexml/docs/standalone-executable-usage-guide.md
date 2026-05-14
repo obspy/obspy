@@ -66,8 +66,8 @@ All other columns are optional. Optional empty cells are imported as absent
 metadata.
 
 For a complete CSV column reference with explanations and example values, see
-[SiteXML-CSV-Input-Columns.md](SiteXML-CSV-Input-Columns.md), distributed with
-the standalone executable package.
+[csv-input-columns.md](csv-input-columns.md), distributed with the standalone
+executable package.
 
 ## Running `csv2serasite`
 
@@ -245,9 +245,8 @@ tables are sheets in the main workbook, while velocity profiles are passed
 separately with `-p`.
 
 The detailed CSV column reference is maintained separately in
-[SiteXML-CSV-Input-Columns.md](SiteXML-CSV-Input-Columns.md). The same column
-names apply to Excel sheets, except that sheet names replace the separate CSV
-filenames.
+[csv-input-columns.md](csv-input-columns.md). The same column names apply to
+Excel sheets, except that sheet names replace the separate CSV filenames.
 
 ## Quality-Index Behavior
 

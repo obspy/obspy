@@ -86,7 +86,7 @@ jobs:
       - name: Add usage guide to artifact
         run: |
           python -c "import shutil; shutil.copyfile('obspy/io/sitexml/docs/standalone-executable-usage-guide.md', 'dist/SiteXML-Standalone-Usage-Guide.md')"
-          python -c "import shutil; shutil.copyfile('obspy/io/sitexml/docs/csv-input-columns.md', 'dist/SiteXML-CSV-Input-Columns.md')"
+          python -c "import shutil; shutil.copyfile('obspy/io/sitexml/docs/csv-input-columns.md', 'dist/csv-input-columns.md')"
           python -c "import shutil; shutil.copytree('obspy/io/sitexml/tests/data', 'dist/examples', dirs_exist_ok=True, ignore=shutil.ignore_patterns('.DS_Store'))"
 
       - uses: actions/upload-artifact@v7
