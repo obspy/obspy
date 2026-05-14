@@ -422,17 +422,17 @@ SiteXML stores calculated indicator-level quality indexes and the final overall
 quality index. It does not store the detailed Q_Index1 criteria or Q_Index3
 consistency inputs.
 
-If both direct `...Qindex1` columns and a quality-index sidecar are provided:
+If both direct `*_qualityIndex` columns and a quality-index sidecar are provided:
 
-- direct `...Qindex1` values are imported first;
+- direct `*_qualityIndex` values are imported first;
 - sidecar Q_Index1 criteria for an existing indicator recalculate and replace
-  that indicator's direct `...Qindex1` value;
-- sidecar blanks for an indicator leave that indicator's direct `...Qindex1`
+  that indicator's direct `*_qualityIndex` value;
+- sidecar blanks for an indicator leave that indicator's direct `*_qualityIndex`
   value unchanged;
 - sidecar rows for sites without indicator objects are skipped.
 
 The tools do not automatically synthesize `overallQindex` from direct
-`...Qindex1` columns alone. To write `overallQindex`, use one of these explicit
+`*_qualityIndex` columns alone. To write `overallQindex`, use one of these explicit
 workflows:
 
 - provide `overallQindex` in the site-description table;

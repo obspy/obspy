@@ -144,6 +144,7 @@ class TestSiteXMLCSVImport():
 
         site_001 = sera_site_dict["quakeml:domain.ab/site/001"]
         assert site_001.site_owner.owner_codename == "SITEOWNER"
+        assert site_001.site_owner.address_postal_code == "12345"
         assert site_001.created is None
         assert site_001.site_description.resource_id == (
             "quakeml:domain.ab/site_description/001")
@@ -350,7 +351,7 @@ class TestSiteXMLCSVImport():
 
         analysis_csv = tmp_path / "site_analysis.csv"
         analysis_csv.write_text(
-            "siteID;analysisID;siteDescriptionID;velocityProfileSetQindex1;"
+            "siteID;analysisID;siteDescriptionID;velocityProfileSet_qualityIndex;"
             "velocityProfileSet_title;velocityProfileSet_firstAuthor;"
             "velocityProfileSet_year\n"
             "quakeml:test/site/001;quakeml:test/analysis/001;"
@@ -390,7 +391,7 @@ class TestSiteXMLCSVImport():
 
         analysis_csv = tmp_path / "site_analysis.csv"
         analysis_csv.write_text(
-            "siteID;analysisID;siteDescriptionID;velocityProfileSetQindex1\n"
+            "siteID;analysisID;siteDescriptionID;velocityProfileSet_qualityIndex\n"
             "quakeml:test/site/001;quakeml:test/analysis/001;"
             "quakeml:test/site_description/001;0.7\n",
             encoding="utf-8")
@@ -754,7 +755,7 @@ class TestSiteXMLCSVImport():
 
         analysis_csv = tmp_path / "site_analysis.csv"
         analysis_csv.write_text(
-            "siteID;analysisID;siteDescriptionID;velocityProfileSetQindex1\n"
+            "siteID;analysisID;siteDescriptionID;velocityProfileSet_qualityIndex\n"
             "quakeml:test/site/001;quakeml:test/analysis/001;"
             "quakeml:test/site_description/001;1\n",
             encoding="utf-8")
@@ -805,7 +806,7 @@ class TestSiteXMLCSVImport():
 
         analysis_csv = tmp_path / "site_analysis.csv"
         analysis_csv.write_text(
-            "siteID;analysisID;siteDescriptionID;velocityProfileSetQindex1\n"
+            "siteID;analysisID;siteDescriptionID;velocityProfileSet_qualityIndex\n"
             "quakeml:test/site/001;quakeml:test/analysis/001;"
             "quakeml:test/site_description/001;1\n",
             encoding="utf-8")

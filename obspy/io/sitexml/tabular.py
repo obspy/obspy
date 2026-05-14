@@ -462,11 +462,11 @@ def _read_site_description(df_site_description):
         site_description_obj.max_distance_from_station = \
             _read_cell(row, "maxDistanceFromStation")
         site_description_obj.morphology = \
-            _read_cell(row, "siteMorphology")
+            _read_cell(row, "morphology")
         site_description_obj.topographyA = \
-            _read_cell(row, "siteTopography_schemaA")
+            _read_cell(row, "topography_schemaA")
         site_description_obj.topographyB = \
-            _read_cell(row, "siteTopography_schemaB")
+            _read_cell(row, "topography_schemaB")
         site_description_obj.preferred_site_analysisID = \
             _read_cell(row, "preferredSiteAnalysisID")
         site_description_obj.preferred_velocity_profileID = \
@@ -665,15 +665,17 @@ def _read_site_indicator(df_row, cls, indicator):
         if _read_cell(df_row, indicator+'_uncertainty') is not None:
             obj.value.uncertainty = df_row[indicator+'_uncertainty']
 
-        if _read_cell(df_row, indicator+'Method1'):
-            obj.methods.append(df_row[indicator+'Method1'])
-        if _read_cell(df_row, indicator+'Method2'):
-            obj.methods.append(df_row[indicator+'Method2'])
+        method1_column = indicator + '_method1'
+        method2_column = indicator + '_method2'
+        if _read_cell(df_row, method1_column):
+            obj.methods.append(df_row[method1_column])
+        if _read_cell(df_row, method2_column):
+            obj.methods.append(df_row[method2_column])
         
         if indicator == "velocityS30":
             method_combined_qindex = _read_cell(
-                df_row, 'velocityS30MethodCombIndex')
-            manual_qindex = _read_cell(df_row, 'velocityS30ManualIndex')
+                df_row, 'velocityS30_methodCombIndex')
+            manual_qindex = _read_cell(df_row, 'velocityS30_manualIndex')
             obj.method_combined_qindex = (
                 None if method_combined_qindex is None \
                 else str(method_combined_qindex)
@@ -691,7 +693,7 @@ def _read_site_indicator(df_row, cls, indicator):
 
     obj.literature_source = _read_literature_source(df_row, indicator)
     obj.external_references = _read_external_references(df_row, indicator)
-    obj.quality_index = _read_cell(df_row, indicator+'Qindex1')
+    obj.quality_index = _read_cell(df_row, indicator+'_qualityIndex')
     
     return obj
 
@@ -937,7 +939,10 @@ def _read_site_owner(df):
         pub_attr = attr.strip('_')
         if pub_attr in df.columns and not _empty_value(row[pub_attr]):
             try:
-                setattr(obj, pub_attr, row[pub_attr])
+                value = row[pub_attr]
+                if pub_attr == "address_postal_code":
+                    value = str(value)
+                setattr(obj, pub_attr, value)
             except Exception as e:
                 warnings.warn(
                     f"Could not set attribute '{pub_attr}' on SiteOwner: {e}",

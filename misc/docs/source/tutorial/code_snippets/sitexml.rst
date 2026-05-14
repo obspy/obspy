@@ -527,13 +527,13 @@ Indicator metadata columns use the indicator name as a prefix.
     * - Indicator
       - Column name
     * - EC8
-      - ``siteClassEC8_value``, ``siteClassEC8Qindex1``, ``siteClassEC8_title``, etc.
+      - ``siteClassEC8_value``, ``siteClassEC8_qualityIndex``, ``siteClassEC8_title``, etc.
     * - Bedrock depth
-      - ``bedrockDepth_value``, ``bedrockDepthQindex1``, ``bedrockDepth_title``, etc.
+      - ``bedrockDepth_value``, ``bedrockDepth_qualityIndex``, ``bedrockDepth_title``, etc.
     * - H800
-      - ``h800_value``, ``h800Qindex1``, ``h800_title``, etc.
+      - ``h800_value``, ``h800_qualityIndex``, ``h800_title``, etc.
     * - Geological unit
-      - ``geologicalUnit_value``, ``geologicalUnitQindex1``, ``geologicalUnit_title``, etc.
+      - ``geologicalUnit_value``, ``geologicalUnit_qualityIndex``, ``geologicalUnit_title``, etc.
 
 Station codes use ``network.station`` notation, for example ``XX.ABCD``.
 Bare station codes are rejected because station codes are not globally unique.
@@ -571,11 +571,11 @@ Indicator metadata columns use the indicator name as a prefix.
     * - Indicator
       - Column name
     * - Resonance Frequency
-      - ``resonanceFrequency_value``, ``resonanceFrequencyQindex1``, ``resonanceFrequency_title``, etc.
+      - ``resonanceFrequency_value``, ``resonanceFrequency_qualityIndex``, ``resonanceFrequency_title``, etc.
     * - Velocity S30
-      - ``velocityS30_value``, ``velocityS30Qindex1``, ``velocityS30_title``, etc.
+      - ``velocityS30_value``, ``velocityS30_qualityIndex``, ``velocityS30_title``, etc.
     * - Velocity Profile Set
-      - ``velocityProfileSet_value``, ``velocityProfileSetQindex1``, ``velocityProfileSet_title``, etc.
+      - ``velocityProfileSet_value``, ``velocityProfileSet_qualityIndex``, ``velocityProfileSet_title``, etc.
 
 Velocity Profiles
 ~~~~~~~~~~~~~~~~~
@@ -1154,12 +1154,12 @@ Q_Index3 consistency columns are:
 For CSV import, pass the sidecar file as ``quality_index_csv``. For Excel
 import, include an optional ``qualityIndex`` sheet in the workbook.
 
-If both schema-shaped ``...Qindex1`` columns and a quality-index sidecar are
-provided, ObsPy imports the direct ``...Qindex1`` values first and then applies
+If both schema-shaped ``*_qualityIndex`` columns and a quality-index sidecar are
+provided, ObsPy imports the direct ``*_qualityIndex`` values first and then applies
 the sidecar. Sidecar Q_Index1 criteria for an existing indicator recalculate
-that indicator's stored quality index and replace the direct ``...Qindex1``
+that indicator's stored quality index and replace the direct ``*_qualityIndex``
 value. If the sidecar row has no Q_Index1 criteria for an indicator, the direct
-``...Qindex1`` value is preserved. Sidecar rows for sites without any indicator
+``*_qualityIndex`` value is preserved. Sidecar rows for sites without any indicator
 objects are skipped because there is no target indicator to calculate or
 combine.
 
@@ -1167,7 +1167,7 @@ Automatic Calculation Of Overall QI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tabular import is conservative about the overall quality index. If a CSV file
-or Excel sheet contains indicator-level ``...Qindex1`` columns but does not
+or Excel sheet contains indicator-level ``*_qualityIndex`` columns but does not
 provide an ``overallQindex`` value and does not provide the optional
 quality-index sidecar table, ObsPy imports and writes the indicator-level
 quality indexes only. It does **not** automatically synthesize
@@ -1190,7 +1190,7 @@ Use one of these explicit workflows when the output XML should contain
   yourself on the imported ``SERASite`` objects before writing SiteXML.
 
 For example, after importing tabular files with some indicator-level
-``...Qindex1`` values, calculate and store the overall quality index
+``*_qualityIndex`` values, calculate and store the overall quality index
 explicitly before producing XML output:
 
 .. code-block:: python
