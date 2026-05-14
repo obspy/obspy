@@ -5,13 +5,13 @@ This guide describes how to use the standalone `csv2serasite` and
 metadata into SiteXML files.
 
 The tools are intended for users who do not have Python or ObsPy installed.
-Each release artifact is built for one operating system and architecture. Use
+Each release package is built for one operating system and architecture. Use
 the bundle built for your platform, and keep the executable inside its
 distributed folder.
 
 ## What The Tools Produce
 
-Both tools write one SiteXML file per imported site into the output folder.
+Both tools write one SiteXML file per imported site into an output folder.
 The generated XML is schema-validated before it is written.
 
 Default output filenames are:
@@ -64,6 +64,10 @@ longitude
 
 All other columns are optional. Optional empty cells are imported as absent
 metadata.
+
+For a complete CSV column reference with explanations and example values, see
+[SiteXML-CSV-Input-Columns.md](SiteXML-CSV-Input-Columns.md), distributed with
+the standalone executable package.
 
 ## Running `csv2serasite`
 
@@ -164,9 +168,9 @@ On Windows PowerShell, run:
 .\excel2serasite.exe sera_site.xlsx -out sitexml_output
 ```
 
-The tools are distributed as PyInstaller `--onedir` bundles. Do not move the
-executable out of its folder; it needs the bundled libraries and SiteXML schema
-data next to it.
+The tools are distributed as comporessed folders that contain all
+required libraries and data. Do not move the executable out of its 
+folder; it needs the bundled libraries and SiteXML schema data next to it.
 
 Unsigned macOS executables may trigger a Gatekeeper warning. If you trust the
 source of the bundle, remove the quarantine attribute from the unpacked tool
@@ -181,240 +185,69 @@ Unsigned Windows executables may trigger SmartScreen or antivirus warnings.
 For trusted small-group distribution, verify the source of the archive and any
 provided checksums before running the tool.
 
-## Input Tables
+### Example Files
 
-### Site Owner
+The standalone artifact includes an `examples/` folder with small XML, CSV,
+and Excel files that can be used for testing the tools before preparing your
+own metadata.
 
-The site-owner table describes the data owner and contact person. In CSV mode,
-it is provided with `-o`. In Excel mode, it is the `siteOwner` sheet.
+Useful starter files include:
 
-Required columns:
+- `examples/minimal_site_owner.csv`
+- `examples/minimal_site_description.csv`
+- `examples/site_owner.csv`
+- `examples/site_description.csv`
+- `examples/site_analysis.csv`
+- `examples/velocity_profiles.csv`
+- `examples/velocity_profiles.xlsx`
+- `examples/quality_index.csv`
+- `examples/minimal_sera_site.xlsx`
+- `examples/sera_site_all.xlsx`
+- `examples/minimal_sitexml.xml`
+- `examples/full_sitexml.xml`
 
-```text
-owner_codename
-owner_fullname
-person_firstname
-person_lastname
-person_mbox
+For example:
+
+```bash
+csv2serasite \
+  -o examples/site_owner.csv \
+  -d examples/site_description.csv \
+  -a examples/site_analysis.csv \
+  -p examples/velocity_profiles.csv \
+  -q examples/quality_index.csv \
+  -out sitexml_output
 ```
 
-Optional columns may include owner, person, institution, address, and
-affiliation resource identifiers and contact metadata. Missing optional values
-are omitted from SiteXML.
+or:
 
-### Site Description
-
-The site-description table has one row per site. In CSV mode, it is provided
-with `-d`. In Excel mode, it is the `siteDescription` sheet.
-
-Required columns:
-
-```text
-siteID
-siteDescriptionID
-latitude
-longitude
+```bash
+excel2serasite examples/sera_site_all.xlsx \
+  -p examples/velocity_profiles.xlsx \
+  -out sitexml_output
 ```
 
-Common optional columns:
+In the ObsPy source tree, the same files live under
+`obspy/io/sitexml/tests/data/`.
 
-```text
-station
-altitude
-minDistanceFromStation
-maxDistanceFromStation
-siteTopography_schemaA
-siteTopography_schemaB
-siteMorphology
-preferredSiteAnalysisID
-preferredVelocityProfileID
-overallQindex
-```
+## Input Table Summary
 
-Site-description indicator columns use these prefixes:
+CSV and Excel imports use the same logical tables:
 
-```text
-siteClassEC8
-bedrockDepth
-h800
-geologicalUnit
-```
+- site owner: required;
+- site description: required;
+- analysis: optional;
+- velocity profiles: optional;
+- quality-index sidecar: optional.
 
-Examples:
+In CSV mode, these are separate CSV files or folders selected by command-line
+options. In Excel mode, owner, site-description, analysis, and quality-index
+tables are sheets in the main workbook, while velocity profiles are passed
+separately with `-p`.
 
-```text
-siteClassEC8_value
-siteClassEC8Qindex1
-siteClassEC8_title
-siteClassEC8_firstAuthor
-siteClassEC8_year
-siteClassEC8_uri
-bedrockDepth_value
-bedrockDepth_uncertainty
-h800_value
-geologicalUnit_value
-geologicalMapScale
-geologicalUnitOGE
-```
-
-Station codes must use `network.station` notation, for example `XX.ABCD`.
-Bare station codes are rejected because station codes are not globally unique.
-
-### Analysis
-
-The analysis table is optional. In CSV mode, it is provided with `-a`. In
-Excel mode, it is the optional `analysis` sheet.
-
-Required columns when the table is provided:
-
-```text
-siteID
-siteDescriptionID
-analysisID
-```
-
-Analysis indicator columns use these prefixes:
-
-```text
-resonanceFrequency
-velocityS30
-velocityProfileSet
-```
-
-Examples:
-
-```text
-resonanceFrequency_value
-resonanceFrequency_uncertainty
-resonanceFrequencyQindex1
-resonanceFrequencyMethod1
-velocityS30_value
-velocityS30_uncertainty
-velocityS30Qindex1
-velocityS30Method1
-velocityS30Method2
-velocityS30MethodCombIndex
-velocityS30ManualIndex
-velocityProfileSetQindex1
-sptLogsCount
-cptLogsCount
-boreholeLogsCount
-```
-
-If the analysis table is omitted, any `preferredSiteAnalysisID` and
-`preferredVelocityProfileID` values from the site-description table are ignored
-with warnings and are not written to generated SiteXML.
-
-### Velocity Profiles
-
-Velocity-profile metadata is optional. In CSV mode, pass one CSV file or a
-folder of CSV files with `-p`. In Excel mode, pass one Excel file or a folder of
-Excel files with `-p`.
-
-Each row describes one velocity-profile layer.
-
-Required columns when velocity-profile metadata is provided:
-
-```text
-siteID
-analysisID
-velocityProfileID
-velocityS_value
-layerTopDepth_value
-```
-
-Common optional columns:
-
-```text
-layerCount
-layerBottomDepth_value
-layerBottomDepth_uncertainty
-velocityS_uncertainty
-velocityP_value
-velocityP_uncertainty
-density_value
-density_uncertainty
-```
-
-`velocityS_value` and `layerTopDepth_value` are required for every layer.
-`layerBottomDepth_value` is optional. A missing bottom depth represents an
-open-ended final layer.
-
-If analysis metadata is provided but velocity-profile metadata is omitted, any
-`preferredVelocityProfileID` values from the site-description table are ignored
-with warnings and are not written to generated SiteXML. Valid
-`preferredSiteAnalysisID` values are preserved.
-
-### Quality-Index Sidecar
-
-The quality-index sidecar is optional. In CSV mode, pass it with `-q`. In Excel
-mode, include an optional `qualityIndex` sheet in the main workbook.
-
-The sidecar is keyed by:
-
-```text
-siteID
-```
-
-Rows with an empty `siteID` or an unknown `siteID` are skipped with a warning
-because quality-index metadata is optional enrichment.
-
-Q_Index1 calculation criteria use `<indicator>_<criterion>` column names.
-Supported indicator prefixes are:
-
-```text
-siteClassEC8
-bedrockDepth
-h800
-geologicalUnit
-resonanceFrequency
-velocityS30
-velocityProfileSet
-```
-
-Supported Q_Index1 criteria are:
-
-```text
-method
-evaluation
-reliability
-report
-```
-
-Examples:
-
-```text
-siteClassEC8_method
-siteClassEC8_evaluation
-siteClassEC8_reliability
-siteClassEC8_report
-velocityS30_method
-velocityS30_evaluation
-velocityS30_reliability
-velocityS30_report
-```
-
-Q_Index3 consistency columns are:
-
-```text
-f0_vs30
-f0_bedrock_depth
-f0_h800
-vs30_h800
-vs30_geology
-```
-
-Consistency values must be `0`, `1`, or empty:
-
-- `1`: the indicator pair is consistent.
-- `0`: the indicator pair is not consistent.
-- empty: the pair is unavailable or was not evaluated.
-
-The sidecar inputs are not stored in SiteXML. They are used immediately to
-calculate schema-supported outputs:
-
-- indicator-level `qualityIndex` values, also called Q_Index1;
-- site-description `overallQindex`.
+The detailed CSV column reference is maintained separately in
+[SiteXML-CSV-Input-Columns.md](SiteXML-CSV-Input-Columns.md). The same column
+names apply to Excel sheets, except that sheet names replace the separate CSV
+filenames.
 
 ## Quality-Index Behavior
 
