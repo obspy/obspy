@@ -1,11 +1,14 @@
 # SiteXML Tabular Input Reference
 
 This document is a reference for the tabular input files accepted by
-`csv2serasite` and `excel2serasite`. 
+`csv2sitexml` and `excel2sitexml`. 
 
-Each column in the tabular input files, corresponds to a 
-SiteXML schema **tag**. Detailed descriptions on the allowed values you can 
-find at the [SiteXML schema documentation](https://www.itsak.gr/SiteXML).
+> **Important:**  
+> The input tables are organized to follow the SiteXML schema. Each table 
+> corresponds to a major SiteXML object, and the columns in that table 
+> correspond to the object's **elements** and **attributes**. Detailed 
+> descriptions on the allowed values you can find at the 
+> [SiteXML schema documentation](https://www.itsak.gr/SiteXML).
 
 ## CSV Specific Notes
 
@@ -22,14 +25,6 @@ In the tables below, **yes** marks required inputs.
 The CSV and Excel file names are not specific. When running the commands provide the actual paths to the input files.
 
 The Excel sheet names are specific. See below for the names you must use for each table.
-
-## CSV Files
-
-`csv2serasite` accepts these CSV inputs:
-
-
-The minimal input that can produce SiteXML is `site_owner.csv` plus
-`site_description.csv` with their required columns.
 
 ## Common Conventions
 
@@ -261,10 +256,6 @@ The data read from the analysis table are stored in
 [SiteXML element analysis](https://www.itsak.gr/SiteXML/#type_AnalysisType).
 
 
-
-The analysis CSV is optional. If provided, every row must identify the site,
-the parent site description, and the analysis.
-
 ### Analysis Relationship Columns
 
 | Column | Required? | Meaning | Example |
@@ -283,8 +274,8 @@ value and method columns:
 | `resonanceFrequency_value` | Resonance frequency value. | `0.7` |
 | `resonanceFrequency_uncertainty` | Uncertainty of the resonance frequency value. | `0.05` |
 | `resonanceFrequency_qualityIndex` | Indicator Q_Index1. | `0.8` |
-| `resonanceFrequency_method1` | Primary method. Allowed examples: `HVSR NOISE`, `SSR NOISE`, `HVSR EARTHQUAKE RECORDS`, `SSR EARTHQUAKE RECORDS`, `INFERRED`. | `HVSR NOISE` |
-| `resonanceFrequency_method2` | Secondary method. Same allowed values as method 1. | `SSR NOISE` |
+| [`resonanceFrequency_method1`](https://www.itsak.gr/SiteXML/#type_ResonanceFrequencyMethodType) | Primary method. Allowed examples: `HVSR NOISE`, `SSR NOISE`, `HVSR EARTHQUAKE RECORDS`, `SSR EARTHQUAKE RECORDS`, `INFERRED`. | `HVSR NOISE` |
+| [`resonanceFrequency_method2`](https://www.itsak.gr/SiteXML/#type_VelocityS30MethodType) | Secondary method. Same allowed values as method 1. | `SSR NOISE` |
 
 Complete shared metadata columns:
 
@@ -308,10 +299,10 @@ method columns:
 | `velocityS30_value` | Vs30 value in m/s. | `620` |
 | `velocityS30_uncertainty` | Uncertainty of the Vs30 value. | `18` |
 | `velocityS30_qualityIndex` | Indicator Q_Index1. | `0.5` |
-| `velocityS30_method1` | Primary Vs30 method. Examples: `MASW`, `SPAC/F-K`, `S-REFL`, `Downhole`, `Geology`. | `MASW` |
-| `velocityS30_method2` | Secondary Vs30 method. Same allowed values as method 1. | `SPAC/F-K` |
-| `velocityS30_methodCombIndex` | Whether methods were combined. Allowed values: `1.0`, `1.2`. | `1.2` |
-| `velocityS30_manualIndex` | Qualitative factor for maximum Vs measurement depth. Allowed values: `0.2`, `0.4`, `0.8`, `1.0`. | `1.0` |
+| [`velocityS30_method1`](https://www.itsak.gr/SiteXML/#type_VelocityS30MethodType) | Primary Vs30 method. Examples: `MASW`, `SPAC/F-K`, `S-REFL`, `Downhole`, `Geology`. | `MASW` |
+| [`velocityS30_method2`](https://www.itsak.gr/SiteXML/#type_VelocityS30MethodType) | Secondary Vs30 method. Same allowed values as method 1. | `SPAC/F-K` |
+| [`velocityS30_methodCombIndex`](https://www.itsak.gr/SiteXML/#type_VelocityS30MethodCombIndexType) | Whether methods were combined. Allowed values: `1.0`, `1.2`. | `1.2` |
+| [`velocityS30_manualIndex`](https://www.itsak.gr/SiteXML/#type_VelocityS30ManualIndexType) | Qualitative factor for maximum Vs measurement depth. Allowed values: `0.2`, `0.4`, `0.8`, `1.0`. | `1.0` |
 
 Complete shared metadata columns:
 
@@ -327,7 +318,8 @@ velocityS30_description
 velocityS30_uri
 ```
 
-For `velocityProfileSet`, there is no `velocityProfileSet_value` column. Use
+For `velocityProfileSet`, there is no `velocityProfileSet_value` column. 
+The velocity profile data, if available, is provided as seperate table(s). Use
 the shared source/reference columns with:
 
 | Column | Meaning | Example |
@@ -356,7 +348,7 @@ velocityProfileSet_uri
 | `cptLogsCount` | no | Number of CPT logs. | `0` |
 | `boreholeLogsCount` | no | Number of borehole logs. | `0` |
 
-## Velocity Profiles CSV (`-p`)
+## Velocity Profiles Table
 
 Velocity-profile input is optional. It may be one CSV file or a folder of CSV
 files. Each row describes one layer in one velocity profile.

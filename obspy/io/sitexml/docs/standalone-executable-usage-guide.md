@@ -1,7 +1,7 @@
 # SiteXML Standalone Executable Usage Guide
 
-This guide describes how to use the standalone `csv2serasite` and
-`excel2serasite` command-line tools to convert tabular site-characterization
+This guide describes how to use the standalone `csv2sitexml` and
+`excel2sitexml` command-line tools to convert tabular site-characterization
 metadata into SiteXML files.
 
 The tools are intended for users who do not have Python or ObsPy installed.
@@ -13,8 +13,8 @@ Once you unzip the compressed file, you will end-up with the following file hier
 
 ``` 
   sitexml-scripts             # Top level folder
-      -- csv2serasite         # CSV executable
-      -- excel2serasite       # Excel executable
+      -- csv2sitexml          # CSV executable
+      -- excel2sitexml       # Excel executable
       -- examples             # Examples of XML, CSV and Excel files
       -- _internal            # Folder containing the shared libraries needed by the executables
 ```
@@ -39,15 +39,21 @@ Existing files with the same generated name are overwritten.
 
 ## Input Table Summary
 
+> **Important:**  
+> The input tables are organized to follow the
+> [SiteXML schema](https://www.itsak.gr/SiteXML). Each table corresponds to a
+> major SiteXML object, and the columns in that table correspond to the object's
+> elements and attributes.
+
 CSV and Excel imports use the same logical tables:
 
-| Table | Required/optional | Description | Excel sheet name |
-| --- | --- | --- | --- |
-| Site owner | **Required** | Metadata owner and contact information. | `siteOwner` |
-| Site description | **Required** | One row per site; creates the top-level SiteXML site objects. | `siteDescription` |
-| Analysis | Optional | Analysis-level indicators such as resonance frequency, Vs30, velocity-profile-set metadata, and log counts. | `analysis` |
-| Velocity profiles | Optional | Velocity-profile layer rows. Both for CSV and Excel input, this may be one file or a folder. | Separate file or folder, not a main-workbook sheet |
-| Quality-index | Optional | Q_Index1 criteria and Q_Index3 consistency inputs used to calculate quality indexes during import. | `qualityIndex` |
+| Table | Major Schema Object | Required/optional | Description | Excel sheet name |
+| --- | --- | --- | --- | --- |
+| Site owner | [`siteOwner`](https://www.itsak.gr/SiteXML/#type_SiteOwnerType) | **Required** | Metadata owner and contact information. | `siteOwner` |
+| Site description | [`siteDescription`](https://www.itsak.gr/SiteXML/#type_SiteDescriptionType) | **Required** | One row per site; creates the top-level SiteXML site objects. | `siteDescription` |
+| Analysis | [`analysis`](https://www.itsak.gr/SiteXML/#type_AnalysisType) | Optional | Analysis-level indicators such as resonance frequency, Vs30, velocity-profile-set metadata, and log counts. | `analysis` |
+| Velocity profiles | [`velocityProfile`](https://www.itsak.gr/SiteXML/#type_VelocityProfile) | Optional | Velocity-profile layer rows. Both for CSV and Excel input, this may be one file or a folder. | Separate file or folder, not a main-workbook sheet |
+| Quality-index | `qualityIndex` | Optional | Q_Index1 criteria and Q_Index3 consistency inputs used to calculate quality indexes during import. | `qualityIndex` |
 
 - For CSV input, these are separate CSV files or folders selected by command-line
 options.
@@ -56,9 +62,9 @@ tables are sheets in the **main workbook**, while velocity profiles are provided
 in separate file(s).
 
 > **Important:** 
-> - For Excel input the sheet names must be exactly as shown in the table above. 
-> - For CSV input the filemames are not fixed.  
-> - The same column names are used by both CSV and Excel files.
+> - For Excel input the sheet names must be **exactly as shown** in the table above. 
+> - For CSV input the filemames **are not fixed**.  
+> - The same column names are used **by both** CSV and Excel files.
 
 For a detailed description of the input tables, accepted columns and allowed
 values, please refer to the [SiteXML Tabular Input Reference](tabular-input-reference.md)
@@ -85,7 +91,7 @@ For Excel input, this means one workbook with:
 - a `siteOwner` sheet;
 - a `siteDescription` sheet.
 
-The minimal required site-owner columns are:
+The minimal required `site-owner` columns are:
 
 ```text
 owner_codename
@@ -95,7 +101,7 @@ person_lastname
 person_mbox
 ```
 
-The minimal required site-description columns are:
+The minimal required `site-description` columns are:
 
 ```text
 siteID
@@ -104,15 +110,17 @@ latitude
 longitude
 ```
 
-All other columns are optional. Optional empty cells are imported as absent
-metadata.
+> **Note:**  
+> All other columns are **optional.**    
+> Optional empty cells are imported as absent metadata.  
+> Required empty cells abort the input process.
 
-## Running `csv2serasite`
+## Running `csv2sitexml`
 
-Use `csv2serasite` when your input metadata is split across CSV files.
+Use `csv2sitexml` when your input metadata is split across CSV files.
 In the table below you can find a summary of the supported input options.
 
-Use `csv2serasite -h`, to get a full list of supported options.
+Use `csv2sitexml -h`, to get a full list of supported options.
 
 | Input | Command option | Required? | Purpose |
 | --- | --- | --- | --- |
@@ -136,7 +144,7 @@ The minimal input that can produce SiteXML is `site_owner.csv` plus
 Minimal CSV conversion:
 
 ```bash
-csv2serasite \
+csv2sitexml \
   -o site_owner.csv \
   -d site_description.csv \
   -out sitexml_output
@@ -146,7 +154,7 @@ Full CSV conversion with analysis, velocity profiles, and quality-index
 calculation inputs:
 
 ```bash
-csv2serasite \
+csv2sitexml \
   -o site_owner.csv \
   -d site_description.csv \
   -a site_analysis.csv \
@@ -161,12 +169,12 @@ csv2serasite \
 > - You must make sure, that **the delimiter character 
 > is not used inside any text values in any of the columns.**
 
-## Running `excel2serasite`
+## Running `excel2sitexml`
 
-Use `excel2serasite` when your owner, site-description, analysis, and
+Use `excel2sitexml` when your owner, site-description, analysis, and
 quality-index tables are sheets in one workbook.
 
-Use `excel2serasite -h`, to get a full list of supported options.
+Use `excel2sitexml -h`, to get a full list of supported options.
 
 | Input | Command option | Required? | Purpose |
 | --- | --- | --- | --- |
@@ -184,13 +192,13 @@ Use `excel2serasite -h`, to get a full list of supported options.
 Minimal Excel conversion:
 
 ```bash
-excel2serasite sera_site.xlsx -out sitexml_output
+excel2sitexml sera_site.xlsx -out sitexml_output
 ```
 
 Excel conversion with velocity profiles:
 
 ```bash
-excel2serasite sera_site.xlsx \
+excel2sitexml sera_site.xlsx \
   -p velocity_profiles.xlsx \
   -out sitexml_output
 ```
@@ -200,15 +208,15 @@ excel2serasite sera_site.xlsx \
 On macOS and Linux, run the executable from a terminal, for example:
 
 ```bash
-./csv2serasite -o site_owner.csv -d site_description.csv -out sitexml_output
-./excel2serasite sera_site.xlsx -out sitexml_output
+./csv2sitexml -o site_owner.csv -d site_description.csv -out sitexml_output
+./excel2sitexml sera_site.xlsx -out sitexml_output
 ```
 
 On Windows PowerShell, run:
 
 ```powershell
-.\csv2serasite.exe -o site_owner.csv -d site_description.csv -out sitexml_output
-.\excel2serasite.exe sera_site.xlsx -out sitexml_output
+.\csv2sitexml.exe -o site_owner.csv -d site_description.csv -out sitexml_output
+.\excel2sitexml.exe sera_site.xlsx -out sitexml_output
 ```
 
 Unsigned macOS executables may trigger a Gatekeeper warning. If you trust the
@@ -223,7 +231,7 @@ Unsigned Windows executables may trigger SmartScreen or antivirus warnings.
 For trusted small-group distribution, verify the source of the archive and any
 provided checksums before running the tool.
 
-### Example Files
+## Example Files
 
 The standalone artifact includes an `examples/` folder with small XML, CSV,
 and Excel files that can be used for testing the tools before preparing your
@@ -247,7 +255,7 @@ Useful starter files include:
 For example:
 
 ```bash
-csv2serasite \
+csv2sitexml \
   -o examples/site_owner.csv \
   -d examples/site_description.csv \
   -a examples/site_analysis.csv \
@@ -259,7 +267,7 @@ csv2serasite \
 or:
 
 ```bash
-excel2serasite examples/sera_site_all.xlsx \
+excel2sitexml examples/sera_site_all.xlsx \
   -p examples/velocity_profiles.xlsx \
   -out sitexml_output
 ```
@@ -274,18 +282,14 @@ In the ObsPy source tree, the same files live under
 Use this when you only need owner and site-location metadata:
 
 ```bash
-csv2serasite -o site_owner.csv -d site_description.csv -out sitexml_output
+csv2sitexml -o site_owner.csv -d site_description.csv -out sitexml_output
 ```
 
 or:
 
 ```bash
-excel2serasite sera_site.xlsx -out sitexml_output
+excel2sitexml sera_site.xlsx -out sitexml_output
 ```
-
-The site-description table should not include preferred analysis or velocity
-profile IDs unless you also provide the target analysis and velocity-profile
-metadata.
 
 ### SiteXML With Analysis
 
@@ -293,22 +297,19 @@ Use this when you have analysis-level indicators such as resonance frequency or
 Vs30 but no velocity-profile layers:
 
 ```bash
-csv2serasite \
+csv2sitexml \
   -o site_owner.csv \
   -d site_description.csv \
   -a site_analysis.csv \
   -out sitexml_output
 ```
 
-If `preferredVelocityProfileID` appears in the site-description table but no
-velocity-profile metadata is provided, it is ignored with a warning.
-
 ### SiteXML With Velocity Profiles
 
 Use this when you have analysis metadata and velocity-profile layers:
 
 ```bash
-csv2serasite \
+csv2sitexml \
   -o site_owner.csv \
   -d site_description.csv \
   -a site_analysis.csv \
@@ -319,7 +320,7 @@ csv2serasite \
 or:
 
 ```bash
-excel2serasite sera_site.xlsx \
+excel2sitexml sera_site.xlsx \
   -p velocity_profiles.xlsx \
   -out sitexml_output
 ```
@@ -330,10 +331,10 @@ profiles are meaningful only with analysis metadata.
 ### SiteXML With Calculated Quality Indexes
 
 Use this when you want the tool to calculate indicator quality indexes and
-`overallQindex` from sidecar calculation inputs:
+`overallQindex` from provided calculation inputs in `quality_index.csv`:
 
 ```bash
-csv2serasite \
+csv2sitexml \
   -o site_owner.csv \
   -d site_description.csv \
   -a site_analysis.csv \
@@ -345,7 +346,7 @@ csv2serasite \
 For Excel, include a `qualityIndex` sheet in the main workbook:
 
 ```bash
-excel2serasite sera_site.xlsx \
+excel2sitexml sera_site.xlsx \
   -p velocity_profiles.xlsx \
   -out sitexml_output
 ```
