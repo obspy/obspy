@@ -1,26 +1,32 @@
-# SiteXML CSV Input Columns
+# SiteXML Tabular Input Reference
 
-This document lists the CSV columns accepted by `csv2serasite`.
+This document is a reference for the tabular input files accepted by
+`csv2serasite` and `excel2serasite`. 
+
+Each column in the tabular input files, corresponds to a 
+SiteXML schema **tag**. Detailed descriptions on the allowed values you can 
+find at the [SiteXML schema documentation](https://www.itsak.gr/SiteXML).
+
+## CSV Specific Notes
 
 The default CSV delimiter is semicolon (`;`). If your files use another
-delimiter, pass it with `-s`, for example `-s ","`.
+delimiter, pass it with `-s`, for example `-s ","`. 
 
-Column names are case-sensitive.
+> - **You must make sure, that the delimiter character 
+> is not used inside any text values in any of the columns.**
+>
+> - **Column names cannot be changed and are case-sensitive.**
 
-In the tables below, <span style="color: #b00020; font-weight: 700;">yes</span>
-marks required inputs.
+In the tables below, **yes** marks required inputs.
+
+The CSV and Excel file names are not specific. When running the commands provide the actual paths to the input files.
+
+The Excel sheet names are specific. See below for the names you must use for each table.
 
 ## CSV Files
 
 `csv2serasite` accepts these CSV inputs:
 
-| Input | Command option | Required? | Purpose |
-| --- | --- | --- | --- |
-| Site owner CSV | `-o`, `--site-owner` | <span style="color: #b00020; font-weight: 700;">yes</span> | One table describing the metadata owner and contact information. |
-| Site description CSV | `-d`, `--site-description` | <span style="color: #b00020; font-weight: 700;">yes</span> | One row per site. Creates the top-level SiteXML site objects. |
-| Analysis CSV | `-a`, `--analysis` | no | One row per analysis. Adds resonance frequency, Vs30, velocity-profile-set metadata, and log counts. |
-| Velocity profiles CSV | `-p`, `--velocity-profiles` | no | One CSV file or folder of CSV files. One row per velocity-profile layer. |
-| Quality-index CSV | `-q`, `--quality-index` | no | Optional sidecar with Q_Index1 criteria and Q_Index3 consistency inputs. |
 
 The minimal input that can produce SiteXML is `site_owner.csv` plus
 `site_description.csv` with their required columns.
@@ -42,18 +48,19 @@ Station codes must use `network.station` notation:
 
 ```text
 XX.ABCD
-YY.WXYZ
+1A.ABC1
+A.TST
 ```
 
-The network code is 1-2 ASCII alphanumeric characters. The station code is
-3-5 ASCII letters.
+The network code is 1-2 ASCII uppercase alpha or numeric characters. The station code is
+3-5 ASCII uppercase alpha or numeric characters.
 
 Quality-index values written directly in `*_qualityIndex` and `overallQindex`
 columns must be numbers in the closed range `0` to `1`.
 
 ## Shared Indicator Columns
 
-Several site-description and analysis indicators use the same column pattern:
+All site-description and analysis indicators use the same column pattern:
 
 ```text
 <indicator>_value
@@ -94,19 +101,25 @@ only the columns that differ from this shared pattern are listed.
 | `siteClassEC8_description` | no | Description for the external reference. | `paper` |
 | `siteClassEC8_uri` | no | External reference URI. | `https://doi.org/10.1007/s10518-017-0135-5/` |
 
-## Site Owner CSV (`-o`)
+## Site Owner Table
 
-The site-owner CSV is required. It is read as one owner/contact definition.
+The site-owner table provides contact information for the site owner and it is **required**. 
+
+It is provided as a CSV file or as an Excel sheet named `siteOwner` with just **one row**. 
+This means you can use the site owner table with many sites that have the same owner.
+
+The data read from the Site Owner table are stored in 
+[SiteXML element siteOwner](https://www.itsak.gr/SiteXML/#type_SiteOwnerType).
 
 | Column | Required? | Meaning | Example |
 | --- | --- | --- | --- |
 | `ownerID` | no | Resource ID for the owner object. | `quakeml:domain.ab/siteOwner/001` |
-| `owner_codename` | <span style="color: #b00020; font-weight: 700;">yes</span> | Short code name for the data owner. | `SITEOWNER` |
-| `owner_fullname` | <span style="color: #b00020; font-weight: 700;">yes</span> | Full owner name. | `Site Owner Full Name` |
+| `owner_codename` | **yes** | Short code name for the data owner. | `SITEOWNER` |
+| `owner_fullname` | **yes** | Full owner name. | `Site Owner Full Name` |
 | `personID` | no | Resource ID for the contact person. | `quakeml:domain.ab/person/001` |
-| `person_firstname` | <span style="color: #b00020; font-weight: 700;">yes</span> | Contact person's first name. | `Name` |
-| `person_lastname` | <span style="color: #b00020; font-weight: 700;">yes</span> | Contact person's last name. | `Surname` |
-| `person_mbox` | <span style="color: #b00020; font-weight: 700;">yes</span> | Contact email address. | `someemail@domain.ab` |
+| `person_firstname` | **yes** | Contact person's first name. | `Name` |
+| `person_lastname` | **yes** | Contact person's last name. | `Surname` |
+| `person_mbox` | **yes** | Contact email address. | `someemail@domain.ab` |
 | `person_homepage` | no | Contact person's web page. | `https://www.domain.ab/person` |
 | `institutionID` | no | Resource ID for the institution. | `quakeml:domain.ab/institution/001` |
 | `institution_name` | no | Institution name or abbreviation. | `INSTITUTION_ABBR` |
@@ -121,19 +134,26 @@ The site-owner CSV is required. It is read as one owner/contact definition.
 | `affiliation_department` | no | Contact person's department. | `Seismology` |
 | `affiliation_function` | no | Contact person's role/function. | `Senior researcher` |
 
-## Site Description CSV (`-d`)
+## Site Description Table
 
-The site-description CSV is required. It has one row per site.
+The site-description table is **required** and it provides information on site location, geology 
+and values for the four site indicators: `siteClassEC8`, `bedrockDepth`, `h800`, `geologicalUnit`.
+
+It is provided as a CSV file or as an Excel sheet named `siteDescription` with **one row per site**. 
+
+The data read from the site-description table are stored in 
+[SiteXML element siteDescription](https://www.itsak.gr/SiteXML/#type_SiteDescriptionType).
+
 
 ### Site And Location Columns
 
 | Column | Required? | Meaning | Example |
 | --- | --- | --- | --- |
-| `siteID` | <span style="color: #b00020; font-weight: 700;">yes</span> | Resource ID for the top-level SiteXML site. | `quakeml:domain.ab/site/001` |
-| `siteDescriptionID` | <span style="color: #b00020; font-weight: 700;">yes</span> | Resource ID for the site-description object. | `quakeml:domain.ab/site_description/001` |
+| `siteID` | **yes** | Resource ID for the top-level SiteXML site. | `quakeml:domain.ab/site/001` |
+| `siteDescriptionID` | **yes** | Resource ID for the site-description object. | `quakeml:domain.ab/site_description/001` |
 | `station` | no | Station code in `network.station` notation. Leave empty for non-station sites. | `XX.ABCD` |
-| `latitude` | <span style="color: #b00020; font-weight: 700;">yes</span> | Geographic latitude in degrees. | `45.137174` |
-| `longitude` | <span style="color: #b00020; font-weight: 700;">yes</span> | Geographic longitude in degrees. | `5.998905` |
+| `latitude` | **yes** | Geographic latitude in degrees. | `45.137174` |
+| `longitude` | **yes** | Geographic longitude in degrees. | `5.998905` |
 | `altitude` | no | Ground elevation in meters. | `239` |
 | `minDistanceFromStation` | no | Minimum distance from station in meters. | `20` |
 | `maxDistanceFromStation` | no | Maximum distance from station in meters. | `520.2` |
@@ -222,7 +242,25 @@ geologicalUnit_description
 geologicalUnit_uri
 ```
 
-## Analysis CSV (`-a`)
+## Analysis Table
+
+The analysis table is **optional** and it provides values for three site indicators: 
+`resonanceFrequency`, `velocityS30`, `velocityProfileSet`.
+
+It is provided as a CSV file or as an Excel sheet named `analysis` with **many rows per site**. 
+This means you can provide many sets of analysis site-indicators per site.
+
+Each row must **absolutely** identify three things:
+- the site it belongs to: SiteID
+- the site description it is associated with: siteDescriptionID
+- the unique analysisID
+
+> **Note:** Missing values in any of the three above resource identifiers will result in data import error.
+
+The data read from the analysis table are stored in 
+[SiteXML element analysis](https://www.itsak.gr/SiteXML/#type_AnalysisType).
+
+
 
 The analysis CSV is optional. If provided, every row must identify the site,
 the parent site description, and the analysis.
@@ -231,9 +269,9 @@ the parent site description, and the analysis.
 
 | Column | Required? | Meaning | Example |
 | --- | --- | --- | --- |
-| `siteID` | <span style="color: #b00020; font-weight: 700;">yes</span> | Resource ID of the parent site. | `quakeml:domain.ab/site/001` |
-| `siteDescriptionID` | <span style="color: #b00020; font-weight: 700;">yes</span> | Resource ID of the parent site description. Must match the site row. | `quakeml:domain.ab/site_description/001` |
-| `analysisID` | <span style="color: #b00020; font-weight: 700;">yes</span> | Resource ID for this analysis. | `quakeml:domain.ab/analysis/001` |
+| `siteID` | **yes** | Resource ID of the parent site. | `quakeml:domain.ab/site/001` |
+| `siteDescriptionID` | **yes** | Resource ID of the parent site description. Must match the site row. | `quakeml:domain.ab/site_description/001` |
+| `analysisID` | **yes** | Resource ID for this analysis. | `quakeml:domain.ab/analysis/001` |
 
 ### Analysis Indicator Columns
 
@@ -325,17 +363,17 @@ files. Each row describes one layer in one velocity profile.
 
 | Column | Required? | Meaning | Example |
 | --- | --- | --- | --- |
-| `siteID` | <span style="color: #b00020; font-weight: 700;">yes</span> | Resource ID of the parent site. | `quakeml:domain.ab/site/001` |
-| `analysisID` | <span style="color: #b00020; font-weight: 700;">yes</span> | Resource ID of the parent analysis. | `quakeml:domain.ab/analysis/001` |
-| `velocityProfileID` | <span style="color: #b00020; font-weight: 700;">yes</span> | Resource ID of the velocity profile. Repeated rows with the same ID are layers of the same profile. | `quakeml:domain.ab/velocity_profile/001` |
+| `siteID` | **yes** | Resource ID of the parent site. | `quakeml:domain.ab/site/001` |
+| `analysisID` | **yes** | Resource ID of the parent analysis. | `quakeml:domain.ab/analysis/001` |
+| `velocityProfileID` | **yes** | Resource ID of the velocity profile. Repeated rows with the same ID are layers of the same profile. | `quakeml:domain.ab/velocity_profile/001` |
 | `layerCount` | no | Optional layer counter/order marker. | `1` |
 | `density_value` | no | Density value. | `1800` |
 | `density_uncertainty` | no | Uncertainty of the density value. | `50` |
 | `velocityP_value` | no | P-wave velocity value. | `900` |
 | `velocityP_uncertainty` | no | Uncertainty of the P-wave velocity value. | `20` |
-| `velocityS_value` | <span style="color: #b00020; font-weight: 700;">yes</span> | S-wave velocity value. | `118.08` |
+| `velocityS_value` | **yes** | S-wave velocity value. | `118.08` |
 | `velocityS_uncertainty` | no | Uncertainty of the S-wave velocity value. | `2` |
-| `layerTopDepth_value` | <span style="color: #b00020; font-weight: 700;">yes</span> | Top depth of the layer. | `0` |
+| `layerTopDepth_value` | **yes** | Top depth of the layer. | `0` |
 | `layerTopDepth_uncertainty` | no | Uncertainty of the top depth. | `0.1` |
 | `layerBottomDepth_value` | no | Bottom depth of the layer. Leave empty for an open-ended final layer. | `0.19` |
 | `layerBottomDepth_uncertainty` | no | Uncertainty of the bottom depth. | `0.1` |
@@ -349,7 +387,7 @@ immediately during import and are not stored in SiteXML.
 
 | Column | Required? | Meaning | Example |
 | --- | --- | --- | --- |
-| `siteID` | <span style="color: #b00020; font-weight: 700;">yes</span> | Site whose indicators should receive calculated quality-index values. Unknown or empty IDs are skipped with a warning. | `quakeml:domain.ab/site/001` |
+| `siteID` | **yes** | Site whose indicators should receive calculated quality-index values. Unknown or empty IDs are skipped with a warning. | `quakeml:domain.ab/site/001` |
 
 ### Q_Index1 Criteria Columns
 
@@ -454,8 +492,8 @@ contain a matching `velocityProfileID`. If velocity-profile metadata is
 omitted, the preferred velocity-profile ID is ignored with a warning and
 omitted from generated SiteXML.
 
-If both preferred IDs are provided, the preferred velocity profile must belong
-to the preferred analysis.
+> **If both preferred IDs are provided, the preferred velocity profile must belong
+> to the preferred analysis.**
 
 ## Notes On Quality Indexes
 

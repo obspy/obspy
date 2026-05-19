@@ -5,14 +5,28 @@ This guide describes how to use the standalone `csv2serasite` and
 metadata into SiteXML files.
 
 The tools are intended for users who do not have Python or ObsPy installed.
-Each release package is built for one operating system and architecture. Use
-the bundle built for your platform, and keep the executable inside its
-distributed folder.
+Each release package is built for one operating system and architecture 
+and it is distributed as a compressed folder that contains both executables,
+all required libraries, and data.
+
+Once you unzip the compressed file, you will end-up with the following file hierarchy:
+
+``` 
+  sitexml-scripts             # Top level folder
+      -- csv2serasite         # CSV executable
+      -- excel2serasite       # Excel executable
+      -- examples             # Examples of XML, CSV and Excel files
+      -- _internal            # Folder containing the shared libraries needed by the executables
+```
+
+> **Important:**  
+> Do not move the executables out of their folder; they need the bundled libraries and SiteXML schema data next to them.
+
 
 ## What The Tools Produce
 
-Both tools write one SiteXML file per imported site into an output folder.
-The generated XML is schema-validated before it is written.
+Both tools write **one SiteXML file per imported site** into an output folder.
+The generated XML is **schema-validated** before it is written.
 
 Default output filenames are:
 
@@ -22,6 +36,34 @@ Default output filenames are:
   for example `Site_domain.ab.003_13-05-2026.xml`.
 
 Existing files with the same generated name are overwritten.
+
+## Input Table Summary
+
+CSV and Excel imports use the same logical tables:
+
+| Table | Required/optional | Description | Excel sheet name |
+| --- | --- | --- | --- |
+| Site owner | **Required** | Metadata owner and contact information. | `siteOwner` |
+| Site description | **Required** | One row per site; creates the top-level SiteXML site objects. | `siteDescription` |
+| Analysis | Optional | Analysis-level indicators such as resonance frequency, Vs30, velocity-profile-set metadata, and log counts. | `analysis` |
+| Velocity profiles | Optional | Velocity-profile layer rows. Both for CSV and Excel input, this may be one file or a folder. | Separate file or folder, not a main-workbook sheet |
+| Quality-index | Optional | Q_Index1 criteria and Q_Index3 consistency inputs used to calculate quality indexes during import. | `qualityIndex` |
+
+- For CSV input, these are separate CSV files or folders selected by command-line
+options.
+- For Excel input, `siteOwner`, `siteDescription`, `analysis`, and `qualityIndex`
+tables are sheets in the **main workbook**, while velocity profiles are provided
+in separate file(s).
+
+> **Important:** 
+> - For Excel input the sheet names must be exactly as shown in the table above. 
+> - For CSV input the filemames are not fixed.  
+> - The same column names are used by both CSV and Excel files.
+
+For a detailed description of the input tables, accepted columns and allowed
+values, please refer to the [SiteXML Tabular Input Reference](tabular-input-reference.md)
+that is also distributed with the standalone executables.
+
 
 ## Minimal Required Metadata
 
@@ -33,7 +75,7 @@ The smallest tabular input that can produce a valid SiteXML file contains:
 - no velocity-profile table;
 - no quality-index sidecar table.
 
-For CSV input, this means:
+For CSV input, this means two files. For example:
 
 - `site_owner.csv`
 - `site_description.csv`
@@ -65,13 +107,31 @@ longitude
 All other columns are optional. Optional empty cells are imported as absent
 metadata.
 
-For a complete CSV column reference with explanations and example values, see
-[csv-input-columns.md](csv-input-columns.md), distributed with the standalone
-executable package.
-
 ## Running `csv2serasite`
 
 Use `csv2serasite` when your input metadata is split across CSV files.
+In the table below you can find a summary of the supported input options.
+
+Use `csv2serasite -h`, to get a full list of supported options.
+
+| Input | Command option | Required? | Purpose |
+| --- | --- | --- | --- |
+| Output folder | `-out` | **yes** | Folder where the generated SiteXML files will be written. |
+| Site owner CSV | `-o` or `--site-owner` | **yes** | One table describing the metadata owner and contact information. |
+| Site description CSV | `-d` or `--site-description` | **yes** | One row per site. Creates the top-level SiteXML site objects. |
+| Analysis CSV | `-a` or `--analysis` | no | One row per analysis. Adds resonance frequency, Vs30, velocity-profile-set metadata, and log counts. |
+| Velocity profiles CSV | `-p` or `--velocity-profiles` | no | One CSV file or folder of CSV files. One row per velocity-profile layer. |
+| Quality-index CSV | `-q` or `--quality-index` | no | Q_Index1 criteria and Q_Index3 consistency inputs. |
+
+The minimal input that can produce SiteXML is `site_owner.csv` plus
+`site_description.csv` with their required columns.
+
+> **Note:**   
+> In the examples below, the file names are just an example.   
+> They **must** be replaced by your
+> actual file names or full path names to the input files.
+
+### Examples 
 
 Minimal CSV conversion:
 
@@ -95,26 +155,31 @@ csv2serasite \
   -out sitexml_output
 ```
 
-Options:
-
-```text
--o, --site-owner          Required CSV file with site-owner metadata.
--d, --site-description    Required CSV file with site-description metadata.
--a, --analysis            Optional CSV file with analysis metadata.
--p, --velocity-profiles   Optional CSV file or folder with velocity-profile metadata.
--q, --quality-index       Optional CSV file with quality-index calculation inputs.
--out, --output-folder     Required output folder for generated SiteXML files.
--s, --delim               CSV delimiter. Defaults to ';'.
--V, --version             Print the tool version.
--h, --help                Print command help.
-```
-
-If your CSV files use commas instead of semicolons, pass `-s ","`.
+> **Important:** 
+> - The default CSV delimiter is semicolon `';'`. If your CSV files use another
+> delimiter, pass it with option `-s`, for example `-s ","`.
+> - You must make sure, that **the delimiter character 
+> is not used inside any text values in any of the columns.**
 
 ## Running `excel2serasite`
 
 Use `excel2serasite` when your owner, site-description, analysis, and
 quality-index tables are sheets in one workbook.
+
+Use `excel2serasite -h`, to get a full list of supported options.
+
+| Input | Command option | Required? | Purpose |
+| --- | --- | --- | --- |
+| Output folder | `-out` | **yes** | Folder where the generated SiteXML files will be written. |
+| Main Workbook | `file path` | **yes** | A main Workbook with at least `siteOwner` and `siteDescription` sheets. |
+| Velocity profiles | `-p` or `--velocity-profiles` | no | One Excel file or folder of Excel files. One row per velocity-profile layer. |
+
+> **Note:**   
+> In the examples below, the file names are just an example.   
+> They **must** be replaced by your
+> actual file names or full path names to the input files.
+
+### Examples 
 
 Minimal Excel conversion:
 
@@ -129,28 +194,6 @@ excel2serasite sera_site.xlsx \
   -p velocity_profiles.xlsx \
   -out sitexml_output
 ```
-
-Options:
-
-```text
-path_or_file_object       Required Excel workbook with site metadata.
--p, --velocity-profiles   Optional Excel file or folder with velocity-profile metadata.
--out, --output-folder     Required output folder for generated SiteXML files.
--V, --version             Print the tool version.
--h, --help                Print command help.
-```
-
-The main Excel workbook uses these sheet names:
-
-```text
-siteOwner        required
-siteDescription  required
-analysis         optional
-qualityIndex     optional
-```
-
-Velocity-profile metadata is passed separately with `-p`. It may be one Excel
-file or a folder of Excel files.
 
 ## Platform Notes
 
@@ -168,17 +211,12 @@ On Windows PowerShell, run:
 .\excel2serasite.exe sera_site.xlsx -out sitexml_output
 ```
 
-The tools are distributed as comporessed folders that contain all
-required libraries and data. Do not move the executable out of its 
-folder; it needs the bundled libraries and SiteXML schema data next to it.
-
 Unsigned macOS executables may trigger a Gatekeeper warning. If you trust the
 source of the bundle, remove the quarantine attribute from the unpacked tool
 folder:
 
 ```bash
-xattr -dr com.apple.quarantine csv2serasite
-xattr -dr com.apple.quarantine excel2serasite
+xattr -dr com.apple.quarantine sitexml-scripts
 ```
 
 Unsigned Windows executables may trigger SmartScreen or antivirus warnings.
@@ -228,88 +266,6 @@ excel2serasite examples/sera_site_all.xlsx \
 
 In the ObsPy source tree, the same files live under
 `obspy/io/sitexml/tests/data/`.
-
-## Input Table Summary
-
-CSV and Excel imports use the same logical tables:
-
-- site owner: required;
-- site description: required;
-- analysis: optional;
-- velocity profiles: optional;
-- quality-index sidecar: optional.
-
-In CSV mode, these are separate CSV files or folders selected by command-line
-options. In Excel mode, owner, site-description, analysis, and quality-index
-tables are sheets in the main workbook, while velocity profiles are passed
-separately with `-p`.
-
-The detailed CSV column reference is maintained separately in
-[csv-input-columns.md](csv-input-columns.md). The same column names apply to
-Excel sheets, except that sheet names replace the separate CSV filenames.
-
-## Quality-Index Behavior
-
-SiteXML stores calculated indicator-level quality indexes and the final overall
-quality index. It does not store the detailed Q_Index1 criteria or Q_Index3
-consistency inputs.
-
-If both direct `*_qualityIndex` columns and a quality-index sidecar are provided:
-
-- direct `*_qualityIndex` values are imported first;
-- sidecar Q_Index1 criteria for an existing indicator recalculate and replace
-  that indicator's direct `*_qualityIndex` value;
-- sidecar blanks for an indicator leave that indicator's direct `*_qualityIndex`
-  value unchanged;
-- sidecar rows for sites without indicator objects are skipped.
-
-The tools do not automatically synthesize `overallQindex` from direct
-`*_qualityIndex` columns alone. To write `overallQindex`, use one of these explicit
-workflows:
-
-- provide `overallQindex` in the site-description table;
-- provide the quality-index sidecar so the tool can calculate Q_Index1 and
-  Q_Index3-derived results during import.
-
-If no usable indicator data exists for a site, providing a quality-index
-sidecar does not write a fake `<overallQindex>0</overallQindex>`.
-
-## Validation Rules And Assumptions
-
-The import process is intentionally strict about object identifiers and
-relationships when the relevant metadata is provided.
-
-The tools validate that:
-
-- required input files or sheets are present;
-- required columns are present;
-- required row values are not empty;
-- station codes use `network.station` notation;
-- analysis rows point to the parent site description through
-  `siteDescriptionID`;
-- velocity-profile rows point to an existing `analysisID`;
-- duplicate analysis and velocity-profile resource IDs are rejected;
-- `preferredSiteAnalysisID`, when kept, points to an attached analysis;
-- `preferredVelocityProfileID`, when kept, points to an attached velocity
-  profile;
-- when both preferred IDs are kept, the preferred velocity profile belongs to
-  the preferred analysis;
-- generated XML validates against the bundled SiteXML schema before it is
-  written.
-
-The tools do not guess or generate missing relationship IDs. For example, they
-do not choose the first analysis as the preferred analysis and they do not
-invent missing `analysisID` or `velocityProfileID` values.
-
-One lenient rule applies to optional target tables:
-
-- if analysis metadata is omitted, `preferredSiteAnalysisID` and
-  `preferredVelocityProfileID` values from site-description input are ignored
-  with warnings;
-- if analysis metadata is present but velocity-profile metadata is omitted,
-  `preferredVelocityProfileID` values are ignored with warnings.
-
-Ignored preferred IDs are omitted from generated SiteXML.
 
 ## Recommended Workflows
 
@@ -394,14 +350,79 @@ excel2serasite sera_site.xlsx \
   -out sitexml_output
 ```
 
+## Quality-Index Behavior
+
+SiteXML stores calculated indicator-level quality indexes and the final overall
+quality index. It does not store the detailed Q_Index1 criteria or Q_Index3
+consistency inputs.
+
+If both direct `*_qualityIndex` columns and a quality-index sidecar are provided:
+
+- direct `*_qualityIndex` values are imported first;
+- sidecar Q_Index1 criteria for an existing indicator recalculate and replace
+  that indicator's direct `*_qualityIndex` value;
+- sidecar blanks for an indicator leave that indicator's direct `*_qualityIndex`
+  value unchanged;
+- sidecar rows for sites without indicator objects are skipped.
+
+The tools do not automatically synthesize `overallQindex` from direct
+`*_qualityIndex` columns alone. To write `overallQindex`, use one of these explicit
+workflows:
+
+- provide `overallQindex` in the site-description table;
+- provide the quality-index sidecar so the tool can calculate Q_Index1 and
+  Q_Index3-derived results during import.
+
+If no usable indicator data exists for a site, providing a quality-index
+sidecar does not write a fake `<overallQindex>0</overallQindex>`.
+
+## Validation Rules And Assumptions
+
+The import process is intentionally strict about object identifiers and
+relationships when the relevant metadata is provided.
+
+The tools validate that:
+
+- required input files or sheets are present;
+- required columns are present;
+- required row values are not empty;
+- station codes use `network.station` notation;
+- analysis rows point to the parent site description through
+  `siteDescriptionID`;
+- velocity-profile rows point to an existing `analysisID`;
+- duplicate analysis and velocity-profile resource IDs are rejected;
+- `preferredSiteAnalysisID`, when kept, points to an attached analysis;
+- `preferredVelocityProfileID`, when kept, points to an attached velocity
+  profile;
+- when both preferred IDs are kept, the preferred velocity profile belongs to
+  the preferred analysis;
+- generated XML validates against the bundled SiteXML schema before it is
+  written.
+
+The tools do not guess or generate missing relationship IDs. For example, they
+do not choose the first analysis as the preferred analysis and they do not
+invent missing `analysisID` or `velocityProfileID` values.
+
+One lenient rule applies to optional target tables:
+
+- if analysis metadata is omitted, `preferredSiteAnalysisID` and
+  `preferredVelocityProfileID` values from site-description input are ignored
+  with warnings;
+- if analysis metadata is present but velocity-profile metadata is omitted,
+  `preferredVelocityProfileID` values are ignored with warnings.
+
+Ignored preferred IDs are omitted from generated SiteXML.
+
 ## Troubleshooting
 
 If the command fails before writing XML, check:
 
 - required files or sheets are present;
-- required columns are spelled exactly as expected;
+- required column names are spelled exactly as expected;
 - CSV delimiter matches the file contents, usually `;`;
+- CSV delimiter is not used inside any text values in any of the columns;
 - every required row value is filled;
+- every provided value conforms to the requirements set by the SiteXML schema;
 - every `siteID`, `siteDescriptionID`, `analysisID`, and `velocityProfileID`
   relationship points to a real object;
 - `preferredSiteAnalysisID` and `preferredVelocityProfileID` point to objects
@@ -409,6 +430,10 @@ If the command fails before writing XML, check:
 - velocity-profile layers include `velocityS_value` and
   `layerTopDepth_value`;
 - Q_Index3 consistency values are only `0`, `1`, or empty.
+
+> Always check with the [SiteXML Tabular Input Reference](tabular-input-reference.md)
+> or the [SiteXML schema documentation](https://www.itsak.gr/SiteXML)
+> for the accepted values in each column.
 
 Warnings usually mean optional enrichment was skipped or an unresolved optional
 preferred ID was omitted from generated XML. Errors mean the input could not be

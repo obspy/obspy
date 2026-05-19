@@ -18,16 +18,12 @@ jobs:
         include:
           - os: macos-15
             artifact: sitexml-scripts-macos-arm64
-            data_sep: ":"
           - os: macos-15-intel
             artifact: sitexml-scripts-macos-x86_64
-            data_sep: ":"
           - os: ubuntu-latest
             artifact: sitexml-scripts-linux-x86_64
-            data_sep: ":"
           - os: windows-latest
             artifact: sitexml-scripts-windows-x86_64
-            data_sep: ";"
 
     steps:
       # Get the repository code.
@@ -48,46 +44,17 @@ jobs:
         run: |
           python -c "import shutil; [shutil.rmtree(path, ignore_errors=True) for path in ('build', 'dist')]"
 
-      # Build the CSV executable.
-      - name: Build csv2serasite
+      # Build both executables into one shared onedir bundle.
+      - name: Build SiteXML scripts
         shell: bash
         run: |
-          # Build executable.
-          # pyinstaller --clean --onedir --name csv2serasite --collect-submodules obspy.io.sitexml --collect-data obspy.io.sitexml --add-data "obspy/RELEASE-VERSION${{ matrix.data_sep }}obspy" obspy/io/sitexml/scripts/csv2serasite.py
-          pyinstaller --clean --onedir --name csv2serasite \
-            --collect-data obspy.io.sitexml \
-            --add-data "obspy/RELEASE-VERSION${{ matrix.data_sep }}obspy" \
-            --collect-all pandas \
-            --exclude-module scipy \
-            --exclude-module sqlalchemy \
-            --exclude-module matplotlib \
-            --exclude-module tkinter \
-            --exclude-module IPython \
-            obspy/io/sitexml/scripts/csv2serasite.py
-
-      # Build the Excel executable.
-      - name: Build excel2serasite
-        shell: bash
-        run: |
-          # Build executable.
-          # pyinstaller --clean --onedir --name excel2serasite --collect-submodules obspy.io.sitexml --collect-data obspy.io.sitexml --collect-all openpyxl --add-data "obspy/RELEASE-VERSION${{ matrix.data_sep }}obspy" obspy/io/sitexml/scripts/excel2serasite.py
-          pyinstaller --clean --onedir --name excel2serasite \
-            --collect-data obspy.io.sitexml \
-            --add-data "obspy/RELEASE-VERSION${{ matrix.data_sep }}obspy" \
-            --collect-all pandas \
-            --collect-all openpyxl \
-            --exclude-module scipy \
-            --exclude-module sqlalchemy \
-            --exclude-module matplotlib \
-            --exclude-module tkinter \
-            --exclude-module IPython \
-            obspy/io/sitexml/scripts/excel2serasite.py
+          pyinstaller --clean --noconfirm sitexml-scripts.spec
 
       - name: Add usage guide to artifact
         run: |
-          python -c "import shutil; shutil.copyfile('obspy/io/sitexml/docs/standalone-executable-usage-guide.md', 'dist/SiteXML-Standalone-Usage-Guide.md')"
-          python -c "import shutil; shutil.copyfile('obspy/io/sitexml/docs/csv-input-columns.md', 'dist/csv-input-columns.md')"
-          python -c "import shutil; shutil.copytree('obspy/io/sitexml/tests/data', 'dist/examples', dirs_exist_ok=True, ignore=shutil.ignore_patterns('.DS_Store'))"
+          python -c "import pathlib, shutil; root = pathlib.Path('dist/sitexml-scripts'); shutil.copyfile('obspy/io/sitexml/docs/standalone-executable-usage-guide.md', root / 'SiteXML-Standalone-Usage-Guide.md')"
+          python -c "import pathlib, shutil; root = pathlib.Path('dist/sitexml-scripts'); shutil.copyfile('obspy/io/sitexml/docs/tabular-input-reference.md', root / 'SiteXML-Tabular-Input-Reference.md')"
+          python -c "import pathlib, shutil; root = pathlib.Path('dist/sitexml-scripts'); shutil.copytree('obspy/io/sitexml/tests/data', root / 'examples', dirs_exist_ok=True, ignore=shutil.ignore_patterns('.DS_Store'))"
 
       - uses: actions/upload-artifact@v7
         with:
