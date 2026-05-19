@@ -24,7 +24,7 @@ excludes = [
 
 
 csv_analysis = Analysis(
-    ["obspy/io/sitexml/scripts/csv2serasite.py"],
+    ["obspy/io/sitexml/scripts/csv2sitexml.py"],
     pathex=[],
     binaries=binaries,
     datas=datas,
@@ -39,12 +39,12 @@ csv_exe = EXE(
     csv_pyz,
     csv_analysis.scripts,
     exclude_binaries=True,
-    name="csv2serasite",
+    name="csv2sitexml",
     console=True,
 )
 
 excel_analysis = Analysis(
-    ["obspy/io/sitexml/scripts/excel2serasite.py"],
+    ["obspy/io/sitexml/scripts/excel2sitexml.py"],
     pathex=[],
     binaries=binaries,
     datas=datas,
@@ -59,7 +59,7 @@ excel_exe = EXE(
     excel_pyz,
     excel_analysis.scripts,
     exclude_binaries=True,
-    name="excel2serasite",
+    name="excel2sitexml",
     console=True,
 )
 

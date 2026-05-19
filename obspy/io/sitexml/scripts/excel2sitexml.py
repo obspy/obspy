@@ -11,7 +11,7 @@ from obspy.io.sitexml.sitexml import sitedict_to_sitexml
 from obspy.io.sitexml.tabular import excel_to_sera_site
 
 
-def excel2serasite(options):
+def excel2sitexml(options):
     """
     Import Excel metadata and write one SiteXML file per site.
     """
@@ -26,7 +26,7 @@ def excel2serasite(options):
 
 
 def main(argv=None):
-    parser = ArgumentParser(prog='excel2serasite',
+    parser = ArgumentParser(prog='excel2sitexml',
                             description=__doc__.strip())
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s ' + __version__)
@@ -42,7 +42,7 @@ def main(argv=None):
         help='Excel file with site metadata')
     args = parser.parse_args(argv)
 
-    excel2serasite(args)
+    excel2sitexml(args)
     return 0
 
 

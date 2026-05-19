@@ -11,7 +11,7 @@ from obspy.io.sitexml.sitexml import sitedict_to_sitexml
 from obspy.io.sitexml.tabular import csv_to_sera_site
 
 
-def csv2serasite(options):
+def csv2sitexml(options):
     """
     Import CSV metadata and write one SiteXML file per site.
     """
@@ -30,7 +30,7 @@ def csv2serasite(options):
 
 
 def main(argv=None):
-    parser = ArgumentParser(prog='csv2serasite',
+    parser = ArgumentParser(prog='csv2sitexml',
                             description=__doc__.strip())
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s ' + __version__)
@@ -58,7 +58,7 @@ def main(argv=None):
         help="CSV delimiter, defaults to ';'")
     args = parser.parse_args(argv)
 
-    csv2serasite(args)
+    csv2sitexml(args)
     return 0
 
 

@@ -20,9 +20,9 @@ from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLImportError
 from obspy.io.sitexml.quality_index import (apply_quality_index_dataframe,
                                             apply_quality_index_csv,
                                             apply_quality_index_excel)
-from obspy.io.sitexml.scripts.csv2serasite import main as csv2serasite_main
-from obspy.io.sitexml.scripts.excel2serasite import (
-    main as excel2serasite_main)
+from obspy.io.sitexml.scripts.csv2sitexml import main as csv2sitexml_main
+from obspy.io.sitexml.scripts.excel2sitexml import (
+    main as excel2sitexml_main)
 from obspy.io.sitexml.tabular import (add_velocity_profiles, csv_to_sera_site,
                                       excel_to_sera_site, _read_year_cell)
 from obspy.io.sitexml.sitexml import sitexml_to_sitedict
@@ -406,11 +406,11 @@ class TestSiteXMLCSVImport():
             sera_site_dict["quakeml:test/site/001"]
             .analysis[0].velocity_profile_set) is None
 
-    def test_csv2serasite_main_writes_sitexml_files(
+    def test_csv2sitexml_main_writes_sitexml_files(
             self, datapath, tmp_path):
         output_folder = tmp_path / "sitexml"
 
-        result = csv2serasite_main([
+        result = csv2sitexml_main([
             "-o", str(datapath / "site_owner.csv"),
             "-d", str(datapath / "site_description.csv"),
             "-a", str(datapath / "site_analysis.csv"),
@@ -426,13 +426,13 @@ class TestSiteXMLCSVImport():
             "Site_domain.ab.003_%s.xml" % date_text,
         ]
 
-    def test_csv2serasite_main_ignores_preferred_ids_without_analysis(
+    def test_csv2sitexml_main_ignores_preferred_ids_without_analysis(
             self, datapath, tmp_path):
         output_folder = tmp_path / "sitexml"
 
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
-            result = csv2serasite_main([
+            result = csv2sitexml_main([
                 "-o", str(datapath / "site_owner.csv"),
                 "-d", str(datapath / "site_description.csv"),
                 "--output-folder", str(output_folder),
@@ -452,13 +452,13 @@ class TestSiteXMLCSVImport():
         assert any("Ignoring preferredVelocityProfileID" in str(w.message)
                    for w in caught)
 
-    def test_csv2serasite_main_ignores_preferred_velocity_without_profiles(
+    def test_csv2sitexml_main_ignores_preferred_velocity_without_profiles(
             self, datapath, tmp_path):
         output_folder = tmp_path / "sitexml"
 
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
-            result = csv2serasite_main([
+            result = csv2sitexml_main([
                 "-o", str(datapath / "site_owner.csv"),
                 "-d", str(datapath / "site_description.csv"),
                 "-a", str(datapath / "site_analysis.csv"),
@@ -477,11 +477,11 @@ class TestSiteXMLCSVImport():
         assert any("velocity-profile metadata was not provided" in
                    str(w.message) for w in caught)
 
-    def test_csv2serasite_main_does_not_write_overall_qindex_without_qindex1(
+    def test_csv2sitexml_main_does_not_write_overall_qindex_without_qindex1(
             self, datapath, tmp_path):
         output_folder = tmp_path / "sitexml"
 
-        result = csv2serasite_main([
+        result = csv2sitexml_main([
             "-o", str(datapath / "site_owner.csv"),
             "-d", str(datapath / "minimal_site_description.csv"),
             "-q", str(datapath / "quality_index.csv"),
@@ -569,12 +569,12 @@ class TestSiteXMLCSVImport():
         self._assert_full_reference_metadata(
             analysis_001.velocity_profile_set)
 
-    def test_excel2serasite_main_writes_sitexml_files(
+    def test_excel2sitexml_main_writes_sitexml_files(
             self, datapath, tmp_path):
         pytest.importorskip("openpyxl")
         output_folder = tmp_path / "sitexml"
 
-        result = excel2serasite_main([
+        result = excel2sitexml_main([
             str(datapath / "sera_site_all.xlsx"),
             "-p", str(datapath / "velocity_profiles.xlsx"),
             "--output-folder", str(output_folder),

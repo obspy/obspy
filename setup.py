@@ -148,8 +148,8 @@ ENTRY_POINTS = {
         'obspy-dataless2xseed = obspy.io.xseed.scripts.dataless2xseed:main',
         'obspy-xseed2dataless = obspy.io.xseed.scripts.xseed2dataless:main',
         'obspy-dataless2resp = obspy.io.xseed.scripts.dataless2resp:main',
-        'obspy-csv2serasite = obspy.io.sitexml.scripts.csv2serasite:main',
-        'obspy-excel2serasite = obspy.io.sitexml.scripts.excel2serasite:main',
+        'obspy-csv2sitexml = obspy.io.sitexml.scripts.csv2sitexml:main',
+        'obspy-excel2sitexml = obspy.io.sitexml.scripts.excel2sitexml:main',
         ],
     'obspy.plugin.waveform': [
         'TSPAIR = obspy.io.ascii.core',
