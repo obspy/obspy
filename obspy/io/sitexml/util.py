@@ -41,6 +41,7 @@ class SiteXMLIOError(SiteXMLError, OSError):
     Raised when SiteXML-related input paths or files cannot be accessed.
     """
 
+
 def _split_station_code(value):
     """
     Split a ``network.station`` code into FDSN network and station codes.
@@ -103,6 +104,7 @@ class BaseNode(ComparingObject):
         """
         return copy.deepcopy(self)
 
+
 TopographySchemaA = Enum([
     "T1",
     "T2",
@@ -116,10 +118,13 @@ Formal topographic/terrain classification of a site.
 **Italian Code**.
 Allowed values are:
 
-* ``"T1"`` : Flat surface, isolated slopes and cliffs with average slop angle 
+* ``"T1"`` : Flat surface, isolated slopes and cliffs with average slop
+  angle
 * ``"T2"`` : Slopes with average slope angle i>15
-* ``"T3"`` : Ridges with crest width significantly less than the base width and average slope angle 15
-* ``"T4"`` : Ridges with crest width significantly less than the base width and average slope angle i>30
+* ``"T3"`` : Ridges with crest width significantly less than the base
+  width and average slope angle 15
+* ``"T4"`` : Ridges with crest width significantly less than the base
+  width and average slope angle i>30
 """
 
 TopographySchemaB = Enum([
@@ -134,9 +139,9 @@ TopographySchemaB = Enum([
 Formal topographic/terrain classification of a site.
 
 **Schema B** is the terrain classification scheme proposed by
-**Burjanek et al. (2014)**. For the precise definition of the 
+**Burjanek et al. (2014)**. For the precise definition of the
 allowed values refer to `SERA Deliverable 7.1, Appendix I.
-<https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_ 
+<https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_
 
 Allowed values are:
 
@@ -166,13 +171,13 @@ Allowed values are:
 """
 
 EC8Class = Enum([
-    "A", 
-    "B", 
-    "C", 
-    "D", 
-    "E", 
-    "S1", 
-    "S2", 
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "S1",
+    "S2",
     "Undefined"
 ])
 """
@@ -181,12 +186,12 @@ Ground type according to Eurocode 8 (EC8 § 3.1.2, Table 3.1).
 Allowed values are:
 
 * ``"A"``
-* ``"B"`` 
-* ``"C"`` 
-* ``"D"`` 
-* ``"E"`` 
-* ``"S1"`` 
-* ``"S2"`` 
+* ``"B"``
+* ``"C"``
+* ``"D"``
+* ``"E"``
+* ``"S1"``
+* ``"S2"``
 * ``"Undefined"``
 
 """
@@ -205,7 +210,7 @@ Method used for the estimation of the resonance frequency, f0, of a site.
     Required by **EGD (European Geocharacterization Database)**
     when calculating the EGD specific resonance frequency quality index.
     For more information refer to `SERA Deliverable 7.1, Appendix II.
-    <https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_ 
+    <https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_
 
 Allowed values are:
 
@@ -217,23 +222,23 @@ Allowed values are:
 """
 
 VelocityS30Method = Enum([
-     "Geology", 
-     "Topographic Slope", 
-     "SPT", 
-     "CPT", 
-     "Laboratory", 
-     "S-REFR", 
-     "S-REFL", 
-     "SASW", 
-     "MASW", 
-     "SWI", 
-     "SPAC/F-K", 
-     "ReMi", 
-     "Crosshole", 
-     "Downhole", 
-     "Uphole", 
-     "P-S Log", 
-     "Seismic Cone", 
+     "Geology",
+     "Topographic Slope",
+     "SPT",
+     "CPT",
+     "Laboratory",
+     "S-REFR",
+     "S-REFL",
+     "SASW",
+     "MASW",
+     "SWI",
+     "SPAC/F-K",
+     "ReMi",
+     "Crosshole",
+     "Downhole",
+     "Uphole",
+     "P-S Log",
+     "Seismic Cone",
      "DH Strong Motion Arrays"
 ])
 """
@@ -241,11 +246,11 @@ Method used to estimate the S-wave velocity profile and Vs30.
 
 .. note::
     Required by **EGD (European Geocharacterization Database)**
-    when calculating the EGD specific Vs30 quality index. For 
+    when calculating the EGD specific Vs30 quality index. For
     more information refer to `SERA Deliverable 7.1, Appendix IV.
-    <https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_ 
+    <https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_
 
-Vs30 is the average shear-wave velocity in the upper 30 meters of the 
+Vs30 is the average shear-wave velocity in the upper 30 meters of the
 soil column. Allowed values are:
 
 * ``"Geology"``
@@ -276,15 +281,15 @@ Vs30MethodCombined = Enum([
 Whether multiple methods were combined to estimate Vs30.
 
 .. note::
-    Required by **EGD (European Geocharacterization Database)** 
-    for calculating the EGD specific Vs30 quality index. For 
+    Required by **EGD (European Geocharacterization Database)**
+    for calculating the EGD specific Vs30 quality index. For
     more information refer to `SERA Deliverable 7.1, Appendix III & IV.
-    <https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_ 
+    <https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_
 
 Allowed values are:
 
 * ``"1.0"`` : if only one method has been used to estimate the Vs30 value
-* ``"1.2"`` : if a combination of two or more methods has been applied to 
+* ``"1.2"`` : if a combination of two or more methods has been applied to
   estimate the Vs30 value
 """
 
@@ -298,13 +303,13 @@ Vs30ManualIndex = Enum([
 Qualitative factor regarding the maximum Vs measurement depth.
 
 .. note::
-    Required by **EGD (European Geocharacterization Database)** 
+    Required by **EGD (European Geocharacterization Database)**
     for calculating the EGD specific Vs30 quality index.
 
-This depth is commonly compared with the EC8 engineering bedrock depth, 
+This depth is commonly compared with the EC8 engineering bedrock depth,
 where Vs >= 800 m/s.
 
-The reasoning for introducing this index and description of its values is 
+The reasoning for introducing this index and description of its values is
 provided in `SERA Deliverable 7.1, Appendix III.
 <https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf>`_
 
@@ -314,6 +319,7 @@ provided in `SERA Deliverable 7.1, Appendix III.
 * ``"1.0"`` : Maximum depth of Vs measurements > 30m
 """
 
+
 def _pretty_str(obj):
     """
     Return a compact representation of non-empty public object attributes.
@@ -321,13 +327,14 @@ def _pretty_str(obj):
     :rtype: str
     """
     return ", ".join(
-        f"{key}='{value}'" for key, value in vars(obj).items() 
+        f"{key}='{value}'" for key, value in vars(obj).items()
         if value is not None
     )
 
+
 def _enum_property(attr_name, enum_type):
     """
-    Method to produce getter/setter functions 
+    Method to produce getter/setter functions
     and validate enum type values.
 
     :rtype: property
@@ -347,6 +354,7 @@ def _enum_property(attr_name, enum_type):
                     Expected one of {valid_values}, but got '{value}'."
             )
     return property(getter, setter)
+
 
 def _enum_list_property(attr_name, enum_type, allow_none=True):
     """
@@ -374,7 +382,8 @@ def _enum_list_property(attr_name, enum_type, allow_none=True):
             return enum_type.get(x)
         except KeyError:
             raise SiteXMLValidationError(
-                f"Invalid {attr_name} entry {x!r}. Allowed: {enum_type.values()}"
+                f"Invalid {attr_name} entry {x!r}. "
+                f"Allowed: {enum_type.values()}"
             )
 
     class _EnumList(list):
@@ -392,7 +401,8 @@ def _enum_list_property(attr_name, enum_type, allow_none=True):
 
         def __setitem__(self, index, value):
             if isinstance(index, slice):
-                super().__setitem__(index, [_eval_enum(item) for item in value])
+                super().__setitem__(index,
+                                    [_eval_enum(item) for item in value])
             else:
                 super().__setitem__(index, _eval_enum(value))
 
@@ -403,7 +413,8 @@ def _enum_list_property(attr_name, enum_type, allow_none=True):
                 return
             raise SiteXMLValidationError(f"{attr_name} cannot be None")
 
-        if not isinstance(values, Iterable) or isinstance(values, (str, bytes)):
+        if (not isinstance(values, Iterable)
+                or isinstance(values, (str, bytes))):
             raise SiteXMLValidationError(
                 f"{attr_name} must be an iterable of strings"
             )
@@ -412,8 +423,9 @@ def _enum_list_property(attr_name, enum_type, allow_none=True):
 
     return property(getter, setter)
 
-def _scalar_property(attr_name, value_type=None, allow_none=True,
-                    allow_empty=True):
+
+def _scalar_property(attr_name, value_type=None,
+                     allow_none=True, allow_empty=True):
     """
     Creates a property for scalar values with optional requiredness checks.
 
@@ -450,6 +462,7 @@ def _scalar_property(attr_name, value_type=None, allow_none=True,
         setattr(self, private_name, value)
 
     return property(getter, setter)
+
 
 def _resource_id_property(attr_name, allow_none=True, allow_empty=True):
     """
@@ -488,9 +501,10 @@ def _resource_id_property(attr_name, allow_none=True, allow_empty=True):
 
     return property(getter, setter)
 
+
 def _wrapped_property(attr_name, wrapper_type, allow_none=True):
     """
-    Method to produce getter/setter functions 
+    Method to produce getter/setter functions
     and wrap argument values into the appropriate type.
 
     :param attr_name: name of the attribute
@@ -522,6 +536,7 @@ def _wrapped_property(attr_name, wrapper_type, allow_none=True):
 
     return property(getter, setter)
 
+
 def _wrapped_list_property(attr_name, wrapper_type, allow_none=True):
     """
     Creates a property that wraps iterable elements into wrapper_type.
@@ -543,7 +558,8 @@ def _wrapped_list_property(attr_name, wrapper_type, allow_none=True):
                 return
             raise SiteXMLValidationError(f"{attr_name} cannot be None")
 
-        if not isinstance(values, Iterable) or isinstance(values, (str, bytes)):
+        if (not isinstance(values, Iterable)
+                or isinstance(values, (str, bytes))):
             raise SiteXMLValidationError(f"{attr_name} must be an iterable")
 
         wrapped_items = []
@@ -555,7 +571,8 @@ def _wrapped_list_property(attr_name, wrapper_type, allow_none=True):
                     wrapped_items.append(wrapper_type(v))
                 except Exception as e:
                     raise SiteXMLValidationError(
-                        f"Could not convert element {v} to {wrapper_type.__name__}: {e}"
+                        f"Could not convert element {v} to "
+                        f"{wrapper_type.__name__}: {e}"
                     )
 
         setattr(self, private_name, wrapped_items)

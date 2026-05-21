@@ -37,8 +37,10 @@ from obspy.io.sitexml.sitexml import (_is_sitexml, _read_site_description,
                                       sitexml_to_sitedict)
 from obspy.io.sitexml.sitexml import write_sitexml
 
+
 class TestSiteXML():
     """
+    Test Suite for Read/Write SiteXML Documents
     """
     def _minimal_sera_site(self, station_code="XX.ABCD",
                            resource_id="quakeml:domain.ab/site/001"):
@@ -425,7 +427,7 @@ class TestSiteXML():
                 [VelocityS30(ValueWithUncertainty(760))],
                 analysisID="quakeml:domain.ab/analysis/missing")
 
-    def test_add_site_indicator_requires_analysis_for_analysis_indicators(self):
+    def test_add_site_indicator_requires_analysis_for_analysis_indicat(self):
         """
         Analysis-level indicators need an attached analysis target.
         """
@@ -513,7 +515,7 @@ class TestSiteXML():
         assert velocity_profile_set.quality_index == 0.5
         assert velocity_profile_set.velocity_profiles == [new_profile]
 
-    def test_validate_references_requires_preferred_velocity_profile_in_preferred_analysis(self):
+    def test_preferred_velocity_profile_in_preferred_analysis(self):
         """
         Preferred velocity profile must belong to the preferred analysis.
         """
@@ -801,7 +803,8 @@ class TestSiteXML():
             "X.AB CD",
         ]
         for station_code in invalid_codes:
-            with pytest.raises(SiteXMLValidationError, match="network.station"):
+            with pytest.raises(SiteXMLValidationError,
+                               match="network.station"):
                 self._minimal_sera_site(station_code=station_code)
 
     def test_station_code_schema_rejects_invalid_notation(self, testdata):
@@ -826,7 +829,8 @@ class TestSiteXML():
     <revisionHistory>
         <revision>
             <revisionTime>2026-05-02T12:00:00Z</revisionTime>
-            <description>Updated velocity profile and quality indexes.</description>
+            <description>Updated velocity profile and quality indexes.
+            </description>
             <author>ORFEUS</author>
             <version>2026-05-02</version>
             <previousVersion>"""
@@ -1014,7 +1018,7 @@ class TestSiteXML():
                 operator, owner_codename="SITEOWNER")
 
     def _assert_site_xml_equality(self, xml_file_buffer,
-                                     expected_xml_file_buffer):
+                                  expected_xml_file_buffer):
         """
         Helper function comparing two BytesIO buffers contain SiteXML
         files.
@@ -1040,7 +1044,7 @@ class TestSiteXML():
         org_lines = normalize_root_creation_time(org_lines)
 
         # Remove the module lines from the original file.
-        #org_lines = [_i.strip() for _i in org_lines
+        # org_lines = [_i.strip() for _i in org_lines
         #             if not _i.strip().startswith("<!--")]
 
         for new_line, org_line in zip(new_lines, org_lines):
@@ -1064,11 +1068,12 @@ class TestSiteXML():
         """
         Helper function for creating two BytesIO buffers contain SiteXML
         files to be compared by _assert_site_xml_equality().
-        
+
         :type orig_filename: str
         :param orig_filename: Name of the file to read from siteXML doc
-        :type sera_site: :class:`~obspy.core.io.sitexml.core.SERASite` 
-        :param sera_site: A SERASite object containing site metadata from orig_filename
+        :type sera_site: :class:`~obspy.core.io.sitexml.core.SERASite`
+        :param sera_site: A SERASite object containing site metadata from
+            orig_filename
         """
         # Read orig_filename into orig_xml_file_buffer BytesIO buffer
         #
@@ -1081,12 +1086,12 @@ class TestSiteXML():
         new_xml_file_buffer = io.BytesIO()
         write_sitexml(sera_site, new_xml_file_buffer, validate=True)
         new_xml_file_buffer.seek(0, 0)
-        
+
         # Compare the two buffers
         #
         self._assert_site_xml_equality(
             new_xml_file_buffer, orig_xml_file_buffer)
-        
+
     def test_is_sitexml(self, testdata, datapath):
         """
         Tests the _is_sitexml() function.
@@ -1098,19 +1103,19 @@ class TestSiteXML():
         ]
         for stat in sitexmls:
             assert _is_sitexml(stat)
-        
+
         # Check some negatives.
-        #not_sitexmls = [
+        # not_sitexmls = [
         #    "wrong_sitexml.xml", "input_csv/site_description.csv",
         #    "input_excel/sera_site_all.xlsx"]
-        #not_sitexmls = [datapath / name
+        # not_sitexmls = [datapath / name
         #                   for name in not_sitexmls]
-        #for stat in not_sitexmls:
+        # for stat in not_sitexmls:
         #    assert not _is_sitexml(stat)
-    
+
     def test_read_and_write_minimal_file(self, testdata):
         """
-        Test that reading and writing of a minimal SiteXML document, 
+        Test that reading and writing of a minimal SiteXML document,
         with the least possible tags, works.
         """
         filename = testdata["minimal_sitexml.xml"]
@@ -1160,7 +1165,7 @@ class TestSiteXML():
         assert sera_site.site_owner is not None
         assert sera_site.site_description is not None
 
-    def test_read_sitexml_raises_sitexml_validation_error_for_invalid_xml(self):
+    def test_read_sitexml_raises_validation_error_for_invalid_xml(self):
         xml_buffer = io.BytesIO(b"<not-sitexml />")
 
         with pytest.raises(SiteXMLValidationError):
@@ -1168,16 +1173,22 @@ class TestSiteXML():
 
     def test_analysis_requires_schema_required_ids(self):
         with pytest.raises(SiteXMLValidationError):
-            Analysis(resource_id=None,
-                     site_descriptionID="quakeml:domain.ab/site_description/001")
+            Analysis(
+                resource_id=None,
+                site_descriptionID="quakeml:domain.ab/site_description/001",
+            )
 
         with pytest.raises(SiteXMLValidationError):
-            Analysis(resource_id="quakeml:domain.ab/analysis/001",
-                     site_descriptionID=None)
+            Analysis(
+                resource_id="quakeml:domain.ab/analysis/001",
+                site_descriptionID=None,
+            )
 
         with pytest.raises(SiteXMLValidationError):
-            Analysis(resource_id="",
-                     site_descriptionID="quakeml:domain.ab/site_description/001")
+            Analysis(
+                resource_id="",
+                site_descriptionID="quakeml:domain.ab/site_description/001",
+            )
 
     def test_resource_id_fields_normalize_resourceidentifier_inputs(self):
         site_owner = SERASiteOwner(
@@ -1188,7 +1199,8 @@ class TestSiteXML():
             person_mbox="someemail@domain.ab",
             ownerID=ResourceIdentifier("quakeml:domain.ab/siteOwner/001"),
             personID=ResourceIdentifier("quakeml:domain.ab/person/001"),
-            institutionID=ResourceIdentifier("quakeml:domain.ab/institution/001"),
+            institutionID=ResourceIdentifier(
+                "quakeml:domain.ab/institution/001"),
         )
         site_description = SiteDescription(
             resource_id=ResourceIdentifier(
@@ -1385,7 +1397,9 @@ class TestSiteXML():
 
         root = etree.fromstring(xml_buffer.getvalue())
         written_creation_time = obspy.UTCDateTime(
-            root.find("{http://www.orfeus-eu.org/xml/site/1}creationTime").text)
+            root.find(
+                "{http://www.orfeus-eu.org/xml/site/1}creationTime"
+            ).text)
 
         assert before <= written_creation_time <= after
         assert sera_site.created == written_creation_time
@@ -1404,7 +1418,9 @@ class TestSiteXML():
 
         root = etree.parse(str(filename)).getroot()
         written_creation_time = obspy.UTCDateTime(
-            root.find("{http://www.orfeus-eu.org/xml/site/1}creationTime").text)
+            root.find(
+                "{http://www.orfeus-eu.org/xml/site/1}creationTime"
+            ).text)
 
         assert before <= written_creation_time <= after
         assert sera_site.created == written_creation_time
@@ -1423,7 +1439,9 @@ class TestSiteXML():
 
         root = etree.fromstring(xml_buffer.getvalue())
         written_creation_time = obspy.UTCDateTime(
-            root.find("{http://www.orfeus-eu.org/xml/site/1}creationTime").text)
+            root.find(
+                "{http://www.orfeus-eu.org/xml/site/1}creationTime"
+            ).text)
 
         assert written_creation_time == creation_time
         assert sera_site.created == creation_time
@@ -1601,7 +1619,8 @@ class TestSiteXML():
         sera_site.analysis[0].site_descriptionID = (
             "quakeml:domain.ab/site_description/does-not-match")
 
-        with pytest.raises(SiteXMLValidationError, match="site_descriptionID"):
+        with pytest.raises(SiteXMLValidationError,
+                           match="site_descriptionID"):
             write_sitexml(sera_site, io.BytesIO(), validate=True)
 
     def test_write_sitexml_validates_preferred_analysis_reference(
@@ -1621,7 +1640,8 @@ class TestSiteXML():
             "quakeml:domain.ab/velocity_profile/missing")
 
         with pytest.raises(
-                SiteXMLValidationError, match="preferred_velocity_profileID"):
+                SiteXMLValidationError,
+                match="preferred_velocity_profileID"):
             write_sitexml(sera_site, io.BytesIO(), validate=True)
 
     def test_write_sitexml_validates_duplicate_analysis_ids(self, testdata):
@@ -1630,7 +1650,8 @@ class TestSiteXML():
         sera_site.analysis.append(duplicate_analysis)
 
         with pytest.raises(
-                SiteXMLValidationError, match="Duplicate analysis resource_id"):
+                SiteXMLValidationError,
+                match="Duplicate analysis resource_id"):
             write_sitexml(sera_site, io.BytesIO(), validate=True)
 
     def test_write_sitexml_validates_duplicate_velocity_profile_ids(
@@ -1644,7 +1665,7 @@ class TestSiteXML():
                 SiteXMLValidationError,
                 match="Duplicate velocity profile resource_id"):
             write_sitexml(sera_site, io.BytesIO(), validate=True)
-        
+
     def test_read_and_write_full_file(self, testdata):
         """
         Test that reading and writing of a full SiteXML document with all
@@ -1655,7 +1676,7 @@ class TestSiteXML():
 
         # Write it again. Also validate it to get more confidence.
         self._write_and_compare(filename, sera_site)
-        
+
     def test_reading_and_writing_full_siteowner_tag(self, testdata):
         """
         Tests reading and writing a full SiteXML <siteOwner> tag.
@@ -1665,33 +1686,38 @@ class TestSiteXML():
 
         assert sera_site.site_owner.owner_codename == "SITEOWNER"
         assert sera_site.site_owner.owner_fullname == "Site Owner Full Name"
-        assert sera_site.site_owner.ownerID == "quakeml:domain.ab/siteOwner/001"
+        assert sera_site.site_owner.ownerID == \
+            "quakeml:domain.ab/siteOwner/001"
 
         assert sera_site.site_owner.personID == "quakeml:domain.ab/person/001"
         assert sera_site.site_owner.person_firstname == "Name"
         assert sera_site.site_owner.person_lastname == "Surname"
         assert sera_site.site_owner.person_mbox == "someemail@domain.ab"
-        assert sera_site.site_owner.person_homepage == "https://www.domain.ab/person"
+        assert sera_site.site_owner.person_homepage == \
+            "https://www.domain.ab/person"
 
-        assert sera_site.site_owner.institutionID == "quakeml:domain.ab/institution/001"
+        assert sera_site.site_owner.institutionID == \
+            "quakeml:domain.ab/institution/001"
         assert sera_site.site_owner.institution_name == "INSTITUTION_ABBR"
         assert sera_site.site_owner.institution_mbox == "info@domain.ab"
         assert sera_site.site_owner.institution_phone == "+30 123 456789"
-        assert sera_site.site_owner.institution_homepage == "http://www.domain.ab"
+        assert sera_site.site_owner.institution_homepage == \
+            "http://www.domain.ab"
 
         assert sera_site.site_owner.affiliation_department == "Seismology"
-        assert sera_site.site_owner.affiliation_function == "Senior researcher"
+        assert sera_site.site_owner.affiliation_function == \
+            "Senior researcher"
 
         assert sera_site.site_owner.address_street == "Some streetAddress"
-        assert sera_site.site_owner.address_locality == "City" 
+        assert sera_site.site_owner.address_locality == "City"
         assert sera_site.site_owner.address_postal_code == "12345"
-    
-        assert sera_site.site_owner.address_country == "Somecountry" 
-        assert sera_site.site_owner.address_country_code == "AB" 
+
+        assert sera_site.site_owner.address_country == "Somecountry"
+        assert sera_site.site_owner.address_country_code == "AB"
 
         # Write it again and compare to the original file.
         self._write_and_compare(filename, sera_site)
-        
+
     def test_reading_and_writing_full_sitedescription_tag(self, testdata):
         """
         Tests reading and writing a full SiteXML <siteDescription> tag.
@@ -1700,7 +1726,8 @@ class TestSiteXML():
         sera_site = read_sitexml(filename)
 
         assert sera_site.site_description is not None
-        assert sera_site.site_description.resource_id == "quakeml:domain.ab/site_description/001"
+        assert sera_site.site_description.resource_id == \
+            "quakeml:domain.ab/site_description/001"
         assert sera_site.site_description.station_code == "XX.ABCD"
         assert sera_site.site_description.latitude == 45.137174
         assert sera_site.site_description.longitude == 5.998905
@@ -1730,30 +1757,31 @@ class TestSiteXML():
         assert sera_site.site_description.ec8.external_references is not None
         assert len(sera_site.site_description.ec8.external_references) == 2
         external_ref = sera_site.site_description.ec8.external_references[0]
-        assert external_ref.uri == "https://doi.org/10.1007/s10518-017-0135-5/"
+        assert external_ref.uri == (
+            "https://doi.org/10.1007/s10518-017-0135-5/")
         assert external_ref.description == "paper"
         external_ref = sera_site.site_description.ec8.external_references[1]
         assert external_ref.uri == (
-            "https://www.domain.ab/SiteXML/ec8-supporting-resource"
-        )
+            "https://www.domain.ab/SiteXML/ec8-supporting-resource")
         assert external_ref.description == "supporting resource"
 
-        assert sera_site.site_description.bedrock_depth is not None
-        assert sera_site.site_description.bedrock_depth.value.value == 774.6218
-        assert sera_site.site_description.bedrock_depth.value.uncertainty == 107.8669
-        assert sera_site.site_description.bedrock_depth.quality_index == 0.5
+        sd = sera_site.site_description
+        assert sd.bedrock_depth is not None
+        assert sd.bedrock_depth.value.value == 774.6218
+        assert sd.bedrock_depth.value.uncertainty == 107.8669
+        assert sd.bedrock_depth.quality_index == 0.5
 
-        assert sera_site.site_description.h800 is not None
-        assert sera_site.site_description.h800.value.value == 94.0736
-        assert sera_site.site_description.h800.value.uncertainty == 15.5748
-        assert sera_site.site_description.h800.quality_index == 0.43
+        assert sd.h800 is not None
+        assert sd.h800.value.value == 94.0736
+        assert sd.h800.value.uncertainty == 15.5748
+        assert sd.h800.quality_index == 0.43
 
-        assert sera_site.site_description.geological_unit is not None
-        assert sera_site.site_description.geological_unit.value == "Some geology"
-        assert sera_site.site_description.geological_unit.quality_index == 0.25
-        assert sera_site.site_description.geological_unit.geological_map_scale == "1:50000"
-        assert sera_site.site_description.geological_unit.geological_unit_OGE == "Some description"
-        
+        assert sd.geological_unit is not None
+        assert sd.geological_unit.value == "Some geology"
+        assert sd.geological_unit.quality_index == 0.25
+        assert sd.geological_unit.geological_map_scale == "1:50000"
+        assert sd.geological_unit.geological_unit_OGE == "Some description"
+
         # Write it again and compare to the original file.
         self._write_and_compare(filename, sera_site)
 
@@ -1797,38 +1825,37 @@ class TestSiteXML():
         sera_site = read_sitexml(filename)
 
         assert sera_site.site_description is not None
-        assert sera_site.site_description.resource_id == (
+        sd = sera_site.site_description
+        assert sd.resource_id == (
             "quakeml:domain.ab/site_description/003")
-        assert sera_site.site_description.station_code is None
-        assert sera_site.site_description.latitude == 40.555907
-        assert sera_site.site_description.longitude == 22.988593
-        assert sera_site.site_description.altitude == 120.0
-        assert sera_site.site_description.min_distance_from_station is None
-        assert sera_site.site_description.max_distance_from_station is None
-        assert sera_site.site_description.topographyA == "T1"
-        assert sera_site.site_description.topographyB == "Flat"
-        assert sera_site.site_description.morphology == "Plain"
+        assert sd.station_code is None
+        assert sd.latitude == 40.555907
+        assert sd.longitude == 22.988593
+        assert sd.altitude == 120.0
+        assert sd.min_distance_from_station is None
+        assert sd.max_distance_from_station is None
+        assert sd.topographyA == "T1"
+        assert sd.topographyB == "Flat"
+        assert sd.morphology == "Plain"
 
-        assert sera_site.site_description.ec8 is not None
-        assert sera_site.site_description.ec8.value == "A"
-        assert sera_site.site_description.ec8.quality_index == 1.0
+        assert sd.ec8 is not None
+        assert sd.ec8.value == "A"
+        assert sd.ec8.quality_index == 1.0
 
-        assert sera_site.site_description.bedrock_depth is not None
-        assert sera_site.site_description.bedrock_depth.value.value == 820.0
-        assert sera_site.site_description.bedrock_depth.value.uncertainty is None
-        assert sera_site.site_description.bedrock_depth.quality_index == 0.8
+        assert sd.bedrock_depth is not None
+        assert sd.bedrock_depth.value.value == 820.0
+        assert sd.bedrock_depth.value.uncertainty is None
+        assert sd.bedrock_depth.quality_index == 0.8
 
-        assert sera_site.site_description.h800 is not None
-        assert sera_site.site_description.h800.value.value == 180.0
-        assert sera_site.site_description.h800.value.uncertainty is None
+        assert sd.h800 is not None
+        assert sd.h800.value.value == 180.0
+        assert sd.h800.value.uncertainty is None
 
-        assert sera_site.site_description.geological_unit is not None
-        assert sera_site.site_description.geological_unit.value == (
-            "Holocene Deposits")
-        assert sera_site.site_description.geological_unit.geological_map_scale == (
-            "1:50000")
-        assert sera_site.site_description.preferred_site_analysisID is None
-        assert sera_site.site_description.preferred_velocity_profileID is None
+        assert sd.geological_unit is not None
+        assert sd.geological_unit.value == "Holocene Deposits"
+        assert sd.geological_unit.geological_map_scale == "1:50000"
+        assert sd.preferred_site_analysisID is None
+        assert sd.preferred_velocity_profileID is None
 
         # Write it again and compare to the original file.
         self._write_and_compare(filename, sera_site)
@@ -1840,14 +1867,15 @@ class TestSiteXML():
         filename = testdata["full_analysis.xml"]
         sera_site = read_sitexml(filename)
 
-        # Test that a preferred analysis ID is provided 
+        # Test that a preferred analysis ID is provided
         assert sera_site.site_description.preferred_site_analysisID == \
             "quakeml:domain.ab/analysis/001"
 
         assert len(sera_site.analysis) == 1
         analysis = sera_site.analysis[0]
         assert analysis.resource_id == "quakeml:domain.ab/analysis/001"
-        assert analysis.site_descriptionID == "quakeml:domain.ab/site_description/001"
+        assert analysis.site_descriptionID == \
+            "quakeml:domain.ab/site_description/001"
         assert analysis.creation_date == obspy.UTCDateTime(2015, 11, 10)
         assert analysis.spt_logs_count == 2
         assert analysis.cpt_logs_count == 0
@@ -1928,19 +1956,19 @@ class TestSiteXML():
         assert vps.velocity_profiles is not None
         assert len(vps.velocity_profiles) == 2
 
-        # Test first/last layer from first velocity profile        
+        # Test first/last layer from first velocity profile
         vp = vps.velocity_profiles[0]
         assert vp.resource_id == "quakeml:domain.ab/velocity_profile/001"
         assert vp.layer_count == 8
         assert vp.velocity_profile_data is not None
         assert len(vp.velocity_profile_data) == 8
-        
+
         vpd = vp.velocity_profile_data[0]               # First Layer
         assert vpd.velocityS.value == 118.08
         assert vpd.velocityS.uncertainty == 2.0
         assert vpd.top_depth.value == 0.0
         assert vpd.bottom_depth.value == 0.19
-        
+
         vpd = vp.velocity_profile_data[7]               # Last Layer
         assert vpd.velocityS.value == 1108.37
         assert vpd.top_depth.value == 209.23
@@ -1952,12 +1980,12 @@ class TestSiteXML():
         assert vp.layer_count == 8
         assert vp.velocity_profile_data is not None
         assert len(vp.velocity_profile_data) == 8
-        
+
         vpd = vp.velocity_profile_data[0]               # First Layer
         assert vpd.velocityS.value == 119.4
         assert vpd.top_depth.value == 0.0
         assert vpd.bottom_depth.value == 0.2
-        
+
         vpd = vp.velocity_profile_data[7]               # Last Layer
         assert vpd.velocityS.value == 1097.0
         assert vpd.top_depth.value == 226.6
@@ -2022,7 +2050,8 @@ class TestSiteXML():
     def test_reading_velocity_profile_without_layer_count(
             self, testdata, tmp_path):
         """
-        Tests that missing layerCount is derived from velocityProfileData items.
+        Tests that missing layerCount is derived
+        from velocityProfileData items.
         """
         filename = testdata["full_analysis.xml"]
         xml_text = filename.read_text(encoding="utf-8")
@@ -2067,12 +2096,14 @@ class TestSiteXML():
         with pytest.raises(SiteXMLValidationError, match="resource_id"):
             VelocityProfile(resource_id=None, velocity_profile_data=[layer])
 
-        with pytest.raises(SiteXMLValidationError, match="velocity_profile_data"):
+        with pytest.raises(SiteXMLValidationError,
+                           match="velocity_profile_data"):
             VelocityProfile(
                 resource_id="quakeml:domain.ab/velocity_profile/001",
                 velocity_profile_data=None)
 
-        with pytest.raises(SiteXMLValidationError, match="at least one layer"):
+        with pytest.raises(SiteXMLValidationError,
+                           match="at least one layer"):
             VelocityProfile(
                 resource_id="quakeml:domain.ab/velocity_profile/001",
                 velocity_profile_data=[])
@@ -2085,7 +2116,8 @@ class TestSiteXML():
 
     def test_velocity_profile_derives_layer_count_from_data(self):
         """
-        Tests that layer_count is derived from velocity_profile_data when omitted.
+        Tests that layer_count is derived
+        from velocity_profile_data when omitted.
         """
         layers = [
             VelocityProfileData(
@@ -2118,7 +2150,8 @@ class TestSiteXML():
 
     def test_deepcopy(self, testdata):
         """
-        Tests that creating a deep copy of a siteXML object results in two identical objects.
+        Tests that creating a deep copy of a siteXML object
+        results in two identical objects.
         """
         filename = testdata['full_sitexml.xml']
 
@@ -2130,7 +2163,7 @@ class TestSiteXML():
             assert len(w) == 0
 
         assert site1 is not site2       # The two objects are not the same
-        assert site1 == site2           # but they have the same data 
+        assert site1 == site2           # but they have the same data
 
         # Write deep copied object site2 and compare to the original file.
         self._write_and_compare(filename, site2)

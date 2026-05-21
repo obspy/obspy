@@ -17,12 +17,11 @@ import warnings
 import pandas as pd
 from collections import defaultdict
 
-import obspy
 from obspy.core.inventory.util import ExternalReference
 from .core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
-                   EC8, H800, BedrockDepth, GeologicalUnit, 
-                   ResonanceFrequency, VelocityS30, 
-                   VelocityProfile, VelocityProfileData, VelocityProfileSet, 
+                   EC8, H800, BedrockDepth, GeologicalUnit,
+                   ResonanceFrequency, VelocityS30,
+                   VelocityProfile, VelocityProfileData, VelocityProfileSet,
                    LiteratureSource, ValueWithUncertainty)
 from .quality_index import apply_quality_index_dataframe
 from .util import (SiteXMLIOError, SiteXMLImportError,
@@ -116,9 +115,9 @@ def _require_row_values(row, columns, context):
 
 
 def csv_to_sera_site(site_owner_csv,
-                     site_description_csv, 
-                     analysis_csv=None, 
-                     velocity_profiles_csv=None, 
+                     site_description_csv,
+                     analysis_csv=None,
+                     velocity_profiles_csv=None,
                      quality_index_csv=None,
                      delim=';'):
     """
@@ -126,14 +125,16 @@ def csv_to_sera_site(site_owner_csv,
 
     :type site_owner_csv: str, pathlib.Path, or file-like object, required
     :param site_owner_csv: One line csv file with site owner metadata.
-    :type site_description_csv: str, pathlib.Path, or file-like object, required
+    :type site_description_csv: str, pathlib.Path, or file-like object,
+        required
     :param site_description_csv: CSV file with site description metadata. One
         line per station/location.
     :type analysis_csv: str, pathlib.Path, or file-like object, optional
     :param analysis_csv: CSV file with analysis metadata. One line per
         analysisID. If omitted, preferred analysis and velocity-profile IDs
         read from the site-description CSV are ignored with a warning.
-    :type velocity_profiles_csv: str, pathlib.Path, or file-like object, optional
+    :type velocity_profiles_csv: str, pathlib.Path, or file-like object,
+        optional
     :param velocity_profiles_csv: CSV file or path to a folder with velocity
         profile metadata. The folder can contain any number of CSV files. If
         omitted, preferred velocity-profile IDs read from the site-description
@@ -161,12 +162,12 @@ def csv_to_sera_site(site_owner_csv,
         raise SiteXMLImportError(
             "The site owner and site description metadata are mandatory."
         )
-    
+
     df_site_owner = _csv_to_dataframe(
         site_owner_csv, "site owner CSV metadata", delim=delim)
     df_site_description = _csv_to_dataframe(
         site_description_csv, "site description CSV metadata", delim=delim)
-    
+
     # Try to read the analysis metadata if a csv is provided.
     #
     if analysis_csv:
@@ -178,11 +179,11 @@ def csv_to_sera_site(site_owner_csv,
         exists_analysis = False
 
     # Read the velocity profiles and store them
-    # in a dictionary of dataframes with key the siteID 
+    # in a dictionary of dataframes with key the siteID
     #
     df_vp_dict = _import_velocity_profiles(
         velocity_profiles_csv, kind="CSV", delim=delim)
-    
+
     site_owner = _read_dataframe_metadata(
         _read_site_owner, df_site_owner, context="site owner metadata")
     site_description_dict = _read_dataframe_metadata(
@@ -193,16 +194,16 @@ def csv_to_sera_site(site_owner_csv,
         analysis_dict = _read_dataframe_metadata(
             _read_analysis, df_analysis, df_vp_dict,
             skip_invalid_rows=False, context="analysis metadata")
-        
+
     # All dictionaries use the unique SiteID for key.
     #
     sera_site_dict = {}
     for siteID in site_description_dict:
         sera_site_dict[siteID] = SERASite(
-            site_owner = site_owner,
-            site_description = site_description_dict[siteID],
-            created = None,
-            resource_id = siteID)
+            site_owner=site_owner,
+            site_description=site_description_dict[siteID],
+            created=None,
+            resource_id=siteID)
         if exists_analysis and siteID in analysis_dict:
             sera_site_dict[siteID].analysis = analysis_dict[siteID]
 
@@ -217,6 +218,7 @@ def csv_to_sera_site(site_owner_csv,
         apply_quality_index_dataframe(sera_site_dict, df_quality_index)
 
     return sera_site_dict
+
 
 def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     """
@@ -243,7 +245,7 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     :rtype: dict of :class:`~obspy.io.sitexml.core.SERASite`
     :return: Returns a dictionary of SERASite objects. Dictionary keys are the
         unique SiteIDs.
-    
+
     Example
 
     >>> from obspy.io.sitexml.tabular import excel_to_sera_site
@@ -267,13 +269,13 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
         raise SiteXMLImportError(
             "The site owner and site description sheets are mandatory."
         )
-    
+
     # Read the velocity profiles and store them
     # in a dictionary of dataframes with key the siteID
     #
     df_vp_dict = _import_velocity_profiles(velocity_profiles, kind="Excel") \
         if velocity_profiles else None
-    
+
     site_owner = _read_dataframe_metadata(
         _read_site_owner, df_dict['siteOwner'],
         context="site owner metadata")
@@ -291,16 +293,16 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     else:
         warnings.warn("Analysis metadata not provided.", UserWarning)
         exists_analysis = False
-        
+
     # All dictionaries use the unique SiteID for key.
     #
     sera_site_dict = {}
     for siteID in site_description_dict:
         sera_site_dict[siteID] = SERASite(
-            site_owner = site_owner,
-            site_description = site_description_dict[siteID],
-            created = None,
-            resource_id = siteID)
+            site_owner=site_owner,
+            site_description=site_description_dict[siteID],
+            created=None,
+            resource_id=siteID)
         if exists_analysis and siteID in analysis_dict:
             sera_site_dict[siteID].analysis = analysis_dict[siteID]
 
@@ -318,7 +320,8 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
 def _clear_preferred_ids_without_target_metadata(
         sera_site_dict, has_analysis_metadata, has_velocity_profile_metadata):
     """
-    Drop preferred IDs that point to metadata tables omitted from tabular input.
+    Drop preferred IDs that point to metadata tables omitted from tabular
+    input.
     """
     for site_id, sera_site in sera_site_dict.items():
         site_description = sera_site.site_description
@@ -349,8 +352,8 @@ def _clear_preferred_ids_without_target_metadata(
                 site_description.preferred_velocity_profileID = None
 
 
-def add_velocity_profiles(sera_sites, velocity_profiles, replace_existing=False,
-                          delim=';'):
+def add_velocity_profiles(sera_sites, velocity_profiles,
+                          replace_existing=False, delim=';'):
     """
     Add velocity profiles from CSV or Excel tabular metadata to existing sites.
 
@@ -444,17 +447,18 @@ def _read_site_description(df_site_description):
             f"Site description metadata row {index}")
 
         siteID = _read_cell(row, "siteID")
-        resource_id =  _read_cell(row, "siteDescriptionID")
+        resource_id = _read_cell(row, "siteDescriptionID")
         latitude = _read_cell(row, "latitude")
         longitude = _read_cell(row, "longitude")
-        
+
         station_code = _read_cell(row, "station")
-        
-        site_description_obj = SiteDescription(resource_id=resource_id,
-                                       station_code=station_code, 
-                                       latitude=latitude, 
-                                       longitude=longitude)
-        
+
+        site_description_obj = SiteDescription(
+            resource_id=resource_id,
+            station_code=station_code,
+            latitude=latitude,
+            longitude=longitude)
+
         site_description_obj.altitude = \
             _read_cell(row, "altitude")
         site_description_obj.min_distance_from_station = \
@@ -473,7 +477,7 @@ def _read_site_description(df_site_description):
             _read_cell(row, "preferredVelocityProfileID")
         site_description_obj.overall_quality_index = \
             _read_cell(row, "overallQindex")
-        
+
         site_description_obj.ec8 = \
             _read_site_indicator(row, EC8, 'siteClassEC8')
         site_description_obj.bedrock_depth = \
@@ -482,10 +486,11 @@ def _read_site_description(df_site_description):
             _read_site_indicator(row, H800, 'h800')
         site_description_obj.geological_unit = \
             _read_site_indicator(row, GeologicalUnit, 'geologicalUnit')
-        
+
         site_description_dict[siteID] = site_description_obj
 
     return site_description_dict
+
 
 def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
     """
@@ -502,8 +507,8 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
     :param df_vp_dict: Dictionary of :class:`pandas.DataFrame` with velocity
             profile metadata for all sites. Dictionary key is the siteID.
     :rtype: dict of :class:`~obspy.io.sitexml.core.Analysis`
-    :return: A dictionary of Analysis objects. Dictionary keys are the unique
-        SiteIDs.
+    :return: A dictionary of Analysis objects. Dictionary keys are the
+        unique SiteIDs.
     """
     required_columns = ("siteID", "analysisID", "siteDescriptionID")
     _require_dataframe_columns(
@@ -518,12 +523,12 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
         siteID = _read_cell(row, "siteID")
         analysisID = _read_cell(row, "analysisID")
         site_descriptionID = _read_cell(row, "siteDescriptionID")
-        
+
         if siteID and analysisID and site_descriptionID:
             analysis_obj = Analysis(
-                resource_id = analysisID,
-                site_descriptionID = site_descriptionID)
-                
+                resource_id=analysisID,
+                site_descriptionID=site_descriptionID)
+
             # Go on reading the site characterization indicators
             analysis_obj.resonance_frequency = _read_site_indicator(
                 row, ResonanceFrequency, 'resonanceFrequency')
@@ -531,18 +536,18 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
                 row, VelocityS30, 'velocityS30')
             analysis_obj.velocity_profile_set = _read_site_indicator(
                 row, VelocityProfileSet, 'velocityProfileSet')
-            
+
             analysis_obj.spt_logs_count = \
                 _read_cell(row, "sptLogsCount")
             analysis_obj.cpt_logs_count = \
                 _read_cell(row, "cptLogsCount")
             analysis_obj.borehole_logs_count = \
                 _read_cell(row, "boreholeLogsCount")
-           
+
             # Read Velocity Profiles of Analysis
             #
             if df_vp_dict and siteID in df_vp_dict \
-                and analysis_obj.velocity_profile_set:
+                    and analysis_obj.velocity_profile_set:
                 analysis_obj.velocity_profile_set.velocity_profiles = \
                     _read_velocity_profiles_for_analysis(
                         df_vp_dict[siteID],
@@ -550,22 +555,23 @@ def _read_analysis(df_analysis, df_vp_dict=None, skip_invalid_rows=True):
             if not _has_velocity_profile_set_content(
                     analysis_obj.velocity_profile_set):
                 analysis_obj.velocity_profile_set = None
-            
+
             # Add analysis object in analysis_dict using as key the siteID
             analysis_dict[siteID].append(analysis_obj)
-                                       
+
         else:
             if skip_invalid_rows:
-                warnings.warn("Missing siteID, analysisID or siteDescriptionID "
-                              "value. Processing of analysis element will be "
-                              "skipped.", UserWarning)
+                warnings.warn(
+                    "Missing siteID, analysisID or siteDescriptionID "
+                    "value. Processing of analysis element will be "
+                    "skipped.", UserWarning)
                 continue
             raise SiteXMLImportError(
                 f"Analysis metadata row {index} is missing required "
                 "siteID, analysisID or siteDescriptionID values. "
                 "Abording further processing."
             )
-    
+
     return analysis_dict
 
 
@@ -588,8 +594,8 @@ def _read_velocity_profiles_for_analysis(df_vp, analysis_id):
     Return a list of VelocityProfile objects for a given analysisID.
 
     Velocity-profile rows are not skipped. A malformed layer would make the
-    containing velocity profile ambiguous, so required columns and values are
-    validated before this reader groups rows into profiles.
+    containing velocity profile ambiguous, so required columns and values
+    are validated before this reader groups rows into profiles.
 
     :type df_vp: :class:`pandas.DataFrame`, required
     :param df_vp: Dataframe of velocity profiles for a single site
@@ -603,7 +609,7 @@ def _read_velocity_profiles_for_analysis(df_vp, analysis_id):
 
     if df_analysis.empty:
         return None
-        
+
     velocity_profiles = []
 
     # 2. Group by velocityProfileID inside this analysis
@@ -612,6 +618,7 @@ def _read_velocity_profiles_for_analysis(df_vp, analysis_id):
         velocity_profiles.append(vp)
 
     return velocity_profiles
+
 
 def _read_velocity_profile(rows):
     """
@@ -626,10 +633,10 @@ def _read_velocity_profile(rows):
 
     for idx, row in rows.iterrows():
 
-        density = _read_value_with_uncertainty(row, "density")        
+        density = _read_value_with_uncertainty(row, "density")
         velP = _read_value_with_uncertainty(row, "velocityP")
         velS = _read_value_with_uncertainty(row, "velocityS", required=True)
-        
+
         top_depth = _read_value_with_uncertainty(
             row, "layerTopDepth", required=True)
         bottom_depth = _read_value_with_uncertainty(row, "layerBottomDepth")
@@ -649,6 +656,7 @@ def _read_velocity_profile(rows):
         velocity_profile_data=layer_objects
     )
 
+
 def _read_site_indicator(df_row, cls, indicator):
     """
     Build one site indicator from a tabular row and indicator prefix.
@@ -659,9 +667,9 @@ def _read_site_indicator(df_row, cls, indicator):
         value_column = indicator + '_value'
         if value_column not in df_row or _empty_value(df_row[value_column]):
             return None
-        
+
         obj = cls(value=df_row[value_column])
-        
+
         if _read_cell(df_row, indicator+'_uncertainty') is not None:
             obj.value.uncertainty = df_row[indicator+'_uncertainty']
 
@@ -671,19 +679,19 @@ def _read_site_indicator(df_row, cls, indicator):
             obj.methods.append(df_row[method1_column])
         if _read_cell(df_row, method2_column):
             obj.methods.append(df_row[method2_column])
-        
+
         if indicator == "velocityS30":
             method_combined_qindex = _read_cell(
                 df_row, 'velocityS30_methodCombIndex')
             manual_qindex = _read_cell(df_row, 'velocityS30_manualIndex')
             obj.method_combined_qindex = (
-                None if method_combined_qindex is None \
+                None if method_combined_qindex is None
                 else str(method_combined_qindex)
             )
             obj.manual_qindex = (
                 None if manual_qindex is None else str(manual_qindex)
             )
-        
+
         if indicator == "geologicalUnit":
             obj.value = obj.value[0:255]
             obj.geological_map_scale = _read_cell(df_row, 'geologicalMapScale')
@@ -694,15 +702,17 @@ def _read_site_indicator(df_row, cls, indicator):
     obj.literature_source = _read_literature_source(df_row, indicator)
     obj.external_references = _read_external_references(df_row, indicator)
     obj.quality_index = _read_cell(df_row, indicator+'_qualityIndex')
-    
+
     return obj
+
 
 def _import_velocity_profiles(path, kind=None, delim=';'):
     """
     Read velocity-profile files and return dataframes grouped by site ID.
 
     If ``kind`` is ``"CSV"`` or ``"Excel"``, only that tabular format is
-    accepted. If ``kind`` is omitted, the format is detected from file suffixes.
+    accepted. If ``kind`` is omitted, the format is detected from file
+    suffixes.
 
     :rtype: dict or None
     """
@@ -777,15 +787,18 @@ def _import_velocity_profiles(path, kind=None, delim=';'):
         kind_name = kind or _kind_for_suffix(suffix)
         if kind_name is None:
             raise SiteXMLImportError(
-                f"Velocity-profile input is not a CSV or Excel file: {path_str}")
+                f"Velocity-profile input is not a CSV or "
+                f"Excel file: {path_str}")
         importer = importers[kind_name]
         if not path_str.lower().endswith(importer["extensions"]):
             raise SiteXMLImportError(
-                f"Velocity-profile input is not a {kind_name} file: {path_str}"
+                f"Velocity-profile input is not a {kind_name} "
+                f"file: {path_str}"
             )
         df = importer["read_file"](path_str)
     else:
-        raise SiteXMLIOError(f"Velocity-profile path does not exist: {path_str}")
+        raise SiteXMLIOError(f"Velocity-profile path "
+                             f"does not exist: {path_str}")
 
     if not df.empty:
         _validate_velocity_profile_dataframe(df, path_str)
@@ -839,6 +852,7 @@ def _read_velocity_profile_excel_file(file_path):
         df = pd.concat([df, sheet_df], ignore_index=True)
     return df
 
+
 def _read_literature_source(df_row, indicator):
     """
     Return literature metadata for one indicator.
@@ -851,14 +865,19 @@ def _read_literature_source(df_row, indicator):
     # Title and firstAuthor are required according to the schema.
     #
     if title and first_author:
-        literature_source = LiteratureSource(title=title,
-                                             first_author=first_author)
+        literature_source = LiteratureSource(
+            title=title,
+            first_author=first_author)
         literature_source.secondary_authors = _read_cell(
             df_row, 'secondaryAuthors', indicator)
-        literature_source.year = _read_cell(df_row, 'year', indicator)
-        literature_source.booktitle = _read_cell(df_row, 'booktitle', indicator)
-        literature_source.language = _read_cell(df_row, 'language', indicator)
-        literature_source.doi = _read_cell(df_row, 'doi', indicator)
+        literature_source.year = _read_cell(
+            df_row, 'year', indicator)
+        literature_source.booktitle = _read_cell(
+            df_row, 'booktitle', indicator)
+        literature_source.language = _read_cell(
+            df_row, 'language', indicator)
+        literature_source.doi = _read_cell(
+            df_row, 'doi', indicator)
         return literature_source
     elif title or first_author:
         raise SiteXMLImportError(
@@ -867,11 +886,13 @@ def _read_literature_source(df_row, indicator):
         )
     return None
 
+
 def _read_external_references(df_row, indicator):
     """
     Return external references for one indicator.
 
-    :rtype: list[:class:`~obspy.core.inventory.util.ExternalReference`] or None
+    :rtype: list[:class:`~obspy.core.inventory.util.ExternalReference`]
+        or None
     """
 
     uri = _read_cell(df_row, 'uri', indicator)
@@ -880,11 +901,13 @@ def _read_external_references(df_row, indicator):
         return [ExternalReference(uri=uri, description=description)]
     return None
 
+
 def _read_value_with_uncertainty(row, name, required=False):
     """
     Return a ValueWithUncertainty read from ``<name>_value`` columns.
 
-    :rtype: :class:`~obspy.io.sitexml.core.ValueWithUncertainty` or None
+    :rtype: :class:`~obspy.io.sitexml.core.ValueWithUncertainty`
+        or None
     """
 
     value_column = name + "_value"
@@ -898,12 +921,13 @@ def _read_value_with_uncertainty(row, name, required=False):
         return None
 
     metric = ValueWithUncertainty(value)
-    
+
     uncertainty = _read_cell(row, uncertainty_column)
     if uncertainty is not None:
         metric.uncertainty = uncertainty
 
     return metric
+
 
 def _read_site_owner(df):
     """
@@ -945,9 +969,11 @@ def _read_site_owner(df):
                 setattr(obj, pub_attr, value)
             except Exception as e:
                 warnings.warn(
-                    f"Could not set attribute '{pub_attr}' on SiteOwner: {e}",
+                    f"Could not set attribute '{pub_attr}' "
+                    f"on SiteOwner: {e}",
                     UserWarning)
     return obj
+
 
 def _read_cell(df_row, argument, indicator=None):
     """
@@ -958,14 +984,15 @@ def _read_cell(df_row, argument, indicator=None):
 
     if indicator:
         if indicator + "_" + argument in df_row and \
-            not _empty_value(df_row[indicator + "_" + argument]):
-                    return df_row[indicator + "_" + argument]
+                not _empty_value(df_row[indicator + "_" + argument]):
+            return df_row[indicator + "_" + argument]
     else:
         if argument in df_row and \
-            not _empty_value(df_row[argument]):
-                    return df_row[argument]
-        
+                not _empty_value(df_row[argument]):
+            return df_row[argument]
+
     return None
+
 
 def _read_year_cell(value):
     """
@@ -988,6 +1015,7 @@ def _read_year_cell(value):
         )
     return value
 
+
 def _empty_value(value):
     """
     Return whether a tabular cell should be treated as missing.
@@ -999,5 +1027,5 @@ def _empty_value(value):
     if isinstance(value, str):
         if not value.strip():
             return True
-    
+
     return False

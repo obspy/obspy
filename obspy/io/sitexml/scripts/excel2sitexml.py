@@ -33,7 +33,7 @@ def main(argv=None):
     parser.add_argument(
         '-out', '--output-folder', required=True,
         help='folder where the generated SiteXML files will be written. '
-            'Existing files with the same name will be overwritten.')
+        'Existing files with the same name will be overwritten.')
     parser.add_argument(
         '-p', '--velocity-profiles',
         help='optional Excel file or folder with velocity-profile metadata')

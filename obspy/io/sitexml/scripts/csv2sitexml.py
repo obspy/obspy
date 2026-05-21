@@ -37,7 +37,7 @@ def main(argv=None):
     parser.add_argument(
         '-out', '--output-folder', required=True,
         help='folder where the generated SiteXML files will be written. '
-            'Existing files with the same name will be overwritten.')
+        'Existing files with the same name will be overwritten.')
     parser.add_argument(
         '-o', '--site-owner', required=True,
         help='CSV file with site owner metadata')
