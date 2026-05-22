@@ -449,7 +449,11 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         if os.path.getsize(mseed_object) == 0:
             bfr_np = np.array([], dtype=np.int8)
         else:
-            bfr_np = np.memmap(mseed_object, dtype=np.int8, mode="c")
+            try:
+                bfr_np = np.memmap(mseed_object, dtype=np.int8, mode="c")
+            except (AttributeError, OSError, NotImplementedError):
+                with open(mseed_object, "rb") as f:
+                    bfr_np = from_buffer(f.read(), dtype=np.int8)
 
     elif hasattr(mseed_object, 'read'):
         bfr_np = from_buffer(mseed_object.read(), dtype=np.int8)

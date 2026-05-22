@@ -405,6 +405,20 @@ class TestMSEEDReadingAndWriting():
             assert stream[0].stats.get('channel') == 'LHE'
             assert np.all(stream[0].data[0:5] ==
                           [-1134, -962, -293, -161, -587])
+        # Test whether fallback from np.memorymap to np.frombuffer works
+        with mock.patch("numpy.memmap",
+                        side_effect=OSError("memmap not supported")):
+            stream = _read_mseed(testdata["CH.BALST..LHE.D.2025.314"])
+            stream.verify()
+            assert len(stream) == 1
+            assert stream[0].stats.network == 'CH'
+            assert stream[0].stats['station'] == 'BALST'
+            assert stream[0].stats.get('location') == ''
+            assert stream[0].stats.npts == 86343
+            assert stream[0].stats['sampling_rate'] == 1.0
+            assert stream[0].stats.get('channel') == 'LHE'
+            assert np.all(stream[0].data[0:5] ==
+                          [-1134, -962, -293, -161, -587])
 
     def test_read_partial_time_window_from_file(self, testdata):
         """
