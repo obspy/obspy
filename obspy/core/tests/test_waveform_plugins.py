@@ -381,7 +381,7 @@ class TestWaveformPlugins:
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
-            if format in ['SEGY', 'SU', 'SEG2', 'MSEED3']:
+            if format in ['SEGY', 'SU', 'SEG2']:
                 continue
             with NamedTemporaryFile() as tf:
                 tempfile = tf.name

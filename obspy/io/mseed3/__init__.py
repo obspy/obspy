@@ -8,4 +8,4 @@ This module exposes the plugin entry points:
 
 """
 
-from .core import _is_mseed3, _read_mseed3  # noqa: F401
+from .core import _is_mseed3, _read_mseed3, _write_mseed3  # noqa: F401

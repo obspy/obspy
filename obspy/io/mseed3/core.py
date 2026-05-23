@@ -17,6 +17,22 @@ from obspy.core.util import AttribDict
 _MSEED3_ISFORMAT_PROBE_BYTES = 1 << 20
 
 
+def _supports_buffer_protocol(obj) -> bool:
+    """
+    Return True if ``obj`` exposes the Python buffer protocol.
+
+    Used to route inputs through pymseed's ``from_buffer`` (zero-copy)
+    rather than ``from_filelike``. Probes ``memoryview(obj)`` cheaply;
+    accepts bytes, bytearray, memoryview, numpy arrays, mmap objects,
+    ctypes buffers, and similar.
+    """
+    try:
+        memoryview(obj)
+    except TypeError:
+        return False
+    return True
+
+
 def _is_mseed3(
     source: Union[str, os.PathLike, bytes, bytearray, memoryview, IO[bytes]],
 ) -> bool:
@@ -68,16 +84,18 @@ def _read_mseed3(
     Reads a miniSEED file and returns an ObsPy Stream object.
 
     :param source: File path, in-memory buffer, or file-like object to be
-        read. File-like objects must provide a ``read()`` method
-        (e.g. ``io.BytesIO``, ``io.BufferedReader``).
-    :type source: str, os.PathLike, bytes, bytearray, memoryview, or
-        file-like (typing.IO[bytes])
-    :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        read. Any object supporting the Python buffer protocol (bytes,
+        bytearray, memoryview, numpy.ndarray, mmap, etc.) is read directly
+        (zero-copy); otherwise a ``read()`` method is required (e.g. ``io.BytesIO``,
+        ``io.BufferedReader``).
+    :type source: str, os.PathLike, bytes-like (supports the buffer
+        protocol), or file-like (typing.IO[bytes])
     :param starttime: Only read data samples after or at the start time.
-    :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param endtime: Only read data samples before or at the end time.
+    :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param headonly: If True, do not decompress data samples. Default is False.
-    :type details: bool
+    :type headonly: bool
     :param sourceid: Only read data with matching FDSN Source ID.
         Value can contain wildcards "?" and "*" and other common globbing
         patterns, e.g. "FDSN:BW_UH2_*", "*_L_H_[EN]"
@@ -112,20 +130,20 @@ def _read_mseed3(
             "Cannot specify both sourceid and sourcename. Use one or the other."
         )
 
-    # Convert sourcename pattern to FDSN sourceid pattern
+    # Convert sourcename pattern to FDSN sourceid pattern, best effort
     if sourcename:
         parts = sourcename.split(".")
         # If four parts, convert to FDSN sourceid pattern
         if len(parts) == 4:
             sourceid = nslc2sourceid(*parts)
-        # Special case: if the first part does not start with '*' it must be a network
-        # code anchoring the pattern.  Use this information to convert.
-        elif len(parts[0]) > 0 and not parts[0].startswith("*"):
-            nslc = [parts[0]] + ["*"] * (4 - len(parts)) + list(parts[1:])
+        # Front-anchored: known network, optionally station and location;
+        # missing trailing components become wildcards.
+        elif len(parts) > 1 and not parts[0].startswith("*"):
+            nslc = list(parts) + ["*"] * (4 - len(parts))
             sourceid = nslc2sourceid(*nslc)
-        # Special case: if the last part does not end in '*' it must be a channel
-        # code anchoring the pattern.  Use this information to convert.
-        elif len(parts[-1]) > 0 and not parts[-1].endswith("*"):
+        # End-anchored: known channel (+ optionally location/station);
+        # missing leading components become wildcards.
+        elif len(parts) > 1 and not parts[-1].endswith("*"):
             nslc = ["*"] * (4 - len(parts)) + list(parts)
             sourceid = nslc2sourceid(*nslc)
         # Otherwise no anchors, do a naive conversion to sourceid-like pattern
@@ -138,11 +156,11 @@ def _read_mseed3(
         "record_list": twopass,
     }
 
-    # Set verbose level as integer level, otherwise if True, set to 2
-    if isinstance(verbose, int):
+    # Set verbose level to 2 if True, otherwise as integer level
+    if isinstance(verbose, bool):
+        common_kwargs["verbose"] = 2 if verbose else 0
+    elif isinstance(verbose, int):
         common_kwargs["verbose"] = verbose
-    elif verbose:
-        common_kwargs["verbose"] = 2
 
     if starttime:
         common_kwargs["starttime"] = str(starttime)
@@ -154,7 +172,7 @@ def _read_mseed3(
     try:
         if isinstance(source, (str, os.PathLike)):
             mstracelist = MS3TraceList.from_file(source, **common_kwargs)
-        elif isinstance(source, (bytes, bytearray, memoryview)):
+        elif _supports_buffer_protocol(source):
             mstracelist = MS3TraceList.from_buffer(source, **common_kwargs)
         elif callable(getattr(source, "read", None)):
             mstracelist = MS3TraceList.from_filelike(source, **common_kwargs)
@@ -169,7 +187,10 @@ def _read_mseed3(
 
     # Iterate through each trace ID in the trace list
     for traceid in mstracelist:
-        (network, station, location, channel) = sourceid2nslc(traceid.sourceid)
+        try:
+            (network, station, location, channel) = sourceid2nslc(traceid.sourceid)
+        except ValueError:
+            network = station = location = channel = ""
 
         # Process each continuous segment for this trace ID
         for segment in traceid:
@@ -207,11 +228,33 @@ def _read_mseed3(
 
     stream = Stream(traces=traces)
 
-    # Apply sample-level time window filtering if specified
+    # If time window is specified, the data have already been limited
+    # at the record-level; trim() applies sample-level filtering.
     if starttime or endtime:
         stream.trim(starttime=starttime, endtime=endtime)
 
-    return stream.sort()
+    return stream
+
+
+# Map encoding aliases (case-sensitive strings and SEED integer codes) to
+# pymseed DataEncoding values that are writable.
+_ENCODING_ALIASES = {
+    "ASCII": DataEncoding.TEXT,
+    "TEXT": DataEncoding.TEXT,
+    0: DataEncoding.TEXT,
+    "INT16": DataEncoding.INT16,
+    1: DataEncoding.INT16,
+    "INT32": DataEncoding.INT32,
+    3: DataEncoding.INT32,
+    "FLOAT32": DataEncoding.FLOAT32,
+    4: DataEncoding.FLOAT32,
+    "FLOAT64": DataEncoding.FLOAT64,
+    5: DataEncoding.FLOAT64,
+    "STEIM1": DataEncoding.STEIM1,
+    10: DataEncoding.STEIM1,
+    "STEIM2": DataEncoding.STEIM2,
+    11: DataEncoding.STEIM2,
+}
 
 
 def _write_mseed3(
@@ -244,25 +287,16 @@ def _write_mseed3(
     :type overwrite: bool, optional
     """
 
-    # Determine pymseed encoding
-    pymseed_encoding = None
-    if encoding == "ASCII" or encoding == "TEXT" or encoding == 0:
-        pymseed_encoding = DataEncoding.TEXT
-    elif encoding == "INT16" or encoding == 1:
-        pymseed_encoding = DataEncoding.INT16
-    elif encoding == "INT32" or encoding == 3:
-        pymseed_encoding = DataEncoding.INT32
-    elif encoding == "FLOAT32" or encoding == 4:
-        pymseed_encoding = DataEncoding.FLOAT32
-    elif encoding == "FLOAT64" or encoding == 5:
-        pymseed_encoding = DataEncoding.FLOAT64
-    elif encoding == "STEIM1" or encoding == 10:
-        pymseed_encoding = DataEncoding.STEIM1
-    elif encoding == "STEIM2" or encoding == 11:
-        pymseed_encoding = DataEncoding.STEIM2
-    elif encoding is not None:
+    # Determine pymseed encoding. ``None`` defers to dtype-derived defaults.
+    if encoding is None:
+        pymseed_encoding = None
+    elif encoding in _ENCODING_ALIASES:
+        pymseed_encoding = _ENCODING_ALIASES[encoding]
+    else:
         raise ValueError(
-            f"Unsupported encoding: {encoding}. Use ASCII/TEXT, INT16, INT32, FLOAT32, FLOAT64, STEIM1, or STEIM2."
+            f"Unsupported encoding: {encoding!r}. Use ASCII/TEXT (0), "
+            f"INT16 (1), INT32 (3), FLOAT32 (4), FLOAT64 (5), "
+            f"STEIM1 (10), or STEIM2 (11)."
         )
 
     # Initialize MS3Record with common header fields
@@ -274,13 +308,10 @@ def _write_mseed3(
 
     for trace in stream:
         # Create source ID from codes
-        network = trace.stats.network
-        station = trace.stats.station
+        network = trace.stats.network or ""
+        station = trace.stats.station or ""
         location = trace.stats.location or ""
-        channel = trace.stats.channel
-
-        if not network or not station or not channel:
-            raise ValueError("Network, station, and channel codes are required.")
+        channel = trace.stats.channel or "__"
 
         msrecord.sourceid = nslc2sourceid(network, station, location, channel)
 
