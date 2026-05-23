@@ -337,7 +337,6 @@ class TestReadMSEED3:
         # The unapplied 1.0 second time correction is applied to the starttime
         assert st[0].stats.starttime == UTCDateTime("2003-05-29T02:13:23.043400Z")
 
-
     # ---- headonly -----------------------------------------------------
 
     def test_read_headonly(self, testdata):
@@ -500,6 +499,57 @@ class TestReadMSEED3:
                 assert tr.stats.starttime == v2_alone[0].stats.starttime
                 assert tr.stats.sampling_rate == v2_alone[0].stats.sampling_rate
                 np.testing.assert_array_equal(tr.data, v2_alone[0].data)
+
+    # ---- details -------------------------------------------------------
+
+    def test_read_details_homogeneous_v3(self, testdata):
+        """details=True populates per-record stats for a 3-channel v3 file."""
+        st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"], details=True)
+        assert len(st) == 3
+        expected_nrec = [36, 35, 36]
+        for tr, nrec in zip(st, expected_nrec):
+            assert tr.stats.mseed3.number_of_records == nrec
+            assert tr.stats.mseed3.timing_qualities == [100]
+            assert tr.stats.mseed3.publication_versions == [4]
+            assert tr.stats.mseed3.encodings == ["STEIM-2 integer compression"]
+
+    def test_read_details_heterogeneous_v2(self, testdata):
+        """details=True collects one entry per run of identical values.
+        The timing-quality file has 101 records each with a distinct quality
+        (0..100), so the result has 101 entries covering all values."""
+        st = _read_mseed3(testdata["timingquality.mseed"], details=True)
+        assert len(st) == 1
+        tr = st[0]
+        assert tr.id == "BW.BGLD..EHE"
+        assert tr.stats.mseed3.number_of_records == 101
+        # All 101 records have distinct qualities — none are adjacent repeats —
+        # so the full set 0..100 must appear (in file order, not sorted).
+        assert set(tr.stats.mseed3.timing_qualities) == set(range(101))
+        assert len(tr.stats.mseed3.timing_qualities) == 101
+        assert tr.stats.mseed3.publication_versions == [2]
+        assert tr.stats.mseed3.encodings == ["STEIM-1 integer compression"]
+
+    def test_read_details_disabled_omits_keys(self, testdata):
+        """details=False (default) must not populate the four extra keys."""
+        _DETAIL_KEYS = {
+            "number_of_records",
+            "timing_qualities",
+            "publication_versions",
+            "encodings",
+        }
+        st_no_details = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
+        for tr in st_no_details:
+            present = set(tr.stats.mseed3.keys())
+            assert present == {"source_id"}, f"Expected only 'source_id', got {present}"
+
+        st_details = _read_mseed3(
+            testdata["testdata-3channel-signal.mseed3"], details=True
+        )
+        for tr in st_details:
+            present = set(tr.stats.mseed3.keys())
+            assert _DETAIL_KEYS.issubset(present), (
+                f"Missing detail keys: {_DETAIL_KEYS - present}"
+            )
 
     # ---- errors -------------------------------------------------------
 

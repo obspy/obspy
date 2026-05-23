@@ -77,6 +77,7 @@ def _read_mseed3(
     sourceid: Union[str, None] = None,
     sourcename: Union[str, None] = None,
     twopass: bool = False,
+    details: bool = False,
     verbose: Union[bool, int] = 0,
     **kwargs: dict,
 ) -> Stream:
@@ -107,9 +108,6 @@ def _read_mseed3(
         are not supported.  Use "*.LH?" or sourceid patterns instead.
         Defaults to ``None``.
     :type sourcename: str
-    :param verbose: If True, print verbose output at level 2.  If an integer,
-        print verbose output at the given level. Default is False (aka level 0).
-    :type verbose: bool, int
     :param twopass: If True, the data will be read in two passes.  During
         the first pass, the data will be read without unpacking the data samples.
         During the second pass, the data will be unpacked directly into a numpy array.
@@ -120,6 +118,15 @@ def _read_mseed3(
         such as a file-like object that is not seekable (e.g. a network stream).
         Default is False.
     :type twopass: bool
+    :param details: If True, read additional information: timing quality,
+        publication versions, and encodings. Stored in the mseed3 stats
+        dictionary of each trace as run-length-deduplicated lists, which
+        retains the order that the values were encountered.
+        Default is False.
+    :type details: bool
+    :param verbose: If True, print verbose output at level 2.  If an integer,
+        print verbose output at the given level. Default is False (aka level 0).
+    :type verbose: bool, int
 
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: An ObsPy Stream object containing the data.
@@ -159,6 +166,10 @@ def _read_mseed3(
     if twopass:
         common_kwargs["record_list"] = True
         common_kwargs["unpack_data"] = False
+
+    # Details requires a record list
+    if details:
+        common_kwargs["record_list"] = True
 
     # Set verbose level to 2 if True, otherwise as integer level
     if isinstance(verbose, bool):
@@ -215,6 +226,33 @@ def _read_mseed3(
             stats.mseed3["source_id"] = traceid.sourceid
             if segment.recordlist:
                 stats.mseed3["number_of_records"] = segment.recordlist.recordcnt
+
+            # Summarize record details
+            if details and segment.recordlist:
+                # Walk record list and collect run-length-deduplicated values:
+                # a value is only appended when it differs from the previous one.
+                timing_qualities = []
+                publication_versions = []
+                encodings = []
+                for record_ptr in segment.recordlist:
+                    record = record_ptr.record
+                    timing_quality = record.get_extra_header("/FDSN/Time/Quality")
+                    if timing_quality is not None and timing_quality != (
+                        timing_qualities[-1] if timing_qualities else object()
+                    ):
+                        timing_qualities.append(timing_quality)
+                    pubver = record.pubversion
+                    if pubver != (
+                        publication_versions[-1] if publication_versions else object()
+                    ):
+                        publication_versions.append(pubver)
+                    encoding = record.encoding_str()
+                    if encoding != (encodings[-1] if encodings else object()):
+                        encodings.append(encoding)
+
+                stats.mseed3["timing_qualities"] = timing_qualities
+                stats.mseed3["publication_versions"] = publication_versions
+                stats.mseed3["encodings"] = encodings
 
             # If header-only mode create an empty trace
             if headonly:
