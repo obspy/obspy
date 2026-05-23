@@ -153,8 +153,12 @@ def _read_mseed3(
     # Common arguments for MS3TraceList factory functions
     common_kwargs = {
         "unpack_data": not headonly,
-        "record_list": twopass,
     }
+
+    # If twopass, read the record list first and unpack data later
+    if twopass:
+        common_kwargs["record_list"] = True
+        common_kwargs["unpack_data"] = False
 
     # Set verbose level to 2 if True, otherwise as integer level
     if isinstance(verbose, bool):
