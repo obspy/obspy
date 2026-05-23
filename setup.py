@@ -107,6 +107,7 @@ EXTRAS_REQUIRES = {
     ],
     'geo': ['geographiclib'],
     'imaging': ['cartopy'],
+    'io.mseed3': ['pymseed~=0.9'],
     'io.shapefile': ['pyshp'],
 }
 EXTRAS_REQUIRES['all'] = [dep for depl in EXTRAS_REQUIRES.values()
