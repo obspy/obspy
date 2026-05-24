@@ -4,6 +4,26 @@ This guide describes how to use the standalone `csv2sitexml` and
 `excel2sitexml` command-line tools to convert tabular site-characterization
 metadata into SiteXML files.
 
+## Table Of Contents
+
+- [Installation](#installation)
+- [What The Tools Produce](#what-the-tools-produce)
+- [Input Table Summary](#input-table-summary)
+- [Minimal Required Metadata](#minimal-required-metadata)
+- [Running `csv2sitexml`](#running-csv2sitexml)
+- [Running `excel2sitexml`](#running-excel2sitexml)
+- [Platform Notes](#platform-notes)
+- [Example Files](#example-files)
+- [Recommended Workflows](#recommended-workflows)
+  - [SiteXML with only Site Description](#sitexml-with-only-site-description)
+  - [SiteXML With Analysis](#sitexml-with-analysis)
+  - [SiteXML With Velocity Profiles](#sitexml-with-velocity-profiles)
+  - [SiteXML With Calculated Quality Indexes](#sitexml-with-calculated-quality-indexes)
+- [Validation Rules And Assumptions](#validation-rules-and-assumptions)
+- [Troubleshooting](#troubleshooting)
+
+## Installation
+
 The tools are intended for users who do not have Python or ObsPy installed.
 Each release package is built for one operating system and architecture 
 and it is distributed as a compressed folder that contains both executables,
@@ -14,14 +34,16 @@ Once you unzip the compressed file, you will end-up with the following file hier
 ``` 
   sitexml-scripts             # Top level folder
       -- csv2sitexml          # CSV executable
-      -- excel2sitexml       # Excel executable
-      -- examples             # Examples of XML, CSV and Excel files
-      -- _internal            # Folder containing the shared libraries needed by the executables
+      -- excel2sitexml        # Excel executable
+      -- SiteXML-Standalone-Usage-Guide.md
+      -- tabular-input-reference.md
+      -- quality-indexes-guide.md
+      -- \examples             # Folder with examples of XML, CSV and Excel files
+      -- \_internal            # Folder containing the shared libraries needed by the executables
 ```
 
 > **Important:**  
 > Do not move the executables out of their folder; they need the bundled libraries and SiteXML schema data next to them.
-
 
 ## What The Tools Produce
 
@@ -65,6 +87,7 @@ in separate file(s).
 > - For Excel input the sheet names must be **exactly as shown** in the table above. 
 > - For CSV input the filemames **are not fixed**.  
 > - The same column names are used **by both** CSV and Excel files.
+> - Column names are case sensitive
 
 For a detailed description of the input tables, accepted columns and allowed
 values, please refer to the [SiteXML Tabular Input Reference](tabular-input-reference.md)
@@ -233,7 +256,7 @@ provided checksums before running the tool.
 
 ## Example Files
 
-The standalone artifact includes an `examples/` folder with small XML, CSV,
+The release package includes an `examples/` folder with small XML, CSV,
 and Excel files that can be used for testing the tools before preparing your
 own metadata.
 
@@ -272,12 +295,9 @@ excel2sitexml examples/sera_site_all.xlsx \
   -out sitexml_output
 ```
 
-In the ObsPy source tree, the same files live under
-`obspy/io/sitexml/tests/data/`.
-
 ## Recommended Workflows
 
-### Minimal SiteXML
+### SiteXML with only Site Description
 
 Use this when you only need owner and site-location metadata:
 
@@ -351,32 +371,6 @@ excel2sitexml sera_site.xlsx \
   -out sitexml_output
 ```
 
-## Quality-Index Behavior
-
-SiteXML stores calculated indicator-level quality indexes and the final overall
-quality index. It does not store the detailed Q_Index1 criteria or Q_Index3
-consistency inputs.
-
-If both direct `*_qualityIndex` columns and a quality-index sidecar are provided:
-
-- direct `*_qualityIndex` values are imported first;
-- sidecar Q_Index1 criteria for an existing indicator recalculate and replace
-  that indicator's direct `*_qualityIndex` value;
-- sidecar blanks for an indicator leave that indicator's direct `*_qualityIndex`
-  value unchanged;
-- sidecar rows for sites without indicator objects are skipped.
-
-The tools do not automatically synthesize `overallQindex` from direct
-`*_qualityIndex` columns alone. To write `overallQindex`, use one of these explicit
-workflows:
-
-- provide `overallQindex` in the site-description table;
-- provide the quality-index sidecar so the tool can calculate Q_Index1 and
-  Q_Index3-derived results during import.
-
-If no usable indicator data exists for a site, providing a quality-index
-sidecar does not write a fake `<overallQindex>0</overallQindex>`.
-
 ## Validation Rules And Assumptions
 
 The import process is intentionally strict about object identifiers and
@@ -387,15 +381,15 @@ The tools validate that:
 - required input files or sheets are present;
 - required columns are present;
 - required row values are not empty;
-- station codes use `network.station` notation;
+- all provided value validate against the rules imposed by the schema;
 - analysis rows point to the parent site description through
   `siteDescriptionID`;
 - velocity-profile rows point to an existing `analysisID`;
 - duplicate analysis and velocity-profile resource IDs are rejected;
-- `preferredSiteAnalysisID`, when kept, points to an attached analysis;
-- `preferredVelocityProfileID`, when kept, points to an attached velocity
+- `preferredSiteAnalysisID`, when provided, points to an attached analysis;
+- `preferredVelocityProfileID`, when provided, points to an attached velocity
   profile;
-- when both preferred IDs are kept, the preferred velocity profile belongs to
+- when both preferred IDs are provided, the preferred velocity profile belongs to
   the preferred analysis;
 - generated XML validates against the bundled SiteXML schema before it is
   written.

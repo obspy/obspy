@@ -10,6 +10,27 @@ This document is a reference for the tabular input files accepted by
 > descriptions on the allowed values you can find at the 
 > [SiteXML schema documentation](https://www.itsak.gr/SiteXML).
 
+## Table Of Contents
+
+- [CSV Specific Notes](#csv-specific-notes)
+- [Common Conventions](#common-conventions)
+- [Shared Indicator Columns](#shared-indicator-columns)
+  - [Full Example: `siteClassEC8`](#full-example-siteclassec8)
+- [Site Owner Table](#site-owner-table)
+- [Site Description Table](#site-description-table)
+  - [Site And Location Columns](#site-and-location-columns)
+  - [Site-Description Indicator Columns](#site-description-indicator-columns)
+- [Analysis Table](#analysis-table)
+  - [Analysis Relationship Columns](#analysis-relationship-columns)
+  - [Analysis Indicator Columns](#analysis-indicator-columns)
+  - [Analysis Log Count Columns](#analysis-log-count-columns)
+- [Velocity Profiles Table](#velocity-profiles-table)
+- [Quality-Index Tables](#quality-index-table)
+  - [Q_Index1 Criteria Columns](#q_index1-criteria-columns)
+  - [Q_Index3 Consistency Columns](#q_index3-consistency-columns)
+- [Notes On Preferred IDs](#notes-on-preferred-ids)
+- [Notes On Quality Indexes](#notes-on-quality-indexes)
+
 ## CSV Specific Notes
 
 The default CSV delimiter is semicolon (`;`). If your files use another
@@ -144,7 +165,7 @@ The data read from the site-description table are stored in
 
 | Column | Required? | Meaning | Example |
 | --- | --- | --- | --- |
-| `siteID` | **yes** | Resource ID for the top-level SiteXML site. | `quakeml:domain.ab/site/001` |
+| `siteID` | **yes** | Resource ID for the top-level SiteXML site. **This is necessary because it associates the siteDescription item with the site.** | `quakeml:domain.ab/site/001` |
 | `siteDescriptionID` | **yes** | Resource ID for the site-description object. | `quakeml:domain.ab/site_description/001` |
 | `station` | no | Station code in `network.station` notation. Leave empty for non-station sites. | `XX.ABCD` |
 | `latitude` | **yes** | Geographic latitude in degrees. | `45.137174` |
@@ -152,9 +173,9 @@ The data read from the site-description table are stored in
 | `altitude` | no | Ground elevation in meters. | `239` |
 | `minDistanceFromStation` | no | Minimum distance from station in meters. | `20` |
 | `maxDistanceFromStation` | no | Maximum distance from station in meters. | `520.2` |
-| `morphology` | no | Qualitative landform. Allowed values: `Plain`, `Valley - Basin`, `Slope`, `Ridge`. | `Valley - Basin` |
-| `topography_schemaA` | no | Italian Code topography class. Allowed values: `T1`, `T2`, `T3`, `T4`. | `T1` |
-| `topography_schemaB` | no | Burjanek et al. terrain class. Allowed values: `Valley`, `Lower slope`, `Flat`, `Middle slope`, `Upper slope`, `Ridge`. | `Valley` |
+| [`morphology`](https://www.itsak.gr/SiteXML/#type_MorphologyType)  | no | Qualitative landform. Allowed values: `Plain`, `Valley - Basin`, `Slope`, `Ridge`. | `Valley - Basin` |
+| [`topography_schemaA`](https://www.itsak.gr/SiteXML/#type_TopographySchemaAType)  | no | Italian Code topography class. Allowed values: `T1`, `T2`, `T3`, `T4`. | `T1` |
+| [`topography_schemaB`](https://www.itsak.gr/SiteXML/#type_TopographySchemaBType)  | no | Burjanek et al. terrain class. Allowed values: `Valley`, `Lower slope`, `Flat`, `Middle slope`, `Upper slope`, `Ridge`. | `Valley` |
 | `overallQindex` | no | Final overall quality index stored in SiteXML. | `0.41` |
 | `preferredSiteAnalysisID` | no | Preferred analysis resource ID. Requires matching analysis metadata to be written. | `quakeml:domain.ab/analysis/001` |
 | `preferredVelocityProfileID` | no | Preferred velocity-profile resource ID. Requires matching velocity-profile metadata to be written. | `quakeml:domain.ab/velocity_profile/001` |
@@ -370,20 +391,45 @@ files. Each row describes one layer in one velocity profile.
 | `layerBottomDepth_value` | no | Bottom depth of the layer. Leave empty for an open-ended final layer. | `0.19` |
 | `layerBottomDepth_uncertainty` | no | Uncertainty of the bottom depth. | `0.1` |
 
-## Quality-Index CSV (`-q`)
+## Quality-Index Table
 
-The quality-index CSV is optional. It contains calculation inputs that are used
-immediately during import and are not stored in SiteXML.
+The indicator-level quality indexes and the final overall quality index 
+stored in SiteXML can be calculated during tabular import. The import 
+helpers read the required calculation parameters from an **optional** CSV or 
+Excel table, apply them immediately, and **store only the schema-supported 
+calculated results on the SiteXML objects**.
 
-### Required Key
+Quality-Index table is provided as a CSV file or as an Excel sheet named 
+`qualityIndex` with **one row per site**. 
 
-| Column | Required? | Meaning | Example |
-| --- | --- | --- | --- |
-| `siteID` | **yes** | Site whose indicators should receive calculated quality-index values. Unknown or empty IDs are skipped with a warning. | `quakeml:domain.ab/site/001` |
+Each row must identify the site it belongs to, with the ``SiteID`` column. 
+It also includes [criteria values for the calculation of 
+Q_Index1](#q_index1-criteria-columns) for all site indicators and [criteria 
+values for the calculation of Q_Index3](#q_index3-consistency-columns). All
+these criteria values are **optional**.
+
+> **Note:** 
+> - A missing ``SiteID`` column would result in data import error.
+> - Rows with missing or unknown ``SiteID`` values are skipped with a warning.
+
+> **See also:** For more information on the SiteXML quality indexes, please refer
+> - to the [quality indexes guide](quality-indexes-guide.md) distributed with the standalone executables
+> - to the guidelines of [SERA deliverable D7.2](https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf).
 
 ### Q_Index1 Criteria Columns
 
-Use the same four criteria for any indicator prefix:
+For the calculation of Q_Index1, for each site indicator, you can provide values
+for four criteria:
+
+| Criterion suffix | Meaning | Example values |
+| --- | --- | --- |
+| `_method` | Whether acquisition/analysis method is documented. | `documented`, empty |
+| `_evaluation` | Whether the indicator is evaluated directly from field experiments. | `direct`, empty |
+| `_reliability` | Confidence in the indicator value. | `yes`, `partial`, empty |
+| `_report` | Whether a report documents the field survey and processing. | `yes`, `partial`, empty |
+
+The names of the columns are formed using the criterion name, preffixed by 
+the name of the site indicator.
 
 ```text
 <indicator>_method
@@ -404,16 +450,7 @@ velocityS30
 velocityProfileSet
 ```
 
-Criteria meanings and example values:
-
-| Criterion suffix | Meaning | Example values |
-| --- | --- | --- |
-| `_method` | Whether acquisition/analysis method is documented. | `documented`, empty |
-| `_evaluation` | Whether the indicator is evaluated directly from field experiments. | `direct`, empty |
-| `_reliability` | Confidence in the indicator value. | `yes`, `partial`, empty |
-| `_report` | Whether a report documents the field survey and processing. | `yes`, `partial`, empty |
-
-Example EC8 sidecar columns:
+Example columns for the EC8 site indicator:
 
 | Column | Example |
 | --- | --- |
@@ -426,7 +463,7 @@ For the other six indicators, use the same suffixes with the corresponding
 prefix. For example, use `velocityS30_method` and
 `velocityProfileSet_report`.
 
-Complete Q_Index1 sidecar columns for the other indicators:
+Complete Q_Index1 columns for the other indicators:
 
 ```text
 bedrockDepth_method
@@ -457,6 +494,10 @@ velocityProfileSet_report
 
 ### Q_Index3 Consistency Columns
 
+Q_Index3 is calculated overall for the site, using **consistency** values
+for pairs of site indicators. You can provide consistency values for the 
+following pairs:
+
 | Column | Required? | Meaning | Example |
 | --- | --- | --- | --- |
 | `f0_vs30` | no | Consistency between resonance frequency and Vs30. | `1` |
@@ -470,6 +511,34 @@ Allowed consistency values are:
 - `1`: consistent;
 - `0`: not consistent;
 - empty: unavailable or not evaluated.
+
+### Notes On Quality Indexes
+
+SiteXML stores calculated indicator-level quality indexes and the final overall
+quality index. It does not store the detailed Q_Index1 criteria or Q_Index3
+consistency inputs.
+
+If you provide both **direct** (already calculated) `*_qualityIndex` values 
+(from the site-description or the analysis table) and a quality-index 
+calculation table:
+
+- direct `*_qualityIndex` values are imported first;
+- Q_Index1 criteria values for an existing indicator **recalculate and replace**
+  that indicator's direct `*_qualityIndex` value;
+- Missing Q_Index1 criteria values for an indicator, leave that indicator's 
+  direct `*_qualityIndex` value unchanged;
+- Quality-index rows for sites without indicator objects are skipped.
+
+The import tools do not automatically populate the `overallQindex` value in
+the SiteXML document from direct `*_qualityIndex` columns alone. To write 
+`overallQindex`, use one of these explicit workflows:
+
+- provide `overallQindex` in the site-description table;
+- provide the quality-index table so the tool can calculate Q_Index1 and
+  Q_Index3-derived results during import.
+
+If no usable indicator data exists for a site, providing a quality-index
+table does not write a fake `<overallQindex>0</overallQindex>`.
 
 ## Notes On Preferred IDs
 
@@ -486,20 +555,3 @@ omitted from generated SiteXML.
 
 > **If both preferred IDs are provided, the preferred velocity profile must belong
 > to the preferred analysis.**
-
-## Notes On Quality Indexes
-
-Direct `*_qualityIndex` columns are imported as already calculated indicator
-quality-index values.
-
-If a quality-index CSV is also provided, it is applied after the direct
-`*_qualityIndex` columns:
-
-- sidecar criteria for an existing indicator recalculate and replace that
-  indicator's direct `*_qualityIndex` value;
-- blank sidecar criteria for an indicator leave the direct `*_qualityIndex` value
-  unchanged;
-- direct `*_qualityIndex` values alone do not automatically create
-  `overallQindex`;
-- to write `overallQindex`, provide the `overallQindex` column directly or
-  provide a quality-index sidecar with usable indicator and consistency inputs.
