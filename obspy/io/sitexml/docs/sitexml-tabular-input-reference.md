@@ -30,7 +30,8 @@ This document is a reference for the tabular input files accepted by
 
 ## General Formatting And Naming Rules
 
-> **Important:**  
+> **Important:**
+> 
 > - Excel **sheet names** are fixed and must be exactly as shown in the tables
 >   descriptions below.
 > - **Column names** are fixed and are case-sensitive.
@@ -96,16 +97,16 @@ The importer does not guess preferred IDs. Missing preferred IDs are preserved
 as missing.
 
 If you provide preferred IDs:
+
 - `preferredSiteAnalysisID`: the analysis CSV must contain a
-matching `analysisID`. If the analysis CSV is omitted, the preferred analysis
-ID is ignored with a warning and omitted from generated SiteXML.
-
+  matching `analysisID`. If the analysis CSV is omitted, the preferred analysis
+  ID is ignored with a warning and omitted from generated SiteXML.
 - `preferredVelocityProfileID`: the velocity-profile CSV must
-contain a matching `velocityProfileID`. If velocity-profile metadata is
-omitted, the preferred velocity-profile ID is ignored with a warning and
-omitted from generated SiteXML.
+  contain a matching `velocityProfileID`. If velocity-profile metadata is
+  omitted, the preferred velocity-profile ID is ignored with a warning and
+  omitted from generated SiteXML.
 
-> **Important:**  
+> **Important:**   
 > If both preferred IDs are present, the preferred velocity profile must belong
 > to the preferred analysis.
 
@@ -121,38 +122,24 @@ SiteXML supports seven (7) site indicators:
 [`velocityS30`](https://www.itsak.gr/SiteXML/#type_VelocityS30IndicatorType) and 
 [`velocityProfileSet`](https://www.itsak.gr/SiteXML/#type_VelocityProfileSetIndicatorType). 
 
-All site indicators include the same set of metadata: 
-- Value metadata
-  ```text
-  value
-  uncertainty (where applicable)
-  qualityIndex
-  ```
-- [`literatureSource`](https://www.itsak.gr/SiteXML/#type_LiteratureSourceType) metadata:
-  ```text
-  title
-  firstAuthor
-  secondaryAuthors
-  year
-  booktitle
-  language
-  doi
-  ```
-- [`externalReference`](https://www.itsak.gr/SiteXML/#type_ExternalReferenceType) metadata:
-  ```text
-  description
-  uri
-  ```
+All site indicators include the same set of metadata:
+
+| Metadata group | Columns |
+| --- | --- |
+| Value metadata | `value`, `uncertainty` where applicable, `qualityIndex` |
+| [`literatureSource`](https://www.itsak.gr/SiteXML/#type_LiteratureSourceType) metadata | `title`, `firstAuthor`, `secondaryAuthors`, `year`, `booktitle`, `language`, `doi` |
+| [`externalReference`](https://www.itsak.gr/SiteXML/#type_ExternalReferenceType) metadata | `description`, `uri` |
 
 Some, have extra metadata; for example `geologicalUnit` includes the `geologicalMapScale`.
 
 Some common rules apply if you want to provide metadata for a site indicator:
-- you must provide a `value`
-- `uncertainty` and `qualityIndex` are optional
+
+- the site indicator `value` is required;
+- `uncertainty` and `qualityIndex` are optional;
 - if you have a [`literatureSource`](https://www.itsak.gr/SiteXML/#type_LiteratureSourceType)
-  you must provide at least `title` and `firstAuthor`
+  you must provide at least `title` and `firstAuthor`;
 - If you have an [`externalReference`](https://www.itsak.gr/SiteXML/#type_ExternalReferenceType)
-  you must provide both `description` and `uri`
+  you must provide both `description` and `uri`;
 - All other metadata is optional.
 
 For user convenience, site indicator metadata columns in the input tables, 
@@ -302,9 +289,10 @@ It is provided as a CSV file or as an Excel sheet named `analysis` with **many r
 This means you can provide many sets of analysis site-indicators per site.
 
 Each row must identify three things:
-- the site it belongs to: SiteID
-- the site description it is associated with: siteDescriptionID
-- the unique analysisID
+
+- the site it belongs to: `SiteID`
+- the site description it is associated with: `siteDescriptionID`
+- the unique `analysisID`
 
 > **Note:** Missing values in any of the three above resource identifiers will result in data import error.
 
@@ -344,7 +332,8 @@ indicators that belong to the analysis object.
 | [`velocityS30_methodCombIndex`](https://www.itsak.gr/SiteXML/#type_VelocityS30MethodCombIndexType) | Whether methods were combined. Allowed values: `1.0`, `1.2`. | `1.2` |
 | [`velocityS30_manualIndex`](https://www.itsak.gr/SiteXML/#type_VelocityS30ManualIndexType) | Qualitative factor for maximum Vs measurement depth. Allowed values: `0.2`, `0.4`, `0.8`, `1.0`. | `1.0` |
 
-> **Please note,** that there is not `velocityProfileSet_value` column.   
+> **Please note:**    
+> There is not `velocityProfileSet_value` column.   
 > The velocity profile data, if available, is provided as seperate table(s)
 > ([see below](#velocity-profiles-table)).   
 > However, you can still provide `qualityIndex`, `literatureSource` and 
@@ -358,9 +347,10 @@ files.
 
 Each row in the table describes **one layer in one velocity profile** and must 
 identify three things:
-- the site it belongs to: SiteID
-- the analysis it belongs to: analysisID
-- the unique velocityProfileID
+
+- the site it belongs to: `SiteID`
+- the analysis it belongs to: `analysisID`
+- the unique `velocityProfileID`
 
 > **For example**, a velocity profile with 8 layers, will occupy 8 rows in the table, 
 > with the same SiteID, analysisID and velocityProfileID
@@ -376,22 +366,24 @@ The data read from the velocity-profile  table are stored in multiple
 | `analysisID` | **yes** | Resource ID of the parent analysis. | `quakeml:domain.ab/analysis/001` |
 | `velocityProfileID` | **yes** | Resource ID of the velocity profile. Repeated rows with the same ID are layers of the same profile. | `quakeml:domain.ab/velocity_profile/001` |
 | `layerCount` | no | Optional layer counter/order marker. | `1` |
-| `density_value` | no | Density value. | `1800` |
-| `density_uncertainty` | no | Uncertainty of the density value. | `50` |
-| `velocityP_value` | no | P-wave velocity value. | `900` |
-| `velocityP_uncertainty` | no | Uncertainty of the P-wave velocity value. | `20` |
 | `velocityS_value` | **yes** | S-wave velocity value. | `118.08` |
 | `velocityS_uncertainty` | no | Uncertainty of the S-wave velocity value. | `2` |
+| `velocityP_value` | no | P-wave velocity value. | `900` |
+| `velocityP_uncertainty` | no | Uncertainty of the P-wave velocity value. | `20` |
+| `density_value` | no | Density value. | `1800` |
+| `density_uncertainty` | no | Uncertainty of the density value. | `50` |
 | `layerTopDepth_value` | **yes** | Top depth of the layer. | `0` |
 | `layerTopDepth_uncertainty` | no | Uncertainty of the top depth. | `0.1` |
 | `layerBottomDepth_value` | no | Bottom depth of the layer. Leave empty for an open-ended final layer. | `0.19` |
 | `layerBottomDepth_uncertainty` | no | Uncertainty of the bottom depth. | `0.1` |
 
 Here is an example of a velocity-profile table, containing 
+
 - two velocity profiles for the same analysis and site and 
 - one velocity profile for a different analysis and site.
 
-> **Please note** that, the layer data of one velocity profile, share the same velocityProfileID.
+> **Please note:**   
+> The layer data of one velocity profile, share the same `velocityProfileID`.
 
 | SiteID | analysisID | velocityProfileID | layerCount | velocityS | topDepth |
 | --- | --- | --- | --- | --- | --- |
@@ -427,11 +419,13 @@ values for the calculation of Q_Index3](#q_index3-consistency-columns). All
 these criteria values are **optional**.
 
 > **Note:** 
+> 
 > - A missing ``SiteID`` column would result in data import error.
 > - Rows with missing or unknown ``SiteID`` values are skipped with a warning.
 
 > **See also:** For more information on the SiteXML quality indexes, please refer
-> - to the [**quality indexes guide**](quality-indexes-guide.md) distributed with the standalone executables
+>
+> - to the [**quality indexes guide**](sitexml-quality-indexes-guide.md) distributed with the standalone executables
 > - to the guidelines of [**SERA deliverable D7.2**](https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf).
 
 

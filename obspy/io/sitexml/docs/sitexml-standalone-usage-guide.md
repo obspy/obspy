@@ -35,14 +35,15 @@ Once you unzip the compressed file, you will end-up with the following file hier
   sitexml-scripts             # Top level folder
       -- csv2sitexml          # CSV executable
       -- excel2sitexml        # Excel executable
-      -- SiteXML-Standalone-Usage-Guide.md
-      -- SiteXML-Standalone-Usage-Guide.pdf
-      -- tabular-input-reference.md
-      -- tabular-input-reference.pdf
-      -- quality-indexes-guide.md
-      -- quality-indexes-guide.pdf
-      -- \examples             # Folder with examples of XML, CSV and Excel files
-      -- \_internal            # Folder containing the shared libraries needed by the executables
+      -- docs                 # Documentation in Markdown and PDF formats
+          -- sitexml-standalone-usage-guide.md
+          -- sitexml-standalone-usage-guide.pdf
+          -- sitexml-tabular-input-reference.md
+          -- sitexml-tabular-input-reference.pdf
+          -- sitexml-quality-indexes-guide.md
+          -- sitexml-quality-indexes-guide.pdf
+      -- examples             # Folder with examples of XML, CSV and Excel files
+      -- _internal            # Folder containing the shared libraries needed by the executables
 ```
 
 > **Important:**  
@@ -80,20 +81,21 @@ CSV and Excel imports use the same logical tables:
 | Velocity profiles | [`velocityProfile`](https://www.itsak.gr/SiteXML/#type_VelocityProfile) | Optional | Velocity-profile layer rows. Both for CSV and Excel input, this may be one file or a folder. | Separate file or folder, not a main-workbook sheet |
 | Quality-index | `qualityIndex` | Optional | Q_Index1 criteria and Q_Index3 consistency inputs used to calculate quality indexes during import. | `qualityIndex` |
 
-- For CSV input, these are separate CSV files or folders selected by command-line
-options.
-- For Excel input, `siteOwner`, `siteDescription`, `analysis`, and `qualityIndex`
+For CSV input, each table corresponds to a separate CSV file or folder selected by command-line
+options.  
+For Excel input, `siteOwner`, `siteDescription`, `analysis`, and `qualityIndex`
 tables are sheets in the **main workbook**, while velocity profiles are provided
 in separate file(s).
 
 > **Important:** 
+>
 > - For Excel input the sheet names must be **exactly as shown** in the table above. 
 > - For CSV input the filemames **are not fixed**.  
 > - The same column names are used **by both** CSV and Excel files.
 > - Column names are case sensitive
 
 For a detailed description of the input tables, accepted columns and allowed
-values, please refer to the [**SiteXML Tabular Input Reference**](tabular-input-reference.md)
+values, please refer to the [**SiteXML Tabular Input Reference**](sitexml-tabular-input-reference.md)
 that is also distributed with the standalone executables.
 
 
@@ -192,6 +194,7 @@ csv2sitexml \
 ```
 
 > **Important:** 
+>
 > - The default CSV delimiter is semicolon `';'`. If your CSV files use another
 > delimiter, pass it with option `-s`, for example `-s ","`.
 > - You must make sure, that **the delimiter character 
@@ -407,7 +410,7 @@ invent missing `analysisID` or `velocityProfileID` values.
 
 For more information on the resource identifiers and the preferred IDs 
 please refer to the [**SiteXML Tabular Input 
-Reference**](tabular-input-reference.md#resource-identifiers-and-preferred-ids)
+Reference**](sitexml-tabular-input-reference.md#resource-identifiers-and-preferred-ids)
 
 ## Troubleshooting
 
@@ -431,7 +434,7 @@ Warnings usually mean optional enrichment was skipped or an unresolved optional
 preferred ID was omitted from generated XML. Errors mean the input could not be
 converted into a valid, schema-validated SiteXML document.
 
-> Please refer to the [**SiteXML Tabular Input Reference**](tabular-input-reference.md)
+> Please refer to the [**SiteXML Tabular Input Reference**](sitexml-tabular-input-reference.md)
 > for more details on the tabular input format and validation rules,
 > or the [**SiteXML schema documentation**](https://www.itsak.gr/SiteXML)
 > for the accepted values in each column.

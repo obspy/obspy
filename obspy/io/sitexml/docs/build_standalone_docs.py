@@ -16,19 +16,19 @@ from playwright.sync_api import sync_playwright
 
 DOCS = (
     (
-        "standalone-executable-usage-guide.md",
-        "SiteXML-Standalone-Usage-Guide.md",
-        "SiteXML-Standalone-Usage-Guide.pdf",
+        "sitexml-standalone-usage-guide.md",
+        "sitexml-standalone-usage-guide.md",
+        "sitexml-standalone-usage-guide.pdf",
     ),
     (
-        "tabular-input-reference.md",
-        "tabular-input-reference.md",
-        "tabular-input-reference.pdf",
+        "sitexml-tabular-input-reference.md",
+        "sitexml-tabular-input-reference.md",
+        "sitexml-tabular-input-reference.pdf",
     ),
     (
-        "quality-indexes-guide.md",
-        "quality-indexes-guide.md",
-        "quality-indexes-guide.pdf",
+        "sitexml-quality-indexes-guide.md",
+        "sitexml-quality-indexes-guide.md",
+        "sitexml-quality-indexes-guide.pdf",
     ),
 )
 
