@@ -187,7 +187,7 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="previousVersion" type="xs:anyURI"
+			<xs:element name="previousVersion" type="HttpURIType"
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>URI of the previous published SiteXML document
@@ -275,7 +275,7 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="homepage" type="xs:anyURI" 
+			<xs:element name="homepage" type="HttpURIType" 
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>
@@ -350,7 +350,7 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element name="homepage" type="xs:anyURI" 
+			<xs:element name="homepage" type="HttpURIType" 
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
 					<xs:documentation>
@@ -1397,6 +1397,17 @@
 		</xs:restriction>
 	</xs:simpleType>
 
+	<xs:simpleType name="HttpURIType">
+		<xs:annotation>
+			<xs:documentation>
+				HTTP, HTTPS, or FTP URI.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:anyURI">
+			<xs:pattern value="(https?|ftp)://.+"/>
+		</xs:restriction>
+	</xs:simpleType>
+
 	<xs:simpleType name="QIndexType">
 		<xs:annotation>
 			<xs:documentation>
@@ -1441,13 +1452,14 @@
 		<xs:annotation>
 			<xs:documentation>
 				FDSN network and station code in network.station notation.
-				The network code is one or two alphanumeric characters and
-				the station code is a three to five letter code.
+				The network code is one or two uppercase letters or numeric characters and
+				the station code is a three to five uppercase letters or characters.
 				<p><strong>Example: </strong>XX.ABCD</p>
+				<p><strong>Example: </strong>1Α.ABC2</p>
 			</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:string">
-			<xs:pattern value="[A-Za-z0-9]{1,2}\.[A-Za-z]{3,5}"/>
+			<xs:pattern value="[A-Z0-9]{2}\.[A-Z0-9]{3,5}"/>
 		</xs:restriction>
 	</xs:simpleType>
 
@@ -1496,7 +1508,7 @@
 			</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:string">
-			<xs:pattern value="[0-9]{4}"/>
+			<xs:pattern value="[12][0-9]{3}"/>
 		</xs:restriction>
 	</xs:simpleType>
 </xs:schema>
