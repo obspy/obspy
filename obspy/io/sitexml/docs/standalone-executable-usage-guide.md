@@ -36,8 +36,11 @@ Once you unzip the compressed file, you will end-up with the following file hier
       -- csv2sitexml          # CSV executable
       -- excel2sitexml        # Excel executable
       -- SiteXML-Standalone-Usage-Guide.md
+      -- SiteXML-Standalone-Usage-Guide.pdf
       -- tabular-input-reference.md
+      -- tabular-input-reference.pdf
       -- quality-indexes-guide.md
+      -- quality-indexes-guide.pdf
       -- \examples             # Folder with examples of XML, CSV and Excel files
       -- \_internal            # Folder containing the shared libraries needed by the executables
 ```

@@ -30,8 +30,6 @@ This document is a reference for the tabular input files accepted by
 
 ## General Formatting And Naming Rules
 
-
-
 > **Important:**  
 > - Excel **sheet names** are fixed and must be exactly as shown in the tables
 >   descriptions below.
@@ -40,7 +38,6 @@ This document is a reference for the tabular input files accepted by
 > - The default CSV delimiter is semicolon (`;`). If your files use another
     delimiter, pass it with `-s`, for example `-s ","`. 
 > - The delimiter character must not be used inside text values in any column.
-
 
 In the tables below, **yes** marks required inputs.
 
@@ -199,6 +196,7 @@ In this example, the soil class site indicator `siteClassEC8` is used.
 | `siteClassEC8_description` | no | External reference description. | `paper` |
 | `siteClassEC8_uri` | no | External reference URI. | `https://doi.org/10.1007/s10518-017-0135-5/` |
 
+
 ## Site Owner Table
 
 The site-owner table provides contact information for the site owner and it is **required**. 
@@ -231,6 +229,7 @@ The data read from the Site Owner table is stored in
 | `address_country` | no | Country name. | `Greece` |
 | `affiliation_department` | no | Contact person's department. | `Seismology` |
 | `affiliation_function` | no | Contact person's role/function. | `Senior researcher` |
+
 
 ## Site Description Table
 
@@ -272,13 +271,13 @@ The data read from the site-description table is stored in
 > is provided. If neither is true, the produced SiteXML document won't have an
 > `overallQindex` value.
 
+
 ### Site Description Indicator Columns
 
 In addition to the common `qualityIndex`, `literatureSource` and  `externalReference` 
 columns that were described [above](#common-site-indicator-metadata), use the 
 following columns to provide value/uncertainty and other metadata for site 
 indicators that belong to the site-description object.
-
 
 | Column | Meaning | Example |
 | --- | --- | --- |
@@ -324,6 +323,7 @@ The data read from the analysis table are stored in
 | `cptLogsCount` | no | Number of CPT logs. | `0` |
 | `boreholeLogsCount` | no | Number of borehole logs. | `0` |
 
+
 ### Analysis Indicator Columns
 
 In addition to the common `qualityIndex`, `literatureSource` and  `externalReference` 
@@ -349,6 +349,7 @@ indicators that belong to the analysis object.
 > ([see below](#velocity-profiles-table)).   
 > However, you can still provide `qualityIndex`, `literatureSource` and 
 > `externalReference` metadata for the `velocityProfileSet` site indicator.
+
 
 ## Velocity Profiles Table
 
@@ -407,6 +408,7 @@ Here is an example of a velocity-profile table, containing
 | quakeml:domain.ab/site/002 | quakeml:domain.ab/analysis/002	| quakeml:domain.ab/velocity_profile/003 | 3 | 170.3 | 0.57
 | quakeml:domain.ab/site/002 | quakeml:domain.ab/analysis/002	| quakeml:domain.ab/velocity_profile/003 | 4 | 232.54	| 1.34
 
+
 ## Quality-Index Table
 
 The indicator-level quality indexes and the final overall quality index 
@@ -431,6 +433,7 @@ these criteria values are **optional**.
 > **See also:** For more information on the SiteXML quality indexes, please refer
 > - to the [**quality indexes guide**](quality-indexes-guide.md) distributed with the standalone executables
 > - to the guidelines of [**SERA deliverable D7.2**](https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf).
+
 
 ### Q_Index1 Criteria Columns
 
@@ -507,6 +510,7 @@ velocityProfileSet_evaluation
 velocityProfileSet_reliability
 velocityProfileSet_report
 ```
+
 
 ### Q_Index3 Consistency Columns
 
