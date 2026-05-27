@@ -372,7 +372,7 @@ class TestSiteXMLCSVImport():
             sera_site_dict["quakeml:test/site/001"]
             .analysis[0].velocity_profile_set)
         assert velocity_profile_set is not None
-        assert velocity_profile_set.velocity_profiles is None
+        assert velocity_profile_set.velocity_profiles == []
         assert velocity_profile_set.quality_index == 0.7
         assert velocity_profile_set.literature_source.title == (
             "Velocity profile study")
