@@ -73,6 +73,21 @@ a {
     text-decoration: none;
 }
 
+ul, ol {
+    margin: 5pt 0 9pt;
+    padding-left: 20pt;
+}
+
+li {
+    margin: 2pt 0;
+}
+
+li > ul,
+li > ol {
+    margin: 2pt 0 4pt;
+    padding-left: 18pt;
+}
+
 blockquote {
     border-left: 4px solid #9fb3c8;
     color: #334e68;

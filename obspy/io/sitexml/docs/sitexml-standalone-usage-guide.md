@@ -15,10 +15,10 @@ metadata into SiteXML files.
 - [Platform Notes](#platform-notes)
 - [Example Files](#example-files)
 - [Recommended Workflows](#recommended-workflows)
-  - [SiteXML with only Site Description](#sitexml-with-only-site-description)
-  - [SiteXML With Analysis](#sitexml-with-analysis)
-  - [SiteXML With Velocity Profiles](#sitexml-with-velocity-profiles)
-  - [SiteXML With Calculated Quality Indexes](#sitexml-with-calculated-quality-indexes)
+    - [SiteXML with only Site Description](#sitexml-with-only-site-description)
+    - [SiteXML With Analysis](#sitexml-with-analysis)
+    - [SiteXML With Velocity Profiles](#sitexml-with-velocity-profiles)
+    - [SiteXML With Calculated Quality Indexes](#sitexml-with-calculated-quality-indexes)
 - [Validation Rules And Assumptions](#validation-rules-and-assumptions)
 - [Troubleshooting](#troubleshooting)
 
@@ -35,6 +35,7 @@ Once you unzip the compressed file, you will end-up with the following file hier
   sitexml-scripts             # Top level folder
       -- csv2sitexml          # CSV executable
       -- excel2sitexml        # Excel executable
+      -- VERSION.txt          # Release version and build metadata
       -- docs                 # Documentation in Markdown and PDF formats
           -- sitexml-standalone-usage-guide.md
           -- sitexml-standalone-usage-guide.pdf

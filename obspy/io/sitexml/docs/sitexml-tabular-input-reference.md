@@ -14,19 +14,19 @@ This document is a reference for the tabular input files accepted by
 
 - [General Formatting And Naming Rules](#general-formatting-and-naming-rules)
 - [Resource Identifiers And Preferred IDs](#resource-identifiers-and-preferred-ids)
-  - [Notes On Preferred IDs](#notes-on-preferred-ids)
+    - [Notes On Preferred IDs](#notes-on-preferred-ids)
 - [Common Site Indicator Metadata](#common-site-indicator-metadata)
 - [Site Owner Table](#site-owner-table)
 - [Site Description Table](#site-description-table)
-  - [Site And Location Columns](#site-and-location-columns)
-  - [Site Description Indicator Columns](#site-description-indicator-columns)
+    - [Site And Location Columns](#site-and-location-columns)
+    - [Site Description Indicator Columns](#site-description-indicator-columns)
 - [Analysis Table](#analysis-table)
-  - [Analysis Relationship and Log Count Columns](#analysis-relationship-and-log-count-columns)
-  - [Analysis Indicator Columns](#analysis-indicator-columns)
+    - [Analysis Relationship and Log Count Columns](#analysis-relationship-and-log-count-columns)
+    - [Analysis Indicator Columns](#analysis-indicator-columns)
 - [Velocity Profiles Table](#velocity-profiles-table)
 - [Quality-Index Tables](#quality-index-table)
-  - [Q_Index1 Criteria Columns](#q_index1-criteria-columns)
-  - [Q_Index3 Consistency Columns](#q_index3-consistency-columns)
+    - [Q_Index1 Criteria Columns](#q_index1-criteria-columns)
+    - [Q_Index3 Consistency Columns](#q_index3-consistency-columns)
 
 ## General Formatting And Naming Rules
 
