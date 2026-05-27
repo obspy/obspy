@@ -486,12 +486,14 @@ class TestSiteXMLCSVImport():
             self, datapath, tmp_path):
         output_folder = tmp_path / "sitexml"
 
-        result = csv2sitexml_main([
-            "-o", str(datapath / "site_owner.csv"),
-            "-d", str(datapath / "minimal_site_description.csv"),
-            "-q", str(datapath / "quality_index.csv"),
-            "--output-folder", str(output_folder),
-        ])
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = csv2sitexml_main([
+                "-o", str(datapath / "site_owner.csv"),
+                "-d", str(datapath / "minimal_site_description.csv"),
+                "-q", str(datapath / "quality_index.csv"),
+                "--output-folder", str(output_folder),
+            ])
 
         date_text = obspy.UTCDateTime().strftime("%d-%m-%Y")
         site_dict = sitexml_to_sitedict(
@@ -500,6 +502,8 @@ class TestSiteXMLCSVImport():
 
         assert result == 0
         assert site.site_description.overall_quality_index is None
+        assert any("Analysis metadata not provided." in str(w.message)
+                   for w in caught)
 
     def test_excel_to_sera_site_imports_sites_analysis_and_velocity_profiles(
             self, datapath):
