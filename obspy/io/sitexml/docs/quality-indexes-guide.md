@@ -11,8 +11,8 @@ tools.
 - [Quality Index 2](#quality-index-2)
 - [Quality Index 3](#quality-index-3)
 - [Overall Quality Index](#overall-quality-index)
-- [Import From CSV Or Excel](#import-from-csv-or-excel)
-- [Automatic Calculation Of Overall QI](#automatic-calculation-of-overall-qi)
+- [Notes On Quality Indexes](#notes-on-quality-indexes)
+- [Automatic Calculation Of Overall Quality Index](#automatic-calculation-of-overall-quality-index)
 
 ## Overview
 
@@ -21,8 +21,8 @@ D7.2](https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characteriza
 for describing the reliability and consistency of site-characterization metadata. 
 ObsPy implements four related values:
 
-- Q_Index1 describes the quality of one site indicator.
-- Q_Index2 combines the Q_Index1 values available for one site.
+- Q_Index1 evaluates the quality of a site indicator value.
+- Q_Index2 provides a weighted sum of all Q_Index1 values available for a site.
 - Q_Index3 describes consistency between pairs of site indicators.
 - The overall quality index combines Q_Index2 and Q_Index3.
 
@@ -124,22 +124,36 @@ Overall_Quality_Index = (Q_Index2 + Q_Index3) / 2
 If Q_Index2 is zero, the overall quality index is zero. If Q_Index3 is `None`,
 it is treated as zero for the overall calculation.
 
-## Import From CSV Or Excel
 
-The indicator-level quality indexes and the final overall quality index stored
-in SiteXML can be calculated during tabular import. The import helpers read the
-required calculation parameters from an optional CSV or Excel table,
-apply them immediately, and store only the schema-supported calculated results
-on the imported SiteXML objects.
+## Notes On Quality Indexes
 
-## Automatic Calculation Of Overall QI
+SiteXML stores calculated indicator-level quality indexes and the final overall
+quality index. It does not store the detailed Q_Index1 criteria or Q_Index3
+consistency inputs.
 
-Tabular import is conservative about the overall quality index. If a CSV file
-or Excel sheet contains indicator-level `*_qualityIndex` columns but does not
-provide an `overallQindex` value and does not provide the optional quality-index
-table, ObsPy imports and writes the indicator-level quality indexes
-only. It does **not** automatically synthesize `overallQindex` in the output
-XML.
+If you provide both **direct** (already calculated) `*_qualityIndex` values 
+(from the site-description or the analysis table) and a quality-index 
+calculation table:
+
+- direct `*_qualityIndex` values are imported first;
+- Q_Index1 criteria values for an existing indicator **recalculate and replace**
+  that indicator's direct `*_qualityIndex` value;
+- Missing Q_Index1 criteria values for an indicator, leave that indicator's 
+  direct `*_qualityIndex` value unchanged;
+- Quality-index rows for sites without indicator objects are skipped.
+
+## Automatic Calculation Of Overall Quality Index
+
+Tabular import is **conservative** regarding the calculation of overall quality 
+index. 
+
+The import tools do not automatically calculate and write the `overallQindex` value in
+the SiteXML document from direct `*_qualityIndex` columns alone. To write 
+`overallQindex`, use one of these explicit workflows:
+
+- provide `overallQindex` in the site-description table;
+- provide the quality-index table so the tool can calculate Q_Index1 and
+  Q_Index3-derived results during import.
 
 This distinction is important because Q_Index2 gives missing indicator Q_Index1
 values a zero contribution, and Q_Index3 needs consistency inputs that are only
@@ -147,9 +161,5 @@ available from the quality-index table or from explicit Python arguments.
 Automatically calculating an overall value from partial tabular metadata could
 therefore make absent information look like an evaluated site quality.
 
-Use one of these explicit workflows when the output XML should contain
-`overallQindex`:
-
-- provide an `overallQindex` column in the site-description table;
-- provide the quality-index sidecar CSV or Excel `qualityIndex` sheet, so ObsPy
-  can calculate Q_Index1/Q_Index3-derived results during import;
+If no usable indicator data exists for a site, providing a quality-index
+table does not write a fake `<overallQindex>0</overallQindex>`.

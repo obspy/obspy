@@ -50,10 +50,11 @@ jobs:
         run: |
           pyinstaller --clean --noconfirm sitexml-scripts.spec
 
-      - name: Add usage guide to artifact
+      - name: Add documentation to artifact
         run: |
           python -c "import pathlib, shutil; root = pathlib.Path('dist/sitexml-scripts'); shutil.copyfile('obspy/io/sitexml/docs/standalone-executable-usage-guide.md', root / 'SiteXML-Standalone-Usage-Guide.md')"
-          python -c "import pathlib, shutil; root = pathlib.Path('dist/sitexml-scripts'); shutil.copyfile('obspy/io/sitexml/docs/tabular-input-reference.md', root / 'SiteXML-Tabular-Input-Reference.md')"
+          python -c "import pathlib, shutil; root = pathlib.Path('dist/sitexml-scripts'); shutil.copyfile('obspy/io/sitexml/docs/tabular-input-reference.md', root / 'tabular-input-reference.md')"
+          python -c "import pathlib, shutil; root = pathlib.Path('dist/sitexml-scripts'); shutil.copyfile('obspy/io/sitexml/docs/quality-indexes-guide.md', root / 'quality-indexes-guide.md')"
           python -c "import pathlib, shutil; root = pathlib.Path('dist/sitexml-scripts'); shutil.copytree('obspy/io/sitexml/tests/data', root / 'examples', dirs_exist_ok=True, ignore=shutil.ignore_patterns('.DS_Store'))"
 
       - uses: actions/upload-artifact@v7
