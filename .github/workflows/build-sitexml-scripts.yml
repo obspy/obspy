@@ -56,7 +56,7 @@ jobs:
 
       - name: Add documentation to artifact
         run: |
-          python obspy/io/sitexml/docs/build_standalone_docs.py --output-dir dist/sitexml-scripts
+          python obspy/io/sitexml/docs/build_standalone_docs.py --output-dir dist/sitexml-scripts/docs
           python -c "import pathlib, shutil; root = pathlib.Path('dist/sitexml-scripts'); shutil.copytree('obspy/io/sitexml/tests/data', root / 'examples', dirs_exist_ok=True, ignore=shutil.ignore_patterns('.DS_Store'))"
 
       - uses: actions/upload-artifact@v7
