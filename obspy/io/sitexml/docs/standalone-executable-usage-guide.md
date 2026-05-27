@@ -63,7 +63,7 @@ Existing files with the same generated name are overwritten.
 
 > **Important:**  
 > The input tables are organized to follow the
-> [SiteXML schema](https://www.itsak.gr/SiteXML). Each table corresponds to a
+> [**SiteXML schema**](https://www.itsak.gr/SiteXML). Each table corresponds to a
 > major SiteXML object, and the columns in that table correspond to the object's
 > elements and attributes.
 
@@ -90,7 +90,7 @@ in separate file(s).
 > - Column names are case sensitive
 
 For a detailed description of the input tables, accepted columns and allowed
-values, please refer to the [SiteXML Tabular Input Reference](tabular-input-reference.md)
+values, please refer to the [**SiteXML Tabular Input Reference**](tabular-input-reference.md)
 that is also distributed with the standalone executables.
 
 
@@ -159,8 +159,10 @@ The minimal input that can produce SiteXML is `site_owner.csv` plus
 
 > **Note:**   
 > In the examples below, the file names are just an example.   
-> They **must** be replaced by your
-> actual file names or full path names to the input files.
+> They **must** be replaced by your actual file names or full path names to
+> the input files.  
+> The script is distributed with [a folder with example CSV files](#example-files)
+> to get you started.
 
 ### Examples 
 
@@ -207,8 +209,10 @@ Use `excel2sitexml -h`, to get a full list of supported options.
 
 > **Note:**   
 > In the examples below, the file names are just an example.   
-> They **must** be replaced by your
-> actual file names or full path names to the input files.
+> They **must** be replaced by your actual file names or full path names to
+> the input files.  
+> The script is distributed with [a folder with example Excel files](#example-files)
+> to get you started.
 
 ### Examples 
 
@@ -351,7 +355,7 @@ profiles are meaningful only with analysis metadata.
 ### SiteXML With Calculated Quality Indexes
 
 Use this when you want the tool to calculate indicator quality indexes and
-`overallQindex` from provided calculation inputs in `quality_index.csv`:
+`overallQindex` from provided calculation criteria values in `quality_index.csv`:
 
 ```bash
 csv2sitexml \
@@ -381,11 +385,11 @@ The tools validate that:
 - required input files or sheets are present;
 - required columns are present;
 - required row values are not empty;
-- all provided value validate against the rules imposed by the schema;
-- analysis rows point to the parent site description through
+- all provided values validate against the rules imposed by the schema;
+- analysis rows point to existing site description objects through
   `siteDescriptionID`;
-- velocity-profile rows point to an existing `analysisID`;
-- duplicate analysis and velocity-profile resource IDs are rejected;
+- velocity-profile rows point to existing analysis objects through `analysisID`;
+- no duplicate analysis and velocity-profile resource IDs are present;
 - `preferredSiteAnalysisID`, when provided, points to an attached analysis;
 - `preferredVelocityProfileID`, when provided, points to an attached velocity
   profile;
@@ -398,38 +402,33 @@ The tools do not guess or generate missing relationship IDs. For example, they
 do not choose the first analysis as the preferred analysis and they do not
 invent missing `analysisID` or `velocityProfileID` values.
 
-One lenient rule applies to optional target tables:
-
-- if analysis metadata is omitted, `preferredSiteAnalysisID` and
-  `preferredVelocityProfileID` values from site-description input are ignored
-  with warnings;
-- if analysis metadata is present but velocity-profile metadata is omitted,
-  `preferredVelocityProfileID` values are ignored with warnings.
-
-Ignored preferred IDs are omitted from generated SiteXML.
+For more information on the resource identifiers and the preferred IDs 
+please refer to the [**SiteXML Tabular Input 
+Reference**](tabular-input-reference.md#resource-identifiers-and-preferred-ids)
 
 ## Troubleshooting
 
 If the command fails before writing XML, check:
 
 - required files or sheets are present;
-- required column names are spelled exactly as expected;
+- required columns are present;
+- excel sheet names are spelled exactly as expected;
+- column names are spelled exactly as expected;
 - CSV delimiter matches the file contents, usually `;`;
 - CSV delimiter is not used inside any text values in any of the columns;
 - every required row value is filled;
 - every provided value conforms to the requirements set by the SiteXML schema;
+- every resource identifier ID is unique;
 - every `siteID`, `siteDescriptionID`, `analysisID`, and `velocityProfileID`
-  relationship points to a real object;
+  that represents a relationship points to a real object;
 - `preferredSiteAnalysisID` and `preferredVelocityProfileID` point to objects
   that are actually provided in the input tables;
-- velocity-profile layers include `velocityS_value` and
-  `layerTopDepth_value`;
-- Q_Index3 consistency values are only `0`, `1`, or empty.
-
-> Always check with the [SiteXML Tabular Input Reference](tabular-input-reference.md)
-> or the [SiteXML schema documentation](https://www.itsak.gr/SiteXML)
-> for the accepted values in each column.
 
 Warnings usually mean optional enrichment was skipped or an unresolved optional
 preferred ID was omitted from generated XML. Errors mean the input could not be
 converted into a valid, schema-validated SiteXML document.
+
+> Please refer to the [**SiteXML Tabular Input Reference**](tabular-input-reference.md)
+> for more details on the tabular input format and validation rules,
+> or the [**SiteXML schema documentation**](https://www.itsak.gr/SiteXML)
+> for the accepted values in each column.

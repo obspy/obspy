@@ -12,40 +12,37 @@ This document is a reference for the tabular input files accepted by
 
 ## Table Of Contents
 
-- [CSV Specific Notes](#csv-specific-notes)
+- [General Formatting And Naming Rules](#general-formatting-and-naming-rules)
 - [Resource Identifiers And Preferred IDs](#resource-identifiers-and-preferred-ids)
   - [Notes On Preferred IDs](#notes-on-preferred-ids)
 - [Common Site Indicator Metadata](#common-site-indicator-metadata)
 - [Site Owner Table](#site-owner-table)
 - [Site Description Table](#site-description-table)
   - [Site And Location Columns](#site-and-location-columns)
-  - [Site-Description Indicator Columns](#site-description-indicator-columns)
+  - [Site Description Indicator Columns](#site-description-indicator-columns)
 - [Analysis Table](#analysis-table)
-  - [Analysis Relationship Columns](#analysis-relationship-columns)
-  - [Resonance Frequency Indicator Columns](#resonance-frequency-indicator-columns)
-  - [Velocity S30 Indicator Columns](#velocity-s30-indicator-columns)
-  - [Velocity Profile Set Indicator Columns](#velocity-profile-set-indicator-columns)
-  - [Analysis Log Count Columns](#analysis-log-count-columns)
+  - [Analysis Relationship and Log Count Columns](#analysis-relationship-and-log-count-columns)
+  - [Analysis Indicator Columns](#analysis-indicator-columns)
 - [Velocity Profiles Table](#velocity-profiles-table)
 - [Quality-Index Tables](#quality-index-table)
   - [Q_Index1 Criteria Columns](#q_index1-criteria-columns)
   - [Q_Index3 Consistency Columns](#q_index3-consistency-columns)
 
-## CSV Specific Notes
+## General Formatting And Naming Rules
 
-The default CSV delimiter is semicolon (`;`). If your files use another
-delimiter, pass it with `-s`, for example `-s ","`. 
 
-> - **You must make sure, that the delimiter character 
-> is not used inside any text values in any of the columns.**
->
-> - **Column names cannot be changed and are case-sensitive.**
+
+> **Important:**  
+> - Excel **sheet names** are fixed and must be exactly as shown in the tables
+>   descriptions below.
+> - **Column names** are fixed and are case-sensitive.
+> - The same column names are used by both CSV and Excel input.
+> - The default CSV delimiter is semicolon (`;`). If your files use another
+    delimiter, pass it with `-s`, for example `-s ","`. 
+> - The delimiter character must not be used inside text values in any column.
+
 
 In the tables below, **yes** marks required inputs.
-
-The CSV and Excel file names are not specific. When running the commands provide the actual paths to the input files.
-
-The Excel sheet names are specific. See below for the names you must use for each table.
 
 ## Resource Identifiers And Preferred IDs
 
@@ -127,10 +124,39 @@ SiteXML supports seven (7) site indicators:
 [`velocityS30`](https://www.itsak.gr/SiteXML/#type_VelocityS30IndicatorType) and 
 [`velocityProfileSet`](https://www.itsak.gr/SiteXML/#type_VelocityProfileSetIndicatorType). 
 
-All site indicators include the same set of metadata: `value`, `uncertainty` (where applicable),
-`qualityIndex`, [`literatureSource`](https://www.itsak.gr/SiteXML/#type_LiteratureSourceType) 
-and [`externalReference`](https://www.itsak.gr/SiteXML/#type_ExternalReferenceType). Some, 
-have extra metadata; for example `geologicalUnit` includes the `geologicalMapScale`.
+All site indicators include the same set of metadata: 
+- Value metadata
+  ```text
+  value
+  uncertainty (where applicable)
+  qualityIndex
+  ```
+- [`literatureSource`](https://www.itsak.gr/SiteXML/#type_LiteratureSourceType) metadata:
+  ```text
+  title
+  firstAuthor
+  secondaryAuthors
+  year
+  booktitle
+  language
+  doi
+  ```
+- [`externalReference`](https://www.itsak.gr/SiteXML/#type_ExternalReferenceType) metadata:
+  ```text
+  description
+  uri
+  ```
+
+Some, have extra metadata; for example `geologicalUnit` includes the `geologicalMapScale`.
+
+Some common rules apply if you want to provide metadata for a site indicator:
+- you must provide a `value`
+- `uncertainty` and `qualityIndex` are optional
+- if you have a [`literatureSource`](https://www.itsak.gr/SiteXML/#type_LiteratureSourceType)
+  you must provide at least `title` and `firstAuthor`
+- If you have an [`externalReference`](https://www.itsak.gr/SiteXML/#type_ExternalReferenceType)
+  you must provide both `description` and `uri`
+- All other metadata is optional.
 
 For user convenience, site indicator metadata columns in the input tables, 
 use the same naming pattern:
@@ -150,11 +176,15 @@ use the same naming pattern:
 <indicator>_uri
 ```
 
-In the following table you can find the discriptions and examples for the
-`qualityIndex`, [`literatureSource`](https://www.itsak.gr/SiteXML/#type_LiteratureSourceType) 
-and [`externalReference`](https://www.itsak.gr/SiteXML/#type_ExternalReferenceType)
-metadata that is common among all site indicators. For this example the soil
-class site indicator `siteClassEC8` is used. 
+In the following table, you can find the descriptions and examples for
+metadata that is **common** among all site indicators.
+
+For metadata (like `value`) that are defined differently for each site 
+indicator, or for the extra metadata please refer to the sections 
+[Site Description Indicator Columns](#site-description-indicator-columns) 
+and [Analysis Indicator Columns](#analysis-indicator-columns). 
+
+In this example, the soil class site indicator `siteClassEC8` is used. 
 
 | Column | Required? | Meaning | Example |
 | --- | --- | --- | --- |
@@ -221,7 +251,7 @@ The data read from the site-description table is stored in
 
 | Column | Required? | Meaning | Example |
 | --- | --- | --- | --- |
-| `siteID` | **yes** | Resource ID for the top-level SiteXML site. **This is necessary because it associates the siteDescription item with the site.** | `quakeml:domain.ab/site/001` |
+| `siteID` | **yes** | Resource ID for the top-level SiteXML site. **This is necessary because it associates the siteDescription object with the site.** | `quakeml:domain.ab/site/001` |
 | `siteDescriptionID` | **yes** | Resource ID for the site-description object. | `quakeml:domain.ab/site_description/001` |
 | `station` | no | Station code in `network.station` notation. Leave empty for non-station sites. | `XX.ABCD` |
 | `latitude` | **yes** | Geographic latitude in degrees. | `45.137174` |
@@ -236,17 +266,19 @@ The data read from the site-description table is stored in
 | `preferredSiteAnalysisID` | no | Preferred analysis resource ID. Requires matching analysis metadata to be written. | `quakeml:domain.ab/analysis/001` |
 | `preferredVelocityProfileID` | no | Preferred velocity-profile resource ID. Requires matching velocity-profile metadata to be written. | `quakeml:domain.ab/velocity_profile/001` |
 
-> **Please Note:** If the analysis CSV is omitted, `preferredSiteAnalysisID` and
-> `preferredVelocityProfileID` are ignored with warnings. If the analysis CSV is
-> provided but velocity-profile metadata is omitted, `preferredVelocityProfileID`
-> is ignored with a warning.
+> **Please Note:**   
+> The `overallQindex` can be either provided manually by the user using the
+> site-description table or calculated by the tools if a quality-index input table
+> is provided. If neither is true, the produced SiteXML document won't have an
+> `overallQindex` value.
 
-### Site Indicator Columns
+### Site Description Indicator Columns
 
-Use the following columns to provide value/uncertainty and other metadata for
-site indicators that belong to the site-description object
-use the folowing value columns plus the common `literatureSource` and 
-`externalReference` columns:
+In addition to the common `qualityIndex`, `literatureSource` and  `externalReference` 
+columns that were described [above](#common-site-indicator-metadata), use the 
+following columns to provide value/uncertainty and other metadata for site 
+indicators that belong to the site-description object.
+
 
 | Column | Meaning | Example |
 | --- | --- | --- |
@@ -260,66 +292,6 @@ use the folowing value columns plus the common `literatureSource` and
 | `geologicalUnitOGE` | Geological unit according to the OGE vocabulary, if available. | `Alluvial deposits` |
 
 
-Complete shared metadata columns:
-
-```text
-bedrockDepth_title
-bedrockDepth_firstAuthor
-bedrockDepth_secondaryAuthors
-bedrockDepth_year
-bedrockDepth_booktitle
-bedrockDepth_language
-bedrockDepth_doi
-bedrockDepth_description
-bedrockDepth_uri
-```
-### Engineering Bedrock Depth (H800) Indicator Columns
-
-For [`h800`](https://www.itsak.gr/SiteXML/#type_H800IndicatorType), 
-use the folowing value columns plus the common `literatureSource` and 
-`externalReference` columns:
-
-| Column | Meaning | Example |
-| --- | --- | --- |
-
-
-Complete shared metadata columns:
-
-```text
-h800_title
-h800_firstAuthor
-h800_secondaryAuthors
-h800_year
-h800_booktitle
-h800_language
-h800_doi
-h800_description
-h800_uri
-```
-
-### Geological Unit Indicator Columns
-
-For [`geologicalUnit`](https://www.itsak.gr/SiteXML/#type_GeologicalUnitIndicatorType), 
-use the folowing value columns plus the common `literatureSource` and 
-`externalReference` columns:
-
-| Column | Meaning | Example |
-| --- | --- | --- |
-
-Complete shared metadata columns:
-
-```text
-geologicalUnit_title
-geologicalUnit_firstAuthor
-geologicalUnit_secondaryAuthors
-geologicalUnit_year
-geologicalUnit_booktitle
-geologicalUnit_language
-geologicalUnit_doi
-geologicalUnit_description
-geologicalUnit_uri
-```
-
 ## Analysis Table
 
 The analysis table is **optional** and it provides values for three site indicators: 
@@ -330,7 +302,7 @@ The analysis table is **optional** and it provides values for three site indicat
 It is provided as a CSV file or as an Excel sheet named `analysis` with **many rows per site**. 
 This means you can provide many sets of analysis site-indicators per site.
 
-Each row must **absolutely** identify three things:
+Each row must identify three things:
 - the site it belongs to: SiteID
 - the site description it is associated with: siteDescriptionID
 - the unique analysisID
@@ -341,104 +313,42 @@ The data read from the analysis table are stored in
 [SiteXML element analysis](https://www.itsak.gr/SiteXML/#type_AnalysisType).
 
 
-### Analysis Relationship Columns
+### Analysis Relationship and Log Count Columns
 
 | Column | Required? | Meaning | Example |
 | --- | --- | --- | --- |
 | `siteID` | **yes** | Resource ID of the parent site. | `quakeml:domain.ab/site/001` |
 | `siteDescriptionID` | **yes** | Resource ID of the parent site description. Must match the site row. | `quakeml:domain.ab/site_description/001` |
 | `analysisID` | **yes** | Resource ID for this analysis. | `quakeml:domain.ab/analysis/001` |
+| `sptLogsCount` | no | Number of SPT logs. | `0` |
+| `cptLogsCount` | no | Number of CPT logs. | `0` |
+| `boreholeLogsCount` | no | Number of borehole logs. | `0` |
 
-### Resonance Frequency Indicator Columns
+### Analysis Indicator Columns
 
-For [`resonanceFrequency`](https://www.itsak.gr/SiteXML/#type_ResonanceFrequencyIndicatorType), 
-use the folowing value columns plus the common `literatureSource` and 
-`externalReference` columns:
+In addition to the common `qualityIndex`, `literatureSource` and  `externalReference` 
+columns that were described [above](#common-site-indicator-metadata), use the 
+following columns to provide value/uncertainty and other metadata for site 
+indicators that belong to the analysis object.
 
 | Column | Meaning | Example |
 | --- | --- | --- |
 | `resonanceFrequency_value` | Resonance frequency value. | `0.7` |
 | `resonanceFrequency_uncertainty` | Uncertainty of the resonance frequency value. | `0.05` |
-| `resonanceFrequency_qualityIndex` | Indicator Q_Index1. | `0.8` |
 | [`resonanceFrequency_method1`](https://www.itsak.gr/SiteXML/#type_ResonanceFrequencyMethodType) | Primary method. Allowed examples: `HVSR NOISE`, `SSR NOISE`, `HVSR EARTHQUAKE RECORDS`, `SSR EARTHQUAKE RECORDS`, `INFERRED`. | `HVSR NOISE` |
 | [`resonanceFrequency_method2`](https://www.itsak.gr/SiteXML/#type_VelocityS30MethodType) | Secondary method. Same allowed values as method 1. | `SSR NOISE` |
-
-Complete shared metadata columns:
-
-```text
-resonanceFrequency_title
-resonanceFrequency_firstAuthor
-resonanceFrequency_secondaryAuthors
-resonanceFrequency_year
-resonanceFrequency_booktitle
-resonanceFrequency_language
-resonanceFrequency_doi
-resonanceFrequency_description
-resonanceFrequency_uri
-```
-
-### Velocity S30 Indicator Columns
-
-For [`velocityS30`](https://www.itsak.gr/SiteXML/#type_VelocityS30IndicatorType), 
-use the folowing value columns plus the common `literatureSource` and 
-`externalReference` columns:
-
-| Column | Meaning | Example |
-| --- | --- | --- |
 | `velocityS30_value` | Vs30 value in m/s. | `620` |
 | `velocityS30_uncertainty` | Uncertainty of the Vs30 value. | `18` |
-| `velocityS30_qualityIndex` | Indicator Q_Index1. | `0.5` |
 | [`velocityS30_method1`](https://www.itsak.gr/SiteXML/#type_VelocityS30MethodType) | Primary Vs30 method. Examples: `MASW`, `SPAC/F-K`, `S-REFL`, `Downhole`, `Geology`. | `MASW` |
 | [`velocityS30_method2`](https://www.itsak.gr/SiteXML/#type_VelocityS30MethodType) | Secondary Vs30 method. Same allowed values as method 1. | `SPAC/F-K` |
 | [`velocityS30_methodCombIndex`](https://www.itsak.gr/SiteXML/#type_VelocityS30MethodCombIndexType) | Whether methods were combined. Allowed values: `1.0`, `1.2`. | `1.2` |
 | [`velocityS30_manualIndex`](https://www.itsak.gr/SiteXML/#type_VelocityS30ManualIndexType) | Qualitative factor for maximum Vs measurement depth. Allowed values: `0.2`, `0.4`, `0.8`, `1.0`. | `1.0` |
 
-Complete shared metadata columns:
-
-```text
-velocityS30_title
-velocityS30_firstAuthor
-velocityS30_secondaryAuthors
-velocityS30_year
-velocityS30_booktitle
-velocityS30_language
-velocityS30_doi
-velocityS30_description
-velocityS30_uri
-```
-### Velocity Profile Set Indicator Columns
-
-For [`velocityProfileSet`](https://www.itsak.gr/SiteXML/#type_VelocityProfileSetIndicatorType), 
-there is no `velocityProfileSet_value` column. 
-The velocity profile data, if available, is provided as seperate table(s). 
-
-Use the common `literatureSource` and `externalReference` columns with:
-
-| Column | Meaning | Example |
-| --- | --- | --- |
-| `velocityProfileSet_qualityIndex` | Indicator Q_Index1 for the velocity-profile set/survey. | `1` |
-
-Complete shared metadata columns:
-
-```text
-velocityProfileSet_title
-velocityProfileSet_firstAuthor
-velocityProfileSet_secondaryAuthors
-velocityProfileSet_year
-velocityProfileSet_booktitle
-velocityProfileSet_language
-velocityProfileSet_doi
-velocityProfileSet_description
-velocityProfileSet_uri
-```
-
-### Analysis Log Count Columns
-
-| Column | Required? | Meaning | Example |
-| --- | --- | --- | --- |
-| `sptLogsCount` | no | Number of SPT logs. | `0` |
-| `cptLogsCount` | no | Number of CPT logs. | `0` |
-| `boreholeLogsCount` | no | Number of borehole logs. | `0` |
+> **Please note,** that there is not `velocityProfileSet_value` column.   
+> The velocity profile data, if available, is provided as seperate table(s)
+> ([see below](#velocity-profiles-table)).   
+> However, you can still provide `qualityIndex`, `literatureSource` and 
+> `externalReference` metadata for the `velocityProfileSet` site indicator.
 
 ## Velocity Profiles Table
 
@@ -451,7 +361,7 @@ identify three things:
 - the analysis it belongs to: analysisID
 - the unique velocityProfileID
 
-> **For example**, a velocity profile with 8 layers, will ocupy 8 rows in the table, 
+> **For example**, a velocity profile with 8 layers, will occupy 8 rows in the table, 
 > with the same SiteID, analysisID and velocityProfileID
 
 > **Note:** Missing values in any of the three above resource identifiers will result in data import error.
@@ -476,9 +386,11 @@ The data read from the velocity-profile  table are stored in multiple
 | `layerBottomDepth_value` | no | Bottom depth of the layer. Leave empty for an open-ended final layer. | `0.19` |
 | `layerBottomDepth_uncertainty` | no | Uncertainty of the bottom depth. | `0.1` |
 
-Here is an example of a velocity-profile table, containing two velocity profiles 
-for the same analysis and site and one velocity profile for a different analysis and site.
-**Please note,** that the layer data of one velocity profile share the same velocityProfileID.
+Here is an example of a velocity-profile table, containing 
+- two velocity profiles for the same analysis and site and 
+- one velocity profile for a different analysis and site.
+
+> **Please note** that, the layer data of one velocity profile, share the same velocityProfileID.
 
 | SiteID | analysisID | velocityProfileID | layerCount | velocityS | topDepth |
 | --- | --- | --- | --- | --- | --- |
@@ -517,8 +429,8 @@ these criteria values are **optional**.
 > - Rows with missing or unknown ``SiteID`` values are skipped with a warning.
 
 > **See also:** For more information on the SiteXML quality indexes, please refer
-> - to the [quality indexes guide](quality-indexes-guide.md) distributed with the standalone executables
-> - to the guidelines of [SERA deliverable D7.2](https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf).
+> - to the [**quality indexes guide**](quality-indexes-guide.md) distributed with the standalone executables
+> - to the guidelines of [**SERA deliverable D7.2**](https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf).
 
 ### Q_Index1 Criteria Columns
 
