@@ -36,7 +36,7 @@ DOCS = (
 
 CSS = """
 @page {
-    margin: 18mm 16mm;
+    margin: 17mm 14mm;
 }
 
 body {
@@ -139,6 +139,15 @@ th {
 tr:nth-child(even) td {
     background: #f8fafc;
 }
+
+table.compact-table {
+    font-size: 8pt;
+}
+
+table.compact-table th,
+table.compact-table td {
+    padding: 3pt 4pt;
+}
 """
 
 
@@ -176,11 +185,29 @@ def _render_html(markdown_text):
         ],
         output_format="html5",
     )
+    body = _mark_compact_tables(body)
     return HTML_TEMPLATE.format(
         title=_title_from_markdown(markdown_text),
         css=CSS,
         body=body,
     )
+
+
+def _mark_compact_tables(html):
+    velocity_profile_example = """<table>
+<thead>
+<tr>
+<th>SiteID</th>
+<th>analysisID</th>
+<th>velocityProfileID</th>
+<th>layerCount</th>
+<th>velocityS</th>
+<th>topDepth</th>"""
+    return html.replace(
+        velocity_profile_example,
+        velocity_profile_example.replace(
+            "<table>", '<table class="compact-table">'),
+        1)
 
 
 def _normalize_release_version(release_version):
@@ -203,7 +230,7 @@ def _footer_template(release_version, build_date):
         color: #52606d;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-size: 11px;
-        padding: 0 16mm;
+        padding: 0 14mm;
         width: 100%;
     ">
       <div style="
@@ -250,10 +277,10 @@ def build_docs(source_dir, output_dir, release_version=None, build_date=None):
                     footer_template=_footer_template(
                         release_version, build_date),
                     margin={
-                        "top": "18mm",
-                        "right": "16mm",
+                        "top": "17mm",
+                        "right": "14mm",
                         "bottom": "22mm",
-                        "left": "16mm",
+                        "left": "14mm",
                     },
                     print_background=True,
                 )
