@@ -48,18 +48,44 @@ jobs:
         run: |
           python -c "import shutil; [shutil.rmtree(path, ignore_errors=True) for path in ('build', 'dist')]"
 
+      - name: Set package metadata
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            version="$GITHUB_REF_NAME"
+          else
+            version="manual-${GITHUB_RUN_NUMBER}"
+          fi
+          release_version="${version#sitexml-scripts-}"
+          release_version="${release_version#v}"
+          build_date="$(date -u +%Y-%m-%d)"
+          {
+            echo "SITEXML_RELEASE_VERSION=${release_version}"
+            echo "SITEXML_DISPLAY_VERSION=v${release_version}"
+            echo "SITEXML_BUILD_DATE=${build_date}"
+          } >> "$GITHUB_ENV"
+
       # Build both executables into one shared onedir bundle.
       - name: Build SiteXML scripts
         shell: bash
         run: |
           pyinstaller --clean --noconfirm sitexml-scripts.spec
 
-      - name: Add documentation to artifact
+      - name: Add documentation to package
         run: |
-          python obspy/io/sitexml/docs/build_standalone_docs.py --output-dir dist/sitexml-scripts/docs
+          python obspy/io/sitexml/docs/build_standalone_docs.py --output-dir dist/sitexml-scripts/docs --release-version "${{ env.SITEXML_RELEASE_VERSION }}" --build-date "${{ env.SITEXML_BUILD_DATE }}"
           python -c "import pathlib, shutil; root = pathlib.Path('dist/sitexml-scripts'); shutil.copytree('obspy/io/sitexml/tests/data', root / 'examples', dirs_exist_ok=True, ignore=shutil.ignore_patterns('.DS_Store'))"
+
+      - name: Add package version file
+        shell: bash
+        run: |
+          {
+            echo "SiteXML standalone tools"
+            echo "Release version: $SITEXML_RELEASE_VERSION"
+            echo "Build date: $SITEXML_BUILD_DATE"
+          } > dist/sitexml-scripts/VERSION.txt
 
       - uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact }}
+          name: ${{ matrix.artifact }}_${{ env.SITEXML_DISPLAY_VERSION }}
           path: dist/

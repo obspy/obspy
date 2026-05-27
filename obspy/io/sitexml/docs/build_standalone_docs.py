@@ -6,8 +6,9 @@ Build Markdown and PDF documentation for the SiteXML standalone bundle.
 from __future__ import annotations
 
 from argparse import ArgumentParser
+from datetime import date
+from html import escape
 from pathlib import Path
-import shutil
 import tempfile
 
 from markdown import markdown
@@ -147,8 +148,7 @@ def _title_from_markdown(markdown_text):
     return "SiteXML Documentation"
 
 
-def _render_html(source_path):
-    markdown_text = source_path.read_text(encoding="utf-8")
+def _render_html(markdown_text):
     body = markdown(
         markdown_text,
         extensions=[
@@ -168,7 +168,45 @@ def _render_html(source_path):
     )
 
 
-def build_docs(source_dir, output_dir):
+def _normalize_release_version(release_version):
+    if not release_version:
+        return ""
+    for prefix in ("sitexml-scripts-", "sitexml-scripts_"):
+        if release_version.startswith(prefix):
+            release_version = release_version[len(prefix):]
+            break
+    if release_version.startswith("v") and len(release_version) > 1:
+        return release_version[1:]
+    return release_version
+
+
+def _footer_template(release_version, build_date):
+    release_version = escape(_normalize_release_version(release_version))
+    build_date = escape(build_date or "")
+    return f"""
+    <div style="
+        color: #52606d;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 11px;
+        padding: 0 16mm;
+        width: 100%;
+    ">
+      <div style="
+          border-top: 1px solid #d9e2ec;
+          display: flex;
+          justify-content: space-between;
+          padding-top: 4px;
+          width: 100%;
+      ">
+        <span>Release version: {release_version}</span>
+        <span>&copy; 2026 ORFEUS and ObsPy contributors</span>
+        <span>Build date: {build_date}</span>
+      </div>
+    </div>
+    """
+
+
+def build_docs(source_dir, output_dir, release_version=None, build_date=None):
     output_dir.mkdir(parents=True, exist_ok=True)
 
     with tempfile.TemporaryDirectory() as tmpdir, sync_playwright() as p:
@@ -181,18 +219,28 @@ def build_docs(source_dir, output_dir):
                 markdown_path = output_dir / markdown_name
                 pdf_path = output_dir / pdf_name
                 html_path = tmpdir / (pdf_path.stem + ".html")
+                markdown_text = source_path.read_text(encoding="utf-8")
 
-                shutil.copyfile(source_path, markdown_path)
+                markdown_path.write_text(markdown_text, encoding="utf-8")
                 html_path.write_text(
-                    _render_html(source_path),
+                    _render_html(markdown_text),
                     encoding="utf-8",
                 )
                 page.goto(html_path.as_uri(), wait_until="networkidle")
                 page.pdf(
                     path=str(pdf_path),
                     format="A4",
+                    display_header_footer=True,
+                    header_template="<span></span>",
+                    footer_template=_footer_template(
+                        release_version, build_date),
+                    margin={
+                        "top": "18mm",
+                        "right": "16mm",
+                        "bottom": "22mm",
+                        "left": "16mm",
+                    },
                     print_background=True,
-                    prefer_css_page_size=True,
                 )
         finally:
             browser.close()
@@ -210,9 +258,21 @@ def main(argv=None):
         required=True,
         type=Path,
         help="folder where Markdown and PDF files will be written")
+    parser.add_argument(
+        "--release-version",
+        default=None,
+        help="standalone release version to write into the PDF footer")
+    parser.add_argument(
+        "--build-date",
+        default=date.today().isoformat(),
+        help="build date to write into the PDF footer")
     args = parser.parse_args(argv)
 
-    build_docs(args.source_dir, args.output_dir)
+    build_docs(
+        args.source_dir,
+        args.output_dir,
+        release_version=args.release_version,
+        build_date=args.build_date)
     return 0
 
 
