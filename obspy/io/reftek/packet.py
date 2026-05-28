@@ -144,7 +144,14 @@ class EHPacket(Packet):
         for name, (start, length, converter) in EH_PAYLOAD.items():
             data = payload[start:start + length]
             if converter is not None:
-                data = converter(data)
+                try:
+                    data = converter(data)
+                except (ValueError, TypeError):
+                    warnings.warn(
+                        "Could not parse EH packet field '{}', setting to "
+                        "None. File may have been recorded with old firmware "
+                        "that wrote malformed header fields.".format(name))
+                    data = None
             setattr(self, name, data)
 
     def _to_dict(self):
