@@ -103,6 +103,12 @@ code {
     padding: 1px 3px;
 }
 
+p code,
+li code,
+blockquote code {
+    font-size: 10.2pt;
+}
+
 pre {
     background: #f0f4f8;
     border: 1px solid #d9e2ec;
@@ -128,6 +134,16 @@ th, td {
     border: 1px solid #bcccdc;
     padding: 5pt 6pt;
     vertical-align: top;
+}
+
+td:last-child,
+td:last-child code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    }
+
+td code {
+    font-size: inherit;
 }
 
 th {
@@ -241,7 +257,7 @@ def _footer_template(release_version, build_date):
           width: 100%;
       ">
         <span>Release version: {release_version}</span>
-        <span>&copy; 2026 ORFEUS and ObsPy contributors</span>
+        <span>&copy; 2026 ORFEUS and ObsPy Dev Team</span>
         <span>Build date: {build_date}</span>
       </div>
     </div>
