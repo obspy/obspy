@@ -2,7 +2,9 @@ master
 ======
 
 Changes:
- - ...
+- obspy.io.mseed3:
+  * Implement miniSEED reading and writing using pymseed.  miniSEED format
+    versions 2 and 3 are both fully supported.
 
 maintenance_1.5.x
 =================
@@ -22,7 +24,7 @@ Changes:
      mindepversion tests
    * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
  - obspy.core:
-   * response: tweaks to allow sane processing of PolynomialResponseStage 
+   * response: tweaks to allow sane processing of PolynomialResponseStage
      responses if they have 2 coefficients or less (see #3632)
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235), add method for calculating the normalization
