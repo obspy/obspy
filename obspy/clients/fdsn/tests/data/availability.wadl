@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<application xmlns="http://wadl.dev.java.net/2009/02">
+  <doc title="fdsnws-availability web service 1.0"/>
+  <grammars/>
+  <resources base="http://service.iris.edu/fdsnws/availability/1/">
+    <resource path="/">
+      <method name="GET" id="root">
+        <response>
+          <representation mediaType="text/html"/>
+        </response>
+      </method>
+      <resource path="query">
+        <method name="GET" id="query">
+          <request>
+            <param name="starttime" style="query" type="xs:date">
+              <doc xml:lang="english" title="limit to channels that are active on or after the specified start time">
+                Examples: endtime=2014-11-24 or 2014-11-24T10:00:00 or 2014-11-24T10:00:00.000
+              </doc>
+            </param>
+            <param name="endtime" style="query" type="xs:date">
+              <doc xml:lang="english" title="limit to channels that are active on or before the specified end time">
+                Examples: endtime=2014-11-24 or 2014-11-24T15:00:00 or 2014-11-24T15:00:00.000
+              </doc>
+            </param>
+            <param name="network" style="query" type="xs:string">
+              <doc xml:lang="english" title="Select one or more network codes. Lists and wildcards are accepted">
+                Examples:network=TT or network=TT,YW or network=T?
+              </doc>
+             </param>
+             <param name="station" style="query" type="xs:string">
+               <doc xml:lang="english" title="Select one or more SEED station codes. Lists and wildcards are accepted">
+                 Examples: station=1001 or station=1001,1001 or station=1* or station=?00?
+               </doc>
+             </param>
+             <param name="location" style="query" type="xs:string">
+               <doc xml:lang="english" title="Select one or more SEED location codes. Use -- for spaces. Lists and wildcards are accepted">
+                 Examples: location=-- or location=?0 or location=--,10
+               </doc>
+             </param>
+             <param name="channel" style="query" type="xs:string">
+               <doc xml:lang="english" title="Select one or more SEED channel codes. Lists and wildcards are accepted">
+                 Example:channel=BHZ or channel=BH1,BH2 or channel=*Z or channel=BH?
+               </doc>
+             </param>
+             <param name="quality" style="query" type="xs:string">
+               <doc xml:lang="english" title="Select based on SEED quality codes D, M, Q, R. Wildcard * as well as a comma selected list are accepted">
+                 Example:quality=M or quality=Q,M
+               </doc>
+             </param>
+             <param name="merge" style="query" type="xs:string">
+               <doc xml:lang="english" title="If set to one or more of the following values, time spans are merged as described. Multiple values may be specified as a comma-delimited list. Choose from samplerate, quality, and overlap.">
+                 Example: merge=samplerate,quality
+               </doc>
+             </param>
+             <param name="orderby" style="query" type="xs:string">
+               <doc xml:lang="english" title="Sort results by one of the following values in the order specified. Choose from nslc_time_quality_samplerate, latestupdate, and latestupdate_desc.">
+                 Example: orderby=latestupdate
+               </doc>
+             </param>
+             <param name="limit" style="query" type="xs:integer">
+               <doc xml:lang="english" title="Limit results to the specified number of timespans.">
+                 Example: limit=100
+               </doc>
+             </param>
+             <param name="includerestricted" style="query" type="xs:boolean">
+               <doc xml:lang="english" title="If true, all data are reported. If false, only data that can be openly accessed.">
+                 Example: includerestricted=true
+               </doc>
+             </param>
+             <param name="mergegaps" style="query" type="xs:float">
+               <doc xml:lang="english" title="If set, merge time spans that are separated by the specified tolerance in seconds.">
+                 Example: mergegaps=60.0
+               </doc>
+             </param>
+             <param name="show" style="query" type="xs:string">
+               <doc xml:lang="english" title="If set to latestupdate, the latest times at which data contributing to the returned time spans were loaded into the repository are included in the result.">
+                 Example: show=latestupdate
+               </doc>
+             </param>
+             <param name="format" style="query" type="xs:string" default="xml">
+               <doc xml:lang="english" title="Specify output format. Accepted values are text (the default), geocsv, and json."/>
+               <option value="text" mediaType="text/plain"/>
+               <option value="geocsv" mediaType="text/plain"/>
+               <option value="json" mediaType="application/json"/>
+             </param>
+             <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="nodata" style="query" type="xs:int" default="204">
+               <doc xml:lang="english" title="Specify which HTML Status code is returned when no data is found. This is an IRIS extension to the FDSN specification"/>
+               <option value="204"/>
+               <option value="404"/>
+             </param>
+           </request>
+           <response>
+             <representation mediaType="text/plain"/>
+             <representation mediaType="application/json"/>
+           </response>
+         </method>
+         <method name="POST" id="postQuery">
+           <request>
+             <representation mediaType="*/*"/>
+           </request>
+           <response>
+             <representation mediaType="text/plain"/>
+             <representation mediaType="application/xml"/>
+            </response>
+         </method>
+       </resource>
+      <resource path="extent">
+        <method name="GET" id="extent">
+          <request>
+            <param name="starttime" style="query" type="xs:date">
+              <doc xml:lang="english" title="limit to channels that are active on or after the specified start time">
+                Examples: endtime=2014-11-24 or 2014-11-24T10:00:00 or 2014-11-24T10:00:00.000
+              </doc>
+            </param>
+            <param name="endtime" style="query" type="xs:date">
+              <doc xml:lang="english" title="limit to channels that are active on or before the specified end time">
+                Examples: endtime=2014-11-24 or 2014-11-24T15:00:00 or 2014-11-24T15:00:00.000
+              </doc>
+            </param>
+            <param name="network" style="query" type="xs:string">
+              <doc xml:lang="english" title="Select one or more network codes. Lists and wildcards are accepted">
+                Examples:network=TT or network=TT,YW or network=T?
+              </doc>
+             </param>
+             <param name="station" style="query" type="xs:string">
+               <doc xml:lang="english" title="Select one or more SEED station codes. Lists and wildcards are accepted">
+                 Examples: station=1001 or station=1001,1001 or station=1* or station=?00?
+               </doc>
+             </param>
+             <param name="location" style="query" type="xs:string">
+               <doc xml:lang="english" title="Select one or more SEED location codes. Use -- for spaces. Lists and wildcards are accepted">
+                 Examples: location=-- or location=?0 or location=--,10
+               </doc>
+             </param>
+             <param name="channel" style="query" type="xs:string">
+               <doc xml:lang="english" title="Select one or more SEED channel codes. Lists and wildcards are accepted">
+                 Example:channel=BHZ or channel=BH1,BH2 or channel=*Z or channel=BH?
+               </doc>
+             </param>
+             <param name="quality" style="query" type="xs:string">
+               <doc xml:lang="english" title="Select based on SEED quality codes D, M, Q, R. Wildcard * as well as a comma selected list are accepted">
+                 Example:quality=M or quality=Q,M
+               </doc>
+             </param>
+             <param name="merge" style="query" type="xs:string">
+               <doc xml:lang="english" title="If set to one or more of the following values, time spans are merged as described. Multiple values may be specified as a comma-delimited list. Choose from samplerate, quality, and overlap.">
+                 Example: merge=samplerate,quality
+               </doc>
+             </param>
+             <param name="orderby" style="query" type="xs:string">
+               <doc xml:lang="english" title="Sort results by one of the following values in the order specified. Choose from nslc_time_quality_samplerate, latestupdate, latestupdate_desc, timespancount, and timespancount_desc.">
+                 Example: orderby=latestupdate
+               </doc>
+             </param>
+             <param name="limit" style="query" type="xs:integer">
+               <doc xml:lang="english" title="Limit results to the specified number of timespans.">
+                 Example: limit=100
+               </doc>
+             </param>
+             <param name="includerestricted" style="query" type="xs:boolean">
+               <doc xml:lang="english" title="If true, all data are reported. If false, only data that can be openly accessed.">
+                 Example: includerestricted=true
+               </doc>
+             </param>
+             <param name="format" style="query" type="xs:string" default="xml">
+               <doc xml:lang="english" title="Specify output format. Accepted values are text (the default), geocsv, json, and request."/>
+               <option value="text" mediaType="text/plain"/>
+               <option value="geocsv" mediaType="text/plain"/>
+               <option value="json" mediaType="application/json"/>
+               <option value="request" mediaType="text/plain"/>
+             </param>
+             <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="nodata" style="query" type="xs:int" default="204">
+               <doc xml:lang="english" title="Specify which HTML Status code is returned when no data is found. This is an IRIS extension to the FDSN specification"/>
+               <option value="204"/>
+               <option value="404"/>
+             </param>
+           </request>
+           <response>
+             <representation mediaType="text/plain"/>
+             <representation mediaType="application/xml"/>
+           </response>
+         </method>
+         <method name="POST" id="postExtent">
+           <request>
+             <representation mediaType="*/*"/>
+           </request>
+           <response>
+             <representation mediaType="text/plain"/>
+             <representation mediaType="application/json"/>
+            </response>
+         </method>
+       </resource>
+       <resource path="version">
+         <method name="GET" id="version">
+           <response>
+             <representation mediaType="text/plain"/>
+           </response>
+         </method>
+       </resource>
+       <resource path="application.wadl">
+         <method name="GET" id="application.wadl">
+           <response>
+             <representation mediaType="application/xml"/>
+           </response>
+         </method>
+       </resource>
+     </resource>
+  </resources>
+</application>
