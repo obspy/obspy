@@ -160,7 +160,7 @@
         from obspy.io.sitexml.tabular import excel_to_sera_site
     
         sites = excel_to_sera_site(
-            "sera_site_all.xlsx",
+            "full_site.xlsx",
             velocity_profiles="velocity_profiles.xlsx")
 
     Velocity profiles can also be added later to existing SiteXML objects. Use
@@ -195,7 +195,7 @@
         from obspy.core.util import get_example_file
         from obspy.io.sitexml.sitexml import read_sitexml
     
-        filename = get_example_file("full_sitexml.xml")
+        filename = get_example_file("xml/full_sitexml.xml")
         sera_site = read_sitexml(filename)
     
         print(sera_site.resource_id)
@@ -210,7 +210,7 @@
         from obspy.core.util import get_example_file
         from obspy.io.sitexml.tabular import csv_to_sera_site
     
-        site_owner_csv = get_example_file("site_owner.csv")
+        site_owner_csv = get_example_file("csv/site_owner.csv")
         data_dir = Path(site_owner_csv).parent
     
         sites = csv_to_sera_site(
@@ -237,7 +237,7 @@
         from obspy.core.util import get_example_file
         from obspy.io.sitexml.tabular import excel_to_sera_site
     
-        excel_file = get_example_file("sera_site_all.xlsx")
+        excel_file = get_example_file("xlsx/full_site.xlsx")
         data_dir = Path(excel_file).parent
     
         sites = excel_to_sera_site(

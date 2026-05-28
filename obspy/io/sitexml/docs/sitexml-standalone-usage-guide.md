@@ -268,41 +268,42 @@ provided checksums before running the tool.
 ## Example Files
 
 The release package includes an `examples/` folder with small XML, CSV,
-and Excel files that can be used for testing the tools before preparing your
-own metadata.
+and Excel files grouped by format. Use them for testing the tools before
+preparing your own metadata.
 
 Useful starter files include:
 
-- `examples/minimal_site_owner.csv`
-- `examples/minimal_site_description.csv`
-- `examples/site_owner.csv`
-- `examples/site_description.csv`
-- `examples/site_analysis.csv`
-- `examples/velocity_profiles.csv`
-- `examples/velocity_profiles.xlsx`
-- `examples/quality_index.csv`
-- `examples/minimal_sera_site.xlsx`
-- `examples/sera_site_all.xlsx`
-- `examples/minimal_sitexml.xml`
-- `examples/full_sitexml.xml`
+- `examples/csv/minimal_site_owner.csv`
+- `examples/csv/minimal_site_description.csv`
+- `examples/csv/site_owner.csv`
+- `examples/csv/site_description.csv`
+- `examples/csv/site_analysis.csv`
+- `examples/csv/velocity_profiles.csv`
+- `examples/csv/velocity_profiles/`
+- `examples/csv/quality_index.csv`
+- `examples/xlsx/minimal_site.xlsx`
+- `examples/xlsx/full_site.xlsx`
+- `examples/xlsx/velocity_profiles.xlsx`
+- `examples/xml/minimal_sitexml.xml`
+- `examples/xml/full_sitexml.xml`
 
 For example:
 
 ```bash
 csv2sitexml \
-  -o examples/site_owner.csv \
-  -d examples/site_description.csv \
-  -a examples/site_analysis.csv \
-  -p examples/velocity_profiles.csv \
-  -q examples/quality_index.csv \
+  -o examples/csv/site_owner.csv \
+  -d examples/csv/site_description.csv \
+  -a examples/csv/site_analysis.csv \
+  -p examples/csv/velocity_profiles.csv \
+  -q examples/csv/quality_index.csv \
   -out sitexml_output
 ```
 
 or:
 
 ```bash
-excel2sitexml examples/sera_site_all.xlsx \
-  -p examples/velocity_profiles.xlsx \
+excel2sitexml examples/xlsx/full_site.xlsx \
+  -p examples/xlsx/velocity_profiles.xlsx \
   -out sitexml_output
 ```
 

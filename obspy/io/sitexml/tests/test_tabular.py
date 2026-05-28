@@ -76,16 +76,16 @@ class TestSiteXMLCSVImport():
             "layerBottomDepth_uncertainty": [None, None],
         })
 
-    def _site_without_velocity_profiles(self, datapath):
+    def _site_without_velocity_profiles(self, testdata):
         sera_site = sitexml_to_sitedict(
-            datapath / "full_sitexml.xml")["quakeml:domain.ab/site/001"]
+            testdata["full_sitexml.xml"])["quakeml:domain.ab/site/001"]
         sera_site.get_analysis(
             "quakeml:domain.ab/analysis/001").velocity_profile_set = None
         return sera_site
 
     def test_add_velocity_profiles_detects_csv_and_updates_existing_site(
-            self, datapath, tmp_path):
-        sera_site = self._site_without_velocity_profiles(datapath)
+            self, testdata, tmp_path):
+        sera_site = self._site_without_velocity_profiles(testdata)
         csv_path = tmp_path / "velocity_profiles.csv"
         self._velocity_profile_dataframe().to_csv(
             csv_path, sep=";", index=False)
@@ -102,9 +102,9 @@ class TestSiteXMLCSVImport():
         assert profiles[0].velocity_profile_data[0].velocityS.value == 100.0
 
     def test_add_velocity_profiles_detects_excel_and_updates_existing_site(
-            self, datapath, tmp_path):
+            self, testdata, tmp_path):
         pytest.importorskip("openpyxl")
-        sera_site = self._site_without_velocity_profiles(datapath)
+        sera_site = self._site_without_velocity_profiles(testdata)
         excel_path = tmp_path / "velocity_profiles.xlsx"
         self._velocity_profile_dataframe().to_excel(
             excel_path, index=False)
@@ -117,8 +117,8 @@ class TestSiteXMLCSVImport():
         assert profiles[0].velocity_profile_data[1].top_depth.value == 5.0
 
     def test_add_velocity_profiles_rejects_unknown_analysis(
-            self, datapath, tmp_path):
-        sera_site = self._site_without_velocity_profiles(datapath)
+            self, testdata, tmp_path):
+        sera_site = self._site_without_velocity_profiles(testdata)
         csv_path = tmp_path / "velocity_profiles.csv"
         self._velocity_profile_dataframe(
             analysis_id="quakeml:domain.ab/analysis/missing").to_csv(
@@ -128,12 +128,12 @@ class TestSiteXMLCSVImport():
             add_velocity_profiles(sera_site, csv_path)
 
     def test_csv_to_sera_site_imports_sites_analysis_and_velocity_profiles(
-            self, datapath):
+            self, testdata):
         sera_site_dict = csv_to_sera_site(
-            site_owner_csv=datapath / "site_owner.csv",
-            site_description_csv=datapath / "site_description.csv",
-            analysis_csv=datapath / "site_analysis.csv",
-            velocity_profiles_csv=datapath / "velocity_profiles",
+            site_owner_csv=testdata["site_owner.csv"],
+            site_description_csv=testdata["site_description.csv"],
+            analysis_csv=testdata["site_analysis.csv"],
+            velocity_profiles_csv=testdata["velocity_profiles"],
             delim=";")
 
         assert set(sera_site_dict) == {
@@ -202,12 +202,12 @@ class TestSiteXMLCSVImport():
         assert site_003.site_description.preferred_velocity_profileID is None
         assert site_003.analysis is None
 
-    def test_csv_to_sera_site_imports_vs30_quality_indexes(self, datapath):
+    def test_csv_to_sera_site_imports_vs30_quality_indexes(self, testdata):
         sera_site_dict = csv_to_sera_site(
-            site_owner_csv=datapath / "site_owner.csv",
-            site_description_csv=datapath / "site_description.csv",
-            analysis_csv=datapath / "site_analysis.csv",
-            velocity_profiles_csv=datapath / "velocity_profiles",
+            site_owner_csv=testdata["site_owner.csv"],
+            site_description_csv=testdata["site_description.csv"],
+            analysis_csv=testdata["site_analysis.csv"],
+            velocity_profiles_csv=testdata["velocity_profiles"],
             delim=";")
 
         analysis_001 = (
@@ -218,13 +218,13 @@ class TestSiteXMLCSVImport():
         assert analysis_001.velocity_s30.manual_qindex == "1.0"
 
     def test_csv_to_sera_site_applies_quality_index_sidecar(
-            self, datapath):
+            self, testdata):
         sera_site_dict = csv_to_sera_site(
-            site_owner_csv=datapath / "site_owner.csv",
-            site_description_csv=datapath / "site_description.csv",
-            analysis_csv=datapath / "site_analysis.csv",
-            velocity_profiles_csv=datapath / "velocity_profiles",
-            quality_index_csv=datapath / "quality_index.csv",
+            site_owner_csv=testdata["site_owner.csv"],
+            site_description_csv=testdata["site_description.csv"],
+            analysis_csv=testdata["site_analysis.csv"],
+            velocity_profiles_csv=testdata["velocity_profiles"],
+            quality_index_csv=testdata["quality_index.csv"],
             delim=";")
 
         site = sera_site_dict["quakeml:domain.ab/site/001"]
@@ -243,13 +243,13 @@ class TestSiteXMLCSVImport():
         assert site_002.site_description.overall_quality_index is not None
 
     def test_quality_index_sidecar_recalculates_existing_qindex1(
-            self, datapath):
+            self, testdata):
         sera_site_dict = csv_to_sera_site(
-            site_owner_csv=datapath / "site_owner.csv",
-            site_description_csv=datapath / "site_description.csv",
-            analysis_csv=datapath / "site_analysis.csv",
-            velocity_profiles_csv=datapath / "velocity_profiles",
-            quality_index_csv=datapath / "quality_index.csv",
+            site_owner_csv=testdata["site_owner.csv"],
+            site_description_csv=testdata["site_description.csv"],
+            analysis_csv=testdata["site_analysis.csv"],
+            velocity_profiles_csv=testdata["velocity_profiles"],
+            quality_index_csv=testdata["quality_index.csv"],
             delim=";")
 
         site = sera_site_dict["quakeml:domain.ab/site/001"]
@@ -258,14 +258,15 @@ class TestSiteXMLCSVImport():
         assert site.site_description.bedrock_depth.quality_index == 0.25
 
     def test_apply_quality_index_csv_updates_existing_sitexml_dict(
-            self, datapath):
-        sera_site_dict = sitexml_to_sitedict(datapath / "full_sitexml.xml")
+            self, testdata):
+        sera_site_dict = sitexml_to_sitedict(
+            testdata["full_sitexml.xml"])
 
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             result = apply_quality_index_csv(
                 sera_site_dict,
-                datapath / "quality_index.csv",
+                testdata["quality_index.csv"],
                 delim=";")
 
         site = sera_site_dict["quakeml:domain.ab/site/001"]
@@ -281,9 +282,10 @@ class TestSiteXMLCSVImport():
                    str(w.message) for w in caught)
 
     def test_apply_quality_index_dataframe_updates_existing_sitexml_dict(
-            self, datapath):
-        sera_site_dict = sitexml_to_sitedict(datapath / "full_sitexml.xml")
-        df_quality_index = pd.read_csv(datapath / "quality_index.csv", sep=";")
+            self, testdata):
+        sera_site_dict = sitexml_to_sitedict(
+            testdata["full_sitexml.xml"])
+        df_quality_index = pd.read_csv(testdata["quality_index.csv"], sep=";")
 
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
@@ -303,7 +305,7 @@ class TestSiteXMLCSVImport():
                    str(w.message) for w in caught)
 
     def test_csv_to_sera_site_rejects_invalid_q3_sidecar_value(
-            self, datapath, tmp_path):
+            self, testdata, tmp_path):
         quality_index_csv = tmp_path / "quality_index.csv"
         quality_index_csv.write_text(
             "siteID;f0_vs30\n"
@@ -312,19 +314,19 @@ class TestSiteXMLCSVImport():
 
         with pytest.raises(SiteXMLImportError, match="must be 0 or 1"):
             csv_to_sera_site(
-                site_owner_csv=datapath / "site_owner.csv",
-                site_description_csv=datapath / "site_description.csv",
-                analysis_csv=datapath / "site_analysis.csv",
-                velocity_profiles_csv=datapath / "velocity_profiles",
+                site_owner_csv=testdata["site_owner.csv"],
+                site_description_csv=testdata["site_description.csv"],
+                analysis_csv=testdata["site_analysis.csv"],
+                velocity_profiles_csv=testdata["velocity_profiles"],
                 quality_index_csv=quality_index_csv,
                 delim=";")
 
-    def test_csv_to_sera_site_imports_full_reference_metadata(self, datapath):
+    def test_csv_to_sera_site_imports_full_reference_metadata(self, testdata):
         sera_site_dict = csv_to_sera_site(
-            site_owner_csv=datapath / "site_owner.csv",
-            site_description_csv=datapath / "site_description.csv",
-            analysis_csv=datapath / "site_analysis.csv",
-            velocity_profiles_csv=datapath / "velocity_profiles",
+            site_owner_csv=testdata["site_owner.csv"],
+            site_description_csv=testdata["site_description.csv"],
+            analysis_csv=testdata["site_analysis.csv"],
+            velocity_profiles_csv=testdata["velocity_profiles"],
             delim=";")
 
         site_001 = sera_site_dict["quakeml:domain.ab/site/001"]
@@ -412,14 +414,14 @@ class TestSiteXMLCSVImport():
             .analysis[0].velocity_profile_set) is None
 
     def test_csv2sitexml_main_writes_sitexml_files(
-            self, datapath, tmp_path):
+            self, testdata, tmp_path):
         output_folder = tmp_path / "sitexml"
 
         result = csv2sitexml_main([
-            "-o", str(datapath / "site_owner.csv"),
-            "-d", str(datapath / "site_description.csv"),
-            "-a", str(datapath / "site_analysis.csv"),
-            "-p", str(datapath / "velocity_profiles"),
+            "-o", str(testdata["site_owner.csv"]),
+            "-d", str(testdata["site_description.csv"]),
+            "-a", str(testdata["site_analysis.csv"]),
+            "-p", str(testdata["velocity_profiles"]),
             "--output-folder", str(output_folder),
         ])
 
@@ -432,14 +434,14 @@ class TestSiteXMLCSVImport():
         ]
 
     def test_csv2sitexml_main_ignores_preferred_ids_without_analysis(
-            self, datapath, tmp_path):
+            self, testdata, tmp_path):
         output_folder = tmp_path / "sitexml"
 
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             result = csv2sitexml_main([
-                "-o", str(datapath / "site_owner.csv"),
-                "-d", str(datapath / "site_description.csv"),
+                "-o", str(testdata["site_owner.csv"]),
+                "-d", str(testdata["site_description.csv"]),
                 "--output-folder", str(output_folder),
             ])
 
@@ -458,15 +460,15 @@ class TestSiteXMLCSVImport():
                    for w in caught)
 
     def test_csv2sitexml_main_ignores_preferred_velocity_without_profiles(
-            self, datapath, tmp_path):
+            self, testdata, tmp_path):
         output_folder = tmp_path / "sitexml"
 
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             result = csv2sitexml_main([
-                "-o", str(datapath / "site_owner.csv"),
-                "-d", str(datapath / "site_description.csv"),
-                "-a", str(datapath / "site_analysis.csv"),
+                "-o", str(testdata["site_owner.csv"]),
+                "-d", str(testdata["site_description.csv"]),
+                "-a", str(testdata["site_analysis.csv"]),
                 "--output-folder", str(output_folder),
             ])
 
@@ -483,15 +485,15 @@ class TestSiteXMLCSVImport():
                    str(w.message) for w in caught)
 
     def test_csv2sitexml_main_does_not_write_overall_qindex_without_qindex1(
-            self, datapath, tmp_path):
+            self, testdata, tmp_path):
         output_folder = tmp_path / "sitexml"
 
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             result = csv2sitexml_main([
-                "-o", str(datapath / "site_owner.csv"),
-                "-d", str(datapath / "minimal_site_description.csv"),
-                "-q", str(datapath / "quality_index.csv"),
+                "-o", str(testdata["site_owner.csv"]),
+                "-d", str(testdata["minimal_site_description.csv"]),
+                "-q", str(testdata["quality_index.csv"]),
                 "--output-folder", str(output_folder),
             ])
 
@@ -506,12 +508,12 @@ class TestSiteXMLCSVImport():
                    for w in caught)
 
     def test_excel_to_sera_site_imports_sites_analysis_and_velocity_profiles(
-            self, datapath):
+            self, testdata):
         pytest.importorskip("openpyxl")
 
         sera_site_dict = excel_to_sera_site(
-            path_or_file_object=datapath / "sera_site_all.xlsx",
-            velocity_profiles=datapath / "velocity_profiles.xlsx")
+            path_or_file_object=testdata["full_site.xlsx"],
+            velocity_profiles=testdata["velocity_profiles.xlsx"])
 
         assert set(sera_site_dict) == {
             "quakeml:domain.ab/site/001",
@@ -564,12 +566,12 @@ class TestSiteXMLCSVImport():
         assert analysis_002.velocity_profile_set is not None
         assert len(analysis_002.velocity_profile_set.velocity_profiles) == 3
 
-    def test_excel_to_serasite_imports_all_reference_metadata(self, datapath):
+    def test_excel_to_sera_site_imports_all_reference_metadata(self, testdata):
         pytest.importorskip("openpyxl")
 
         sera_site_dict = excel_to_sera_site(
-            path_or_file_object=datapath / "sera_site_all.xlsx",
-            velocity_profiles=datapath / "velocity_profiles.xlsx")
+            path_or_file_object=testdata["full_site.xlsx"],
+            velocity_profiles=testdata["velocity_profiles.xlsx"])
 
         site_001 = sera_site_dict["quakeml:domain.ab/site/001"]
         analysis_001 = site_001.analysis[0]
@@ -580,13 +582,13 @@ class TestSiteXMLCSVImport():
             analysis_001.velocity_profile_set)
 
     def test_excel2sitexml_main_writes_sitexml_files(
-            self, datapath, tmp_path):
+            self, testdata, tmp_path):
         pytest.importorskip("openpyxl")
         output_folder = tmp_path / "sitexml"
 
         result = excel2sitexml_main([
-            str(datapath / "sera_site_all.xlsx"),
-            "-p", str(datapath / "velocity_profiles.xlsx"),
+            str(testdata["full_site.xlsx"]),
+            "-p", str(testdata["velocity_profiles.xlsx"]),
             "--output-folder", str(output_folder),
         ])
 
@@ -597,12 +599,12 @@ class TestSiteXMLCSVImport():
             "Site_YY.WXYZ_%s.xml" % date_text,
         ]
 
-    def test_excel_to_sera_site_applies_quality_index_sheet(self, datapath):
+    def test_excel_to_sera_site_applies_quality_index_sheet(self, testdata):
         pytest.importorskip("openpyxl")
 
         sera_site_dict = excel_to_sera_site(
-            path_or_file_object=datapath / "sera_site_all.xlsx",
-            velocity_profiles=datapath / "velocity_profiles.xlsx")
+            path_or_file_object=testdata["full_site.xlsx"],
+            velocity_profiles=testdata["velocity_profiles.xlsx"])
 
         site = sera_site_dict["quakeml:domain.ab/site/001"]
         q2 = site.calculate_quality_index2()
@@ -619,15 +621,16 @@ class TestSiteXMLCSVImport():
         assert site_002.site_description.overall_quality_index is not None
 
     def test_apply_quality_index_excel_updates_existing_sitexml_dict(
-            self, datapath):
+            self, testdata):
         pytest.importorskip("openpyxl")
-        sera_site_dict = sitexml_to_sitedict(datapath / "full_sitexml.xml")
+        sera_site_dict = sitexml_to_sitedict(
+            testdata["full_sitexml.xml"])
 
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             result = apply_quality_index_excel(
                 sera_site_dict,
-                datapath / "sera_site_all.xlsx")
+                testdata["full_site.xlsx"])
 
         site = sera_site_dict["quakeml:domain.ab/site/001"]
         q2 = site.calculate_quality_index2()
@@ -642,20 +645,21 @@ class TestSiteXMLCSVImport():
                    str(w.message) for w in caught)
 
     def test_excel_to_sera_site_warns_when_analysis_sheet_is_missing(
-            self, datapath, tmp_path):
+            self, testdata, tmp_path):
         pytest.importorskip("openpyxl")
-        excel_path = tmp_path / "sera_site_no_analysis.xlsx"
+        excel_path = tmp_path / "site_without_analysis.xlsx"
         with pd.ExcelWriter(excel_path) as writer:
-            pd.read_csv(datapath / "site_owner.csv", sep=";").to_excel(
+            pd.read_csv(testdata["site_owner.csv"], sep=";").to_excel(
                 writer, sheet_name="siteOwner", index=False)
-            pd.read_csv(datapath / "site_description.csv", sep=";").to_excel(
-                writer, sheet_name="siteDescription", index=False)
+            pd.read_csv(
+                testdata["site_description.csv"], sep=";").to_excel(
+                    writer, sheet_name="siteDescription", index=False)
 
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             sera_site_dict = excel_to_sera_site(
                 path_or_file_object=excel_path,
-                velocity_profiles=datapath / "velocity_profiles.xlsx")
+                velocity_profiles=testdata["velocity_profiles.xlsx"])
 
         assert set(sera_site_dict) == {
             "quakeml:domain.ab/site/001",
@@ -673,18 +677,19 @@ class TestSiteXMLCSVImport():
                    for w in caught)
 
     def test_excel_to_sera_site_raises_for_missing_required_owner_sheet(
-            self, datapath):
+            self, testdata):
         pytest.importorskip("openpyxl")
 
         with pytest.raises(SiteXMLImportError):
-            excel_to_sera_site(datapath / "sera_site_no_owner.xlsx")
+            excel_to_sera_site(testdata["site_without_owner.xlsx"])
 
     def test_excel_to_sera_site_raises_for_missing_site_description_sheet(
-            self, datapath):
+            self, testdata):
         pytest.importorskip("openpyxl")
 
         with pytest.raises(SiteXMLImportError):
-            excel_to_sera_site(datapath / "sera_site_no_sd.xlsx")
+            excel_to_sera_site(
+                testdata["site_without_site_description.xlsx"])
 
     def test_csv_to_sera_site_raises_for_invalid_site_description_rows(
             self, tmp_path):
@@ -847,8 +852,9 @@ class TestSiteXMLCSVImport():
                 delim=";")
 
     def test_apply_quality_index_dataframe_requires_site_id_column(
-            self, datapath):
-        sera_site_dict = sitexml_to_sitedict(datapath / "full_sitexml.xml")
+            self, testdata):
+        sera_site_dict = sitexml_to_sitedict(
+            testdata["full_sitexml.xml"])
         df_quality_index = pd.DataFrame([{"f0_vs30": 1}])
 
         with pytest.raises(
@@ -857,8 +863,9 @@ class TestSiteXMLCSVImport():
             apply_quality_index_dataframe(sera_site_dict, df_quality_index)
 
     def test_apply_quality_index_dataframe_skips_missing_site_id_value(
-            self, datapath):
-        sera_site_dict = sitexml_to_sitedict(datapath / "full_sitexml.xml")
+            self, testdata):
+        sera_site_dict = sitexml_to_sitedict(
+            testdata["full_sitexml.xml"])
         df_quality_index = pd.DataFrame([{
             "siteID": "",
             "siteClassEC8_method": "documented",

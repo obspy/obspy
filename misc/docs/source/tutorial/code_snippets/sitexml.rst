@@ -23,7 +23,7 @@ optional analysis objects.
     from obspy.core.util import get_example_file
     from obspy.io.sitexml.sitexml import read_sitexml
 
-    filename = get_example_file("full_sitexml.xml")
+    filename = get_example_file("xml/full_sitexml.xml")
     site = read_sitexml(filename)
 
     print(site.resource_id)
@@ -660,7 +660,7 @@ of ``SERASite`` objects from CSV files.
     from obspy.core.util import get_example_file
     from obspy.io.sitexml.tabular import csv_to_sera_site
 
-    site_owner_csv = get_example_file("site_owner.csv")
+    site_owner_csv = get_example_file("csv/site_owner.csv")
     data_dir = Path(site_owner_csv).parent
 
     sites = csv_to_sera_site(
@@ -699,7 +699,7 @@ column and the same layer columns used by CSV import.
     from obspy.core.util import get_example_file
     from obspy.io.sitexml.tabular import excel_to_sera_site
 
-    excel_file = get_example_file("sera_site_all.xlsx")
+    excel_file = get_example_file("xlsx/full_site.xlsx")
     data_dir = Path(excel_file).parent
 
     sites = excel_to_sera_site(
@@ -953,16 +953,16 @@ file:
     from obspy.io.sitexml.sitexml import read_sitexml, write_sitexml
     from obspy.io.sitexml.tabular import add_velocity_profiles
 
-    filename = get_example_file("full_sitexml.xml")
-    data_dir = Path(filename).parent
+    filename = get_example_file("xml/full_sitexml.xml")
+    velocity_profiles_csv = get_example_file("csv/velocity_profiles.csv")
 
     site = read_sitexml(filename)
 
     # The same function also accepts Excel workbooks such as
-    # data_dir / "velocity_profiles.xlsx".
+    # get_example_file("xlsx/velocity_profiles.xlsx").
     add_velocity_profiles(
         site,
-        data_dir / "velocity_profiles.csv",
+        velocity_profiles_csv,
         replace_existing=True)
 
     write_sitexml(site, "site_with_velocity_profiles.xml")

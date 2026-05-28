@@ -554,7 +554,7 @@ class TestSiteXML():
         """
         Site indicators can calculate and store their Q_Index1 value.
         """
-        sera_site = read_sitexml(testdata["full_sitedescription.xml"])
+        sera_site = read_sitexml(testdata["full_site_description.xml"])
         ec8 = sera_site.site_description.ec8
 
         value = ec8.calculate_quality_index1(
@@ -813,7 +813,7 @@ class TestSiteXML():
         """
         The SiteXML schema rejects the same invalid station notation.
         """
-        xml = testdata["full_sitedescription.xml"].read_text(
+        xml = testdata["full_site_description.xml"].read_text(
             encoding="utf-8")
         xml = xml.replace("<station>XX.ABCD</station>",
                           "<station>XXX.ABCD</station>")
@@ -826,7 +826,7 @@ class TestSiteXML():
         """
         The SiteXML schema accepts uppercase alphanumeric station notation.
         """
-        xml = testdata["full_sitedescription.xml"].read_text(
+        xml = testdata["full_site_description.xml"].read_text(
             encoding="utf-8")
         xml = xml.replace("<station>XX.ABCD</station>",
                           "<station>X1.ABC2</station>")
@@ -1115,7 +1115,7 @@ class TestSiteXML():
         # Check positives.
         sitexmls = [
             testdata["full_sitexml.xml"],
-            testdata["full_sitedescription_without_station.xml"],
+            testdata["full_site_description_without_station.xml"],
         ]
         for stat in sitexmls:
             assert _is_sitexml(stat)
@@ -1123,7 +1123,7 @@ class TestSiteXML():
         # Check some negatives.
         # not_sitexmls = [
         #    "wrong_sitexml.xml", "input_csv/site_description.csv",
-        #    "input_excel/sera_site_all.xlsx"]
+        #    "input_excel/full_site.xlsx"]
         # not_sitexmls = [datapath / name
         #                   for name in not_sitexmls]
         # for stat in not_sitexmls:
@@ -1693,11 +1693,11 @@ class TestSiteXML():
         # Write it again. Also validate it to get more confidence.
         self._write_and_compare(filename, sera_site)
 
-    def test_reading_and_writing_full_siteowner_tag(self, testdata):
+    def test_reading_and_writing_full_site_owner_tag(self, testdata):
         """
         Tests reading and writing a full SiteXML <siteOwner> tag.
         """
-        filename = testdata["full_siteowner.xml"]
+        filename = testdata["full_site_owner.xml"]
         sera_site = read_sitexml(filename)
 
         assert sera_site.site_owner.owner_codename == "SITEOWNER"
@@ -1734,11 +1734,11 @@ class TestSiteXML():
         # Write it again and compare to the original file.
         self._write_and_compare(filename, sera_site)
 
-    def test_reading_and_writing_full_sitedescription_tag(self, testdata):
+    def test_reading_and_writing_full_site_description_tag(self, testdata):
         """
         Tests reading and writing a full SiteXML <siteDescription> tag.
         """
-        filename = testdata["full_sitedescription.xml"]
+        filename = testdata["full_site_description.xml"]
         sera_site = read_sitexml(filename)
 
         assert sera_site.site_description is not None
@@ -1806,7 +1806,7 @@ class TestSiteXML():
         """
         Missing optional qualityIndex stays None in the object model.
         """
-        filename = testdata["full_sitedescription.xml"]
+        filename = testdata["full_site_description.xml"]
         xml = filename.read_bytes().replace(
             b"                <qualityIndex>1.0</qualityIndex>\n",
             b"",
@@ -1831,13 +1831,13 @@ class TestSiteXML():
 
         assert sera_site.analysis[0].velocity_profile_set.quality_index is None
 
-    def test_reading_and_writing_full_sitedescription_without_station_tag(
+    def test_reading_and_writing_full_site_description_without_station_tag(
             self, testdata):
         """
         Tests reading and writing a full SiteXML <siteDescription> tag for a
         site without a station installation.
         """
-        filename = testdata["full_sitedescription_without_station.xml"]
+        filename = testdata["full_site_description_without_station.xml"]
         sera_site = read_sitexml(filename)
 
         assert sera_site.site_description is not None
