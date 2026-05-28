@@ -29,6 +29,12 @@ jobs:
       # Get the repository code.
       - uses: actions/checkout@v6
 
+      - name: Ignore standalone tag for ObsPy install
+        if: startsWith(github.ref, 'refs/tags/sitexml-scripts-')
+        shell: bash
+        run: |
+          git tag -d "$GITHUB_REF_NAME" || true
+
       # Install Python for this runner.
       - uses: actions/setup-python@v6
         with:
