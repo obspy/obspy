@@ -7,7 +7,13 @@ import os
 from typing import IO, Union
 
 import numpy as np
-from pymseed import DataEncoding, MS3Record, MS3TraceList, nslc2sourceid, sourceid2nslc
+from pymseed import (
+    DataEncoding,
+    MS3Record,
+    MS3TraceList,
+    nslc2sourceid,
+    sourceid2nslc,
+)
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
@@ -87,8 +93,8 @@ def _read_mseed3(
     :param source: File path, in-memory buffer, or file-like object to be
         read. Any object supporting the Python buffer protocol (bytes,
         bytearray, memoryview, numpy.ndarray, mmap, etc.) is read directly
-        (zero-copy); otherwise a ``read()`` method is required (e.g. ``io.BytesIO``,
-        ``io.BufferedReader``).
+        (zero-copy); otherwise a ``read()`` method is required (e.g.
+        ``io.BytesIO``, ``io.BufferedReader``).
     :type source: str, os.PathLike, bytes-like (supports the buffer
         protocol), or file-like (typing.IO[bytes])
     :param starttime: Only read data samples after or at the start time.
@@ -109,13 +115,14 @@ def _read_mseed3(
         Defaults to ``None``.
     :type sourcename: str
     :param twopass: If True, the data will be read in two passes.  During
-        the first pass, the data will be read without unpacking the data samples.
-        During the second pass, the data will be unpacked directly into a numpy array.
-        This unpack-on-demand approach avoids duplicating the data in memory; the
-        cost is reading the file twice.  The value of this tradeoff between memory
-        and I/O will vary depending on the use case and system resources.  This
-        option cannot be used in combination with sources that are not persistent,
-        such as a file-like object that is not seekable (e.g. a network stream).
+        the first pass, the data are read without unpacking the data samples.
+        During the second pass, data are unpacked directly into numpy arrays.
+        This unpack-on-demand approach avoids duplicating the data in memory;
+        the cost is reading the file twice.  The value of this tradeoff between
+        memory and I/O will vary depending on the use case and system
+        resources.  This option cannot be used in combination with sources that
+        are not persistent, such as a file-like object that is not seekable
+        (e.g. a network stream).
         Default is False.
     :type twopass: bool
     :param details: If True, read additional information: timing quality,
@@ -125,7 +132,7 @@ def _read_mseed3(
         Default is False.
     :type details: bool
     :param verbose: If True, print verbose output at level 2.  If an integer,
-        print verbose output at the given level. Default is False (aka level 0).
+        print verbose output at the given level. Default is False (aka 0).
     :type verbose: bool, int
 
     :rtype: :class:`~obspy.core.stream.Stream`
@@ -134,7 +141,7 @@ def _read_mseed3(
 
     if sourceid and sourcename:
         raise ValueError(
-            "Cannot specify both sourceid and sourcename. Use one or the other."
+            "Cannot specify both sourceid and sourcename. Use only one."
         )
 
     # Convert sourcename pattern to FDSN sourceid pattern, best effort
@@ -203,7 +210,9 @@ def _read_mseed3(
     # Iterate through each trace ID in the trace list
     for traceid in mstracelist:
         try:
-            (network, station, location, channel) = sourceid2nslc(traceid.sourceid)
+            (network, station, location, channel) = sourceid2nslc(
+                traceid.sourceid
+            )
         except ValueError:
             network = station = location = channel = ""
 
@@ -225,25 +234,31 @@ def _read_mseed3(
             stats.mseed3 = AttribDict()
             stats.mseed3["source_id"] = traceid.sourceid
             if segment.recordlist:
-                stats.mseed3["number_of_records"] = segment.recordlist.recordcnt
+                stats.mseed3["number_of_records"] = (
+                    segment.recordlist.recordcnt
+                )
 
             # Summarize record details
             if details and segment.recordlist:
                 # Walk record list and collect run-length-deduplicated values:
-                # a value is only appended when it differs from the previous one.
+                # a value is only appended when it differs from the previous.
                 timing_qualities = []
                 publication_versions = []
                 encodings = []
                 for record_ptr in segment.recordlist:
                     record = record_ptr.record
-                    timing_quality = record.get_extra_header("/FDSN/Time/Quality")
+                    timing_quality = record.get_extra_header(
+                        "/FDSN/Time/Quality"
+                    )
                     if timing_quality is not None and timing_quality != (
                         timing_qualities[-1] if timing_qualities else object()
                     ):
                         timing_qualities.append(timing_quality)
                     pubver = record.pubversion
                     if pubver != (
-                        publication_versions[-1] if publication_versions else object()
+                        publication_versions[-1]
+                        if publication_versions
+                        else object()
                     ):
                         publication_versions.append(pubver)
                     encoding = record.encoding_str()
@@ -257,7 +272,7 @@ def _read_mseed3(
             # If header-only mode create an empty trace
             if headonly:
                 trace = Trace(data=np.array([]), header=stats)
-            # If twopass and no data samples, unpack data samples into a numpy array
+            # If twopass & no samples, unpack data samples into a numpy array
             elif twopass and not segment.datasamples:
                 data = segment.create_numpy_array_from_recordlist()
                 trace = Trace(data=data, header=stats)
@@ -315,17 +330,18 @@ def _write_mseed3(
     :type stream: :class:`~obspy.core.stream.Stream`
     :param destination: Output filename or file-like object
     :type destination: str or file-like object
-    :param encoding: Data encoding to use: ``ASCII`` (``0``)*, ``INT16`` (``1``),
-        ``INT32`` (``3``), ``FLOAT32`` (``4``)*, ``FLOAT64`` (``5``)*,
-        ``STEIM1`` (``10``) and ``STEIM2`` (``11``)*. If no encoding is given
-        it will be derived from the dtype of the data and the appropriate
-        default encoding (depicted with an asterix) will be chosen.
+    :param encoding: Data encoding to use: ``ASCII`` (``0``)*,
+        ``INT16`` (``1``), ``INT32`` (``3``), ``FLOAT32`` (``4``)*,
+        ``FLOAT64`` (``5``)*,``STEIM1`` (``10``) and ``STEIM2`` (``11``)*.
+        If no encoding is given it will be derived from the dtype of the data
+        and the appropriate default encoding (depicted with an asterix)
+        will be chosen.
     :type encoding: str or int, optional
     :param max_record_length: Maximum record length in bytes (default: 4096)
     :type max_record_length: int, optional
     :param format_version: miniSEED format version (default: 3)
     :type format_version: int, optional
-    :param overwrite: Overwrite the destination file if it exists (default: True)
+    :param overwrite: Overwrite destination file if it exists (default: True)
     :type overwrite: bool, optional
     """
 
@@ -397,20 +413,25 @@ def _write_mseed3(
                 data = data.astype(np.int32, copy=True)
             else:
                 raise ValueError(
-                    "int64 data only supported when writing miniSEED if it can be downcast to int32 type data."
+                    "int64 data only supported when writing miniSEED "
+                    "if it can be downcast to int32 type data."
                 )
         else:
             raise ValueError(f"Unsupported data type: {data.dtype}")
 
         msrecord.encoding = (
-            pymseed_encoding if pymseed_encoding is not None else type_default_encoding
+            pymseed_encoding
+            if pymseed_encoding is not None
+            else type_default_encoding
         )
 
         # Write records using a zero-copy view of the data samples
         with msrecord.with_datasamples(data, sample_type_code):
             # Write to a path-like destination
             if isinstance(destination, (str, os.PathLike)):
-                msrecord.to_file(destination, overwrite=overwrite and first_path_write)
+                msrecord.to_file(
+                    destination, overwrite=overwrite and first_path_write
+                )
                 first_path_write = False
             # Write to a file-like destination
             else:

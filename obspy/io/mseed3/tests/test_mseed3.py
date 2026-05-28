@@ -103,7 +103,9 @@ class TestReadMSEED3:
         assert st[0].data[:4].tolist() == THREECH_LH1_FIRST4
 
     def test_read_via_obspy_format_kwarg(self, testdata):
-        st = read(str(testdata["testdata-3channel-signal.mseed3"]), format="MSEED3")
+        st = read(
+            str(testdata["testdata-3channel-signal.mseed3"]), format="MSEED3"
+        )
         self._check_threech(st)
 
     def test_read_via_obspy_autodetect(self, testdata):
@@ -286,7 +288,9 @@ class TestReadMSEED3:
         )
         tr = st[0]
         assert tr.data.dtype == np.float32
-        assert np.allclose(tr.data[:4], [-1.0625, -1.078125, -1.078125, -1.078125])
+        assert np.allclose(
+            tr.data[:4], [-1.0625, -1.078125, -1.078125, -1.078125]
+        )
         assert np.allclose(
             tr.data[-4:], [-1.1640625, -1.1640625, -1.1640625, -1.1640625]
         )
@@ -325,7 +329,7 @@ class TestReadMSEED3:
 
     def test_read_v2_no_blockette_1000(self, testdata):
         # With no Blockette 1000, the record length is inferred from the data
-        # structure (next header or end of file) and the encoding falls back to STEIM1.
+        # structure (next header or EOF) and the encoding falls back to STEIM1.
         st = _read_mseed3(testdata["testdata-no-blockette1000-steim1.mseed2"])
         assert st[0].stats.npts == 7312
         assert st[0].data.dtype == np.int32
@@ -335,7 +339,9 @@ class TestReadMSEED3:
     def test_read_v2_unapplied_time_correction(self, testdata):
         st = _read_mseed3(testdata["testdata-unapplied-timecorrection.mseed2"])
         # The unapplied 1.0 second time correction is applied to the starttime
-        assert st[0].stats.starttime == UTCDateTime("2003-05-29T02:13:23.043400Z")
+        assert st[0].stats.starttime == UTCDateTime(
+            "2003-05-29T02:13:23.043400Z"
+        )
 
     # ---- headonly -----------------------------------------------------
 
@@ -356,7 +362,9 @@ class TestReadMSEED3:
         assert st[0].stats.npts == 0
         assert len(st[0].data) == 0
 
-        st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"], headonly=True)
+        st = _read_mseed3(
+            testdata["testdata-3channel-signal.mseed3"], headonly=True
+        )
         assert len(st) == 3
         for tr in st:
             # stats.npts reports the *recorded* sample count, but no
@@ -368,7 +376,9 @@ class TestReadMSEED3:
 
     def test_read_twopass_matches_default(self, testdata):
         st1 = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
-        st2 = _read_mseed3(testdata["testdata-3channel-signal.mseed3"], twopass=True)
+        st2 = _read_mseed3(
+            testdata["testdata-3channel-signal.mseed3"], twopass=True
+        )
         assert len(st1) == len(st2)
         for tr1, tr2 in zip(st1, st2):
             assert tr1.id == tr2.id
@@ -381,21 +391,24 @@ class TestReadMSEED3:
 
     def test_sourceid_filter(self, testdata):
         st = _read_mseed3(
-            testdata["testdata-3channel-signal.mseed3"], sourceid="FDSN:IU_COLA_*_L_H_Z"
+            testdata["testdata-3channel-signal.mseed3"],
+            sourceid="FDSN:IU_COLA_*_L_H_Z",
         )
         assert len(st) == 1
         assert st[0].id == "IU.COLA.00.LHZ"
 
     def test_sourcename_full_nslc(self, testdata):
         st = _read_mseed3(
-            testdata["testdata-3channel-signal.mseed3"], sourcename="IU.COLA.00.LHZ"
+            testdata["testdata-3channel-signal.mseed3"],
+            sourcename="IU.COLA.00.LHZ",
         )
         assert len(st) == 1
         assert st[0].id == "IU.COLA.00.LHZ"
 
     def test_sourcename_front_anchored_wildcard(self, testdata):
         st = _read_mseed3(
-            testdata["testdata-3channel-signal.mseed3"], sourcename="IU.COLA.00.*"
+            testdata["testdata-3channel-signal.mseed3"],
+            sourcename="IU.COLA.00.*",
         )
         assert len(st) == 3
 
@@ -411,7 +424,9 @@ class TestReadMSEED3:
         start = UTCDateTime("2010-02-27T06:50:30")
         end = UTCDateTime("2010-02-27T06:50:40")
         st = _read_mseed3(
-            testdata["testdata-3channel-signal.mseed3"], starttime=start, endtime=end
+            testdata["testdata-3channel-signal.mseed3"],
+            starttime=start,
+            endtime=end,
         )
         assert len(st) == 3
         for tr in st:
@@ -453,7 +468,9 @@ class TestReadMSEED3:
     # ---- multi-record, mixed lengths ----------------------------------
 
     def test_read_mixed_lengths_v3(self, testdata):
-        st = _read_mseed3(testdata["testdata-oneseries-mixedlengths-mixedorder.mseed3"])
+        st = _read_mseed3(
+            testdata["testdata-oneseries-mixedlengths-mixedorder.mseed3"]
+        )
         assert len(st) == 1
         tr = st[0]
         assert tr.id == "XX.TEST.00.LHZ"
@@ -461,7 +478,9 @@ class TestReadMSEED3:
         assert tr.data[:4].tolist() == [-231946, -228438, -223155, -221231]
 
     def test_read_mixed_lengths_v2(self, testdata):
-        st = _read_mseed3(testdata["testdata-oneseries-mixedlengths-mixedorder.mseed2"])
+        st = _read_mseed3(
+            testdata["testdata-oneseries-mixedlengths-mixedorder.mseed2"]
+        )
         assert len(st) == 1
         assert st[0].stats.npts == 3952
 
@@ -481,11 +500,11 @@ class TestReadMSEED3:
         v3_bytes = v3_path.read_bytes()
 
         # Sanity: each file alone reads as one trace.
-        v2_alone = _read_mseed3(v2_bytes)
-        v3_alone = _read_mseed3(v3_bytes)
-        assert len(v2_alone) == 1
-        assert len(v3_alone) == 1
-        np.testing.assert_array_equal(v2_alone[0].data, v3_alone[0].data)
+        v2_only = _read_mseed3(v2_bytes)
+        v3_only = _read_mseed3(v3_bytes)
+        assert len(v2_only) == 1
+        assert len(v3_only) == 1
+        np.testing.assert_array_equal(v2_only[0].data, v3_only[0].data)
 
         for label, combined in [
             ("v2+v3", v2_bytes + v3_bytes),
@@ -496,15 +515,17 @@ class TestReadMSEED3:
             for tr in st:
                 assert tr.id == "XX.TEST.00.LHZ"
                 assert tr.stats.npts == 3952
-                assert tr.stats.starttime == v2_alone[0].stats.starttime
-                assert tr.stats.sampling_rate == v2_alone[0].stats.sampling_rate
-                np.testing.assert_array_equal(tr.data, v2_alone[0].data)
+                assert tr.stats.starttime == v2_only[0].stats.starttime
+                assert tr.stats.sampling_rate == v2_only[0].stats.sampling_rate
+                np.testing.assert_array_equal(tr.data, v2_only[0].data)
 
     # ---- details -------------------------------------------------------
 
     def test_read_details_homogeneous_v3(self, testdata):
         """details=True populates per-record stats for a 3-channel v3 file."""
-        st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"], details=True)
+        st = _read_mseed3(
+            testdata["testdata-3channel-signal.mseed3"], details=True
+        )
         assert len(st) == 3
         expected_nrec = [36, 35, 36]
         for tr, nrec in zip(st, expected_nrec):
@@ -537,10 +558,14 @@ class TestReadMSEED3:
             "publication_versions",
             "encodings",
         }
-        st_no_details = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
+        st_no_details = _read_mseed3(
+            testdata["testdata-3channel-signal.mseed3"]
+        )
         for tr in st_no_details:
             present = set(tr.stats.mseed3.keys())
-            assert present == {"source_id"}, f"Expected only 'source_id', got {present}"
+            assert present == {"source_id"}, (
+                f"Expected only 'source_id', got {present}"
+            )
 
         st_details = _read_mseed3(
             testdata["testdata-3channel-signal.mseed3"], details=True
@@ -602,7 +627,9 @@ class TestWriteMSEED3:
 
     def test_write_int16_promotes_to_int32_on_read(self, tmp_path):
         data = np.array([1, -2, 3, 4, -5, 6, 100, -200], dtype=np.int16)
-        st = Stream(traces=[_make_trace(data, sampling_rate=100.0, channel="HHZ")])
+        st = Stream(
+            traces=[_make_trace(data, sampling_rate=100.0, channel="HHZ")]
+        )
         out = tmp_path / "out.mseed3"
         _write_mseed3(st, str(out), encoding="INT16")
         st2 = _read_mseed3(str(out))
@@ -611,7 +638,9 @@ class TestWriteMSEED3:
 
     def test_write_int64_downcasts_when_in_int32_range(self, tmp_path):
         data = np.array([1, 2, 3, -1000000, 1000000], dtype=np.int64)
-        st = Stream(traces=[_make_trace(data, sampling_rate=100.0, channel="HHZ")])
+        st = Stream(
+            traces=[_make_trace(data, sampling_rate=100.0, channel="HHZ")]
+        )
         out = tmp_path / "out.mseed3"
         _write_mseed3(st, str(out))
         st2 = _read_mseed3(str(out))
@@ -620,19 +649,25 @@ class TestWriteMSEED3:
 
     def test_write_int64_overflow_raises(self):
         data = np.array([2**40], dtype=np.int64)
-        st = Stream(traces=[_make_trace(data, sampling_rate=100.0, channel="HHZ")])
+        st = Stream(
+            traces=[_make_trace(data, sampling_rate=100.0, channel="HHZ")]
+        )
         with pytest.raises(ValueError, match="int64"):
             _write_mseed3(st, "/tmp/should_not_be_written.mseed3")
 
     def test_write_unsupported_dtype_raises(self):
         data = np.array([1 + 2j, 3 + 4j], dtype=np.complex64)
-        st = Stream(traces=[_make_trace(data, sampling_rate=100.0, channel="HHZ")])
+        st = Stream(
+            traces=[_make_trace(data, sampling_rate=100.0, channel="HHZ")]
+        )
         with pytest.raises(ValueError, match="Unsupported data type"):
             _write_mseed3(st, "/tmp/should_not_be_written.mseed3")
 
     # ---- encoding aliases & validation --------------------------------
 
-    @pytest.mark.parametrize("encoding", ["STEIM1", "STEIM2", 10, 11, "INT32", 3])
+    @pytest.mark.parametrize(
+        "encoding", ["STEIM1", "STEIM2", 10, 11, "INT32", 3]
+    )
     def test_write_encoding_aliases(self, testdata, tmp_path, encoding):
         st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
         out = tmp_path / f"out_{encoding}.mseed3"
