@@ -448,7 +448,7 @@
 					<xs:documentation>FDSN network and station code in 
 						network.station notation. Fill this if site metadata 
 						refers to a station. Otherwise leave empty.
-						<p><strong>Example: </strong>XX.ABCD</p>
+						<p><strong>Example: </strong>XX.ABC1</p>
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
@@ -1451,11 +1451,13 @@
 	<xs:simpleType name="StationCodeType">
 		<xs:annotation>
 			<xs:documentation>
-				FDSN network and station code in network.station notation.
-				The network code is one or two uppercase letters or numeric characters and
-				the station code is a three to five uppercase letters or characters.
+				FDSN network and station code in NET.STA notation.
+				The network code must have exactly two uppercase alphanumeric
+				characters, and the station code must have three to five 
+				uppercase alphanumeric characters. Bare station codes are 
+				rejected because they are not globally unique.
 				<p><strong>Example: </strong>XX.ABCD</p>
-				<p><strong>Example: </strong>1Α.ABC2</p>
+				<p><strong>Example: </strong>X1.ABC2</p>
 			</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:string">

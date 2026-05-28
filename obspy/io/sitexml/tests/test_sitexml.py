@@ -791,16 +791,18 @@ class TestSiteXML():
         """
         Bare station codes are rejected to avoid ambiguous StationXML links.
         """
-        valid_site = self._minimal_sera_site(station_code="1.ABC")
-        assert valid_site.site_description.station_code == "1.ABC"
+        valid_site = self._minimal_sera_site(station_code="1A.ABC2")
+        assert valid_site.site_description.station_code == "1A.ABC2"
 
         invalid_codes = [
             "ABCD",
+            "1.ABC",
             "XXX.ABCD",
-            "X.AB",
-            "X.ABCDEF",
-            "X.ABC1",
-            "X.AB CD",
+            "XX.AB",
+            "XX.ABCDEF",
+            "XX.ABc1",
+            "XX.AB_C",
+            "XX.AB CD",
         ]
         for station_code in invalid_codes:
             with pytest.raises(SiteXMLValidationError,
@@ -818,6 +820,20 @@ class TestSiteXML():
 
         with pytest.raises(SiteXMLValidationError):
             read_sitexml(io.BytesIO(xml.encode("utf-8")))
+
+    def test_station_code_schema_accepts_alphanumeric_notation(
+            self, testdata):
+        """
+        The SiteXML schema accepts uppercase alphanumeric station notation.
+        """
+        xml = testdata["full_sitedescription.xml"].read_text(
+            encoding="utf-8")
+        xml = xml.replace("<station>XX.ABCD</station>",
+                          "<station>X1.ABC2</station>")
+
+        site = read_sitexml(io.BytesIO(xml.encode("utf-8")))
+
+        assert site.site_description.station_code == "X1.ABC2"
 
     def test_schema_accepts_revision_history(self, testdata):
         """

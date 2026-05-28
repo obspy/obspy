@@ -50,19 +50,22 @@ def _split_station_code(value):
     """
     message = (
         "station_code must use 'network.station' notation with a "
-        "1-2 character FDSN network code and a 3-5 letter station code"
+        "2 character uppercase alphanumeric FDSN network code and a "
+        "3-5 character uppercase alphanumeric station code"
     )
     if not isinstance(value, str):
         raise SiteXMLValidationError("station_code must be a string or None")
     if value.count(".") != 1 or any(char.isspace() for char in value):
         raise SiteXMLValidationError(message)
     network_code, station_code = value.split(".")
-    if not 1 <= len(network_code) <= 2 or \
+    if len(network_code) != 2 or \
             not network_code.isascii() or \
             not network_code.isalnum() or \
+            network_code != network_code.upper() or \
             not 3 <= len(station_code) <= 5 or \
             not station_code.isascii() or \
-            not station_code.isalpha():
+            not station_code.isalnum() or \
+            station_code != station_code.upper():
         raise SiteXMLValidationError(message)
     return network_code, station_code
 

@@ -239,7 +239,7 @@ The data read from the site-description table is stored in
 | --- | --- | --- | --- |
 | `siteID` | **yes** | Resource ID for the top-level SiteXML site. **This is necessary because it associates the siteDescription object with the site.** | `quakeml:domain.ab/site/001` |
 | `siteDescriptionID` | **yes** | Resource ID for the site-description object. | `quakeml:domain.ab/site_description/001` |
-| `station` | no | Station code in `network.station` notation. Leave empty for non-station sites. | `XX.ABCD` |
+| `station` | no | Station code in `network.station` notation. Use exactly two uppercase alphanumeric network characters and three to five uppercase alphanumeric station characters. Leave empty for non-station sites. | `XX.ABCD` |
 | `latitude` | **yes** | Geographic latitude in degrees. | `45.137174` |
 | `longitude` | **yes** | Geographic longitude in degrees. | `5.998905` |
 | `altitude` | no | Ground elevation in meters. | `239` |

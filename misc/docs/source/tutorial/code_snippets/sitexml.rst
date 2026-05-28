@@ -535,8 +535,11 @@ Indicator metadata columns use the indicator name as a prefix.
     * - Geological unit
       - ``geologicalUnit_value``, ``geologicalUnit_qualityIndex``, ``geologicalUnit_title``, etc.
 
-Station codes use ``network.station`` notation, for example ``XX.ABCD``.
-Bare station codes are rejected because station codes are not globally unique.
+Station codes use ``network.station`` notation, for example ``XX.ABCD`` or
+``X1.ABC2``. The network code must have exactly two uppercase alphanumeric
+characters, and the station code must have three to five uppercase
+alphanumeric characters. Bare station codes are rejected because they
+are not globally unique.
 
 Analysis
 ~~~~~~~~
