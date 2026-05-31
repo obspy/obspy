@@ -38,6 +38,7 @@ import io
 import os
 import re
 from subprocess import STDOUT, CalledProcessError, check_output
+import sys
 import warnings
 
 
@@ -48,6 +49,16 @@ script_dir = os.path.abspath(os.path.dirname(inspect.getfile(
 OBSPY_ROOT = os.path.abspath(os.path.join(script_dir, os.pardir,
                                           os.pardir, os.pardir))
 VERSION_FILE = os.path.join(OBSPY_ROOT, "obspy", "RELEASE-VERSION")
+
+
+def _version_file_candidates():
+    """
+    Return possible RELEASE-VERSION locations.
+    """
+    yield VERSION_FILE
+    bundle_root = getattr(sys, "_MEIPASS", None)
+    if bundle_root is not None:
+        yield os.path.join(bundle_root, "obspy", "RELEASE-VERSION")
 
 
 def call_git_describe(abbrev=10, dirty=True,
@@ -125,12 +136,14 @@ def call_git_describe(abbrev=10, dirty=True,
 
 
 def read_release_version():
-    try:
-        with io.open(VERSION_FILE, "rt") as fh:
-            version = fh.readline()
-        return version.strip()
-    except IOError:
-        return None
+    for version_file in _version_file_candidates():
+        try:
+            with io.open(version_file, "rt") as fh:
+                version = fh.readline()
+            return version.strip()
+        except IOError:
+            pass
+    return None
 
 
 def write_release_version(version):
