@@ -1,9 +1,15 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+
+from PyInstaller.config import CONF
 from PyInstaller.utils.hooks import collect_all, collect_data_files
 
 
-datas = collect_data_files("obspy.io.sitexml")
+os.makedirs(CONF["workpath"], exist_ok=True)
+os.makedirs(CONF["distpath"], exist_ok=True)
+
+datas = collect_data_files("obspy.io.sitexml", excludes=["internal/**"])
 datas += [("obspy/RELEASE-VERSION", "obspy")]
 
 pandas_datas, pandas_binaries, pandas_hiddenimports = collect_all("pandas")
@@ -22,9 +28,8 @@ excludes = [
     "tkinter",
 ]
 
-
-csv_analysis = Analysis(
-    ["obspy/io/sitexml/scripts/csv2sitexml.py"],
+analysis = Analysis(
+    ["obspy/io/sitexml/scripts/sitexml_standalone.py"],
     pathex=[],
     binaries=binaries,
     datas=datas,
@@ -34,41 +39,20 @@ csv_analysis = Analysis(
     excludes=excludes,
     noarchive=False,
 )
-csv_pyz = PYZ(csv_analysis.pure, csv_analysis.zipped_data)
+pyz = PYZ(analysis.pure, analysis.zipped_data)
 csv_exe = EXE(
-    csv_pyz,
-    csv_analysis.scripts,
+    pyz,
+    analysis.scripts,
     exclude_binaries=True,
     name="csv2sitexml",
     console=True,
 )
 
-excel_analysis = Analysis(
-    ["obspy/io/sitexml/scripts/excel2sitexml.py"],
-    pathex=[],
-    binaries=binaries,
-    datas=datas,
-    hiddenimports=hiddenimports,
-    hookspath=None,
-    runtime_hooks=None,
-    excludes=excludes,
-    noarchive=False,
-)
-excel_pyz = PYZ(excel_analysis.pure, excel_analysis.zipped_data)
-excel_exe = EXE(
-    excel_pyz,
-    excel_analysis.scripts,
-    exclude_binaries=True,
-    name="excel2sitexml",
-    console=True,
-)
-
 coll = COLLECT(
     csv_exe,
-    excel_exe,
-    csv_analysis.binaries,
-    csv_analysis.datas,
-    excel_analysis.binaries,
-    excel_analysis.datas,
+    [("excel2sitexml", csv_exe.name, "EXECUTABLE")],
+    analysis.binaries,
+    analysis.zipfiles,
+    analysis.datas,
     name="sitexml-scripts",
 )
