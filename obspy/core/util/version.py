@@ -55,10 +55,10 @@ def _version_file_candidates():
     """
     Return possible RELEASE-VERSION locations.
     """
-    yield VERSION_FILE
     bundle_root = getattr(sys, "_MEIPASS", None)
     if bundle_root is not None:
         yield os.path.join(bundle_root, "obspy", "RELEASE-VERSION")
+    yield VERSION_FILE
 
 
 def call_git_describe(abbrev=10, dirty=True,
@@ -155,10 +155,16 @@ def get_git_version(abbrev=10, dirty=True, append_remote_tracking_branch=True):
     # Read in the version that's currently in RELEASE-VERSION.
     release_version = read_release_version()
 
-    # First try to get the current version using “git describe”.
-    version = call_git_describe(
-        abbrev, dirty=dirty,
-        append_remote_tracking_branch=append_remote_tracking_branch)
+    # Frozen PyInstaller executables should report the bundled release version
+    # and must not discover a nearby source-tree Git checkout.
+    if getattr(sys, "frozen", False):
+        version = release_version
+    else:
+        # First try to get the current version using “git describe”.
+        version = call_git_describe(
+            abbrev, dirty=dirty,
+            append_remote_tracking_branch=append_remote_tracking_branch)
+
     # If that doesn't work, fall back on the value that's in
     # RELEASE-VERSION.
     if version is None:
