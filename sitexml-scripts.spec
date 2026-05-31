@@ -10,7 +10,15 @@ os.makedirs(CONF["workpath"], exist_ok=True)
 os.makedirs(CONF["distpath"], exist_ok=True)
 
 datas = collect_data_files("obspy.io.sitexml", excludes=["internal/**"])
-datas += [("obspy/RELEASE-VERSION", "obspy")]
+
+release_version = os.environ.get("SITEXML_RELEASE_VERSION")
+if release_version:
+    release_version_file = os.path.join(CONF["workpath"], "RELEASE-VERSION")
+    with open(release_version_file, "w", encoding="ascii") as fh:
+        fh.write(release_version + "\n")
+    datas += [(release_version_file, "obspy")]
+else:
+    datas += [("obspy/RELEASE-VERSION", "obspy")]
 
 pandas_datas, pandas_binaries, pandas_hiddenimports = collect_all("pandas")
 openpyxl_datas, openpyxl_binaries, openpyxl_hiddenimports = collect_all(
