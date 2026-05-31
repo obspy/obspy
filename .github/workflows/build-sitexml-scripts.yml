@@ -18,12 +18,12 @@ jobs:
         include:
           - os: macos-15
             artifact: sitexml-scripts-macos-arm64
-          - os: macos-15-intel
-            artifact: sitexml-scripts-macos-x86_64
-          - os: ubuntu-latest
-            artifact: sitexml-scripts-linux-x86_64
-          - os: windows-latest
-            artifact: sitexml-scripts-windows-x86_64
+          #- os: macos-15-intel
+          #  artifact: sitexml-scripts-macos-x86_64
+          #- os: ubuntu-latest
+          #  artifact: sitexml-scripts-linux-x86_64
+          #- os: windows-latest
+          #  artifact: sitexml-scripts-windows-x86_64
 
     steps:
       # Get the repository code.
