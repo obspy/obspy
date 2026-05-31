@@ -1,6 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 import os
+import sys
 
 from PyInstaller.config import CONF
 from PyInstaller.utils.hooks import collect_all, collect_data_files
@@ -27,6 +28,8 @@ openpyxl_datas, openpyxl_binaries, openpyxl_hiddenimports = collect_all(
 datas += pandas_datas + openpyxl_datas
 binaries = pandas_binaries + openpyxl_binaries
 hiddenimports = pandas_hiddenimports + openpyxl_hiddenimports
+excel_exe_name = "excel2sitexml.exe" if sys.platform.startswith("win") else \
+    "excel2sitexml"
 
 excludes = [
     "IPython",
@@ -58,7 +61,7 @@ csv_exe = EXE(
 
 coll = COLLECT(
     csv_exe,
-    [("excel2sitexml", csv_exe.name, "EXECUTABLE")],
+    [(excel_exe_name, csv_exe.name, "EXECUTABLE")],
     analysis.binaries,
     analysis.zipfiles,
     analysis.datas,
