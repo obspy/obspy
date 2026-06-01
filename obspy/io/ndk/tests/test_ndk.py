@@ -77,6 +77,21 @@ class TestNDK():
         for filename in invalid_files:
             assert not _is_ndk(filename)
 
+    def test_is_ndk_negative_depth(self, testdata):
+        """
+        _is_ndk() must accept files whose hypocenter depth is negative.
+
+        Depths in NDK files are given in kilometres and may be negative (e.g.
+        for events located above sea level), see #2823. The depth field of the
+        first record occupies columns 42:47 of the header line.
+        """
+        with open(testdata['C200604092050A.ndk'], "rt") as fh:
+            content = fh.read()
+        first_line, _, rest = content.partition("\n")
+        # original depth is " 34.6"; replace it with a negative depth
+        modified = first_line[:42] + " -1.1" + first_line[47:] + "\n" + rest
+        assert _is_ndk(io.StringIO(modified))
+
     def test_reading_using_obspy_plugin(self, testdata):
         """
         Checks that reading with the read_events() function works correctly.

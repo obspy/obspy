@@ -126,9 +126,13 @@ def _is_ndk(filename):
     except ValueError:
         return False
 
+    # The depth is given in kilometres and, according to the NDK format
+    # documentation, may be negative (e.g. for events located above sea
+    # level). The previous check assumed metres and rejected negative depths,
+    # so some valid NDK files failed format autodetection (see #2823).
     if (-90.0 <= latitude <= 90.0) and \
             (-180.0 <= longitude <= 180.0) and \
-            (0 <= depth <= 800000):
+            (-10 <= depth <= 800):
         return True
     return False
 

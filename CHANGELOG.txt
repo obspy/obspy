@@ -2,7 +2,11 @@ master
 ======
 
 Changes:
- - ...
+ - obspy.io.ndk:
+   * fix format autodetection (_is_ndk) for NDK files whose hypocenter depth is
+     negative; depths are in kilometres and may be negative (e.g. events above
+     sea level), but the check assumed metres and rejected negative values
+     (see #2823)
 
 maintenance_1.5.x
 =================
