@@ -2,7 +2,11 @@ master
 ======
 
 Changes:
- - ...
+ - obspy.core:
+   * Stream.rotate(method="->ZNE", ...) no longer modifies the stream in place
+     when the rotation fails (e.g. because orientation metadata is missing from
+     the inventory); the original traces are now kept until the rotation has
+     fully succeeded (see #2692)
 
 maintenance_1.5.x
 =================

@@ -3606,9 +3606,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         st = self.select(network=network, station=station, location=location)
         st = (st.select(channel=channels[0]) + st.select(channel=channels[1]) +
               st.select(channel=channels[2]))
-        # remove the original unrotated traces from the stream
-        for tr in st.traces:
-            self.remove(tr)
+        # Remember the original traces but do not modify the stream yet: a
+        # failing rotation must leave the input stream unchanged (see #2692).
+        # All work is therefore done on a copy and only committed back to the
+        # stream once the rotation has fully succeeded.
+        original_traces = list(st.traces)
+        st = st.copy()
         # cut data so that we end up with a set of matching pieces for the tree
         # components (i.e. cut away any parts where one of the three components
         # has no data)
@@ -3623,6 +3626,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                    "report on github.")
             raise NotImplementedError(msg)
         num_pieces = int(len(st) / 3)
+        rotated_traces = []
         for i in range(num_pieces):
             # three consecutive traces are always the ones that combine for one
             # rotation run
@@ -3642,7 +3646,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             for tr, new_data, component in zip(traces, zne, "ZNE"):
                 tr.data = new_data
                 tr.stats.channel = tr.stats.channel[:-1] + component
-            self.traces += traces
+            rotated_traces += traces
+        # The rotation succeeded for all pieces, so it is now safe to replace
+        # the original (unrotated) traces with the rotated ones.
+        for tr in original_traces:
+            self.remove(tr)
+        self.traces += rotated_traces
         return self
 
     def newbyteorder(self, byteorder='native'):

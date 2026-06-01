@@ -2724,6 +2724,34 @@ class TestStream:
         # check that rotation to ZNE worked..
         assert set(tr.stats.channel[-1] for tr in result) == set('ZNE')
 
+    def test_rotate_to_zne_failure_keeps_stream_unchanged(self):
+        """
+        A failing ``->ZNE`` rotation must not modify the stream in place.
+
+        See #2692: the rotation used to remove (and trim) the original traces
+        before the metadata lookup, so a failure (e.g. metadata missing from
+        the inventory) left the stream corrupted or empty.
+        """
+        traces = []
+        for component in "12Z":
+            tr = Trace(np.arange(100, dtype=np.float64))
+            tr.stats.network = "BW"
+            tr.stats.station = "FFB1"
+            tr.stats.location = ""
+            tr.stats.channel = "HH" + component
+            tr.stats.starttime = UTCDateTime(0)
+            tr.stats.sampling_rate = 100.0
+            traces.append(tr)
+        st = Stream(traces)
+        st_before = st.copy()
+        # an empty inventory has no orientation metadata, so the rotation fails
+        inv = Inventory(networks=[], source="test")
+        with pytest.raises(Exception):
+            st.rotate("->ZNE", inventory=inv)
+        # the stream must be completely unchanged
+        assert len(st) == 3
+        assert st == st_before
+
     def test_write_empty_stream(self):
         """
         Tests error message when trying to write an empty stream
