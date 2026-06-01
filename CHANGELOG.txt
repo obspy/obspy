@@ -2,7 +2,12 @@ master
 ======
 
 Changes:
- - ...
+ - obspy.signal:
+   * freqattributes.spectrum now honours the n1/n2 sub-window arguments (they
+     were previously ignored), which also fixes freqattributes.welch so that it
+     averages periodograms of distinct, correctly-sized sections instead of
+     repeatedly spectrum-ing the whole array (or raising a broadcasting error
+     for section lengths shorter than the data) (see #3491)
 
 maintenance_1.5.x
 =================

@@ -48,7 +48,7 @@ def spectrum(data, win, nfft, n1=0, n2=0):
         n2 = len(data)
     n = n2 - n1
     u = pow(np.linalg.norm([win]), 2) / n
-    xw = data * win
+    xw = data[n1:n2] * win
     px = pow(abs(fftpack.fft(xw, nfft)), 2) / (n * u)
     px[0] = px[1]
     return px
@@ -76,15 +76,16 @@ def welch(data, win, nfft, l=0, over=0):  # NOQA
     """
     if (l == 0):  # NOQA
         l = len(data)  # NOQA
-    n1 = 0
-    n2 = l
-    n0 = (1. - float(over)) * l
-    nsect = 1 + int(np.floor((len(data) - l) / (n0)))
+    # Hop between successive (possibly overlapping) sections. Each section has
+    # exactly ``l`` samples so it matches the length of ``win``.
+    step = int(round((1. - float(over)) * l))
+    if step < 1:
+        step = 1
+    nsect = 1 + (len(data) - l) // step
     px = 0
     for _i in range(nsect):
-        px = px + spectrum(data, win, nfft, n1, n2) / nsect
-        n1 = n1 + n0
-        n2 = n2 + n0
+        n1 = _i * step
+        px = px + spectrum(data, win, nfft, n1, n1 + l) / nsect
     return px
 
 

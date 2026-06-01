@@ -139,6 +139,63 @@ class TestFreqTrace():
                       np.sum(self.res[:, 13] ** 2))
         assert rms < 1.0e-5
 
+    def test_spectrum_respects_n1_n2(self):
+        """spectrum() must use the n1:n2 sub-window, not the whole array.
+
+        See #3491: previously n1 and n2 only affected the normalisation
+        scalar while the FFT was always computed on the full ``data``, so
+        changing them did not change the result.
+        """
+        rng = np.random.default_rng(42)
+        n = 1024
+        nfft = 256
+        data = rng.standard_normal(n)
+        win = signal.windows.hamming(n // 2)
+        # Selecting the first half must equal computing on the sliced data.
+        sub = freqattributes.spectrum(data, win, nfft, 0, n // 2)
+        manual = freqattributes.spectrum(data[0:n // 2], win, nfft, 0, n // 2)
+        np.testing.assert_allclose(sub, manual)
+        # The first and second halves of the signal must give different
+        # spectra (they did not before the fix).
+        second = freqattributes.spectrum(data, win, nfft, n // 2, n)
+        assert not np.allclose(sub, second)
+        # Default arguments still return the periodogram of the whole array.
+        full_win = signal.windows.hamming(n)
+        np.testing.assert_allclose(
+            freqattributes.spectrum(data, full_win, nfft),
+            freqattributes.spectrum(data, full_win, nfft, 0, n))
+
+    def test_welch_averages_distinct_sections(self):
+        """welch() must average periodograms of distinct sliding sections.
+
+        See #3491: because spectrum() ignored n1/n2, welch() effectively
+        averaged the spectrum of the whole array with itself, and using a
+        section length shorter than the data raised a broadcasting error.
+        """
+        rng = np.random.default_rng(7)
+        n = 1024
+        nfft = 256
+        data = rng.standard_normal(n)
+        section = n // 4
+        over = 0.5
+        win = signal.windows.hamming(section)
+        px = freqattributes.welch(data, win, nfft, l=section, over=over)
+        # Reproduce the expected average of length-``section`` sliding windows.
+        step = int(round((1.0 - over) * section))
+        nsect = 1 + (n - section) // step
+        ref = 0
+        for i in range(nsect):
+            ref = ref + freqattributes.spectrum(
+                data, win, nfft, i * step, i * step + section) / nsect
+        np.testing.assert_allclose(px, ref)
+        assert nsect > 1
+        # A full-length window collapses to a single section equal to
+        # spectrum() of the whole array (unchanged legacy behaviour).
+        full_win = signal.windows.hamming(n)
+        np.testing.assert_allclose(
+            freqattributes.welch(data, full_win, nfft),
+            freqattributes.spectrum(data, full_win, nfft, 0, n))
+
     def test_pgm(self):
         """
         """
