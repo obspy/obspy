@@ -7,12 +7,12 @@ metadata into SiteXML files.
 ## Table Of Contents
 
 - [Installation](#installation)
+    - [Platform Notes](#platform-notes)
 - [What The Tools Produce](#what-the-tools-produce)
 - [Input Table Summary](#input-table-summary)
 - [Minimal Required Metadata](#minimal-required-metadata)
 - [Running `csv2sitexml`](#running-csv2sitexml)
 - [Running `excel2sitexml`](#running-excel2sitexml)
-- [Platform Notes](#platform-notes)
 - [Example Files](#example-files)
 - [Recommended Workflows](#recommended-workflows)
     - [SiteXML with only Site Description](#sitexml-with-only-site-description)
@@ -49,6 +49,35 @@ Once you unzip the compressed file, you will end-up with the following file hier
 
 > **Important:**  
 > Do not move the executables out of their folder; they need the bundled libraries and SiteXML schema data next to them.
+
+### Platform Notes
+
+On macOS and Linux, run the executable from a terminal, for example:
+
+```bash
+./csv2sitexml -V
+./excel2sitexml -V
+```
+
+On Windows PowerShell, run:
+
+```powershell
+.\csv2sitexml.exe -V
+.\excel2sitexml.exe -V
+```
+
+Unsigned macOS executables may **trigger a Gatekeeper warning**. You can bypass 
+Gatekeeper by removing the quarantine attribute from the unpacked tools
+folder, using the following command.
+
+```bash
+xattr -dr com.apple.quarantine sitexml-scripts
+```
+
+Unsigned Windows executables may **trigger SmartScreen or antivirus warnings**.
+Add the executables in the list of your trusted sources, following the instructions
+of the software that is blocking the execution.
+
 
 ## What The Tools Produce
 
@@ -236,34 +265,6 @@ excel2sitexml sera_site.xlsx \
   -p velocity_profiles.xlsx \
   -out sitexml_output
 ```
-
-## Platform Notes
-
-On macOS and Linux, run the executable from a terminal, for example:
-
-```bash
-./csv2sitexml -o site_owner.csv -d site_description.csv -out sitexml_output
-./excel2sitexml sera_site.xlsx -out sitexml_output
-```
-
-On Windows PowerShell, run:
-
-```powershell
-.\csv2sitexml.exe -o site_owner.csv -d site_description.csv -out sitexml_output
-.\excel2sitexml.exe sera_site.xlsx -out sitexml_output
-```
-
-Unsigned macOS executables may trigger a Gatekeeper warning. If you trust the
-source of the bundle, remove the quarantine attribute from the unpacked tool
-folder:
-
-```bash
-xattr -dr com.apple.quarantine sitexml-scripts
-```
-
-Unsigned Windows executables may trigger SmartScreen or antivirus warnings.
-For trusted small-group distribution, verify the source of the archive and any
-provided checksums before running the tool.
 
 ## Example Files
 
