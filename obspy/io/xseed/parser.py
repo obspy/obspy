@@ -1216,15 +1216,22 @@ class Parser(object):
                 input_units = None
 
         # Find the output units by looping over the stages in reverse order
-        # and finding the first stage whose first blockette has an output
-        # unit set.
+        # and finding the highest-numbered stage that has a blockette with an
+        # output unit set. A single stage can contain several blockettes (e.g.
+        # a decimation blockette without units followed by a response blockette
+        # that carries them), so every blockette of the stage is inspected -
+        # in reverse, so the last unit-bearing blockette (the stage's final
+        # output) wins - rather than only the first one (see #2830).
         unit_lookup_key = None
         for _s in reversed(sorted(stages.keys())):
-            _s = stages[_s][0]
-            for attr in dir(_s):
-                if "unit" in attr and "out" in attr and "__" not in attr:
-                    unit_lookup_key = getattr(_s, attr)
-                    break
+            for _blkt in reversed(stages[_s]):
+                for attr in dir(_blkt):
+                    if "unit" in attr and "out" in attr and "__" not in attr:
+                        unit_lookup_key = getattr(_blkt, attr)
+                        break
+                else:
+                    continue
+                break
             else:
                 continue
             break

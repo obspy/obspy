@@ -178,6 +178,11 @@ Changes:
  - obspy.io.xseed:
    * Improve error message when trying to read a local path to a file that does
      not exist with XSEED Parser (see #2686)
+   * Determine the overall output units from the final stage even when the
+     unit-bearing blockette is not the first one in that stage (e.g. a stage
+     starting with a decimation blockette). Previously only the first blockette
+     of each stage was inspected, so such stages were skipped and the units
+     fell back to a previous stage (see #2830)
  - obspy.signal:
    * PPSD: performance improvement in __init__: faster frequency array
      calculation (see #3644)

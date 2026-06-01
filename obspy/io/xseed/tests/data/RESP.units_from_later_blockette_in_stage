@@ -1,0 +1,288 @@
+#		<< IRIS SEED Reader, Release 5.0 >>
+#		
+#		======== CHANNEL RESPONSE DATA ========
+B050F03     Station:     OK001
+B050F16     Network:     GS
+B052F03     Location:    01
+B052F04     Channel:     HNZ
+B052F22     Start date:  2010,021,00:00:00.0000
+B052F23     End date:    No Ending Time
+#		=======================================
+#		+               +--------------------------------------------+                +
+#		+               |   Response (Poles & Zeros), OK001 ch HNZ   |                +
+#		+               +--------------------------------------------+                +
+#		
+B053F03     Transfer function type:                A [Laplace Transform (Rad/sec)]
+B053F04     Stage sequence number:                 1
+B053F05     Response in units lookup:              M/S**2 - meters per second squared
+B053F06     Response out units lookup:             V - Volts
+B053F07     A0 normalization factor:               1.57915E+06
+B053F08     Normalization frequency:               1
+B053F09     Number of zeroes:                      0
+B053F14     Number of poles:                       2
+#		Complex zeroes:
+#		  i  real          imag          real_error    imag_error
+#		Complex poles:
+#		  i  real          imag          real_error    imag_error
+B053F15-18    0 -8.796500E+02  8.974200E+02  0.000000E+00  0.000000E+00
+B053F15-18    1 -8.796500E+02 -8.974200E+02  0.000000E+00  0.000000E+00
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain, OK001 ch HNZ      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 1
+B058F04     Gain:                                  3.395530E-01
+B058F05     Frequency of gain:                     1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+               +--------------------------------------------+                +
+#		+               |   Response (Poles & Zeros), OK001 ch HNZ   |                +
+#		+               +--------------------------------------------+                +
+#		
+B053F03     Transfer function type:                A [Laplace Transform (Rad/sec)]
+B053F04     Stage sequence number:                 2
+B053F05     Response in units lookup:              V - Volts
+B053F06     Response out units lookup:             V - Volts
+B053F07     A0 normalization factor:               9.12672E+16
+B053F08     Normalization frequency:               1
+B053F09     Number of zeroes:                      0
+B053F14     Number of poles:                       5
+#		Complex zeroes:
+#		  i  real          imag          real_error    imag_error
+#		Complex poles:
+#		  i  real          imag          real_error    imag_error
+B053F15-18    0 -1.449060E+03  6.074740E+02  0.000000E+00  0.000000E+00
+B053F15-18    1 -1.449060E+03 -6.074740E+02  0.000000E+00  0.000000E+00
+B053F15-18    2 -5.978380E+02  1.443170E+03  0.000000E+00  0.000000E+00
+B053F15-18    3 -5.978380E+02 -1.443170E+03  0.000000E+00  0.000000E+00
+B053F15-18    4 -1.515000E+04  0.000000E+00  0.000000E+00  0.000000E+00
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain, OK001 ch HNZ      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 2
+B058F04     Gain:                                  1.000000E+00
+B058F05     Frequency of gain:                     1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+               +-------------------------------------------+                 +
+#		+               |   Response (Coefficients), OK001 ch HNZ   |                 +
+#		+               +-------------------------------------------+                 +
+#		
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 3
+B054F05     Response in units lookup:              V - Volts
+B054F06     Response out units lookup:             WRONGUNIT - Wrong Units
+B054F07     Number of numerators:                  0
+B054F10     Number of denominators:                0
+#		
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation, OK001 ch HNZ   |                       +
+#		+                      +------------------------------+                       +
+#		
+B057F03     Stage sequence number:                 3
+B057F04     Input sample rate:                     1.000000E+03
+B057F05     Decimation factor:                     1
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             0.000000E+00
+B057F08     Correction applied (seconds):          0.000000E+00
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain, OK001 ch HNZ      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 3
+B058F04     Gain:                                  7.549750E+05
+B058F05     Frequency of gain:                     1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation, OK001 ch HNZ   |                       +
+#		+                      +------------------------------+                       +
+#		
+B057F03     Stage sequence number:                 4
+B057F04     Input sample rate:                     1.000000E+03
+B057F05     Decimation factor:                     5
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             0.000000E+00
+B057F08     Correction applied (seconds):          0.000000E+00
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain, OK001 ch HNZ      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 4
+B058F04     Gain:                                  1.000000E+00
+B058F05     Frequency of gain:                     0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+                     +--------------------------------+                      +
+#		+                     |   FIR response, OK001 ch HNZ   |                      +
+#		+                     +--------------------------------+                      +
+#		
+B061F03     Stage sequence number:                 4
+B061F05     Symmetry type:                         B
+B061F06     Response in units lookup:              WRONGUNIT - Wrong Units
+B061F07     Response out units lookup:             COUNT - Digital counts
+B061F08     Number of numerators:                  146
+#		Numerator coefficients:
+#		  i, coefficient
+B061F09       0  3.576279E-07
+B061F09       1  4.768372E-07
+B061F09       2  5.960465E-07
+B061F09       3  5.960465E-07
+B061F09       4  1.192093E-07
+B061F09       5 -5.960465E-07
+B061F09       6 -1.668930E-06
+B061F09       7 -2.741814E-06
+B061F09       8 -3.457069E-06
+B061F09       9 -3.457069E-06
+B061F09      10 -2.384186E-06
+B061F09      11 -2.384186E-07
+B061F09      12  2.861023E-06
+B061F09      13  5.960465E-06
+B061F09      14  8.106232E-06
+B061F09      15  8.225441E-06
+B061F09      16  5.602837E-06
+B061F09      17  3.576279E-07
+B061F09      18 -6.437302E-06
+B061F09      19 -1.323223E-05
+B061F09      20 -1.752377E-05
+B061F09      21 -1.728535E-05
+B061F09      22 -1.144409E-05
+B061F09      23 -3.576279E-07
+B061F09      24  1.370907E-05
+B061F09      25  2.658367E-05
+B061F09      26  3.409386E-05
+B061F09      27  3.242493E-05
+B061F09      28  1.990795E-05
+B061F09      29 -1.668930E-06
+B061F09      30 -2.753735E-05
+B061F09      31 -5.018711E-05
+B061F09      32 -6.151199E-05
+B061F09      33 -5.567074E-05
+B061F09      34 -3.099441E-05
+B061F09      35  8.344650E-06
+B061F09      36  5.280971E-05
+B061F09      37  8.904934E-05
+B061F09      38  1.040697E-04
+B061F09      39  8.904934E-05
+B061F09      40  4.327297E-05
+B061F09      41 -2.431870E-05
+B061F09      42 -9.608269E-05
+B061F09      43 -1.502037E-04
+B061F09      44 -1.665354E-04
+B061F09      45 -1.333952E-04
+B061F09      46 -5.316734E-05
+B061F09      47  5.674362E-05
+B061F09      48  1.666546E-04
+B061F09      49  2.418756E-04
+B061F09      50  2.536774E-04
+B061F09      51  1.882315E-04
+B061F09      52  5.447865E-05
+B061F09      53 -1.162291E-04
+B061F09      54 -2.759695E-04
+B061F09      55 -3.733635E-04
+B061F09      56 -3.691912E-04
+B061F09      57 -2.501011E-04
+B061F09      58 -3.719330E-05
+B061F09      59  2.167225E-04
+B061F09      60  4.382134E-04
+B061F09      61  5.542040E-04
+B061F09      62  5.148649E-04
+B061F09      63  3.117323E-04
+B061F09      64 -1.370907E-05
+B061F09      65 -3.764629E-04
+B061F09      66 -6.694794E-04
+B061F09      67 -7.934570E-04
+B061F09      68 -6.890297E-04
+B061F09      69 -3.604889E-04
+B061F09      70  1.182556E-04
+B061F09      71  6.179810E-04
+B061F09      72  9.875298E-04
+B061F09      73  1.098037E-03
+B061F09      74  8.852482E-04
+B061F09      75  3.775358E-04
+B061F09      76 -3.032684E-04
+B061F09      77 -9.678602E-04
+B061F09      78 -1.410842E-03
+B061F09      79 -1.471996E-03
+B061F09      80 -1.090765E-03
+B061F09      81 -3.356934E-04
+B061F09      82  6.026030E-04
+B061F09      83  1.456976E-03
+B061F09      84  1.957655E-03
+B061F09      85  1.914620E-03
+B061F09      86  1.284599E-03
+B061F09      87  1.988411E-04
+B061F09      88 -1.058221E-03
+B061F09      89 -2.120972E-03
+B061F09      90 -2.646208E-03
+B061F09      91 -2.420068E-03
+B061F09      92 -1.436234E-03
+B061F09      93  8.094311E-05
+B061F09      94  1.722813E-03
+B061F09      95  3.002405E-03
+B061F09      96  3.495455E-03
+B061F09      97  2.975822E-03
+B061F09      98  1.503110E-03
+B061F09      99 -5.674362E-04
+B061F09     100 -2.664804E-03
+B061F09     101 -4.155159E-03
+B061F09     102 -4.528165E-03
+B061F09     103 -3.563642E-03
+B061F09     104 -1.426220E-03
+B061F09     105  1.348257E-03
+B061F09     106  3.979564E-03
+B061F09     107  5.656362E-03
+B061F09     108  5.778790E-03
+B061F09     109  4.159570E-03
+B061F09     110  1.120925E-03
+B061F09     111 -2.554655E-03
+B061F09     112 -5.815625E-03
+B061F09     113 -7.632971E-03
+B061F09     114 -7.312179E-03
+B061F09     115 -4.735708E-03
+B061F09     116 -4.551411E-04
+B061F09     117  4.407287E-03
+B061F09     118  8.438110E-03
+B061F09     119  1.032686E-02
+B061F09     120  9.269357E-03
+B061F09     121  5.262137E-03
+B061F09     122 -8.105040E-04
+B061F09     123 -7.342935E-03
+B061F09     124 -1.240552E-02
+B061F09     125 -1.428091E-02
+B061F09     126 -1.199794E-02
+B061F09     127 -5.708933E-03
+B061F09     128  3.215194E-03
+B061F09     129  1.243019E-02
+B061F09     130  1.917219E-02
+B061F09     131  2.100003E-02
+B061F09     132  1.654279E-02
+B061F09     133  6.049752E-03
+B061F09     134 -8.424282E-03
+B061F09     135 -2.328706E-02
+B061F09     136 -3.410423E-02
+B061F09     137 -3.658593E-02
+B061F09     138 -2.764368E-02
+B061F09     139 -6.263375E-03
+B061F09     140  2.603280E-02
+B061F09     141  6.527185E-02
+B061F09     142  1.056763E-01
+B061F09     143  1.407494E-01
+B061F09     144  1.645691E-01
+B061F09     145  1.730027E-01
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity, OK001 ch HNZ   |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           2.563540E+05
+B058F05     Frequency of sensitivity:              1.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		
+

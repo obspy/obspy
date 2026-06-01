@@ -722,6 +722,23 @@ class TestCore():
                 frequencies=frequencies, output=unit)
             np.testing.assert_equal(e_r, i_r, "%s - %s" % (filename, unit))
 
+    def test_output_units_from_later_blockette_in_stage(self, testdata):
+        """
+        The overall output units must be taken from the final stage even when
+        the unit-bearing blockette is not the first one in that stage.
+
+        Regression test for #2830: the last stage of this file begins with a
+        decimation blockette (no units) followed by the response blockette that
+        carries the output units (COUNT). The output units used to be read off
+        the first blockette of each stage only, so the final stage was skipped
+        and the units fell back to the previous stage's WRONGUNIT.
+        """
+        filename = testdata["RESP.units_from_later_blockette_in_stage"]
+        resp = obspy.read_inventory(filename)[0][0][0].response
+        sens = resp.instrument_sensitivity
+        assert sens.output_units == "COUNT"
+        assert sens.input_units == "M/S**2"
+
     def test_response_regression_1(self, testdata):
         """
         Regression test as fixing one issue broke something else.
