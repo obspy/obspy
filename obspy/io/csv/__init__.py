@@ -55,7 +55,9 @@ supported.
 2 Event(s) in Catalog:
 2012-04-11T08:38:37.000000Z |  +2.238,  +93.014 | 8.6  MW
 1960-05-22T19:11:14.000000Z | -38.170,  -72.570 | 8.5
->>> print(read_events('https://service.iris.edu/fdsnws/event/1/query?minmagnitude=8.5&format=text&endtime=2020-01-01'))  # doctest: +NORMALIZE_WHITESPACE
+>>> url = ('https://service.iris.edu/fdsnws/event/1/'
+...        'query?minmagnitude=8.5&format=text&endtime=2020-01-01')
+>>> print(read_events(url))  # doctest: +NORMALIZE_WHITESPACE +SKIP
 7 Event(s) in Catalog:
 2012-04-11T08:38:37.000000Z |  +2.238,  +93.014 | 8.6  MW
 2011-03-11T05:46:23.000000Z | +38.296, +142.498 | 9.1  MW
