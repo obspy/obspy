@@ -47,7 +47,7 @@ GEONET      https://service.geonet.org.nz
 GFZ         https://geofon.gfz.de
 ICGC        https://ws.icgc.cat
 IESDMC      http://batsws.earth.sinica.edu.tw
-IGN         http://fdsnws.sismologia.ign.es
+IGN         https://fdsnws.sismologia.ign.es
 INGV        https://webservices.ingv.it
 IPGP        https://ws.ipgp.fr
 IRIS        https://service.earthscope.org

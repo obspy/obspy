@@ -2,6 +2,8 @@ maintenance_1.5.x
 =================
 
 Changes:
+ - obspy.clients.fdsn:
+   * update URL endpoint for IGN to https (see #3744)
  - obspy.clients.filesystem:
    * tsindex: improve handling of sql sessions, less connections staying open
      (see #3736)
