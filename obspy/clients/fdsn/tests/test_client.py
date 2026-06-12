@@ -110,6 +110,7 @@ class TestClient():
     @classmethod
     def setup_class(cls):
         cls.client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT)
+        cls.client_ISC = Client(base_url="ISC", user_agent=USER_AGENT)
         cls.client_auth = \
             Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
                    user="nobody@iris.edu", password="anonymous")
@@ -129,17 +130,20 @@ class TestClient():
         assert starttime == stream[0].stats.starttime
         assert endtime == stream[0].stats.endtime
 
-    def test_service_discovery_iris(self):
+    def test_service_discovery_iris_and_isc(self):
         """
-        Tests the automatic discovery of services with the EARTHSCOPE endpoint.
+        Tests the automatic discovery of services with the EARTHSCOPE and ISC
+        endpoints.
         The test parameters are taken from EARTHSCOPE website.
 
         This will have to be adjusted once EARTHSCOPE changes their
         implementation.
         """
         client = self.client
-        assert {*client.services.keys()} == \
-            {"dataselect", "event", "station", "available_event_contributors",
+        client_ISC = self.client_ISC
+        assert {*client.services.keys()} == {"dataselect", "station"}
+        assert {*client_ISC.services.keys()} == \
+            {"event", "available_event_contributors",
              "available_event_catalogs"}
 
         # The test sets are copied from the EARTHSCOPE webpage.
@@ -153,19 +157,18 @@ class TestClient():
              "maxlongitude", "latitude", "longitude", "minradius",
              "maxradius", "level", "includerestricted", "format",
              "includeavailability", "updatedafter", "matchtimeseries"}
-        assert {*client.services["event"].keys()} == \
+        assert {*client_ISC.services["event"].keys()} == \
             {"starttime", "endtime", "minlatitude", "maxlatitude",
              "minlongitude", "maxlongitude", "latitude", "longitude",
              "maxradius", "minradius", "mindepth", "maxdepth",
              "minmagnitude", "maxmagnitude",
              "magnitudetype", "format",
              "catalog", "contributor", "limit", "offset", "orderby",
-             "updatedafter", "includeallorigins", "includeallmagnitudes",
-             "includearrivals", "eventid",
-             "originid"}  # XXX: This is currently just specified in the WADL
+             "includeallorigins", "includeallmagnitudes",
+             "includearrivals", "eventid"}
 
         # Also check an exemplary value in more detail.
-        minradius = client.services["event"]["minradius"]
+        minradius = client_ISC.services["event"]["minradius"]
         assert minradius["default_value"] == 0.0
         assert not minradius["required"]
         assert minradius["doc"] == ""
@@ -179,69 +182,67 @@ class TestClient():
         """
         Tests the parsing of the available event catalogs.
         """
-        assert {*self.client.services["available_event_catalogs"]} == \
-            {"GCMT", "ISC", "NEIC PDE"}
+        assert {*self.client_ISC.services["available_event_catalogs"]} == \
+            {"ISC"}
 
-    def test_iris_event_contributors_availability(self):
+    def test_isc_event_contributors_availability(self):
         """
         Tests the parsing of the available event contributors.
         """
         response = requests.get(
-            'https://service.earthscope.org/fdsnws/event/1/contributors')
+            'https://www.isc.ac.uk/fdsnws/event/1/contributors')
         xml = lxml.etree.fromstring(response.content)
         expected = {
             elem.text for elem in xml.xpath('/Contributors/Contributor')}
         expected = set(_cleanup_earthscope(expected))
         # check that we have some values in there
         assert len(expected) > 5
-        assert {*self.client.services["available_event_contributors"]} == \
+        assert {*self.client_ISC.services["available_event_contributors"]} == \
             expected
 
-    def test_iris_example_queries_event(self):
+    def test_isc_example_queries_event(self):
         """
-        Tests the (sometimes modified) example queries given on the EARTHSCOPE
-        web page.
+        Tests some example queries.
 
         Used to be tested against files but that was not maintainable. It
         now tests if the queries return what was asked for.
         """
-        client = self.client
+        client = self.client_ISC
 
         # Event id query.
-        cat = client.get_events(eventid=609301)
+        cat = client.get_events(eventid=600860404)
         assert len(cat) == 1
-        assert "609301" in cat[0].resource_id.id
+        assert "600860404" in cat[0].resource_id.id
 
         # Temporal query.
         cat = client.get_events(
-            starttime=UTCDateTime("2001-01-07T01:00:00"),
-            endtime=UTCDateTime("2001-01-07T01:05:00"), catalog="ISC")
+            starttime=UTCDateTime("2002-01-01T05:00:00"),
+            endtime=UTCDateTime("2002-01-01T15:00:00"))
         assert len(cat) > 0
         for event in cat:
-            assert event.origins[0].extra.catalog.value == "ISC"
-            assert event.origins[0].time > UTCDateTime("2001-01-07T01:00:00")
-            assert UTCDateTime("2001-01-07T01:05:00") > event.origins[0].time
+            assert event.origins[0].time > UTCDateTime("2002-01-01T04:00:00")
+            assert UTCDateTime("2002-01-01T16:00:00") > event.origins[0].time
 
         # Misc query.
         cat = client.get_events(
-            starttime=UTCDateTime("2001-01-07T14:00:00"),
-            endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
-            maxlatitude=40, minlongitude=-170, maxlongitude=170,
-            includeallmagnitudes=True, minmagnitude=4, orderby="magnitude")
+            starttime=UTCDateTime("2020-01-07"),
+            endtime=UTCDateTime("2020-01-10"), minlatitude=-15,
+            maxlatitude=60.3, minlongitude=-60, maxlongitude=-4.1,
+            includeallmagnitudes=True, minmagnitude=3.5, orderby="magnitude")
         assert len(cat) > 0
         for event in cat:
             assert event.origins[0].time > \
-                               UTCDateTime("2001-01-07T14:00:00")
-            assert UTCDateTime("2001-01-08T00:00:00") > event.origins[0].time
-            assert event.origins[0].latitude > 14.9
-            assert 40.1 > event.origins[0].latitude
-            assert event.origins[0].latitude > -170.1
-            assert 170.1 > event.origins[0].latitude
+                               UTCDateTime("2020-01-07")
+            assert UTCDateTime("2020-01-10") > event.origins[0].time
+            assert event.origins[0].latitude > -15
+            assert 60.3 > event.origins[0].latitude
+            assert event.origins[0].longitude > -60
+            assert -4.1 > event.origins[0].longitude
             # events returned by FDSNWS can contain many magnitudes with a wide
             # range, and currently (at least for EARTHSCOPE) the magnitude
             # threshold sent to the server checks if at least one magnitude
             # matches, it does not only check the preferred magnitude..
-            assert any(m.mag >= 3.999 for m in event.magnitudes)
+            assert any(m.mag >= 3.499 for m in event.magnitudes)
 
     @pytest.mark.filterwarnings('ignore:.*cannot deal with')
     def test_irisph5_event(self):
@@ -388,52 +389,50 @@ class TestClient():
         _normalize_stats(got)
         assert got == expected, failmsg(got, expected)
 
-    def test_iris_example_queries_event_discover_services_false(self):
+    def test_isc_example_queries_event_discover_services_false(self):
         """
-        Tests the (sometimes modified) example queries given on the EARTHSCOPE
-        web page, without service discovery.
+        Tests some example queries, without service discovery.
 
         Used to be tested against files but that was not maintainable. It
         now tests if the queries return what was asked for.
         """
-        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+        client = Client(base_url="ISC", user_agent=USER_AGENT,
                         _discover_services=False)
 
         # Event id query.
-        cat = client.get_events(eventid=609301)
+        cat = client.get_events(eventid=600860404)
         assert len(cat) == 1
-        assert "609301" in cat[0].resource_id.id
+        assert "600860404" in cat[0].resource_id.id
 
         # Temporal query.
         cat = client.get_events(
-            starttime=UTCDateTime("2001-01-07T01:00:00"),
-            endtime=UTCDateTime("2001-01-07T01:05:00"), catalog="ISC")
+            starttime=UTCDateTime("2012-04-11T08:38:07"),
+            endtime=UTCDateTime("2012-04-11T08:38:57"), catalog="ISC")
         assert len(cat) > 0
         for event in cat:
-            assert event.origins[0].extra.catalog.value == "ISC"
-            assert event.origins[0].time > UTCDateTime("2001-01-07T01:00:00")
-            assert UTCDateTime("2001-01-07T01:05:00") > event.origins[0].time
+            assert event.origins[0].time > UTCDateTime("2012-04-11T08:35:07")
+            assert UTCDateTime("2012-04-11T08:44:07") > event.origins[0].time
 
         # Misc query.
         cat = client.get_events(
-            starttime=UTCDateTime("2001-01-07T14:00:00"),
-            endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
-            maxlatitude=40, minlongitude=-170, maxlongitude=170,
-            includeallmagnitudes=True, minmagnitude=4, orderby="magnitude")
+            starttime=UTCDateTime("2020-01-07"),
+            endtime=UTCDateTime("2020-01-10"), minlatitude=-15,
+            maxlatitude=60.3, minlongitude=-60, maxlongitude=-4.1,
+            includeallmagnitudes=True, minmagnitude=3.5, orderby="magnitude")
         assert len(cat) > 0
         for event in cat:
             assert event.origins[0].time > \
-                               UTCDateTime("2001-01-07T14:00:00")
-            assert UTCDateTime("2001-01-08T00:00:00") > event.origins[0].time
-            assert event.origins[0].latitude > 14.9
-            assert 40.1 > event.origins[0].latitude
-            assert event.origins[0].latitude > -170.1
-            assert 170.1 > event.origins[0].latitude
+                               UTCDateTime("2020-01-07")
+            assert UTCDateTime("2020-01-10") > event.origins[0].time
+            assert event.origins[0].latitude > -15
+            assert 60.3 > event.origins[0].latitude
+            assert event.origins[0].longitude > -60
+            assert -4.1 > event.origins[0].longitude
             # events returned by FDSNWS can contain many magnitudes with a wide
             # range, and currently (at least for EARTHSCOPE) the magnitude
             # threshold sent to the server checks if at least one magnitude
             # matches, it does not only check the preferred magnitude..
-            assert any(m.mag >= 3.999 for m in event.magnitudes)
+            assert any(m.mag >= 3.499 for m in event.magnitudes)
 
     def test_iris_example_queries_station_discover_services_false(self):
         """
@@ -563,7 +562,7 @@ class TestClient():
         implementation.
         """
         try:
-            client = self.client
+            client = self.client_ISC
 
             # Capture output
             tmp = io.StringIO()
@@ -586,6 +585,8 @@ class TestClient():
             expected = expected[:-2]
             for line_got, line_expected in zip(got, expected):
                 assert line_got == line_expected
+
+            client = self.client
 
             # Reset. Creating a new one is faster then clearing the old one.
             tmp = io.StringIO()
@@ -627,9 +628,8 @@ class TestClient():
         expected = (
             "FDSN Webservice Client "
             "(base url: https://service.earthscope.org)\n"
-            "Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6), "
-            "'station' (v1.0.7), 'available_event_catalogs', "
-            "'available_event_contributors'\n\n"
+            "Available Services: 'dataselect' (v1.0.0), "
+            "'station' (v1.0.7)\n\n"
             "Use e.g. client.help('dataselect') for the\n"
             "parameter description of the individual services\n"
             "or client.help() for parameter description of\n"
@@ -969,9 +969,7 @@ class TestClient():
             "station":
                 "https://ds.iris.edu/files/redirect/307/station/1",
             "dataselect":
-                "https://ds.iris.edu/files/redirect/307/dataselect/1",
-            "event":
-                "https://ds.iris.edu/files/redirect/307/event/1"},
+                "https://ds.iris.edu/files/redirect/307/dataselect/1"},
             user_agent=USER_AGENT)
 
         st = c.get_waveforms(
@@ -987,12 +985,6 @@ class TestClient():
             network="IU", station="ANMO", level="network")
         # Just make sure something is being downloaded.
         assert bool(len(inv.networks))
-
-        cat = c.get_events(starttime=UTCDateTime("2001-01-07T01:00:00"),
-                           endtime=UTCDateTime("2001-01-07T01:05:00"),
-                           catalog="ISC")
-        # Just make sure something is being downloaded.
-        assert bool(len(cat))
 
         # Also test the bulk requests which are done using POST requests.
         bulk = (("TA", "A25A", "", "BHZ",

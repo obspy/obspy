@@ -95,35 +95,12 @@ USP         https://sismo.iag.usp.br
         st = client.get_waveforms("IU", "ANMO", "00", "LHZ", t, t + 60 * 60)
         st.plot()
 
-(2) :meth:`~obspy.clients.fdsn.client.Client.get_events()`: Retrieves event
-    data from the server. Results are returned as a
-    :class:`~obspy.core.event.Catalog` object.
-
-    >>> starttime = UTCDateTime("2002-01-01")
-    >>> endtime = UTCDateTime("2002-01-02")
-    >>> cat = client.get_events(starttime=starttime, endtime=endtime,
-    ...                         minmagnitude=6, catalog="ISC")
-    >>> print(cat)  # doctest: +NORMALIZE_WHITESPACE
-    2 Event(s) in Catalog:
-    2002-01-01T11:29:22.720000Z |  +6.282, +125.749 | 6.3 MW
-    2002-01-01T07:28:57.480000Z | +36.991,  +72.336 | 6.3 Mb
-    >>> cat.plot()  # doctest: +SKIP
-
-    .. plot::
-
-        from obspy import UTCDateTime
-        from obspy.clients.fdsn import Client
-        client = Client()
-        starttime = UTCDateTime("2002-01-01")
-        endtime = UTCDateTime("2002-01-02")
-        cat = client.get_events(starttime=starttime, endtime=endtime,
-                                minmagnitude=6, catalog="ISC")
-        cat.plot()
-
-(3) :meth:`~obspy.clients.fdsn.client.Client.get_stations()`: Retrieves station
+(2) :meth:`~obspy.clients.fdsn.client.Client.get_stations()`: Retrieves station
     data from the server. Results are returned as an
     :class:`~obspy.core.inventory.inventory.Inventory` object.
 
+    >>> starttime = UTCDateTime("2002-01-01")
+    >>> endtime = UTCDateTime("2002-01-02")
     >>> inventory = client.get_stations(network="IU", station="A*",
     ...                                 starttime=starttime,
     ...                                 endtime=endtime)
@@ -153,6 +130,30 @@ USP         https://sismo.iag.usp.br
                                         starttime=starttime,
                                         endtime=endtime)
         inventory.plot()
+
+(3) :meth:`~obspy.clients.fdsn.client.Client.get_events()`: Retrieves event
+    data from the server. Results are returned as a
+    :class:`~obspy.core.event.Catalog` object.
+
+    >>> client = Client("ISC")  # doctest: +SKIP
+    >>> cat = client.get_events(starttime=starttime, endtime=endtime,
+    ...                         minmagnitude=5)  # doctest: +SKIP
+    >>> print(cat)  # doctest: +SKIP
+    2 Event(s) in Catalog:
+    2002-01-01T11:29:22.720000Z |  +6.282, +125.749 | 6.3 MW
+    2002-01-01T07:28:57.480000Z | +36.991,  +72.336 | 6.3 Mb
+    >>> cat.plot()  # doctest: +SKIP
+
+    .. plot::
+
+        from obspy import UTCDateTime
+        from obspy.clients.fdsn import Client
+        client = Client("ISC")
+        starttime = UTCDateTime("2002-01-01")
+        endtime = UTCDateTime("2002-01-02")
+        cat = client.get_events(starttime=starttime, endtime=endtime,
+                                minmagnitude=5)
+        cat.plot()
 
 
 Basic Routing Clients Usage
