@@ -132,6 +132,10 @@ jobs:
     # Ensure network tests dont fail build.
     continue-on-error: ${{ contains(matrix.options, 'network') || contains(matrix.options, 'warnings') }}
     env:
+      # set environment variables for FSNWS authenticated tests at EarthScope
+      OBSPY_TESTS_USER_AGENT: ${{ secrets.OBSPY_TESTS_USER_AGENT }}
+      OBSPY_TESTS_EARTHSCOPE_AUTH_USER: ${{ secrets.OBSPY_TESTS_EARTHSCOPE_AUTH_USER }}
+      OBSPY_TESTS_EARTHSCOPE_AUTH_PASSWORD: ${{ secrets.OBSPY_TESTS_EARTHSCOPE_AUTH_PASSWORD }}
       # set path of test environment for caching
       prefix: ${{ startsWith(matrix.os, 'ubuntu') && '/usr/share/miniconda3/envs/test' || startsWith(matrix.os, 'macos') && '/Users/runner/miniconda3/envs/test' || startsWith(matrix.os, 'windows') && 'C:\Miniconda3\envs\test' }}
       # set individual cache key
