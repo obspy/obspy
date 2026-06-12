@@ -10,6 +10,7 @@ The obspy.clients.fdsn.client test suite.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import io
+import os
 import re
 import socket
 import sys
@@ -55,7 +56,26 @@ from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
 
 
-USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
+# Custom user agent for running the test suite can be set using environment
+# variable OBSPY_TESTS_USER_AGENT, e.g. to let affected servers know what
+# traffic is coming from our CI runs. If not set has a still semi useful
+# default.
+USER_AGENT = (
+    os.environ.get("OBSPY_TESTS_USER_AGENT", "ObsPy (test suite)") +
+    " " + " ".join(DEFAULT_USER_AGENT.split()))
+# fetch credentials to be used when testing against EarthScope authenticated
+# FDSNWS ("queryauth" endpoints) from environment variables (which in CI will
+# be set through github actions secrets). Skip respective tests if not set.
+EARTHSCOPE_AUTH_USER = os.environ.get("OBSPY_TESTS_EARTHSCOPE_AUTH_USER")
+EARTHSCOPE_AUTH_PASSWORD = os.environ.get(
+    "OBSPY_TESTS_EARTHSCOPE_AUTH_PASSWORD")
+if EARTHSCOPE_AUTH_USER and EARTHSCOPE_AUTH_PASSWORD:
+    EARTHSCOPE_CREDENTIALS = True
+else:
+    EARTHSCOPE_CREDENTIALS = False
+MSG_NO_EARTHSCOPE_CREDENTIALS = (
+    "No credentials for EarthScope authentication set (via environment "
+    "variables)")
 
 
 def _normalize_stats(obj):
@@ -111,9 +131,13 @@ class TestClient():
     def setup_class(cls):
         cls.client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT)
         cls.client_ISC = Client(base_url="ISC", user_agent=USER_AGENT)
-        cls.client_auth = \
-            Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
-                   user="nobody@iris.edu", password="anonymous")
+        if EARTHSCOPE_AUTH_USER and EARTHSCOPE_AUTH_PASSWORD:
+            cls.client_auth = \
+                Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                       user=EARTHSCOPE_AUTH_USER,
+                       password=EARTHSCOPE_AUTH_PASSWORD)
+        else:
+            cls.client_auth = None
 
     # @pytest.mark.skip(reason='data no longer available')
     def test_trim_stream_after_get_waveform(self):
@@ -375,6 +399,8 @@ class TestClient():
             assert got == expected, \
                 "Dataselect failed for query %s" % repr(query)
 
+    @pytest.mark.skipif(
+        not EARTHSCOPE_CREDENTIALS, reason=MSG_NO_EARTHSCOPE_CREDENTIALS)
     def test_authentication(self, testdata):
         """
         Test dataselect with authentication.
@@ -645,7 +671,10 @@ class TestClient():
         authenticated bulk request.
         """
         if auth:
-            client = self.client_auth
+            if EARTHSCOPE_CREDENTIALS:
+                client = self.client_auth
+            else:
+                pytest.skip(MSG_NO_EARTHSCOPE_CREDENTIALS)
         else:
             client = self.client
 
@@ -719,7 +748,8 @@ class TestClient():
             del tr.stats._fdsnws_dataselect_url
         assert got == expected, failmsg(got, expected)
 
-    def test_station_bulk(self):
+    @pytest.mark.parametrize('auth', (True, False))
+    def test_station_bulk(self, auth):
         """
         Test bulk station requests, POSTing data to server. Also tests
         authenticated bulk request.
@@ -728,7 +758,14 @@ class TestClient():
         input types are tested with the waveform bulk downloader and thus
         should work just fine.
         """
-        clients = [self.client, self.client_auth]
+        if auth:
+            if EARTHSCOPE_CREDENTIALS:
+                client = self.client_auth
+            else:
+                pytest.skip(MSG_NO_EARTHSCOPE_CREDENTIALS)
+        else:
+            client = self.client
+
         # test cases for providing lists of lists
         starttime = UTCDateTime(1990, 1, 1)
         endtime = UTCDateTime(1990, 1, 1) + 10
@@ -738,46 +775,44 @@ class TestClient():
             ["IU", "COR", "", "UHZ", starttime, endtime],
             ["IU", "HRV", "", "LHN", starttime, endtime],
         ]
-        for client in clients:
-            # Test with station level.
-            inv = client.get_stations_bulk(bulk, level="station")
-            # Test with output to file.
-            with NamedTemporaryFile() as tf:
-                client.get_stations_bulk(
-                    bulk, filename=tf.name, level="station")
-                inv2 = read_inventory(tf.name, format="stationxml")
+        # Test with station level.
+        inv = client.get_stations_bulk(bulk, level="station")
+        # Test with output to file.
+        with NamedTemporaryFile() as tf:
+            client.get_stations_bulk(
+                bulk, filename=tf.name, level="station")
+            inv2 = read_inventory(tf.name, format="stationxml")
 
-            assert inv.networks == inv2.networks
-            assert len(inv.networks) == 1
-            assert inv[0].code == "IU"
-            assert len(inv.networks[0].stations) == 4
-            assert sorted([_i.code for _i in inv.networks[0].stations]) == \
-                sorted(["ANMO", "CCM", "COR", "HRV"])
+        assert inv.networks == inv2.networks
+        assert len(inv.networks) == 1
+        assert inv[0].code == "IU"
+        assert len(inv.networks[0].stations) == 4
+        assert sorted([_i.code for _i in inv.networks[0].stations]) == \
+            sorted(["ANMO", "CCM", "COR", "HRV"])
 
-            # Test with channel level.
-            inv = client.get_stations_bulk(bulk, level="channel")
-            # Test with output to file.
-            with NamedTemporaryFile() as tf:
-                client.get_stations_bulk(
-                    bulk, filename=tf.name, level="channel")
-                inv2 = read_inventory(tf.name, format="stationxml")
+        # Test with channel level.
+        inv = client.get_stations_bulk(bulk, level="channel")
+        # Test with output to file.
+        with NamedTemporaryFile() as tf:
+            client.get_stations_bulk(
+                bulk, filename=tf.name, level="channel")
+            inv2 = read_inventory(tf.name, format="stationxml")
 
-            assert inv.networks == inv2.networks
-            assert len(inv.networks) == 1
-            assert inv[0].code == "IU"
-            assert len(inv.networks[0].stations) == 4
-            assert sorted([_i.code for _i in inv.networks[0].stations]) == \
-                sorted(["ANMO", "CCM", "COR", "HRV"])
-            channels = []
-            for station in inv[0]:
-                for channel in station:
-                    channels.append("IU.%s.%s.%s" % (
-                        station.code, channel.location_code,
-                        channel.code))
-            assert sorted(channels) == \
-                sorted(["IU.ANMO..BHE", "IU.CCM..BHZ", "IU.COR..UHZ",
-                        "IU.HRV..LHN"])
-        return
+        assert inv.networks == inv2.networks
+        assert len(inv.networks) == 1
+        assert inv[0].code == "IU"
+        assert len(inv.networks[0].stations) == 4
+        assert sorted([_i.code for _i in inv.networks[0].stations]) == \
+            sorted(["ANMO", "CCM", "COR", "HRV"])
+        channels = []
+        for station in inv[0]:
+            for channel in station:
+                channels.append("IU.%s.%s.%s" % (
+                    station.code, channel.location_code,
+                    channel.code))
+        assert sorted(channels) == \
+            sorted(["IU.ANMO..BHE", "IU.CCM..BHZ", "IU.COR..UHZ",
+                    "IU.HRV..LHN"])
 
     def test_get_waveform_attach_response(self):
         """
@@ -1007,6 +1042,8 @@ class TestClient():
         # Just make sure something is being downloaded.
         assert bool(len(inv.networks))
 
+    @pytest.mark.skipif(
+        not EARTHSCOPE_CREDENTIALS, reason=MSG_NO_EARTHSCOPE_CREDENTIALS)
     def test_redirection_auth(self):
         """
         Tests the redirection of GET and POST requests using authentication.
@@ -1037,8 +1074,8 @@ class TestClient():
                        user_agent=USER_AGENT)
             # The force_redirect flag overwrites that behaviour.
             c_auth = Client("EARTHSCOPE", service_mappings=service_mappings,
-                            user="nobody@earthscope.org",
-                            password="anonymous",
+                            user=EARTHSCOPE_AUTH_USER,
+                            password=EARTHSCOPE_AUTH_PASSWORD,
                             user_agent=USER_AGENT, force_redirect=True)
         st = c_auth.get_waveforms(
             network="IU", station="ANMO", location="00", channel="BHZ",
