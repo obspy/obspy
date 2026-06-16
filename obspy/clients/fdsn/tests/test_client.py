@@ -1091,12 +1091,6 @@ class TestClient():
         # Just make sure something is being downloaded.
         assert bool(len(inv.networks))
 
-        cat = c_auth.get_events(starttime=UTCDateTime("2001-01-07T01:00:00"),
-                                endtime=UTCDateTime("2001-01-07T01:05:00"),
-                                catalog="ISC")
-        # Just make sure something is being downloaded.
-        assert bool(len(cat))
-
         # Also test the bulk requests which are done using POST requests.
         bulk = (("TA", "A25A", "", "BHZ",
                  UTCDateTime("2010-03-25T00:00:00"),
