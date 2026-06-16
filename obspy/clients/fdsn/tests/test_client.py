@@ -180,7 +180,7 @@ class TestClient():
              "channel", "minlatitude", "maxlatitude", "minlongitude",
              "maxlongitude", "latitude", "longitude", "minradius",
              "maxradius", "level", "includerestricted", "format",
-             "includeavailability", "updatedafter", "matchtimeseries"}
+             "updatedafter"}
         assert {*client_ISC.services["event"].keys()} == \
             {"starttime", "endtime", "minlatitude", "maxlatitude",
              "minlongitude", "maxlongitude", "latitude", "longitude",
