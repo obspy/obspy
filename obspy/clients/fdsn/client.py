@@ -605,9 +605,9 @@ class Client(object):
         ...                                 endtime=endtime)
         >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
-            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+            Created by: EarthScope WEB SERVICE: fdsnws-station | version: ...
                         ...
-            Sending institution: IRIS-DMC (IRIS-DMC)
+            Sending institution: EarthScope (EarthScope)
             Contains:
                     Networks (1):
                             IU
@@ -646,9 +646,9 @@ class Client(object):
         ...     level="response")
         >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
-            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+            Created by: EarthScope WEB SERVICE: fdsnws-station | version: ...
                         ...
-            Sending institution: IRIS-DMC (IRIS-DMC)
+            Sending institution: EarthScope (EarthScope)
             Contains:
                 Networks (1):
                     IU
@@ -1091,9 +1091,9 @@ class Client(object):
         >>> inv = client.get_stations_bulk(bulk)
         >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
-            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+            Created by: EarthScope WEB SERVICE: fdsnws-station | version: ...
 
-            Sending institution: IRIS-DMC (IRIS-DMC)
+            Sending institution: EarthScope (EarthScope)
             Contains:
                 Networks (2):
                     GR, IU
@@ -1122,9 +1122,9 @@ class Client(object):
         >>> inv = client.get_stations_bulk(bulk, level="channel")
         >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
-            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+            Created by: EarthScope WEB SERVICE: fdsnws-station | version: ...
 
-            Sending institution: IRIS-DMC (IRIS-DMC)
+            Sending institution: EarthScope (EarthScope)
             Contains:
                 Networks (2):
                     GR, IU
