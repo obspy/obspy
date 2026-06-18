@@ -7,6 +7,10 @@ Changes:
  - obspy.clients.filesystem:
    * tsindex: improve handling of sql sessions, less connections staying open
      (see #3736)
+ - obspy.clients.iris:
+   * deprecate flinnengdahl web service, which EarthScope announced will be
+     retired in July 2026. Users should use obspy.geodetics instead.
+     (see #3756)
  - obspy.io.mseed:
    * fix the type of exception raised when trying to read an empty file
      (see #3709)
