@@ -258,6 +258,16 @@ class Stats(AttribDict):
         self.__setitem__('sampling_rate', state['sampling_rate'])
 
 
+def _add_to_return_value(func, *args, **kwargs):
+    """
+    Modifies behaviour of _add_processing_info depending
+    on whether processing info should be written to return
+    value or self.
+    """
+    func._writes_return_value = True
+    return func
+
+
 @decorator
 def _add_processing_info(func, *args, **kwargs):
     """
@@ -284,7 +294,15 @@ def _add_processing_info(func, *args, **kwargs):
     result = func(*args, **kwargs)
     # Attach after executing the function to avoid having it attached
     # while the operation failed.
-    self._internal_add_processing_info(info)
+
+    # attach to return value
+    if getattr(func, "_writes_return_value", False):
+        if result:
+            result._internal_add_processing_info(info)
+
+    # attach to self
+    else:
+        self._internal_add_processing_info(info)
     return result
 
 
@@ -1198,6 +1216,8 @@ class Trace(object):
                 pass
         return self
 
+    @_add_processing_info
+    @_add_to_return_value
     def slice(self, starttime=None, endtime=None, nearest_sample=True):
         """
         Return a new Trace object with data going from start to end time.
@@ -1233,10 +1253,31 @@ class Trace(object):
         >>> tr2.data
         array([2, 3, 4, 5, 6, 7, 8])
         """
-        tr = copy(self)
+        tr = Trace()
         tr.stats = deepcopy(self.stats)
-        tr.trim(starttime=starttime, endtime=endtime,
-                nearest_sample=nearest_sample)
+        if not starttime:
+            startpoint = 0
+        else:
+            startpoint = (starttime - self.stats.starttime) / self.stats.delta
+        if not endtime:
+            endpoint = len(self.data)
+        else:
+            endpoint = (endtime - self.stats.starttime) / self.stats.delta
+        if nearest_sample:
+            i0 = int(round(startpoint))
+            i1 = int(round(endpoint))
+        else:
+            i0 = int(np.ceil(startpoint))
+            i1 = int(np.floor(endpoint))
+        if i1 < i0 or i1 < 0 or i0 >= len(self.data):
+            tr.data = np.array([], dtype=self.data.dtype)
+        else:
+            if i0 < 0:
+                i0 = 0
+            if i1 >= len(self.data):
+                i1 = len(self.data)
+            tr.data = self.data[i0:i1+1]
+        tr.stats.starttime = self.stats.starttime + self.stats.delta * i0
         return tr
 
     def slide(self, window_length, step, offset=0,
