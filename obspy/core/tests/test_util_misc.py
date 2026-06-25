@@ -4,12 +4,13 @@ import tempfile
 import warnings
 from unittest import mock
 
+import numpy as np
 import pytest
 
 from obspy import UTCDateTime, read
 from obspy.core.event import ResourceIdentifier as ResId
 from obspy.core.util.misc import CatchOutput, get_window_times, \
-    _ENTRY_POINT_CACHE, _yield_obj_parent_attr
+    _ENTRY_POINT_CACHE, _yield_obj_parent_attr, eig
 from obspy.core.util.base import CatchAndAssertWarnings
 
 
@@ -317,3 +318,26 @@ class TestUtilMisc:
 
         assert len(w) == 1
         assert 'something bad' in str(w[0].message)
+
+    def test_eig(self):
+        """
+        Test helper routine :func:`obspy.core.util.misc.eig` which is a drop in
+        replacement for :func:`numpy.linalg.eig` but mimicking the behavior of
+        numpy <2.5.
+        """
+        # test a matrix that will have real valued eigenvalues/-vectors
+        a = np.diag((1, 2, 3))
+        d_np, v_np = np.linalg.eig(a)
+        d, v = eig(a)
+        np.testing.assert_array_equal(d, d_np)
+        np.testing.assert_array_equal(v, v_np)
+        assert d.dtype == float
+        assert v.dtype == float
+        # test a matrix that will have complex valued eigenvalues/-vectors
+        a = np.array([[1, -1, 2], [4, -2, 1], [-2, 3, 4]])
+        d_np, v_np = np.linalg.eig(a)
+        d, v = eig(a)
+        np.testing.assert_array_equal(d, d_np)
+        np.testing.assert_array_equal(v, v_np)
+        assert d.dtype == complex
+        assert v.dtype == complex

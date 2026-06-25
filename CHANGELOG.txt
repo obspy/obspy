@@ -2,6 +2,11 @@ maintenance_1.5.x
 =================
 
 Changes:
+ - General:
+   * add helper function that wraps around `numpy.linalg.eig` but always
+     mimicks the behavior of numpy <2.5, which is to downcast results to real
+     valued arrays when possible. Replacing all `numpy.linalg.eig` calls in the
+     code base with this wrapper (see #3760)
  - obspy.clients.fdsn:
    * update URL endpoint for IGN to https (see #3744)
  - obspy.clients.filesystem:
