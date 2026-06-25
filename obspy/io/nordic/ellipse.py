@@ -87,6 +87,18 @@ class Ellipse:
         if _almost_good_cov(cov):
             cov = _fix_cov(cov)
         evals, evecs = np.linalg.eig(cov)
+        # numpy 2.5 changed behavior of eig which used to return real values
+        # when possible. so cast to float here
+        with warnings.catch_warnings():
+            # numpy shows a warning about the cast, even if all imaginary parts
+            # are zero, which we test for here
+            warnings.filterwarnings(
+                action='ignore', message='Casting complex values to real '
+                'discards the imaginary part')
+            if np.all(np.isreal(evals)):
+                evals = evals.astype(float)
+            if np.all(np.isreal(evecs)):
+                evecs = evecs.astype(float)
         if np.any(evals < 0):
             cov_factor = cov[0][1]
             cov_base = cov/cov_factor

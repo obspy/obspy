@@ -855,6 +855,16 @@ def mt2plane(mt):
     written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     (d, v) = np.linalg.eig(mt.mt)
+    # numpy 2.5 changed behavior of eig which used to return real values
+    # when possible. so cast to float here
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            action='ignore', message='Casting complex values to real '
+            'discards the imaginary part')
+        if np.all(np.isreal(d)):
+            d = d.astype(float)
+        if np.all(np.isreal(v)):
+            v = v.astype(float)
     d = np.array([d[1], d[0], d[2]])
     v = np.array([[v[1, 1], -v[1, 0], -v[1, 2]],
                  [v[2, 1], -v[2, 0], -v[2, 2]],
