@@ -1598,7 +1598,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
         is_time_correction_applied = bool(activity_flags & 2)
 
         current_time_shift = current_record[40:44]
-        current_time_shift.dtype = np.int32
+        current_time_shift = current_time_shift.view(dtype=np.int32)
         if do_swap:
             current_time_shift = current_time_shift.byteswap(False)
         current_time_shift = current_time_shift[0]
@@ -1630,9 +1630,9 @@ def shift_time_of_file(input_file, output_file, timeshift):
             second = time[6:7]
             msecs = time[8:10]
             # Change dtype of multibyte values.
-            year.dtype = np.uint16
-            julday.dtype = np.uint16
-            msecs.dtype = np.uint16
+            year = year.view(dtype=np.uint16)
+            julday = julday.view(dtype=np.uint16)
+            msecs = msecs.view(dtype=np.uint16)
             if do_swap:
                 year = year.byteswap(False)
                 julday = julday.byteswap(False)
@@ -1653,9 +1653,9 @@ def shift_time_of_file(input_file, output_file, timeshift):
                 julday = julday.byteswap(False)
                 msecs = msecs.byteswap(False)
             # Change dtypes back.
-            year.dtype = np.uint8
-            julday.dtype = np.uint8
-            msecs.dtype = np.uint8
+            year = year.view(dtype=np.uint8)
+            julday = julday.view(dtype=np.uint8)
+            msecs = msecs.view(dtype=np.uint8)
             # Write to current record.
             time[0:2] = year[:]
             time[2:4] = julday[:]
@@ -1670,7 +1670,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
         current_time_shift = np.array([current_time_shift], np.int32)
         if do_swap:
             current_time_shift = current_time_shift.byteswap(False)
-        current_time_shift.dtype = np.uint8
+        current_time_shift = current_time_shift.view(dtype=np.uint8)
         current_record[40:44] = current_time_shift[:]
 
     # Write to the output file.
@@ -1770,7 +1770,7 @@ def spread_time_over_file(input_file, output_file, timeshift):
         is_time_correction_applied = bool(activity_flags & 2)
 
         current_time_shift = current_record[40:44]
-        current_time_shift.dtype = np.int32
+        current_time_shift = current_time_shift.view(dtype=np.int32)
         if do_swap:
             current_time_shift = current_time_shift.byteswap(False)
         current_time_shift = current_time_shift[0]
@@ -1802,9 +1802,9 @@ def spread_time_over_file(input_file, output_file, timeshift):
             second = time[6:7]
             msecs = time[8:10]
             # Change dtype of multibyte values.
-            year.dtype = np.uint16
-            julday.dtype = np.uint16
-            msecs.dtype = np.uint16
+            year = year.view(dtype=np.uint16)
+            julday = julday.view(dtype=np.uint16)
+            msecs = msecs.view(dtype=np.uint16)
             if do_swap:
                 year = year.byteswap(False)
                 julday = julday.byteswap(False)
@@ -1825,9 +1825,9 @@ def spread_time_over_file(input_file, output_file, timeshift):
                 julday = julday.byteswap(False)
                 msecs = msecs.byteswap(False)
             # Change dtypes back.
-            year.dtype = np.uint8
-            julday.dtype = np.uint8
-            msecs.dtype = np.uint8
+            year = year.view(dtype=np.uint8)
+            julday = julday.view(dtype=np.uint8)
+            msecs = msecs.view(dtype=np.uint8)
             # Write to current record.
             time[0:2] = year[:]
             time[2:4] = julday[:]
@@ -1843,7 +1843,7 @@ def spread_time_over_file(input_file, output_file, timeshift):
             current_time_shift = np.array([current_time_shift], np.int32)
             if do_swap:
                 current_time_shift = current_time_shift.byteswap(False)
-            current_time_shift.dtype = np.uint8
+            current_time_shift = current_time_shift.view(dtype=np.uint8)
             current_record[40:44] = current_time_shift[:]
 
     # Write to the output file.
