@@ -139,7 +139,7 @@ def enframe(x, win, inc):
     else:
         # length = next_pow_2(nwin)
         length = nwin
-    nf = int(np.fix((nx - length + inc) // inc))
+    nf = int(np.trunc((nx - length + inc) // inc))
     # f = np.zeros((nf, length))
     indf = inc * np.arange(nf)
     inds = np.arange(length) + 1
@@ -217,7 +217,7 @@ def rdct(x, n=0):
     if (n == 0):
         n = m
         a = np.sqrt(2 * n)
-        x = np.append([x[0:n:2, :]], [x[2 * int(np.fix(n / 2)):0:-2, :]],
+        x = np.append([x[0:n:2, :]], [x[2 * int(np.trunc(n / 2)):0:-2, :]],
                       axis=1)
         x = x[0, :, :]
         z = np.append(np.sqrt(2.), 2. * np.exp((-0.5j * float(np.pi / n)) *
