@@ -752,6 +752,31 @@ def ptp(a, *args, **kwargs):
     return np.ptp(a, *args, **kwargs)
 
 
+def eig(*args, **kwargs):
+    """
+    Drop in for :func:`numpy.linalg.eig()` which slightly changed behavior in
+    numpy 2.5, such that real valued outputs will not be returned downcast to
+    float anymore but left as complex with all imaginary parts zero. This might
+    not be accounted for in places where it is used across the code base.
+    In some cases it failed further down already because other numpy functions
+    refused to work on complex.
+    See #3760.
+    See `Numpy 2.5 release notes <np25notes>`_.
+
+    .. _np25notes: https://numpy.org/devdocs/release/2.5.0-notes.html#linalg-eig-and-linalg-eigvals-now-always-return-complex-arrays  # NOQA
+    """
+    d, v = np.linalg.eig(*args, **kwargs)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            action='ignore', message='Casting complex values to real '
+            'discards the imaginary part')
+        if np.all(np.isreal(d)):
+            d = d.astype(float)
+        if np.all(np.isreal(v)):
+            v = v.astype(float)
+    return d, v
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

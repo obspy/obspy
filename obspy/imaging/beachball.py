@@ -31,6 +31,7 @@ import warnings
 import numpy as np
 from decorator import decorator
 
+from obspy.core.util.misc import eig
 
 D2R = np.pi / 180
 R2D = 180 / np.pi
@@ -854,7 +855,7 @@ def mt2plane(mt):
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
     written by Andy Michael, Chen Ji and Oliver Boyd.
     """
-    (d, v) = np.linalg.eig(mt.mt)
+    (d, v) = eig(mt.mt)
     d = np.array([d[1], d[0], d[2]])
     v = np.array([[v[1, 1], -v[1, 0], -v[1, 2]],
                  [v[2, 1], -v[2, 0], -v[2, 2]],
