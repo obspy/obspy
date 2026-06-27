@@ -9,7 +9,7 @@ from unittest import mock
 
 import pytest
 import sqlalchemy as sa
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, close_all_sessions
 
 from obspy import read, UTCDateTime
 from obspy.clients.filesystem.tsindex import Client, Indexer, \
@@ -42,7 +42,13 @@ def client(filepath):
     db_path = filepath / 'timeseries.sqlite'
 
     client = Client(str(db_path), datapath_replace=("^", str(filepath) + '/'))
-    return client
+    yield client
+    # somehow a lot of connections and databases get left open if we don't do
+    # cleanup here after every single test method. feels like this should be
+    # fixed in the code itself, but wasn't able to fix it in reasonable amount
+    # of time not being familiar with the code itself
+    close_all_sessions()
+    client.request_handler.engine.dispose()
 
 
 class TestClient():
@@ -596,78 +602,90 @@ class TestIndexer():
                           database=database,
                           filename_pattern="*.mseed")
 
-        # test for relative paths
-        file_list = indexer.build_file_list(relative_paths=True,
-                                            reindex=True)
-        file_list.sort()
-        assert len(file_list) == 3
-        assert os.path.normpath(
-            'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed') == \
-            file_list[0]
-        assert os.path.normpath(
-            'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed') == \
-            file_list[1]
-        assert os.path.normpath(
-            'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed') == \
-            file_list[2]
+        try:
+            # test for relative paths
+            file_list = indexer.build_file_list(relative_paths=True,
+                                                reindex=True)
+            file_list.sort()
+            assert len(file_list) == 3
+            assert os.path.normpath(
+                'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed') == \
+                file_list[0]
+            assert os.path.normpath(
+                'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed') == \
+                file_list[1]
+            assert os.path.normpath(
+                'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed') == \
+                file_list[2]
 
-        # case where the root path is outside of the absolute
-        # data path, to assert that already indexed files are still skipped
-        indexer = Indexer(tempfile.mkdtemp(),
-                          database=TSIndexDatabaseHandler(database=database),
-                          filename_pattern="*.mseed")
-        with pytest.raises(OSError, match="^No files matching filename.*$"):
-            indexer.build_file_list(reindex=True)
+            # case where the root path is outside of the absolute
+            # data path, to assert that already indexed files are still skipped
+            indexer = Indexer(
+                tempfile.mkdtemp(),
+                database=TSIndexDatabaseHandler(database=database),
+                filename_pattern="*.mseed")
+            with pytest.raises(
+                    OSError, match="^No files matching filename.*$"):
+                indexer.build_file_list(reindex=True)
+        finally:
+            close_all_sessions()
+            indexer.request_handler.engine.dispose()
 
         # test for absolute paths
         # this time pass a TSIndexDatabaseHandler instance as the database
         indexer = Indexer(filepath,
                           database=TSIndexDatabaseHandler(database=database),
                           filename_pattern="*.mseed")
-        file_list = indexer.build_file_list(reindex=True)
-        file_list.sort()
-        assert len(file_list) == 3
-        assert os.path.normpath(
-            'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed') != \
-            file_list[0]
-        assert os.path.normpath(
-            'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed') in \
-            file_list[0]
-        assert os.path.normpath(
-            'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed') != \
-            file_list[1]
-        assert os.path.normpath(
-            'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed') in \
-            file_list[1]
-        assert os.path.normpath(
-            'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed') != \
-            file_list[2]
-        assert os.path.normpath(
-            'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed') in \
-            file_list[2]
-        # test that already indexed files (relative and absolute) get skipped.
-        with pytest.raises(
-                OSError, match="^No unindexed files matching filename.*$"):
-            indexer.build_file_list(reindex=False, relative_paths=False)
-        with pytest.raises(
-                OSError, match="^No unindexed files matching filename.*$"):
-            indexer.build_file_list(reindex=False, relative_paths=True)
-        # for this test mock an unindexed file ('data.mseed') to ensure that
-        # it gets added when reindex is True
-        mocked_files = [
-                'CU/2018/001/'
-                'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
-                'IU/2018/001/'
-                'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
-                'IU/2018/001/'
-                'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
-                'data.mseed'
-            ]
-        for i in range(len(mocked_files)):
-            mocked_files[i] = os.path.normpath(mocked_files[i])
-        indexer._get_rootpath_files = mock.MagicMock(return_value=mocked_files)
-        assert indexer.build_file_list(
-            reindex=False, relative_paths=False) == ['data.mseed']
+        try:
+            file_list = indexer.build_file_list(reindex=True)
+            file_list.sort()
+            assert len(file_list) == 3
+            assert os.path.normpath(
+                'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed') != \
+                file_list[0]
+            assert os.path.normpath(
+                'CU/2018/001/CU.TGUH.00.BHZ.2018.001_first_minute.mseed') in \
+                file_list[0]
+            assert os.path.normpath(
+                'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed') != \
+                file_list[1]
+            assert os.path.normpath(
+                'IU/2018/001/IU.ANMO.10.BHZ.2018.001_first_minute.mseed') in \
+                file_list[1]
+            assert os.path.normpath(
+                'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed') != \
+                file_list[2]
+            assert os.path.normpath(
+                'IU/2018/001/IU.COLA.10.BHZ.2018.001_first_minute.mseed') in \
+                file_list[2]
+            # test that already indexed files (relative and absolute) get
+            # skipped.
+            with pytest.raises(
+                    OSError, match="^No unindexed files matching filename.*$"):
+                indexer.build_file_list(reindex=False, relative_paths=False)
+            with pytest.raises(
+                    OSError, match="^No unindexed files matching filename.*$"):
+                indexer.build_file_list(reindex=False, relative_paths=True)
+            # for this test mock an unindexed file ('data.mseed') to ensure
+            # that it gets added when reindex is True
+            mocked_files = [
+                    'CU/2018/001/'
+                    'CU.TGUH.00.BHZ.2018.001_first_minute.mseed',
+                    'IU/2018/001/'
+                    'IU.ANMO.10.BHZ.2018.001_first_minute.mseed',
+                    'IU/2018/001/'
+                    'IU.COLA.10.BHZ.2018.001_first_minute.mseed',
+                    'data.mseed'
+                ]
+            for i in range(len(mocked_files)):
+                mocked_files[i] = os.path.normpath(mocked_files[i])
+            indexer._get_rootpath_files = mock.MagicMock(
+                return_value=mocked_files)
+            assert indexer.build_file_list(
+                reindex=False, relative_paths=False) == ['data.mseed']
+        finally:
+            close_all_sessions()
+            indexer.request_handler.engine.dispose()
 
     def test_run_bad_index_cmd(self, filepath):
         """
@@ -761,40 +779,41 @@ class TestTSIndexDatabaseHandler():
         db_path = os.path.join(filepath, 'timeseries.sqlite')
         request_handler = TSIndexDatabaseHandler(db_path)
 
-        keys = ['network', 'station', 'location', 'channel',
-                'earliest', 'latest']
-        NamedRow = namedtuple('NamedRow',
-                              keys)
+        try:
+            keys = ['network', 'station', 'location', 'channel',
+                    'earliest', 'latest']
+            NamedRow = namedtuple('NamedRow',
+                                  keys)
 
-        expected_ts_summary_data = \
-            [NamedRow(
-                "CU", "TGUH", "00", "BHZ",
-                "2018-01-01T00:00:00.000000",
-                "2018-01-01T00:01:00.000000"),
-             NamedRow(
-                "IU", "ANMO", "10", "BHZ",
-                "2018-01-01T00:00:00.019500",
-                "2018-01-01T00:00:59.994536")]
+            expected_ts_summary_data = \
+                [NamedRow(
+                    "CU", "TGUH", "00", "BHZ",
+                    "2018-01-01T00:00:00.000000",
+                    "2018-01-01T00:01:00.000000"),
+                 NamedRow(
+                    "IU", "ANMO", "10", "BHZ",
+                    "2018-01-01T00:00:00.019500",
+                    "2018-01-01T00:00:59.994536")]
 
-        ts_summary_data = request_handler._fetch_summary_rows(
-                                              [("I*,CU",
-                                                "ANMO,T*",
-                                                "00,10",
-                                                "BHZ",
-                                                "2018-01-01T00:00:00.000000",
-                                                "2018-12-31T00:00:00.000000")])
+            ts_summary_data = request_handler._fetch_summary_rows(
+                [("I*,CU", "ANMO,T*", "00,10", "BHZ",
+                  "2018-01-01T00:00:00.000000",
+                  "2018-12-31T00:00:00.000000")])
 
-        for i in range(0, len(expected_ts_summary_data)):
-            for j in range(0, len(keys)):
-                assert getattr(expected_ts_summary_data[i], keys[j]) == \
-                                 getattr(ts_summary_data[i], keys[j])
+            for i in range(0, len(expected_ts_summary_data)):
+                for j in range(0, len(keys)):
+                    assert getattr(expected_ts_summary_data[i], keys[j]) == \
+                                     getattr(ts_summary_data[i], keys[j])
 
-        # test for case where query returns no results
-        ts_summary_data = request_handler._fetch_summary_rows(
-            [("XX", "ANMO,T*", "00,10", "BHZ",
-              "2018-01-01T00:00:00.000000",
-              "2018-12-31T00:00:00.000000")])
-        assert ts_summary_data == []
+            # test for case where query returns no results
+            ts_summary_data = request_handler._fetch_summary_rows(
+                [("XX", "ANMO,T*", "00,10", "BHZ",
+                  "2018-01-01T00:00:00.000000",
+                  "2018-12-31T00:00:00.000000")])
+            assert ts_summary_data == []
+        finally:
+            close_all_sessions()
+            request_handler.engine.dispose()
 
     def test_get_tsindex_summary_cte(self, filepath):
         # test with actual sqlite3 database that is missing a summary table
@@ -802,22 +821,27 @@ class TestTSIndexDatabaseHandler():
         db_path = os.path.join(filepath, 'timeseries.sqlite')
         # supply an existing session
         engine = sa.create_engine("sqlite:///{}".format(db_path))
-        session = sessionmaker(bind=engine)
-        request_handler = TSIndexDatabaseHandler(session=session)
+        Session = sessionmaker(bind=engine)
+        try:
+            request_handler = TSIndexDatabaseHandler(session=Session)
 
-        ts_summary_cte = request_handler.get_tsindex_summary_cte()
+            ts_summary_cte = request_handler.get_tsindex_summary_cte()
 
-        expected_ts_summary_data = \
-            [("CU", "TGUH", "00", "BHZ",
-              "2018-01-01T00:00:00.000000",
-              "2018-01-01T00:01:00.000000"),
-             ("IU", "ANMO", "10", "BHZ",
-              "2018-01-01T00:00:00.019500",
-              "2018-01-01T00:00:59.994536"),
-             ("IU", "COLA", "10", "BHZ",
-              "2018-01-01T00:00:00.019500",
-              "2018-01-01T00:00:59.994538")]
-        query_results = (session().query(ts_summary_cte))
-        for idx, r in enumerate(query_results):
-            result = r[:6]  # ignore updt date
-            assert result == expected_ts_summary_data[idx]
+            expected_ts_summary_data = \
+                [("CU", "TGUH", "00", "BHZ",
+                  "2018-01-01T00:00:00.000000",
+                  "2018-01-01T00:01:00.000000"),
+                 ("IU", "ANMO", "10", "BHZ",
+                  "2018-01-01T00:00:00.019500",
+                  "2018-01-01T00:00:59.994536"),
+                 ("IU", "COLA", "10", "BHZ",
+                  "2018-01-01T00:00:00.019500",
+                  "2018-01-01T00:00:59.994538")]
+            with Session() as session:
+                query_results = session.query(ts_summary_cte)
+            for idx, r in enumerate(query_results):
+                result = r[:6]  # ignore updt date
+                assert result == expected_ts_summary_data[idx]
+        finally:
+            close_all_sessions()
+            engine.dispose()

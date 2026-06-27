@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0
 
       - name: setup conda
-        uses: conda-incubator/setup-miniconda@v3
+        uses: conda-incubator/setup-miniconda@v4
         with:
           miniconda-version: 'latest'
           python-version: '3.11'
@@ -58,7 +58,7 @@ jobs:
 
 #      - name: upload sphinx diagnostics (not now, the deploy_doc expects only 2 artifacts)
 #        if: always()   # upload even if previous step failed
-#        uses: actions/upload-artifact@v4
+#        uses: actions/upload-artifact@v7
 #        with:
 #          name: sphinx-diagnostics
 #          path: /tmp/sphinx_warnings.txt
@@ -83,9 +83,9 @@ jobs:
           cd misc/docs
           bash make_docset.sh
 
-      - name: actions/upload-artifact@v4 for docset
+      - name: actions/upload-artifact@v7 for docset
         if: always()   # upload even if previous step failed
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: obspydocset
           path: misc/docs/build/obspy-*.docset.tgz
