@@ -11,23 +11,33 @@ from obspy.clients.neic import Client
 pytestmark = pytest.mark.network
 
 
+@pytest.fixture(scope='session')
+def client():
+    # this can't fail really, since in the init method, nothing much is done,
+    # no connection established, just variables stored
+    return Client(timeout=8)
+
+
 class TestClient():
     """
     Test cases for obspy.clients.neic.client.Client.
     """
-    @classmethod
-    def setup_class(cls):
-        cls.client = Client(host="137.227.224.97", port=2061, timeout=8)
-        cls.starttime = UTCDateTime() - 5 * 60 * 60
+    starttime = UTCDateTime() - 5 * 60 * 60
 
-    def test_get_waveform(self):
+    def test_get_waveform(self, client):
         """
         Tests get_waveforms method. Tests against get_waveforms_nscl method.
         """
-        client = self.client
         t = self.starttime
         duration = 1.0
-        st = client.get_waveforms_nscl("IUANMO BH.00", t, duration)
+
+        try:
+            st = client.get_waveforms_nscl("IUANMO BH.00", t, duration)
+        except TimeoutError:
+            pytest.skip('Timeout trying to connect to NEIC CWB query server')
+        except ConnectionRefusedError:
+            pytest.skip('NEIC CWB query server refused connection')
+
         # try a series of requests, compare against get_waveforms_nscl
         args = [["IU", "ANMO", "00", "BH."],
                 ["??", "ANMO", "0?", "BH[Z21]"],
@@ -39,17 +49,22 @@ class TestClient():
                                        endtime=t + duration)
             assert st == st2
 
-    def test_get_waveform_nscl(self):
+    def test_get_waveform_nscl(self, client):
         """
         Tests get_waveforms_nscl method.
         """
-        client = self.client
         t = self.starttime
         duration_long = 3600.0
         duration = 1.0
         components = ["1", "2", "Z"]
         # try one longer request to see if fetching multiple blocks works
-        st = client.get_waveforms_nscl("IUANMO BH.00", t, duration_long)
+        try:
+            st = client.get_waveforms_nscl("IUANMO BH.00", t, duration_long)
+        except TimeoutError:
+            pytest.skip('Timeout trying to connect to NEIC CWB query server')
+        except ConnectionRefusedError:
+            pytest.skip('NEIC CWB query server refused connection')
+
         # merge to avoid failing tests simply due to gaps
         st.merge()
         st.sort()
