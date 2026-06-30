@@ -123,15 +123,17 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
       unpackdatabyteorder == -2 ||
       unpackencodingformat == -2 ||
       unpackencodingfallback == -2)
-    if (check_environment (verbose))
+    if (check_environment (verbose)) {
+      msr_free(&msr);
       return MS_GENERROR;
-
+    }
   /* Allocate and copy fixed section of data header */
   msr->fsdh = realloc (msr->fsdh, sizeof (struct fsdh_s));
 
   if (msr->fsdh == NULL)
   {
     ms_log (2, "msr_unpack(): Cannot allocate memory\n");
+    msr_free(&msr);
     return MS_GENERROR;
   }
 
@@ -179,6 +181,7 @@ msr_unpack (char *record, int reclen, MSRecord **ppmsr,
   if (msr_srcname (msr, srcname, 1) == NULL)
   {
     ms_log (2, "msr_unpack(): Cannot generate srcname\n");
+    msr_free(&msr);
     return MS_GENERROR;
   }
 
