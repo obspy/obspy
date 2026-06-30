@@ -18,12 +18,13 @@ from lxml import etree
 
 import obspy
 import obspy.io.stationxml.core
-from obspy import UTCDateTime
+from obspy import UTCDateTime, read_inventory
 from obspy.core.util import AttribDict, CatchAndAssertWarnings
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.inventory import (
     Inventory, Network, ResponseStage, Response, Channel, Station)
-from obspy.core.inventory.util import DataAvailability
+from obspy.core.inventory.util import (
+    DataAvailability, Latitude, Longitude, Distance)
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.stationxml.core import _read_stationxml
 import pytest
@@ -1293,3 +1294,35 @@ class TestStationXML():
         # if it is present, at least it should have empty value, but let's just
         # make sure it's not present at all for now
         # assert matches[0].text is None
+
+    def test_measurement_units(self):
+        """
+        Regression test for #3623
+
+        Make sure that measurement units are expected in some classes derived
+        from obspy custom float classes that override the base classes' init
+        method
+        """
+        lat = Latitude(49.18, lower_uncertainty=0.1, upper_uncertainty=0.1,
+                       measurement_method='guesstimate')
+        lon = Longitude(-2.15, lower_uncertainty=0.1, upper_uncertainty=0.1,
+                        measurement_method='rule of thumb')
+        elev = Distance(-10., lower_uncertainty=1, upper_uncertainty=1,
+                        measurement_method='echo sounder')
+        depth = Distance(0.)
+        cha_orig = Channel('CHZ', '00', lat, lon, elev, depth)
+        channels = [cha_orig]
+        stations = [Station('JERB', lat, lon, elev, channels=channels)]
+        networks = [Network('XX', stations=stations)]
+        inventory = Inventory(networks=networks)
+
+        with io.BytesIO() as bio:
+            inventory.write(bio, 'STATIONXML')
+            bio.seek(0)
+            inv_got = read_inventory(bio, 'STATIONXML')
+
+        cha_got = inv_got[0][0][0]
+        assert cha_got.latitude.measurement_method == 'guesstimate'
+        assert cha_got.longitude.measurement_method == 'rule of thumb'
+        assert cha_got.elevation.measurement_method == 'echo sounder'
+        assert cha_got.depth.measurement_method is None
