@@ -35,3 +35,8 @@ flags:
     carryforward: true
   unittests_network:
     carryforward: true
+
+# ignore some files that codecov thinks is code
+ignore:
+  - "obspy/io/ah/tests/data/ah1.*"
+  - "obspy/io/ah/tests/data/ah2.*"
