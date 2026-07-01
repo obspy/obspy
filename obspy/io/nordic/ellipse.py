@@ -20,6 +20,8 @@ import copy
 import io
 import warnings
 
+from obspy.core.util.misc import eig
+
 
 class Ellipse:
     def __init__(self, a, b, theta=0, center=(0, 0)):
@@ -86,7 +88,7 @@ class Ellipse:
         cov = np.array(cov)
         if _almost_good_cov(cov):
             cov = _fix_cov(cov)
-        evals, evecs = np.linalg.eig(cov)
+        evals, evecs = eig(cov)
         if np.any(evals < 0):
             cov_factor = cov[0][1]
             cov_base = cov/cov_factor

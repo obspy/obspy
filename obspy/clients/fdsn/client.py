@@ -164,9 +164,7 @@ class Client(object):
         >>> client = Client("EARTHSCOPE")
         >>> print(client)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         FDSN Webservice Client (base url: https://service.earthscope.org)
-        Available Services: 'dataselect' (v...), 'event' (v...),
-        'station' (v...), 'available_event_catalogs',
-        'available_event_contributors'
+        Available Services: 'dataselect' (v...), 'station' (v...)
         Use e.g. client.help('dataselect') for the
         parameter description of the individual services
         or client.help() for parameter description of
@@ -449,24 +447,26 @@ class Client(object):
         """
         Query the event service of the client.
 
-        >>> client = Client("EARTHSCOPE")
-        >>> cat = client.get_events(eventid=609301)
+        >>> client = Client("ISC")
+        >>> cat = client.get_events(eventid=600860404)
         >>> print(cat)
         1 Event(s) in Catalog:
-        1997-10-14T09:53:11.070000Z | -22.145, -176.720 | 7.8 ...
+        2012-04-11T08:38:37.800000Z |  +2.238,  +93.014 | 8.53 MS | manual
 
         The return value is a :class:`~obspy.core.event.Catalog` object
         which can contain any number of events.
 
-        >>> t1 = UTCDateTime("2001-01-07T00:00:00")
-        >>> t2 = UTCDateTime("2001-01-07T03:00:00")
-        >>> cat = client.get_events(starttime=t1, endtime=t2, minmagnitude=4,
-        ...                         catalog="ISC")
+        >>> t1 = UTCDateTime("2012-04-11T08:00:00")
+        >>> t2 = UTCDateTime("2012-04-11T09:00:00")
+        >>> cat = client.get_events(starttime=t1, endtime=t2, minmagnitude=4)
         >>> print(cat)
-        3 Event(s) in Catalog:
-        2001-01-07T02:55:59.290000Z |  +9.801,  +76.548 | 4.9 ...
-        2001-01-07T02:35:35.170000Z | -21.291,  -68.308 | 4.4 ...
-        2001-01-07T00:09:25.630000Z | +22.946, -107.011 | 4.0 ...
+        6 Event(s) in Catalog:
+        2012-04-11T08:38:37.800000Z |  +2.238,  +93.014 | 8.53 MS | manual
+        2012-04-11T08:50:30.200000Z | -24.133,  -67.348 | 4.0  ML
+        2012-04-11T08:51:32.800000Z |  +2.436,  +92.595 | 4.9  mb
+        2012-04-11T08:53:25.910000Z |  +1.744,  +90.891 | 4.8  mb
+        2012-04-11T08:54:35.220000Z |  +3.288,  +93.033 | 4.6  mb
+        2012-04-11T08:55:46.840000Z |  +1.275,  +91.730 | 5.32 mb | manual
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param starttime: Limit to events on or after the specified start time.
@@ -605,9 +605,9 @@ class Client(object):
         ...                                 endtime=endtime)
         >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
-            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+            Created by: EarthScope WEB SERVICE: fdsnws-station | version: ...
                         ...
-            Sending institution: IRIS-DMC (IRIS-DMC)
+            Sending institution: EarthScope (EarthScope)
             Contains:
                     Networks (1):
                             IU
@@ -646,9 +646,9 @@ class Client(object):
         ...     level="response")
         >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
-            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+            Created by: EarthScope WEB SERVICE: fdsnws-station | version: ...
                         ...
-            Sending institution: IRIS-DMC (IRIS-DMC)
+            Sending institution: EarthScope (EarthScope)
             Contains:
                 Networks (1):
                     IU
@@ -1091,9 +1091,9 @@ class Client(object):
         >>> inv = client.get_stations_bulk(bulk)
         >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
-            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+            Created by: EarthScope WEB SERVICE: fdsnws-station | version: ...
 
-            Sending institution: IRIS-DMC (IRIS-DMC)
+            Sending institution: EarthScope (EarthScope)
             Contains:
                 Networks (2):
                     GR, IU
@@ -1122,9 +1122,9 @@ class Client(object):
         >>> inv = client.get_stations_bulk(bulk, level="channel")
         >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
-            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+            Created by: EarthScope WEB SERVICE: fdsnws-station | version: ...
 
-            Sending institution: IRIS-DMC (IRIS-DMC)
+            Sending institution: EarthScope (EarthScope)
             Contains:
                 Networks (2):
                     GR, IU

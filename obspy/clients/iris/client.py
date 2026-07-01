@@ -17,6 +17,7 @@ from urllib.parse import urlencode
 import numpy as np
 
 from obspy import Stream, UTCDateTime, __version__, read
+from obspy.core.util.decorator import deprecated
 from obspy.core.util import NamedTemporaryFile
 
 
@@ -606,6 +607,10 @@ class Client(object):
         results['azimuth'] = float(data.azimuth)
         return results
 
+    @deprecated(
+        'EarthScope has announced the retirement of its Flinn-Engdahl web '
+        'service on or after July 6th 2026. Try using '
+        'obspy.geodetics.flinnengdahl instead.')
     def flinnengdahl(self, lat, lon, rtype="both"):
         """
         Low-level interface for `flinnengdahl` Web service of EarthScope
@@ -631,14 +636,17 @@ class Client(object):
 
         >>> from obspy.clients.iris import Client
         >>> client = Client()
-        >>> client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
+        >>> client.flinnengdahl(
+        ...     lat=-20.5, lon=-100.6, rtype="code")  # doctest: +SKIP
         683
 
-        >>> print(client.flinnengdahl(lat=42, lon=-122.24, rtype="region"))
+        >>> print(client.flinnengdahl(
+        ...     lat=42, lon=-122.24, rtype="region"))  # doctest: +SKIP
         OREGON
 
-        >>> code, region = client.flinnengdahl(lat=-20.5, lon=-100.6)
-        >>> print(code, region)
+        >>> code, region = client.flinnengdahl(
+        ...     lat=-20.5, lon=-100.6)  # doctest: +SKIP
+        >>> print(code, region)  # doctest: +SKIP
         683 SOUTHEAST CENTRAL PACIFIC OCEAN
         """
         service = 'flinnengdahl'

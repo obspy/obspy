@@ -790,13 +790,14 @@ class Latitude(FloatWithUncertaintiesFixedUnit):
     _unit = "DEGREES"
 
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
-                 datum=None):
+                 datum=None, measurement_method=None):
         """
         """
         self.datum = datum
         super(Latitude, self).__init__(
             value, lower_uncertainty=lower_uncertainty,
-            upper_uncertainty=upper_uncertainty)
+            upper_uncertainty=upper_uncertainty,
+            measurement_method=measurement_method)
 
 
 class Longitude(FloatWithUncertaintiesFixedUnit):
@@ -819,13 +820,14 @@ class Longitude(FloatWithUncertaintiesFixedUnit):
     unit = "DEGREES"
 
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
-                 datum=None):
+                 datum=None, measurement_method=None):
         """
         """
         self.datum = datum
         super(Longitude, self).__init__(
             value, lower_uncertainty=lower_uncertainty,
-            upper_uncertainty=upper_uncertainty)
+            upper_uncertainty=upper_uncertainty,
+            measurement_method=measurement_method)
 
 
 class Distance(FloatWithUncertaintiesAndUnit):
@@ -844,10 +846,11 @@ class Distance(FloatWithUncertaintiesAndUnit):
     :param measurement_method: Method used in the measurement.
     """
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
-                 unit="METERS"):
+                 unit="METERS", measurement_method=None):
         super(Distance, self).__init__(
             value, lower_uncertainty=lower_uncertainty,
-            upper_uncertainty=upper_uncertainty)
+            upper_uncertainty=upper_uncertainty,
+            measurement_method=measurement_method)
         self._unit = unit
 
 

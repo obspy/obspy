@@ -19,15 +19,9 @@ The service offers the following optional standard parameters:
         Specify minimum distance from the geographic point defined by latitude
         and longitude
     includerestricted (bool), Default value: True
-    includeavailability (bool)
-        Specify if results should include information about time series data
-        availability.
     updatedafter (UTCDateTime)
         Limit to metadata updated after specified date; updates are data center
         specific
-    matchtimeseries (bool)
-        Specify that the availabilities line up with available data. This is an
-        IRIS extension to the FDSN specification
     format (str), Default value: xml, Choices: xml, text
         Specify output format. This is an IRIS extension to the FDSN
         specification

@@ -1,4 +1,4 @@
-Parameter description for the 'event' service (v1.1.0) of 'https://service.earthscope.org':
+Parameter description for the 'event' service (v1.1.0) of 'https://www.isc.ac.uk':
 The service offers the following optional standard parameters:
     latitude (float)
         Specify the central latitude point for a radial search
@@ -22,24 +22,18 @@ The service offers the following optional standard parameters:
     includearrivals (bool)
         Specify if phase arrivals should be included
     eventid (str)
-        Retrieve an event based on the unique ID numbers assigned by the IRIS
-        DMC
+        Retrieve an event based on the unique ID numbers assigned by the ISC
     limit (int)
         Limit the results to the specified number of events
     offset (int), Default value: 1
         Return results starting at the event count specified
-    catalog (str), Default value: NEIC+PDE
+    catalog (str), Default value: ISC
         Specify the catalog from which origins and magnitudes will be retrieved
     contributor (str)
         Limit to events contributed by a specified contributor
-    updatedafter (UTCDateTime)
-        Limit to events updated after the specified time
 The service offers the following non-standard parameters:
-    format (str), Default value: xml, Choices: xml, text
+    format (str), Default value: xml, Choices: xml, isf, isf2
         Specify output format. This is an IRIS extension to the FDSN
         specification
-    originid (str)
-        Retrieve an event based on the unique origin ID numbers assigned by the
-        IRIS DMC
-Available catalogs: ANF, UofW, NEIC PDE, ISC, TEST, GCMT
-Available contributors: NEIC PDE-W, ANF, University of Washington, GCMT-Q, NEIC PDE-Q, UNKNOWN, NEIC ALERT, ISC, NEIC PDE-M, NEIC COMCAT, GCMT
+Available catalogs: ISC
+Available contributors: REN, BDF, RMIT, FRU, SIK, BIAK, BAA, MNH, PMEL, IASPEI, GUC, WEL, BHP, ENT, CHM, NAN, OSUB, TUC, INAM, UNK, UWMDG, HKC, MER, AEIC, ALI, INC, LEM, YAL, ARO, KHO, IST, RDP, STL, KOC, TAP, INMGC, GUTE, SSN, EIDC, SAPSE, BHUJ2, CNH, HAM, NIC, GDNRW, ANF, EKA, FIA0, NAM, PDG, SAN, TTG, CRT, LDO, JSA, SNET, BKK, ARE, DMN, MEX, PYA, GSDM, SIO, BER, USGS, IAG, KRNET, STR, SEA, TAN, DDA, LIB, AVE, SMI, LRA, CNG, PTWC, SLUB, KMA, NNC, RIV, GRA, UVC, RYD, OGS, MSSP, SOMC, NEIS, ISU, MATSS, SNM, NOGSR, IPRG, UCDES, CFUSG, KHC, VIE, SPGM, BEO, AFAD, GEN, LPZ, POO, SIGU, WES, PMG, LIT, INET, BUD, SYO, JSN, EFATE, ISA, GII, ALM, SNSN, BAK, JMA, ROTZ, QCP, WASN, YAGSR, BUL, ULE, UPA, ADH, SPC, OMAN, BOG, SUC, PNG, SRI, NUR, ZAG, PAV, DIAS, ASGSR, LED, STU, INMG, USCGS, AAA, LDN, UPIES, TZN, TAC, MRB, NAG, TIR, MCO, ATH, NAO, PRU, KMGSR, OBGSR, EAF, KUK, KSA, AAM, THE, CLL, NAI, SJA, CUPWA, UPSL, IGIL, ECX, GRAL, UAF, PPT, TUN, VAO, IPEC, SOC, IASBS, CANSK, EST, CADCG, IAGMA, HRVD_LR, IDC, HYB, VSI, PAL, IDG, BRG, KEW, BELR, OSA, MERI, SOF, ISC-PPSM, BGS, ISC1, KRSZO, MSUGS, AAB, USAEC, X, RRLJ, RSPR, MSI, NEIC, CHU, COI, GTFE, ICE, ISS, UCR, MOZ, PDA, FCIAR, ZKW, DBN, AAE, ITU, MCSM, SLM, SGS, UNAH, MOLD, QUE, WAR, UREES, ANT, KLM, EBSE, ISK, LEDBW, EHB, PUS, AFAR, CASC, FKK, NKSZ, AVETI, CATAC, EPSI, GFZ, UPP, ZEMSU, MAL, RSNC, TEIC, AZER, SUS, TRN, BRA, GCG, ISN, SVSA, LDG, NSSC, QUI, ROM, OGSO, MKY, GEM, PTO, BOZ, VLA, NEGSR, ASIES, CSC, HAN, NCEDC, FDF, ZUR, MAN, AFUA, BOM, EUROP, IEC, ROC, SJP, SHL, BAAS, IRIS, ANDRE, LIC, SARA, CNRM, IGQ, LRSM, OAX, TXNET, CENT, DNK, RHSSO, SOD, BRS, BUT, IFREE, SYKES, HFS2, FUNV, IGKRC, PIT, PGC, UCSC, DSN, RSMAC, KRL, STK, SOME, ISC-EHB, GOM, HLW, SAR, LIM, UCC, LSZ, PRA, DASA, BGR, YARS, GSET2, TAB, MAT, THR, NERS, AUST, OSUNB, PDE, SDD, APA, SZGRF, LPA, UAV, SKL, SBDV, NOU, PLV, TEH, KRSC, SAGSR, IGKR, DHMR, KISR, JSO, BNS, ZSC, GRO, HVO, AAC, OSPL, LAO, SKHL, TANZANIA, SHIDE, SKO, COSMOS, SLC, NIED, CRAAG, SPA, RISSC, ISC, PJWWP, UGN, CSEM, NSSP, PNSN, WUSTL, SFS, BUEE, PIST, ZUR_RMT, UESG, INDEPTH3, COM, LJU, HYD, REY, SCSIO, GEOAZ, TVA, DUSS, PAS, DNAG, SCEDC, ALG, ABA, BERK, MUN, TAU, MIRAS, LVSN, BUC, IRSM, DJA, IPGP, API, OXD, UUSS, SAA, KOB, ASM, ASL, VMGSR, CERI, SHI, BRK, CRA, PEK, ESK, TUL, NDI, MED_RCMT, LER, WMO, HIMNT, WBNET, MPSN, LPB, ATA, HEL, ORF, HFS, VUW, FOR, KNET, HDC, KRAR, GBZT, SSS, BYKL, OTT, SPITAK, RAB, BGSI, FUBES, ECGS, IPER, FBR, IGS, TOL, HNR, TIF, JEN, UCB, TAS, SVE, MOZAR, HRV, CAN, GEOMR, SJS, LIS, MOS, SSNC, GOL, TOK, HON, EVBIB, PRE, ERDA, FUR, UATDG, IGGSL, KIR, KOGSR, PMR, DAGSR, KBC, LVV, BUG, EBR, BCIS, MES, COP, OGAUC, CON, BJI, IRK, PNNL, AWI, IEPN, GCMT, LWI, ADE, RBA, HRVD, NEU, SCB, CGS, EAGLE, UTEP, PUL, JOH, HFS1, CAR, SET, HLUG, MDD, KEA
