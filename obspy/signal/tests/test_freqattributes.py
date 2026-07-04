@@ -124,6 +124,26 @@ class TestFreqTrace():
                       np.sum(self.res[:, 15] ** 2))
         assert rms < 1.0e-5
 
+    def test_domper_1d(self):
+        """
+        Regression test for a single, non-windowed trace, see #2576.
+
+        This used to raise an IndexError because a 2D slice of the spectrum
+        was taken before the dimensionality check. The 1D branch also read
+        the raw time-domain samples instead of the amplitude spectrum, so the
+        returned value was meaningless.
+        """
+        fs = 100.0
+        f0 = 10.0
+        t = np.arange(2000) / fs
+        sine = np.sin(2 * pi * f0 * t)
+        dperiod = freqattributes.dominant_period(sine, fs, self.smoothie,
+                                                 self.fk)
+        # a single trace returns one value, not the (dperiod, ddperiod) tuple
+        assert np.ndim(dperiod) == 0
+        # the peak of the amplitude spectrum sits on the injected frequency
+        assert abs(dperiod - f0) < 0.2
+
     def test_logcep(self):
         """
         """

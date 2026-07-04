@@ -244,9 +244,9 @@ def dominant_period(data, fs, smoothie, fk):
     freqaxis = np.linspace(0, fs, nfft + 1)
     dperiod = np.zeros(data.shape[0])
     f = fftpack.fft(data, nfft)
-    # f_sm = util.smooth(abs(f[:,0:nfft // 2]),1)
-    f_sm = f[:, 0:nfft // 2]
     if np.size(data.shape) > 1:
+        # f_sm = util.smooth(abs(f[:,0:nfft // 2]),1)
+        f_sm = f[:, 0:nfft // 2]
         i = 0
         for row in f_sm:
             [mdist_ind, _mindist] = max(enumerate(abs(row)), key=itemgetter(1))
@@ -268,7 +268,8 @@ def dominant_period(data, fs, smoothie, fk):
         ddperiod = util.smooth(ddperiod, smoothie)
         return dperiod, ddperiod
     else:
-        [mdist_ind, _mindist] = max(enumerate(abs(data)), key=itemgetter(1))
+        f_sm = f[0:nfft // 2]
+        [mdist_ind, _mindist] = max(enumerate(abs(f_sm)), key=itemgetter(1))
         dperiod = freqaxis[mdist_ind]
         return dperiod
 

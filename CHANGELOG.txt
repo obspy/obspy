@@ -26,6 +26,10 @@ Changes:
    * fix a void return type in write mseed ctypes wrapper (see #3735)
    * fix reading in case when numpy.memmap is not implemented (see #3741)
    * Memory leak fixed in obspy-readbuffer.c (see #3714)
+ - obspy.signal:
+   * freqattributes.dominant_period no longer raises on a single (1D) trace
+     and now reads the dominant frequency from the amplitude spectrum instead
+     of the raw time-domain samples (see #2576)
  - obspy.taup:
    * fix an issue with obspy.taup not being usable with specific Python
      versions 3.13.10 and 3.14.1 (see #3650)
