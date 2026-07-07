@@ -48,9 +48,9 @@ manner:
 .. _matplotlib: http://matplotlib.org/
 
 Import statements in source code are grouped by standard library imports,
-followed by third party packages and finally obspy imports. Inside blocks
-``from ...`` imports come after ``import ...`` statements, and both should be
-sorted alphabetically:
+followed by third party packages and finally obspy imports, with a blank line
+in between these groups. Inside blocks ``from ...`` imports come after
+``import ...`` statements, and both should be sorted alphabetically:
 
 .. code-block:: python
 
