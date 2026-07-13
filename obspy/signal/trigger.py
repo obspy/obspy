@@ -103,6 +103,30 @@ def recursive_sta_lta_py(a, nsta, nlta):
     return charfct
 
 
+def _rolling_sum(a, n):
+    """
+    Compute a causal rolling sum of *a* with window size *n*.
+
+    out[j] = sum(a[j-n : j]) for j >= n, and 0 for j < n.
+
+    Uses a cumulative-sum approach so that runtime is O(len(a))
+    regardless of window size *n*.
+
+    :type a: NumPy :class:`~numpy.ndarray`
+    :param a: Input array.
+    :type n: int
+    :param n: Window length (must be >= 1 and <= len(a)).
+    :rtype: NumPy :class:`~numpy.ndarray`
+    """
+    m = len(a)
+    if n < 1 or n > m:
+        raise ValueError(f"Window n={n} out of range for array of length {m}")
+    cs = np.concatenate(([0.0], np.cumsum(a, dtype=np.float64)))
+    out = np.zeros(m, dtype=np.float64)
+    out[n:] = cs[n:m] - cs[:m - n]
+    return out
+
+
 def carl_sta_trig(a, nsta, nlta, ratio, quiet):
     """
     Computes the carlSTAtrig characteristic function.
@@ -122,38 +146,19 @@ def carl_sta_trig(a, nsta, nlta, ratio, quiet):
     :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of CarlStaTrig
     """
-    m = len(a)
-    #
-    sta = np.zeros(len(a), dtype=np.float64)
-    lta = np.zeros(len(a), dtype=np.float64)
-    star = np.zeros(len(a), dtype=np.float64)
-    ltar = np.zeros(len(a), dtype=np.float64)
-    pad_sta = np.zeros(nsta)
-    pad_lta = np.zeros(nlta)  # avoid for 0 division 0/1=0
-    #
+    a = np.asarray(a, dtype=np.float64)  # do everything in f64
     # compute the short time average (STA)
-    for i in range(nsta):  # window size to smooth over
-        sta += np.concatenate((pad_sta, a[i:m - nsta + i]))
-    sta /= nsta
-    #
-    # compute the long time average (LTA), 8 sec average over sta
-    for i in range(nlta):  # window size to smooth over
-        lta += np.concatenate((pad_lta, sta[i:m - nlta + i]))
-    lta /= nlta
-    lta = np.concatenate((np.zeros(1), lta))[:m]  # XXX ???
-    #
+    sta = _rolling_sum(a, nsta) / nsta
+    # long time average (LTA): rolling mean of sta over nlta samples,
+    # shifted by one sample
+    lta = _rolling_sum(sta, nlta) / nlta
+    lta = np.concatenate(([0.0], lta[:-1]))
     # compute star, average of abs diff between trace and lta
-    for i in range(nsta):  # window size to smooth over
-        star += np.concatenate((pad_sta,
-                               abs(a[i:m - nsta + i] - lta[i:m - nsta + i])))
-    star /= nsta
+    star = _rolling_sum(np.abs(a - lta), nsta) / nsta
+    # LTAR: rolling mean of star over nlta samples
+    ltar = _rolling_sum(star, nlta) / nlta
     #
-    # compute ltar, 8 sec average over star
-    for i in range(nlta):  # window size to smooth over
-        ltar += np.concatenate((pad_lta, star[i:m - nlta + i]))
-    ltar /= nlta
-    #
-    eta = star - (ratio * ltar) - abs(sta - lta) - quiet
+    eta = star - (ratio * ltar) - np.abs(sta - lta) - quiet
     eta[:nlta] = -1.0
     return eta
 

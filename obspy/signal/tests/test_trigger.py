@@ -13,7 +13,8 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from obspy import Stream, UTCDateTime, read
 from obspy.signal.trigger import (
-    ar_pick, classic_sta_lta, classic_sta_lta_py, coincidence_trigger, pk_baer,
+    ar_pick, carl_sta_trig, classic_sta_lta, classic_sta_lta_py,
+    coincidence_trigger, pk_baer,
     recursive_sta_lta, recursive_sta_lta_py, trigger_onset, aic_simple,
     energy_ratio, modified_energy_ratio)
 from obspy.signal.util import clibsignal
@@ -621,6 +622,66 @@ class TestEnergyRatio():
             f'nsta ({nsta}) must not be equal to or less than zero.')
         with pytest.raises(ValueError, match=expected_msg):
             energy_ratio(self.a, nsta)
+
+
+class TestCarlStaTrig():
+    """Tests for carl_sta_trig characteristic function."""
+
+    def test_simple_integers(self):
+        """Test with simple integer sequence, hand-verified values."""
+        a = np.arange(1, 11, dtype=np.float64)
+        result = carl_sta_trig(a, nsta=2, nlta=3, ratio=0.8, quiet=0.0)
+        # First nlta elements are always -1.0
+        assert_array_equal(result[:3], [-1.0, -1.0, -1.0])
+        # Hand-computed reference values
+        expected = np.array([
+            -1.0, -1.0, -1.0,
+            -0.4, -0.56666667, -0.91666667,
+            -1.15, -1.70555556, -2.07777778, -2.14444444
+        ])
+        np.testing.assert_allclose(result, expected, rtol=1e-6)
+
+    def test_output_length_and_dtype(self):
+        """Output should be same length as input, and always f64."""
+        a = np.arange(100)  # integer array
+        result = carl_sta_trig(a, nsta=5, nlta=10, ratio=0.8, quiet=0.5)
+        assert len(result) == len(a)
+        assert result.dtype == np.float64
+
+    def test_leading_values_are_minus_one(self):
+        """First nlta values should always be -1.0."""
+        a = np.random.randn(200)
+        for nlta in [5, 20, 50]:
+            result = carl_sta_trig(a, nsta=3, nlta=nlta, ratio=0.8, quiet=0.5)
+            assert_array_equal(result[:nlta], np.full(nlta, -1.0))
+
+    def test_constant_input(self):
+        """For constant input, eta should converge toward a stable value."""
+        a = np.full(100, 5.0)
+        result = carl_sta_trig(a, nsta=3, nlta=5, ratio=0.8, quiet=0.0)
+        # After warmup, |a - lta| should be ~0, so star and ltar -> 0,
+        # and eta -> -|sta - lta| which also -> 0.
+        # Check the tail is stable (not diverging or oscillating).
+        tail = result[50:]
+        assert np.std(tail) < 1e-10
+
+    def test_sensitivity_to_ratio(self):
+        """Smaller ratio should produce larger (more sensitive) eta values."""
+        np.random.seed(42)
+        a = np.random.randn(500)
+        r1 = carl_sta_trig(a, 10, 50, ratio=0.5, quiet=0.0)
+        r2 = carl_sta_trig(a, 10, 50, ratio=0.9, quiet=0.0)
+        # Smaller ratio means less suppression from ltar, so higher eta
+        assert np.mean(r1[50:]) > np.mean(r2[50:])
+
+    def test_sensitivity_to_quiet(self):
+        """Larger quiet should produce smaller (less sensitive) eta values."""
+        np.random.seed(42)
+        a = np.random.randn(500)
+        r1 = carl_sta_trig(a, 10, 50, ratio=0.8, quiet=0.0)
+        r2 = carl_sta_trig(a, 10, 50, ratio=0.8, quiet=1.0)
+        # quiet is subtracted directly, so larger quiet = smaller eta
+        np.testing.assert_allclose(r1[50:] - 1.0, r2[50:])
 
 
 class TestModifiedEnergyRatio():
