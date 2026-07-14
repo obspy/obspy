@@ -25,6 +25,12 @@ Changes:
    * deprecate flinnengdahl web service, which EarthScope announced will be
      retired in July 2026. Users should use obspy.geodetics instead.
      (see #3756)
+ - obspy.clients.seedlink:
+   * respect user specified timeout also in making the initial socket
+     connection. Currently, when establishing the initial low-level socket
+     connection no timeout is used, which in practice leads to a default 2min
+     timeout even if user sets a shorter timeout when establishing the client
+     (see #3767)
  - obspy.imaging:
    * fix a bug in dayplot when data is only available for part of the time
      window (see #3780)
