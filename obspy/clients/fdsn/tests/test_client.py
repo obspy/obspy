@@ -1654,6 +1654,232 @@ class TestClientNoNetwork():
         assert base_url_event in download_url_mock.call_args_list[0][0][0]
 
     @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_combined_base_url_fills_in_missing_service(
+            self, download_url_mock, testdata):
+        """
+        Tests that ``[DC1, DC2]`` combines two datacenters: services
+        provided by the first (primary) datacenter are used as-is, and any
+        service it lacks is filled in from the next datacenter that
+        provides it.
+        """
+        base_url_a = "http://dc-a1.example.com"
+        base_url_b = "http://dc-b1.example.com"
+
+        def side_effect(*args, **kwargs):
+            url = args[0]
+            if "application.wadl" not in url:
+                return 404, None
+            if base_url_a in url and "dataselect" in url:
+                with open(testdata["2014-01-07_iris_dataselect.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            if base_url_a in url and "station" in url:
+                with open(testdata["2014-01-07_iris_station.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            if base_url_b in url and "event" in url:
+                with open(testdata["usgs_event.wadl"], "rb") as fh:
+                    return 200, fh.read()
+            # dc-a has no event service, dc-b has no dataselect/station.
+            return 404, None
+
+        download_url_mock.side_effect = side_effect
+
+        combined_url = [base_url_a, base_url_b]
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            c = Client(base_url=combined_url, user_agent=USER_AGENT)
+
+        # dataselect/station resolve through the primary's own base_url.
+        assert c.base_url == base_url_a
+        assert set(c.services).issuperset({"dataselect", "event",
+                                          "station"})
+        # Only the filled-in service gets an explicit mapping.
+        assert c._service_mappings == {
+            "event": "%s/fdsnws/event/1" % base_url_b}
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_combined_base_url_first_datacenter_wins(
+            self, download_url_mock, testdata):
+        """
+        Tests that when both datacenters in a combined base_url provide
+        the same service, the earlier (primary) one is used and the
+        later one's version of that service is not.
+        """
+        base_url_a = "http://dc-a2.example.com"
+        base_url_b = "http://dc-b2.example.com"
+
+        def side_effect(*args, **kwargs):
+            url = args[0]
+            if "application.wadl" not in url or "station" not in url:
+                return 404, None
+            if base_url_a in url:
+                with open(testdata["2014-01-07_iris_station.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            if base_url_b in url:
+                with open(testdata["2014-01-07_ncedc_station.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            return 404, None
+
+        download_url_mock.side_effect = side_effect
+
+        combined_url = [base_url_a, base_url_b]
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            c = Client(base_url=combined_url, user_agent=USER_AGENT)
+
+        assert c.base_url == base_url_a
+        assert "station" not in c._service_mappings
+        assert list(c.services) == ["station"]
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_combined_base_url_user_service_mappings_win(
+            self, download_url_mock, testdata):
+        """
+        Tests that explicit ``service_mappings`` always take precedence
+        over a combined base_url's own fill-in logic, including manually
+        deactivating a service with ``None``.
+        """
+        base_url_a = "http://dc-a3.example.com"
+        base_url_b = "http://dc-b3.example.com"
+
+        def side_effect(*args, **kwargs):
+            url = args[0]
+            if "application.wadl" not in url:
+                return 404, None
+            if base_url_a in url and "dataselect" in url:
+                with open(testdata["2014-01-07_iris_dataselect.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            if base_url_b in url and "event" in url:
+                with open(testdata["usgs_event.wadl"], "rb") as fh:
+                    return 200, fh.read()
+            return 404, None
+
+        download_url_mock.side_effect = side_effect
+
+        combined_url = [base_url_a, base_url_b]
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            c = Client(base_url=combined_url, user_agent=USER_AGENT,
+                       service_mappings={"event": None})
+
+        assert "event" not in c.services
+        # The explicit ``None`` deactivation is carried through verbatim,
+        # same as for a plain, single-datacenter client.
+        assert c._service_mappings.get("event") is None
+        assert "dc-b3" not in str(c._service_mappings)
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_combined_base_url_three_datacenters(
+            self, download_url_mock, testdata):
+        """
+        Tests combining three datacenters, each providing exactly one of
+        the three services.
+        """
+        base_url_a = "http://dc-a4.example.com"
+        base_url_b = "http://dc-b4.example.com"
+        base_url_c = "http://dc-c4.example.com"
+
+        def side_effect(*args, **kwargs):
+            url = args[0]
+            if "application.wadl" not in url:
+                return 404, None
+            if base_url_a in url and "dataselect" in url:
+                with open(testdata["2014-01-07_iris_dataselect.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            if base_url_b in url and "station" in url:
+                with open(testdata["2014-01-07_iris_station.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            if base_url_c in url and "event" in url:
+                with open(testdata["usgs_event.wadl"], "rb") as fh:
+                    return 200, fh.read()
+            return 404, None
+
+        download_url_mock.side_effect = side_effect
+
+        combined_url = [base_url_a, base_url_b, base_url_c]
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            c = Client(base_url=combined_url, user_agent=USER_AGENT)
+
+        assert c.base_url == base_url_a
+        assert set(c.services).issuperset({"dataselect", "station",
+                                          "event"})
+        assert c._service_mappings == {
+            "station": "%s/fdsnws/station/1" % base_url_b,
+            "event": "%s/fdsnws/event/1" % base_url_c,
+        }
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_combined_base_url_dead_datacenter_fails_hard(
+            self, download_url_mock, testdata):
+        """
+        Tests that if any datacenter in a combined base_url offers no
+        services at all, client instantiation raises rather than
+        silently continuing with the remaining ones.
+        """
+        base_url_a = "http://dc-a5.example.com"
+        base_url_dead = "http://dc-dead5.example.com"
+
+        def side_effect(*args, **kwargs):
+            url = args[0]
+            if base_url_a in url and "application.wadl" in url \
+                    and "dataselect" in url:
+                with open(testdata["2014-01-07_iris_dataselect.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            # dc-dead never returns a usable WADL for any service.
+            return 404, None
+
+        download_url_mock.side_effect = side_effect
+
+        combined_url = [base_url_a, base_url_dead]
+        with pytest.raises(FDSNNoServiceException):
+            Client(base_url=combined_url, user_agent=USER_AGENT)
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
+    def test_combined_base_url_discover_services_false_warns(
+            self, download_url_mock, testdata):
+        """
+        Tests that passing ``_discover_services=False`` together with a
+        combined base_url warns that discovery cannot be disabled (it is
+        required to know what each datacenter offers) and that discovery
+        is performed anyway.
+        """
+        base_url_a = "http://dc-a6.example.com"
+        base_url_b = "http://dc-b6.example.com"
+
+        def side_effect(*args, **kwargs):
+            url = args[0]
+            if "application.wadl" not in url:
+                return 404, None
+            if base_url_a in url and "dataselect" in url:
+                with open(testdata["2014-01-07_iris_dataselect.wadl"],
+                          "rb") as fh:
+                    return 200, fh.read()
+            if base_url_b in url and "event" in url:
+                with open(testdata["usgs_event.wadl"], "rb") as fh:
+                    return 200, fh.read()
+            return 404, None
+
+        download_url_mock.side_effect = side_effect
+
+        combined_url = [base_url_a, base_url_b]
+        with CatchAndAssertWarnings(
+                expected=[(UserWarning,
+                          "Service discovery cannot be disabled")]):
+            c = Client(base_url=combined_url, user_agent=USER_AGENT,
+                       _discover_services=False)
+
+        # Discovery still happened despite _discover_services=False.
+        assert set(c.services).issuperset({"dataselect", "event"})
+
+    @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_no_data_exception(self, download_url_mock):
         """
         Verify that a request returning no data raises an identifiable

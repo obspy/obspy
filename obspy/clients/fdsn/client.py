@@ -154,10 +154,52 @@ class Client(object):
         else:
             return False
 
-    def __init__(self, base_url="EARTHSCOPE", major_versions=None, user=None,
-                 password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=120, service_mappings=None, force_redirect=False,
-                 eida_token=None, _discover_services=True, use_gzip=True):
+    @classmethod
+    def _resolve_base_url(cls, base_url):
+        """
+        Resolve a single short name or raw URL to a ``(base_url,
+        url_subpath)`` tuple.
+
+        Raises a :class:`ValueError` for an unrecognized all-alpha
+        shortcut or an invalid URL.
+        """
+        if base_url.upper() == 'IRIS':
+            base_url = 'EARTHSCOPE'
+            msg = ("IRIS is now EarthScope, please consider changing the "
+                   "FDSN client short URL to 'EARTHSCOPE'.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
+
+        if base_url.upper() == 'RESIF':
+            msg = ("RESIF is now EPOSFR. Webservices and client will be "
+                   "shutdown in 2026. Please consider changing the FDSN "
+                   "client short URL to 'EPOSFR'.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
+
+        if base_url.upper() in URL_MAPPINGS:
+            url_mapping = base_url.upper()
+            base_url = URL_MAPPINGS[url_mapping]
+            url_subpath = URL_MAPPING_SUBPATHS.get(
+                url_mapping, URL_DEFAULT_SUBPATH)
+        else:
+            if base_url.isalpha():
+                msg = "The FDSN service shortcut `{}` is unknown."\
+                      .format(base_url)
+                raise ValueError(msg)
+            url_subpath = URL_DEFAULT_SUBPATH
+        # Make sure the base_url does not end with a slash.
+        base_url = base_url.strip("/")
+        # Catch invalid URLs to avoid confusing error messages
+        if not cls._validate_base_url(base_url):
+            msg = "The FDSN service base URL `{}` is not a valid URL."\
+                  .format(base_url)
+            raise ValueError(msg)
+        return base_url, url_subpath
+
+    def __init__(self, base_url=["EARTHSCOPE", "USGS"], major_versions=None,
+                 user=None, password=None, user_agent=DEFAULT_USER_AGENT,
+                 debug=False, timeout=120, service_mappings=None,
+                 force_redirect=False, eida_token=None,
+                 _discover_services=True, use_gzip=True):
         """
         Initializes an FDSN Web Service client.
 
@@ -170,10 +212,18 @@ class Client(object):
         or client.help() for parameter description of
         all webservices.
 
-        :type base_url: str
+        :type base_url: str or list of str
         :param base_url: Base URL of FDSN web service compatible server
             (e.g. "https://service.earthscope.org") or key string for
-            recognized server (one of %s).
+            recognized server (one of %s). Multiple datacenters may be
+            combined by passing a list, e.g.
+            ``["EARTHSCOPE", "USGS"]`` (the default): the service map
+            (dataselect/station/event) is built from the first datacenter,
+            and any service it does not provide is filled in from the next
+            listed datacenter that does provide it (without overwriting
+            services already resolved by an earlier one). This is the
+            default because EarthScope no longer provides an event service,
+            so it is filled in from USGS.
         :type major_versions: dict
         :param major_versions: Allows to specify custom major version numbers
             for individual services (e.g.
@@ -242,39 +292,23 @@ class Client(object):
         # the client more convenient.
         self.__version_cache = {}
 
-        if base_url.upper() == 'IRIS':
-            base_url = 'EARTHSCOPE'
-            msg = ("IRIS is now EarthScope, please consider changing the FDSN "
-                   "client short URL to 'EARTHSCOPE'.")
-            warnings.warn(msg, ObsPyDeprecationWarning)
-
-        if base_url.upper() == 'RESIF':
-            msg = ("RESIF is now EPOSFR. Webservices and client will be "
-                   "shutdown in 2026. Please consider changing the FDSN "
-                   "client short URL to 'EPOSFR'.")
-            warnings.warn(msg, ObsPyDeprecationWarning)
-
-        if base_url.upper() in URL_MAPPINGS:
-            url_mapping = base_url.upper()
-            base_url = URL_MAPPINGS[url_mapping]
-            url_subpath = URL_MAPPING_SUBPATHS.get(
-                url_mapping, URL_DEFAULT_SUBPATH)
+        # A list/tuple of designations (e.g. ["EARTHSCOPE", "USGS"]) lists
+        # more than one datacenter to be merged into a single service map;
+        # a plain string is a single datacenter as before.
+        if isinstance(base_url, (list, tuple)):
+            tokens = [t.strip() for t in base_url if t and t.strip()]
         else:
-            if base_url.isalpha():
-                msg = "The FDSN service shortcut `{}` is unknown."\
-                      .format(base_url)
-                raise ValueError(msg)
-            url_subpath = URL_DEFAULT_SUBPATH
-        # Make sure the base_url does not end with a slash.
-        base_url = base_url.strip("/")
-        # Catch invalid URLs to avoid confusing error messages
-        if not self._validate_base_url(base_url):
+            tokens = [base_url]
+        if not tokens:
             msg = "The FDSN service base URL `{}` is not a valid URL."\
                   .format(base_url)
             raise ValueError(msg)
 
-        self.base_url = base_url
-        self.url_subpath = url_subpath
+        self._combined_datacenters = [
+            self._resolve_base_url(token) for token in tokens]
+        self._is_combined = len(self._combined_datacenters) > 1
+
+        self.base_url, self.url_subpath = self._combined_datacenters[0]
 
         self._set_opener(user, password)
 
@@ -299,7 +333,15 @@ class Client(object):
                     print("\t%s: '%s'" % (key, value))
             print("Request Headers: %s" % str(self.request_headers))
 
-        if _discover_services:
+        if self._is_combined:
+            if not _discover_services:
+                msg = ("Service discovery cannot be disabled when "
+                       "combining multiple datacenters in the base_url "
+                       "designation; discovery will be performed "
+                       "regardless.")
+                warnings.warn(msg)
+            self._discover_combined_services()
+        elif _discover_services:
             self._discover_services()
         else:
             self.services = DEFAULT_SERVICES.copy()
@@ -1647,6 +1689,75 @@ class Client(object):
             print("Storing discovered services in cache.")
         self.__service_discovery_cache[url_hash] = \
             copy.deepcopy(self.services)
+
+    def _discover_combined_services(self):
+        """
+        Discover and merge services for a list-combined base_url.
+
+        Each listed datacenter (``self._combined_datacenters``) is probed
+        independently, reusing :meth:`_discover_services` (and its
+        caching). For every service the earlier datacenters do not
+        provide, the first later datacenter that does provide it is used
+        to fill it in - services already resolved by an earlier
+        datacenter are never overwritten. Any user supplied
+        ``service_mappings`` (custom URLs or ``None`` deactivations)
+        always take precedence over this combined result.
+
+        A datacenter that offers none of the candidate services (e.g. an
+        outage or a misconfigured/incompatible server) causes
+        :meth:`_discover_services` to raise for that datacenter, which
+        propagates from here - combining datacenters does not silently
+        skip an unreachable/empty one.
+        """
+        user_mappings = self._service_mappings
+        saved_base_url, saved_subpath = self.base_url, self.url_subpath
+
+        # Probe every listed datacenter independently (ignoring any user
+        # supplied service_mappings, which only apply to the final,
+        # merged client) to find out which of the candidate services each
+        # one actually offers.
+        per_dc_services = []
+        try:
+            for base_url, url_subpath in self._combined_datacenters:
+                self.base_url = base_url
+                self.url_subpath = url_subpath
+                self._service_mappings = {}
+                self._discover_services()
+                per_dc_services.append(self.services)
+        finally:
+            self.base_url, self.url_subpath = saved_base_url, saved_subpath
+            self._service_mappings = user_mappings
+
+        # Primary-first fill: the first datacenter to offer a service
+        # claims it; later datacenters only fill in gaps.
+        claimed = set()
+        combined_mappings = {}
+        for i, ((base_url, url_subpath), dc_services) in enumerate(
+                zip(self._combined_datacenters, per_dc_services)):
+            is_primary = (i == 0)
+            for service in FDSNWS:
+                if service in claimed or service in user_mappings \
+                        or service not in dc_services:
+                    continue
+                claimed.add(service)
+                # The primary datacenter's own services resolve directly
+                # through self.base_url/self.url_subpath, so only
+                # non-primary fill-ins need an explicit mapping.
+                if not is_primary:
+                    combined_mappings[service] = "/".join((
+                        base_url, url_subpath.lstrip("/"), service,
+                        str(self.major_versions[service])))
+
+        # The user's explicit mappings (including custom URLs and
+        # ``None`` deactivations) always win over the combined result.
+        combined_mappings.update(user_mappings)
+
+        # Do the real, final discovery against the primary datacenter
+        # plus the merged service mappings. This reuses the same WADL
+        # parsing, event catalog/contributor discovery, and EIDA-auth
+        # detection as a normal single-datacenter client.
+        self._service_mappings = combined_mappings
+        self._discover_services()
 
     def get_webservice_version(self, service):
         """

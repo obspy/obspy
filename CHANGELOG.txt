@@ -12,6 +12,10 @@ Changes:
      'measurement_units' when being initialized (see #3623)
  - obspy.clients.fdsn:
    * update URL endpoint for IGN to https (see #3744)
+   * FDSN Client `base_url` can be a list of datacenter shortcuts/URLs;
+     services missing from earlier entries are filled in from later ones
+     without overwriting. Default is now `["EARTHSCOPE", "USGS"]` so
+     event queries work after EarthScope dropped its event service.
  - obspy.clients.filesystem:
    * tsindex: improve handling of sql sessions, less connections staying open
      (see #3736)
@@ -42,7 +46,7 @@ Changes:
      mindepversion tests
    * Minimum Dependencies: numpy 1.21 (was 1.20) (see #3639)
  - obspy.core:
-   * response: tweaks to allow sane processing of PolynomialResponseStage 
+   * response: tweaks to allow sane processing of PolynomialResponseStage
      responses if they have 2 coefficients or less (see #3632)
    * response: allow recalculating overall sensitivity even if unit type is not
      one of VEL/ACC/DISP (see #3235), add method for calculating the normalization
