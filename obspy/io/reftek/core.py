@@ -94,12 +94,8 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
     :type fallback_sampling_rate: float, optional
     :param fallback_sampling_rate: Sampling rate to use if the sampling rate
         field in the EH packet cannot be parsed (e.g. due to old firmware
-        writing malformed header fields). If None and the sampling rate cannot
-        be parsed, a Reftek130Exception is raised. Example usage::
-
-            >>> from obspy import read
-            >>> st = read("file.rt130", format="REFTEK130",
-            ...           fallback_sampling_rate=100.0)  # doctest: +SKIP
+        writing malformed header fields). If ``None`` and the sampling rate
+        cannot be parsed, a :class:`Reftek130Exception` is raised.
     :rtype: :class:`~obspy.core.stream.Stream`
     """
     # Reftek 130 data format stores only the last two digits of the year.  We
@@ -226,7 +222,8 @@ class Reftek130(object):
             read the headers.
         :type fallback_sampling_rate: float, optional
         :param fallback_sampling_rate: Sampling rate to use if the sampling
-            rate field in the EH packet cannot be parsed.
+            rate field in the EH packet cannot be parsed. See
+            :func:`_read_reftek130` for more detail.
         """
         if verbose:
             print(self)
