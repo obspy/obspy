@@ -64,7 +64,8 @@ def _is_reftek130(filename):
 
 def _read_reftek130(filename, network="", location="", component_codes=None,
                     headonly=False, verbose=False,
-                    sort_permuted_package_sequence=False, **kwargs):
+                    sort_permuted_package_sequence=False,
+                    fallback_sampling_rate=None, **kwargs):
     """
     Read a REFTEK130 file into an ObsPy Stream.
 
@@ -90,6 +91,11 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
         package list is sorted when a permuted package sequence is encountered.
         This should only be used if problems occur with files that have a
         permuted package sequence (showing the related warning message).
+    :type fallback_sampling_rate: float, optional
+    :param fallback_sampling_rate: Sampling rate to use if the sampling rate
+        field in the EH packet cannot be parsed (e.g. due to old firmware
+        writing malformed header fields). If ``None`` and the sampling rate
+        cannot be parsed, a :class:`Reftek130Exception` is raised.
     :rtype: :class:`~obspy.core.stream.Stream`
     """
     # Reftek 130 data format stores only the last two digits of the year.  We
@@ -106,7 +112,8 @@ def _read_reftek130(filename, network="", location="", component_codes=None,
             network=network, location=location,
             component_codes=component_codes, headonly=headonly,
             verbose=verbose,
-            sort_permuted_package_sequence=sort_permuted_package_sequence)
+            sort_permuted_package_sequence=sort_permuted_package_sequence,
+            fallback_sampling_rate=fallback_sampling_rate)
         st.merge(-1)
         st.sort()
         return st
@@ -207,11 +214,16 @@ class Reftek130(object):
 
     def to_stream(self, network="", location="", component_codes=None,
                   headonly=False, verbose=False,
-                  sort_permuted_package_sequence=False):
+                  sort_permuted_package_sequence=False,
+                  fallback_sampling_rate=None):
         """
         :type headonly: bool
         :param headonly: Determines whether or not to unpack the data or just
             read the headers.
+        :type fallback_sampling_rate: float, optional
+        :param fallback_sampling_rate: Sampling rate to use if the sampling
+            rate field in the EH packet cannot be parsed. See
+            :func:`_read_reftek130` for more detail.
         """
         if verbose:
             print(self)
@@ -268,13 +280,33 @@ class Reftek130(object):
                        "open an issue on GitHub and provide a small (< 50kb) "
                        "test file.").format(eh.data_format)
                 raise NotImplementedError(msg)
+
+            # use fallback if EH packet sampling rate could not be parsed
+            sampling_rate = eh.sampling_rate
+            if sampling_rate is None:
+                if fallback_sampling_rate is None:
+                    raise Reftek130Exception(
+                        "Could not parse sampling rate from EH packet header "
+                        "(malformed or blank field). This may be caused by "
+                        "old firmware writing non-standard header fields. "
+                        "Please specify 'fallback_sampling_rate' when "
+                        "reading, e.g.: read(filename, format='REFTEK130', "
+                        "fallback_sampling_rate=100.0)")
+                else:
+                    msg = ("Could not parse sampling rate from EH packet, "
+                           "using fallback_sampling_rate={}.").format(
+                           fallback_sampling_rate)
+                    warnings.warn(msg)
+                    sampling_rate = fallback_sampling_rate
+
             header = {
                 "network": network,
                 "station": (eh.station_name +
                             eh.station_name_extension).strip(),
-                "location": location, "sampling_rate": eh.sampling_rate,
+                "location": location,
+                "sampling_rate": sampling_rate,
                 "reftek130": eh._to_dict()}
-            delta = 1.0 / eh.sampling_rate
+            delta = 1.0 / sampling_rate
             delta_nanoseconds = int(delta * 1e9)
             inds_dt = data['packet_type'] == b"DT"
             data_channels = np.unique(data[inds_dt]['channel_number'])

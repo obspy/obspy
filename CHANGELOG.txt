@@ -2,7 +2,12 @@ master
 ======
 
 Changes:
- - ...
+ - obspy.io.reftek:
+   * add `fallback_sampling_rate` parameter to `_read_reftek130`/`to_stream`
+     to allow reading files with a malformed/unparseable sampling rate field
+     in the EH packet header; also make parsing of other malformed EH packet
+     fields non-fatal (warn and set to None instead of raising)
+     (see #3743)
 
 maintenance_1.5.x
 =================

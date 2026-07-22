@@ -391,7 +391,38 @@ class TestReftek():
                     fh.name, network="XX", location="01",
                     component_codes=["1", "2", "3"],
                     sort_permuted_package_sequence=True)
+                                       
+    def test_malformed_sampling_rate_raises_without_fallback(self, testdata):
+        filename = testdata['malformed_sampling_rate.rt130']
+        msg = re.escape(
+            "Could not parse sampling rate from EH packet header (malformed "
+            "or blank field).")
+        with pytest.raises(Reftek130Exception, match=msg):
+            _read_reftek130(filename)
 
+    def test_malformed_sampling_rate_reads_with_fallback(self, testdata):
+        filename = testdata['malformed_sampling_rate.rt130']
+        msg = re.escape(
+            "Could not parse sampling rate from EH packet, using "
+            "fallback_sampling_rate=100.0.")
+        with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
+            warnings.simplefilter("always")
+            st = _read_reftek130(filename, fallback_sampling_rate=100.0)
+        assert len(st) > 0
+        for tr in st:
+            assert tr.stats.sampling_rate == 100.0
+
+    def test_malformed_eh_header_field_other_than_sampling_rate(
+            self, testdata):
+        filename = testdata['malformed_total_installed_channels.rt130']
+        msg = re.escape(
+            "Could not parse EH packet field 'total_installed_channels', "
+            "setting to None.")
+        with CatchAndAssertWarnings(expected=[(UserWarning, msg)]):
+            warnings.simplefilter("always")
+            st = _read_reftek130(filename)
+        assert len(st) > 0
+       
     def test_data_unpacking_steim1(self, testdata):
         """
         Test both unpacking routines for C0 data coding (STEIM1)
