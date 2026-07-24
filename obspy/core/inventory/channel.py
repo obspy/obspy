@@ -45,13 +45,13 @@ class Channel(BaseNode):
         :param code: The SEED channel code for this channel
         :type location_code: str
         :param location_code: The SEED location code for this channel
-        :type latitude: :class:`~obspy.core.inventory.util.Latitude`
+        :type latitude: :class:`~obspy.core.inventory.util.Latitude` or float
         :param latitude: Latitude coordinate of this channel's sensor.
-        :type longitude: :class:`~obspy.core.inventory.util.Longitude`
+        :type longitude: :class:`~obspy.core.inventory.util.Longitude` or float
         :param longitude: Longitude coordinate of this channel's sensor.
-        :type elevation: float
+        :type elevation: :class:`~obspy.core.inventory.util.Distance` or float
         :param elevation: Elevation of the sensor.
-        :type depth: float
+        :type depth: :class:`~obspy.core.inventory.util.Distance` or float
         :param depth: The local depth or overburden of the instrument's
             location. For downhole instruments, the depth of the instrument
             under the surface ground level. For underground vaults, the

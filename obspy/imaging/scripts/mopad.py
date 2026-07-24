@@ -78,6 +78,7 @@ import sys
 import numpy as np
 
 from obspy import __version__
+from obspy.core.util.misc import eig
 
 
 MOPAD_VERSION = 0.7
@@ -343,10 +344,10 @@ class MomentTensor:
         self._deviatoric = M_devi
 
         # eigenvalues and -vectors
-        eigenwtot, eigenvtot = np.linalg.eig(M)
+        eigenwtot, eigenvtot = eig(M)
 
         # eigenvalues and -vectors of the deviatoric part
-        eigenw1, eigenv1 = np.linalg.eig(M_devi)
+        eigenw1, eigenv1 = eig(M_devi)
 
         # eigenvalues in ascending order:
         eigenw = np.real(np.take(eigenw1, np.argsort(abs(eigenwtot))))
@@ -421,7 +422,7 @@ class MomentTensor:
         self._deviatoric = M_devi
 
         # eigenvalues and -vectors of the deviatoric part
-        eigenw1, eigenv1 = np.linalg.eig(M_devi)
+        eigenw1, eigenv1 = eig(M_devi)
 
         # eigenvalues in ascending order of their absolute values:
         eigenw = np.real(np.take(eigenw1, np.argsort(abs(eigenw1))))
@@ -486,11 +487,11 @@ class MomentTensor:
         self._deviatoric = M_devi
 
         # eigenvalues and -vectors of the deviatoric part
-        eigenw1, eigenv1 = np.linalg.eig(M_devi)
+        eigenw1, eigenv1 = eig(M_devi)
         M0_devi = max(abs(eigenw1))
 
         # eigenvalues and -vectors of the full M !!!!!!!!
-        eigenw1, eigenv1 = np.linalg.eig(M)
+        eigenw1, eigenv1 = eig(M)
 
         # eigenvalues in ascending order of their absolute values:
         eigenw = np.real(np.take(eigenw1, np.argsort(abs(eigenw1))))

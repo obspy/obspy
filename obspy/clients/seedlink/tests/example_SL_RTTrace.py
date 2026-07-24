@@ -113,7 +113,7 @@ def main():
     # slClient.slconn.set_sl_address("discovery.rm.ingv.it:39962")
     # slClient.multiselect = ("IV_MGAB:BHZ")
     #
-    # slClient.slconn.set_sl_address("rtserve.iris.washington.edu:18000")
+    # slClient.slconn.set_sl_address("rtserve.earthscope.org:18000")
     # slClient.multiselect = ("AT_TTA:BHZ")
     #
     # set a time window from 2 min in the past to 5 sec in the future

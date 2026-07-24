@@ -4,14 +4,15 @@ The obspy.clients.iris.client test suite.
 """
 import numpy as np
 import pytest
+from unittest import mock
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.clients.iris import Client
 
-pytestmark = pytest.mark.network
 
-
+@pytest.mark.network
 class TestClient():
     """
     Test cases for obspy.clients.iris.client.Client.
@@ -75,47 +76,6 @@ class TestClient():
             client.distaz(stalat=1.1, stalon=1.2)
         with pytest.raises(Exception):
             client.distaz(1.1, 1.2)
-
-    def test_flinnengdahl(self):
-        """
-        Tests calculation of Flinn-Engdahl region code or name.
-        """
-        client = Client()
-        # code
-        result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
-        assert result == 683
-        assert isinstance(result, int)
-        # w/o kwargs
-        result = client.flinnengdahl(-20.5, -100.6, "code")
-        assert result == 683
-        # region
-        result = client.flinnengdahl(lat=42, lon=-122.24, rtype="region")
-        assert result == 'OREGON'
-        assert isinstance(result, str)
-        # w/o kwargs
-        result = client.flinnengdahl(42, -122.24, "region")
-        assert result == 'OREGON'
-        # both
-        result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="both")
-        assert result == (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN')
-        assert isinstance(result[0], int)
-        assert isinstance(result[1], str)
-        # w/o kwargs
-        result = client.flinnengdahl(-20.5, -100.6, "both")
-        assert result == (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN')
-        # default rtype
-        result = client.flinnengdahl(lat=42, lon=-122.24)
-        assert result == (32, 'OREGON')
-        # w/o kwargs
-        # outside boundaries
-        with pytest.raises(Exception):
-            client.flinnengdahl(lat=-90.1, lon=0)
-        with pytest.raises(Exception):
-            client.flinnengdahl(lat=90.1, lon=0)
-        with pytest.raises(Exception):
-            client.flinnengdahl(lat=0, lon=-180.1)
-        with pytest.raises(Exception):
-            client.flinnengdahl(lat=0, lon=180.1)
 
     def test_traveltime(self):
         """
@@ -274,3 +234,13 @@ class TestClient():
         assert st1[0].stats.endtime == st2[0].stats.endtime
         assert st1[0].data[0] == 24
         assert round(abs(st2[0].data[0]--2.8373747e-06), 7) == 0
+
+
+def test_flinnengdahl_deprecation_warning():
+    with mock.patch('obspy.clients.iris.Client._fetch'):
+        client = Client()
+        msg = ('EarthScope has announced the retirement of its Flinn-Engdahl '
+               'web service on or after July 6th 2026. Try using '
+               'obspy.geodetics.flinnengdahl instead')
+        with pytest.warns(ObsPyDeprecationWarning, match=msg):
+            client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")

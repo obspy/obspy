@@ -52,7 +52,7 @@ class TestSLClient():
         __name__ != '__main__', reason='test must be started manually')
     def test_issue708(self):
         sl_client = SLClient()
-        sl_client.slconn.set_sl_address("rtserve.iris.washington.edu:18000")
+        sl_client.slconn.set_sl_address("rtserve.earthscope.org:18000")
         sl_client.multiselect = ("G_FDFM:00BHZ, G_SSB:00BHZ")
         # set a time window from 2 min - 1 min in the past
         dt = UTCDateTime()

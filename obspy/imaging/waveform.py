@@ -891,7 +891,7 @@ class WaveformPlotting(object):
 
         # Create array for min/max values. Use masked arrays to handle gaps.
         extreme_values = np.ma.empty((noi, self.width, 2))
-        trace.data.shape = (noi, spi)
+        data = trace.data.reshape((noi, spi))
 
         ispp = int(spp)
         fspp = spp % 1.0
@@ -903,11 +903,11 @@ class WaveformPlotting(object):
         # Loop over each interval to avoid larger errors towards the end.
         for _i in range(noi):
             if delta:
-                cur_interval = trace.data[_i][:-delta]
-                rest = trace.data[_i][-delta:]
+                cur_interval = data[_i][:-delta]
+                rest = data[_i][-delta:]
             else:
-                cur_interval = trace.data[_i]
-            cur_interval.shape = (self.width, ispp)
+                cur_interval = data[_i]
+            cur_interval = cur_interval.reshape((self.width, ispp))
             extreme_values[_i, :, 0] = cur_interval.min(axis=1)
             extreme_values[_i, :, 1] = cur_interval.max(axis=1)
             # Add the rest.

@@ -188,6 +188,13 @@ def pytest_configure(config):
     # Skip or select network options based on options
     network_selected = config.getoption('--network')
     all_selected = config.getoption('--all')
+    if getattr(config.option, "markexpr"):
+        msg = ('marker expressions (pytest option "-m") will be internally '
+               'overwritten in conftest.py and thus can not be used. '
+               'By default, tests marked as "network" will be excluded. This '
+               'behavior can be changed by custom options "--network" and '
+               '"--all".')
+        raise Exception(msg)
     if network_selected and not all_selected:
         setattr(config.option, 'markexpr', 'network')
     elif not network_selected and not all_selected:

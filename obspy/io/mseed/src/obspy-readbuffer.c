@@ -331,11 +331,6 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
 
     // Read all records and save them in a linked list.
     while (offset < buflen) {
-        msr = msr_init(NULL);
-        if ( msr == NULL ) {
-            ms_log (2, "readMSEEDBuffer(): Error initializing msr\n");
-            return NULL;
-        }
         if (verbose > 1) {
             ms_log(0, "readMSEEDBuffer(): calling msr_parse with "
                       "mseed+offset=%d+%d, buflen=%d, reclen=%d, dataflag=%d, verbose=%d\n",
@@ -346,7 +341,6 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         if (reclen != -1) {
             if (offset + reclen > buflen) {
                 ms_log(1, "readMSEEDBuffer(): Last reclen exceeds buflen, skipping.\n");
-                msr_free(&msr);
                 break;
             }
         }
@@ -357,7 +351,6 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                 ms_log(1, "readMSEEDBuffer(): Last record only has %i byte(s) which "
                           "is not enough to constitute a full SEED record. Corrupt data? "
                           "Record will be skipped.\n", buflen - offset);
-                msr_free(&msr);
                 break;
             }
         }
@@ -366,6 +359,12 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         if (OBSPY_ISVALIDBLANK(mseed + offset)) {
             offset += MINRECLEN;
             continue;
+        }
+
+        msr = msr_init(NULL);
+        if ( msr == NULL ) {
+            ms_log (2, "readMSEEDBuffer(): Error initializing msr\n");
+            return NULL;
         }
 
         // Pass (buflen - offset) because msr_parse() expects only a single record. This

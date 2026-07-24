@@ -51,7 +51,7 @@ jobs:
             "target_url": "https://tests.obspy.org/?pr=${{ github.event.pull_request.number }}"
             }'
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -132,6 +132,10 @@ jobs:
     # Ensure network tests dont fail build.
     continue-on-error: ${{ contains(matrix.options, 'network') || contains(matrix.options, 'warnings') }}
     env:
+      # set environment variables for FSNWS authenticated tests at EarthScope
+      OBSPY_TESTS_USER_AGENT: ${{ secrets.OBSPY_TESTS_USER_AGENT }}
+      OBSPY_TESTS_EARTHSCOPE_AUTH_USER: ${{ secrets.OBSPY_TESTS_EARTHSCOPE_AUTH_USER }}
+      OBSPY_TESTS_EARTHSCOPE_AUTH_PASSWORD: ${{ secrets.OBSPY_TESTS_EARTHSCOPE_AUTH_PASSWORD }}
       # set path of test environment for caching
       prefix: ${{ startsWith(matrix.os, 'ubuntu') && '/usr/share/miniconda3/envs/test' || startsWith(matrix.os, 'macos') && '/Users/runner/miniconda3/envs/test' || startsWith(matrix.os, 'windows') && 'C:\Miniconda3\envs\test' }}
       # set individual cache key
@@ -141,7 +145,7 @@ jobs:
       # set additional runtest options (--keep-images, --network, -W error)
       runtest_options: ${{ github.event_name == 'pull_request' && '--keep-images' || '' }} ${{ contains(matrix.options, 'network') && '--network' || '' }} ${{ contains(matrix.options, 'warnings') && '-W error' || '' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -155,7 +159,7 @@ jobs:
           activate-environment: test
           python-version: ${{ matrix.python-version }}
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: ${{ env.prefix }}
           key: ${{ env.cache_key }}-hash${{ hashFiles(env.env_file) }}-${{ steps.date.outputs.date }}-${{ env.CACHE_NUMBER }}
@@ -204,7 +208,7 @@ jobs:
           obspy-runtests --cov obspy --cov-report=xml:${GITHUB_WORKSPACE}/coverage.xml --cov-append --report ${{ env.runtest_options }}
 
       - name: upload coverage
-        uses: codecov/codecov-action@v6.0.0
+        uses: codecov/codecov-action@v7.0.0
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure')
         with:
           flags: ${{ contains(matrix.options, 'network') && 'unittests_network' || 'unittests' }}

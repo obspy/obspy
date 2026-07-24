@@ -1526,7 +1526,7 @@ class TestUTCDateTime:
 
     @pytest.mark.parametrize(
         "path",
-        (Path(__file__).parent / "data" / "utc_pickles").glob("*.pkl")
+        tuple((Path(__file__).parent / "data" / "utc_pickles").glob("*.pkl"))
     )
     def test_read_old_pickles(self, path):
         """Load many old pickle files, ensure each can be unpickled."""

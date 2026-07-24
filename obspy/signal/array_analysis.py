@@ -24,6 +24,7 @@ import numpy as np
 from scipy.integrate import cumulative_trapezoid
 
 from obspy.core import Stream
+from obspy.core.util.misc import eig
 from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.util import next_pow_2, util_geo_km
@@ -538,13 +539,13 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         # 9/14/92.ii.4, 7/21/06.ii.2(5)
 
         # eigvecs are principal axes, eigvals are principal strains
-        [eigvals, _eigvecs] = np.linalg.eig(gammah)
+        [eigvals, _eigvecs] = eig(gammah)
         # max shear strain, from Fung (1965, p71, eqn (8)
         ts_sh[itime] = .5 * (max(eigvals) - min(eigvals))
 
         # calculate max of total shear strain, not just horizontal strain
         # eigvecs are principal axes, eigvals are principal strains
-        [eigvalt, _eigvect] = np.linalg.eig(e)
+        [eigvalt, _eigvect] = eig(e)
         # max shear strain, from Fung (1965, p71, eqn (8)
         ts_s[itime] = .5 * (max(eigvalt) - min(eigvalt))
         #
