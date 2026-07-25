@@ -117,6 +117,9 @@ def _read_mseed3(
     sourcename: Union[str, None] = None,
     twopass: bool = False,
     details: bool = False,
+    skip_not_data: bool = False,
+    validate_crc: bool = True,
+    split_version: bool = False,
     verbose: Union[bool, int] = 0,
     **kwargs: dict,
 ) -> Stream:
@@ -164,6 +167,24 @@ def _read_mseed3(
         retains the order that the values were encountered.
         Default is False.
     :type details: bool
+    :param skip_not_data: If True, skip bytes that are not miniSEED instead of
+        treating them as an error, e.g. to read records embedded in a full SEED
+        volume or a file with a leading text header.
+        LIMITATION: pymseed only honors this when reading from a file path; it
+        is ignored, with a warning, for a buffer or file-like source.
+        Default is False.
+    :type skip_not_data: bool
+    :param validate_crc: If True, verify the CRC of each miniSEED v3 record and
+        reject a record that fails.  Set to False to recover data from records
+        with damaged CRCs, at the cost of returning samples that may be
+        corrupt.  Has no effect on miniSEED v2, which carries no CRC.
+        Default is True.
+    :type validate_crc: bool
+    :param split_version: If True, do not merge data of differing publication
+        versions into the same trace.  Combine with ``details=True`` to see the
+        version of each resulting trace.
+        Default is False.
+    :type split_version: bool
     :param verbose: If True, print verbose output at level 2.  If an integer,
         print verbose output at the given level. Default is False (aka 0).
     :type verbose: bool, int
@@ -215,9 +236,21 @@ def _read_mseed3(
     else:
         raise IOError(f"Unsupported input source: {type(source).__name__}")
 
+    # pymseed accepts skip_not_data for every source but only acts on it when
+    # reading from a file path, so say so rather than silently ignoring it.
+    if skip_not_data and not isinstance(source, (str, os.PathLike)):
+        warnings.warn(
+            "skip_not_data is only supported when reading from a file path, "
+            f"ignoring it for {type(source).__name__}"
+        )
+        skip_not_data = False
+
     # Common arguments for MS3TraceList factory functions
     common_kwargs = {
         "unpack_data": not headonly,
+        "skip_not_data": skip_not_data,
+        "validate_crc": validate_crc,
+        "split_version": split_version,
     }
 
     # Without a re-readable source the record list has nothing to unpack

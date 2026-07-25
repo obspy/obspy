@@ -9,6 +9,7 @@ import os
 import numpy as np
 import pytest
 
+from pymseed import DataEncoding, MS3Record
 from pymseed.util import timestr2nstime
 
 from obspy import Stream, Trace, UTCDateTime, read
@@ -508,6 +509,86 @@ class TestReadMSEED3:
         )
         assert len(st) == 1
         assert st[0].stats.starttime >= UTCDateTime(start)
+
+    # ---- libmseed read options ----------------------------------------
+
+    def test_skip_not_data(self, testdata, tmp_path):
+        # A leading text header is an error unless non-data is skipped.
+        data = testdata["testdata-3channel-signal.mseed3"].read_bytes()
+        padded = tmp_path / "padded.mseed3"
+        padded.write_bytes(b"# not miniSEED\n" * 20 + data)
+        with pytest.raises((IOError, OSError)):
+            _read_mseed3(str(padded))
+        st = _read_mseed3(str(padded), skip_not_data=True)
+        assert len(st) == 3
+        assert all(tr.stats.npts == THREECH_NPTS for tr in st)
+
+    def test_skip_not_data_warns_for_non_path(self, testdata):
+        # pymseed only honors skip_not_data for a file path, so a buffer
+        # request must not pass silently.
+        data = testdata["testdata-3channel-signal.mseed3"].read_bytes()
+        with pytest.warns(UserWarning, match="skip_not_data"):
+            st = _read_mseed3(data, skip_not_data=True)
+        assert len(st) == 3
+
+    def test_validate_crc_off_recovers_bad_crc(self, testdata):
+        # Corrupt the payload but not the header, so the record is readable
+        # and only its CRC is wrong.
+        data = bytearray(
+            testdata["testdata-3channel-signal.mseed3"].read_bytes()
+        )
+        data[300:308] = b"\xff" * 8
+        data = bytes(data)
+        with pytest.raises((IOError, OSError), match="CRC"):
+            _read_mseed3(data)
+        st = _read_mseed3(data, validate_crc=False)
+        assert len(st) == 3
+        assert all(tr.stats.npts == THREECH_NPTS for tr in st)
+
+    def test_split_version(self, tmp_path):
+        # No shipped file mixes publication versions, so build one: the same
+        # series continuing across a version change.
+        chunks = []
+        for pubversion, start in ((1, "2012-05-12T00:00:00Z"),
+                                  (2, "2012-05-12T00:00:10Z")):
+            record = MS3Record()
+            record.reclen = 512
+            record.formatversion = 3
+            record.sourceid = "FDSN:XX_TEST__B_H_Z"
+            record.samprate = 10.0
+            record.encoding = DataEncoding.STEIM2
+            record.pubversion = pubversion
+            record.starttime = timestr2nstime(start)
+            samples = np.arange(100, dtype=np.int32) * pubversion
+            with record.with_datasamples(samples, "i"):
+                chunks.extend(record.generate())
+        mixed = tmp_path / "mixedversion.mseed3"
+        mixed.write_bytes(b"".join(chunks))
+
+        # Merged into one trace by default...
+        st = _read_mseed3(str(mixed), details=True)
+        assert len(st) == 1
+        assert st[0].stats.npts == 200
+        assert st[0].stats.mseed3.publication_versions == [1, 2]
+
+        # ...and kept apart when requested.
+        st = _read_mseed3(str(mixed), split_version=True, details=True)
+        assert len(st) == 2
+        assert [tr.stats.npts for tr in st] == [100, 100]
+        versions = [tr.stats.mseed3.publication_versions for tr in st]
+        assert versions == [[1], [2]]
+
+    def test_read_options_default_to_previous_behavior(self, testdata):
+        # The three new options must not perturb an ordinary read.
+        path = testdata["testdata-3channel-signal.mseed3"]
+        st = _read_mseed3(path)
+        st_explicit = _read_mseed3(
+            path, skip_not_data=False, validate_crc=True, split_version=False
+        )
+        assert len(st) == len(st_explicit)
+        for tr1, tr2 in zip(st, st_explicit):
+            assert tr1.id == tr2.id
+            np.testing.assert_array_equal(tr1.data, tr2.data)
 
     # ---- alternative input types --------------------------------------
 
