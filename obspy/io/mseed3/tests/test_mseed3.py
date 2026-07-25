@@ -610,6 +610,41 @@ class TestReadMSEED3:
         with pytest.raises((IOError, OSError)):
             _read_mseed3(str(tmp_path / "nope.mseed3"))
 
+    def test_read_error_names_the_file(self, testdata, tmp_path):
+        corrupt = tmp_path / "corrupt.mseed3"
+        data = bytearray(
+            testdata["testdata-3channel-signal.mseed3"].read_bytes()
+        )
+        data[600:640] = b"\x00" * 40
+        corrupt.write_bytes(data)
+        with pytest.raises((IOError, OSError), match=str(corrupt)):
+            _read_mseed3(str(corrupt))
+
+    @pytest.mark.parametrize(
+        "wrap", [bytes, bytearray, memoryview, np.frombuffer]
+    )
+    def test_read_error_describes_buffer_without_contents(
+        self, testdata, wrap
+    ):
+        # The message must describe the buffer, not interpolate it, or a
+        # corrupt multi-megabyte read reports an unreadable exception.
+        data = bytearray(
+            testdata["testdata-3channel-signal.mseed3"].read_bytes()
+        )
+        data[600:640] = b"\x00" * 40
+        source = (
+            np.frombuffer(bytes(data), dtype=np.uint8)
+            if wrap is np.frombuffer
+            else wrap(bytes(data))
+        )
+        with pytest.raises((IOError, OSError)) as exc:
+            _read_mseed3(source)
+        message = str(exc.value)
+        assert len(message) < 200
+        assert f"{len(data)} bytes" in message
+        # No run of raw payload bytes leaked into the message.
+        assert "FDSN:IU_COLA" not in message
+
 
 class TestWriteMSEED3:
     """Writing via _write_mseed3 + read/write roundtrips."""

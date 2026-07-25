@@ -40,6 +40,27 @@ def _supports_buffer_protocol(obj) -> bool:
     return True
 
 
+def _describe_source(source) -> str:
+    """
+    Return a short description of a read source, for use in error messages.
+
+    A path is named directly, as is an open file that reports one. Anything
+    else is described by type and size only, so that an error message never
+    interpolates the contents of a buffer.
+    """
+    if isinstance(source, (str, os.PathLike)):
+        return f"file '{os.fspath(source)}'"
+
+    name = getattr(source, "name", None)
+    if isinstance(name, (str, bytes, os.PathLike)):
+        return f"file '{os.fsdecode(name)}'"
+
+    try:
+        return f"{type(source).__name__} of {memoryview(source).nbytes} bytes"
+    except TypeError:
+        return type(source).__name__
+
+
 def _is_mseed3(
     source: Union[str, os.PathLike, bytes, bytearray, memoryview, IO[bytes]],
 ) -> bool:
@@ -217,7 +238,9 @@ def _read_mseed3(
     except IOError:
         raise
     except Exception as e:
-        raise IOError(f"Error reading MSEED file {source}: {e}") from e
+        raise IOError(
+            f"Error reading miniSEED from {_describe_source(source)}: {e}"
+        ) from e
 
     traces = []
 
