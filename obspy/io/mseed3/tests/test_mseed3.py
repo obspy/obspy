@@ -880,6 +880,55 @@ class TestWriteMSEED3:
         for tr1, tr2 in zip(st, st2):
             np.testing.assert_array_equal(tr1.data, tr2.data)
 
+    def test_write_path_and_file_like_agree(self, testdata, tmp_path):
+        # Both destinations go through the same packing path, so the bytes
+        # must be identical.
+        st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
+        out = tmp_path / "out.mseed3"
+        _write_mseed3(st, str(out))
+        buf = io.BytesIO()
+        _write_mseed3(st, buf)
+        assert out.read_bytes() == buf.getvalue()
+
+    def test_write_to_pathlike(self, testdata, tmp_path):
+        st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
+        out = tmp_path / "out.mseed3"
+        _write_mseed3(st, out)
+        st2 = _read_mseed3(out)
+        assert len(st2) == len(st)
+        for tr1, tr2 in zip(st, st2):
+            np.testing.assert_array_equal(tr1.data, tr2.data)
+
+    def test_stream_write_pathlike(self, testdata, tmp_path):
+        # The same path through the public API, which is how a user hits it.
+        st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
+        out = tmp_path / "viaapi.mseed3"
+        st.write(out, format="MSEED3")
+        st2 = read(out, format="MSEED3")
+        assert len(st2) == len(st)
+        for tr1, tr2 in zip(st, st2):
+            np.testing.assert_array_equal(tr1.data, tr2.data)
+
+    def test_write_no_overwrite_appends(self, testdata, tmp_path):
+        st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
+        out = tmp_path / "appended.mseed3"
+        _write_mseed3(st, str(out), overwrite=False)
+        size_first = out.stat().st_size
+        _write_mseed3(st, str(out), overwrite=False)
+        assert out.stat().st_size == 2 * size_first
+
+    def test_write_leaves_file_like_open(self, testdata, tmp_path):
+        # A caller's handle belongs to the caller; writing must not close it.
+        st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
+        buf = io.BytesIO()
+        _write_mseed3(st, buf)
+        assert not buf.closed
+        out = tmp_path / "handle.mseed3"
+        with open(out, "wb") as fh:
+            _write_mseed3(st, fh)
+            assert not fh.closed
+        assert len(_read_mseed3(str(out))) == 3
+
     def test_write_max_record_length(self, testdata, tmp_path):
         # Smaller record length should yield more (but still valid) records.
         st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])

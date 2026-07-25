@@ -3,6 +3,7 @@
 MSEED3 bindings to ObsPy core module.
 """
 
+import contextlib
 import os
 import warnings
 from typing import IO, Union
@@ -450,81 +451,82 @@ def _write_mseed3(
     msrecord.reclen = max_record_length
     msrecord.formatversion = format_version
 
-    first_path_write = True
+    # Open a path destination once for the whole stream, rather than letting
+    # every trace reopen it. A file-like destination is written as given and
+    # left open for the caller to close.
+    if isinstance(destination, (str, os.PathLike)):
+        opened = open(destination, "wb" if overwrite else "ab")
+    else:
+        opened = contextlib.nullcontext(destination)
 
-    for trace in stream:
-        # Create source ID from codes
-        network = trace.stats.network or ""
-        station = trace.stats.station or ""
-        location = trace.stats.location or ""
-        channel = trace.stats.channel or "__"
+    with opened as output:
+        for trace in stream:
+            # Create source ID from codes
+            network = trace.stats.network or ""
+            station = trace.stats.station or ""
+            location = trace.stats.location or ""
+            channel = trace.stats.channel or "__"
 
-        msrecord.sourceid = nslc2sourceid(network, station, location, channel)
+            msrecord.sourceid = nslc2sourceid(
+                network, station, location, channel
+            )
 
-        # Start time in nanoseconds
-        msrecord.starttime = trace.stats.starttime.ns
+            # Start time in nanoseconds
+            msrecord.starttime = trace.stats.starttime.ns
 
-        # Sample rate in Hz
-        msrecord.samprate = trace.stats.sampling_rate
+            # Sample rate in Hz
+            msrecord.samprate = trace.stats.sampling_rate
 
-        # Determine pymseed sample type and type specific default encoding
-        sample_type_code = None
-        type_default_encoding = None
+            # Determine pymseed sample type and type specific default encoding
+            sample_type_code = None
+            type_default_encoding = None
 
-        data = trace.data
+            data = trace.data
 
-        # Normalize non-native byte order to native byte order
-        if data.dtype.byteorder not in ("=", "|"):
-            data = data.astype(data.dtype.newbyteorder("="))
+            # Normalize non-native byte order to native byte order
+            if data.dtype.byteorder not in ("=", "|"):
+                data = data.astype(data.dtype.newbyteorder("="))
 
-        if data.dtype == np.int32:
-            sample_type_code = "i"
-            type_default_encoding = DataEncoding.STEIM2
-        elif data.dtype == np.float32:
-            sample_type_code = "f"
-            type_default_encoding = DataEncoding.FLOAT32
-        elif data.dtype == np.float64:
-            sample_type_code = "d"
-            type_default_encoding = DataEncoding.FLOAT64
-        elif data.dtype == np.dtype("|S1"):
-            sample_type_code = "t"
-            type_default_encoding = DataEncoding.TEXT
-        elif data.dtype == np.int16:
-            sample_type_code = "i"
-            type_default_encoding = DataEncoding.STEIM2
-            data = data.astype(np.int32, copy=True)
-        elif data.dtype == np.int64:
-            ii32 = np.iinfo(np.int32)
-            if data.min() >= ii32.min and data.max() <= ii32.max:
+            if data.dtype == np.int32:
+                sample_type_code = "i"
+                type_default_encoding = DataEncoding.STEIM2
+            elif data.dtype == np.float32:
+                sample_type_code = "f"
+                type_default_encoding = DataEncoding.FLOAT32
+            elif data.dtype == np.float64:
+                sample_type_code = "d"
+                type_default_encoding = DataEncoding.FLOAT64
+            elif data.dtype == np.dtype("|S1"):
+                sample_type_code = "t"
+                type_default_encoding = DataEncoding.TEXT
+            elif data.dtype == np.int16:
                 sample_type_code = "i"
                 type_default_encoding = DataEncoding.STEIM2
                 data = data.astype(np.int32, copy=True)
+            elif data.dtype == np.int64:
+                ii32 = np.iinfo(np.int32)
+                if data.min() >= ii32.min and data.max() <= ii32.max:
+                    sample_type_code = "i"
+                    type_default_encoding = DataEncoding.STEIM2
+                    data = data.astype(np.int32, copy=True)
+                else:
+                    raise ValueError(
+                        "int64 data only supported when writing miniSEED "
+                        "if it can be downcast to int32 type data."
+                    )
             else:
-                raise ValueError(
-                    "int64 data only supported when writing miniSEED "
-                    "if it can be downcast to int32 type data."
-                )
-        else:
-            raise ValueError(f"Unsupported data type: {data.dtype}")
+                raise ValueError(f"Unsupported data type: {data.dtype}")
 
-        msrecord.encoding = (
-            pymseed_encoding
-            if pymseed_encoding is not None
-            else type_default_encoding
-        )
+            msrecord.encoding = (
+                pymseed_encoding
+                if pymseed_encoding is not None
+                else type_default_encoding
+            )
 
-        # Write records using a zero-copy view of the data samples
-        with msrecord.with_datasamples(data, sample_type_code):
-            # Write to a path-like destination
-            if isinstance(destination, (str, os.PathLike)):
-                msrecord.to_file(
-                    destination, overwrite=overwrite and first_path_write
-                )
-                first_path_write = False
-            # Write to a file-like destination
-            else:
+            # Write records using a zero-copy view of the data samples
+            with msrecord.with_datasamples(data, sample_type_code):
                 for record in msrecord.generate():
-                    destination.write(record)
+                    output.write(record)
 
 
 if __name__ == "__main__":
