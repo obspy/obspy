@@ -4,6 +4,7 @@ MSEED3 bindings to ObsPy core module.
 """
 
 import os
+import warnings
 from typing import IO, Union
 
 import numpy as np
@@ -120,9 +121,9 @@ def _read_mseed3(
         This unpack-on-demand approach avoids duplicating the data in memory;
         the cost is reading the file twice.  The value of this tradeoff between
         memory and I/O will vary depending on the use case and system
-        resources.  This option cannot be used in combination with sources that
-        are not persistent, such as a file-like object that is not seekable
-        (e.g. a network stream).
+        resources.  The second pass re-reads the source, which is only possible
+        for a file path or an in-memory buffer.  For a file-like object the
+        data are read in a single pass instead, with a warning.
         Default is False.
     :type twopass: bool
     :param details: If True, read additional information: timing quality,
@@ -164,10 +165,30 @@ def _read_mseed3(
         else:
             sourceid = sourcename.replace(".", "_")
 
+    # Select the reader for this source. A file-like object is consumed as it
+    # is read, unlike a path or buffer, which can be re-read for a second pass.
+    if isinstance(source, (str, os.PathLike)):
+        read_tracelist, rereadable = MS3TraceList.from_file, True
+    elif _supports_buffer_protocol(source):
+        read_tracelist, rereadable = MS3TraceList.from_buffer, True
+    elif callable(getattr(source, "read", None)):
+        read_tracelist, rereadable = MS3TraceList.from_filelike, False
+    else:
+        raise IOError(f"Unsupported input source: {type(source).__name__}")
+
     # Common arguments for MS3TraceList factory functions
     common_kwargs = {
         "unpack_data": not headonly,
     }
+
+    # Without a re-readable source the record list has nothing to unpack
+    # samples from in the second pass, so read in a single pass instead.
+    if twopass and not rereadable:
+        warnings.warn(
+            "twopass reading requires a file path or in-memory buffer, "
+            f"reading {type(source).__name__} in a single pass instead"
+        )
+        twopass = False
 
     # If twopass, read the record list first and unpack data later
     if twopass:
@@ -192,14 +213,7 @@ def _read_mseed3(
         common_kwargs["sourceid"] = sourceid
 
     try:
-        if isinstance(source, (str, os.PathLike)):
-            mstracelist = MS3TraceList.from_file(source, **common_kwargs)
-        elif _supports_buffer_protocol(source):
-            mstracelist = MS3TraceList.from_buffer(source, **common_kwargs)
-        elif callable(getattr(source, "read", None)):
-            mstracelist = MS3TraceList.from_filelike(source, **common_kwargs)
-        else:
-            raise IOError(f"Unsupported input source: {type(source).__name__}")
+        mstracelist = read_tracelist(source, **common_kwargs)
     except IOError:
         raise
     except Exception as e:

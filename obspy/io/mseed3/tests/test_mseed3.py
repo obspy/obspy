@@ -387,6 +387,34 @@ class TestReadMSEED3:
         for tr in st2:
             assert tr.stats.mseed3.number_of_records > 0
 
+    def test_read_twopass_buffer_matches_default(self, testdata):
+        data = testdata["testdata-3channel-signal.mseed3"].read_bytes()
+        st1 = _read_mseed3(data)
+        st2 = _read_mseed3(data, twopass=True)
+        assert len(st1) == len(st2)
+        for tr1, tr2 in zip(st1, st2):
+            np.testing.assert_array_equal(tr1.data, tr2.data)
+
+    @pytest.mark.parametrize("wrap", [io.BytesIO, open])
+    def test_read_twopass_falls_back_for_file_like(self, testdata, wrap):
+        # A file-like source is consumed by the first pass, so there is
+        # nothing left to unpack samples from; read in a single pass.
+        path = testdata["testdata-3channel-signal.mseed3"]
+        expected = _read_mseed3(path)
+        source = (
+            io.BytesIO(path.read_bytes())
+            if wrap is io.BytesIO
+            else open(path, "rb")
+        )
+        try:
+            with pytest.warns(UserWarning, match="single pass"):
+                st = _read_mseed3(source, twopass=True)
+        finally:
+            source.close()
+        assert len(st) == len(expected)
+        for tr, ref in zip(st, expected):
+            np.testing.assert_array_equal(tr.data, ref.data)
+
     # ---- filtering ----------------------------------------------------
 
     def test_sourceid_filter(self, testdata):
