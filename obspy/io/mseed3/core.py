@@ -61,6 +61,17 @@ def _describe_source(source) -> str:
         return type(source).__name__
 
 
+def _nanosecond_time_string(time: UTCDateTime) -> str:
+    """
+    Format a time as an ISO 8601 string with nanosecond precision.
+
+    pymseed accepts time selections as strings only, and ``str(UTCDateTime)``
+    renders microseconds by default, rounding away the nanoseconds that both
+    miniSEED and ObsPy carry. Rebuilding at precision 9 round-trips exactly.
+    """
+    return str(UTCDateTime(ns=time.ns, precision=9))
+
+
 def _is_mseed3(
     source: Union[str, os.PathLike, bytes, bytearray, memoryview, IO[bytes]],
 ) -> bool:
@@ -166,6 +177,13 @@ def _read_mseed3(
             "Cannot specify both sourceid and sourcename. Use only one."
         )
 
+    # Normalize the requested time window once; it is used both for the
+    # record-level selection below and the sample-level trim() at the end.
+    if starttime is not None and not isinstance(starttime, UTCDateTime):
+        starttime = UTCDateTime(starttime)
+    if endtime is not None and not isinstance(endtime, UTCDateTime):
+        endtime = UTCDateTime(endtime)
+
     # Convert sourcename pattern to FDSN sourceid pattern, best effort
     if sourcename:
         parts = sourcename.split(".")
@@ -226,10 +244,10 @@ def _read_mseed3(
     elif isinstance(verbose, int):
         common_kwargs["verbose"] = verbose
 
-    if starttime:
-        common_kwargs["starttime"] = str(starttime)
-    if endtime:
-        common_kwargs["endtime"] = str(endtime)
+    if starttime is not None:
+        common_kwargs["starttime"] = _nanosecond_time_string(starttime)
+    if endtime is not None:
+        common_kwargs["endtime"] = _nanosecond_time_string(endtime)
     if sourceid:
         common_kwargs["sourceid"] = sourceid
 
@@ -324,7 +342,7 @@ def _read_mseed3(
 
     # If time window is specified, the data have already been limited
     # at the record-level; trim() applies sample-level filtering.
-    if starttime or endtime:
+    if starttime is not None or endtime is not None:
         stream.trim(starttime=starttime, endtime=endtime)
 
     return stream

@@ -9,9 +9,16 @@ import os
 import numpy as np
 import pytest
 
+from pymseed.util import timestr2nstime
+
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import Stats
-from obspy.io.mseed3.core import _is_mseed3, _read_mseed3, _write_mseed3
+from obspy.io.mseed3.core import (
+    _is_mseed3,
+    _nanosecond_time_string,
+    _read_mseed3,
+    _write_mseed3,
+)
 
 # --- Expected values for shared reference files --------------------------
 
@@ -465,6 +472,42 @@ class TestReadMSEED3:
             assert tr.stats.endtime <= end + sample_delta
             # And the window should actually be narrowed.
             assert tr.stats.npts < THREECH_NPTS
+
+    def test_time_selection_string_is_nanosecond_exact(self):
+        # pymseed takes time selections as strings, and str(UTCDateTime)
+        # renders microseconds, so a nanosecond selection would be handed
+        # over rounded.
+        t = UTCDateTime(ns=1336780800123456789)
+        assert _nanosecond_time_string(t) == "2012-05-12T00:00:00.123456789Z"
+        assert timestr2nstime(_nanosecond_time_string(t)) == t.ns
+        # A whole second is still rendered with all nine digits.
+        assert (
+            _nanosecond_time_string(UTCDateTime(ns=0))
+            == "1970-01-01T00:00:00.000000000Z"
+        )
+
+    def test_time_window_nanosecond_precision(self, testdata):
+        # The "nsec" reference starts at .123456789 with a 25 ms interval,
+        # so every sample time has a sub-microsecond fraction.
+        src = testdata["reference-testdata-nsec.mseed3"]
+        second_sample = UTCDateTime(ns=1336780800123456789 + 25_000_000)
+        st = _read_mseed3(src, starttime=second_sample)
+        assert len(st) == 1
+        assert st[0].stats.starttime.ns == second_sample.ns
+        assert st[0].stats.npts == 499
+
+    @pytest.mark.parametrize(
+        "start",
+        ["2012-05-12T00:00:00.148456789Z", 1336780800.148456789],
+    )
+    def test_time_window_accepts_non_utcdatetime(self, testdata, start):
+        # Anything UTCDateTime understands is normalized before use, so it
+        # reaches both the record selection and the final trim().
+        st = _read_mseed3(
+            testdata["reference-testdata-nsec.mseed3"], starttime=start
+        )
+        assert len(st) == 1
+        assert st[0].stats.starttime >= UTCDateTime(start)
 
     # ---- alternative input types --------------------------------------
 
