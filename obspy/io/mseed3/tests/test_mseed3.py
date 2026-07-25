@@ -617,6 +617,30 @@ class TestReadMSEED3:
         st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
         self._check_threech(st)
 
+    def test_read_from_numpy_array(self, testdata):
+        data = testdata["testdata-3channel-signal.mseed3"].read_bytes()
+        st = _read_mseed3(np.frombuffer(data, dtype=np.uint8))
+        self._check_threech(st)
+
+    def test_read_from_numpy_array_wide_dtype(self, testdata):
+        # pymseed sizes a buffer in bytes, not elements. When it sized in
+        # elements, an array with an item size above one byte was read only in
+        # part: an int16 view yielded half the file and no error.
+        data = testdata["testdata-3channel-signal.mseed3"].read_bytes()
+        wide = np.frombuffer(data, dtype=np.uint8).view(np.int16)
+        assert wide.nbytes == len(data)
+        st = _read_mseed3(wide)
+        self._check_threech(st)
+
+    def test_read_from_non_contiguous_numpy_array_raises(self, testdata):
+        # A strided view cannot be read zero-copy and must be reported
+        # clearly rather than leaking pymseed's exception.
+        data = testdata["testdata-3channel-signal.mseed3"].read_bytes()
+        padded = np.zeros((len(data), 2), dtype=np.uint8)
+        padded[:, 0] = np.frombuffer(data, dtype=np.uint8)
+        with pytest.raises((IOError, OSError), match="contiguous"):
+            _read_mseed3(padded[:, 0])
+
     # ---- multi-record, mixed lengths ----------------------------------
 
     def test_read_mixed_lengths_v3(self, testdata):
@@ -879,6 +903,32 @@ class TestWriteMSEED3:
         assert len(st2) == len(st)
         for tr1, tr2 in zip(st, st2):
             np.testing.assert_array_equal(tr1.data, tr2.data)
+
+    def test_write_non_contiguous_data(self, testdata, tmp_path):
+        # Writing a strided view of a trace's samples, e.g. from decimating
+        # by slicing, must produce the samples that were passed in.
+        st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
+        strided = st[0].data[::2]
+        assert not strided.flags["C_CONTIGUOUS"]
+        trace = _make_trace(strided, sampling_rate=0.5)
+        out = tmp_path / "strided.mseed3"
+        _write_mseed3(Stream([trace]), str(out))
+        back = _read_mseed3(str(out))
+        assert len(back) == 1
+        np.testing.assert_array_equal(back[0].data, strided)
+
+    def test_write_non_contiguous_matches_contiguous(self, testdata):
+        # The contiguous copy made before packing must not change the output.
+        st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
+        strided = st[0].data[::2]
+        buffers = []
+        for data in (strided, np.ascontiguousarray(strided)):
+            buf = io.BytesIO()
+            _write_mseed3(
+                Stream([_make_trace(data, sampling_rate=0.5)]), buf
+            )
+            buffers.append(buf.getvalue())
+        assert buffers[0] == buffers[1]
 
     def test_write_path_and_file_like_agree(self, testdata, tmp_path):
         # Both destinations go through the same packing path, so the bytes

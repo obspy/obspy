@@ -487,6 +487,12 @@ def _write_mseed3(
             if data.dtype.byteorder not in ("=", "|"):
                 data = data.astype(data.dtype.newbyteorder("="))
 
+            # pymseed can only take a C-contiguous buffer zero-copy and falls
+            # back to an element-wise copy otherwise, which is far slower than
+            # making the array contiguous here.
+            if not data.flags["C_CONTIGUOUS"]:
+                data = np.ascontiguousarray(data)
+
             if data.dtype == np.int32:
                 sample_type_code = "i"
                 type_default_encoding = DataEncoding.STEIM2
