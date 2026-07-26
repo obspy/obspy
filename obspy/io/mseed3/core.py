@@ -62,6 +62,43 @@ def _describe_source(source) -> str:
         return type(source).__name__
 
 
+def _summarize_records(recordlist) -> dict:
+    """
+    Summarize a segment's record list for the ``details`` read option.
+
+    Each value is run-length deduplicated: it is recorded only when it differs
+    from the previous one, retaining the order the values were encountered in.
+    Only header fields are read, which stay available for a record list from
+    any source, unlike the raw record bytes.
+    """
+    timing_qualities = []
+    publication_versions = []
+    encodings = []
+
+    for record_ptr in recordlist:
+        record = record_ptr.record
+
+        timing_quality = record.get_extra_header("/FDSN/Time/Quality")
+        if timing_quality is not None and (
+            not timing_qualities or timing_qualities[-1] != timing_quality
+        ):
+            timing_qualities.append(timing_quality)
+
+        pubversion = record.pubversion
+        if not publication_versions or publication_versions[-1] != pubversion:
+            publication_versions.append(pubversion)
+
+        encoding = record.encoding_str()
+        if not encodings or encodings[-1] != encoding:
+            encodings.append(encoding)
+
+    return {
+        "timing_qualities": timing_qualities,
+        "publication_versions": publication_versions,
+        "encodings": encodings,
+    }
+
+
 def _nanosecond_time_string(time: UTCDateTime) -> str:
     """
     Format a time as an ISO 8601 string with nanosecond precision.
@@ -296,81 +333,61 @@ def _read_mseed3(
 
     traces = []
 
-    # Iterate through each trace ID in the trace list
-    for traceid in mstracelist:
-        try:
-            (network, station, location, channel) = sourceid2nslc(
-                traceid.sourceid
-            )
-        except ValueError:
-            network = station = location = channel = ""
+    # Close the trace list as soon as the traces are built, rather than
+    # leaving its C memory to garbage collection. Every sample array below
+    # is copied out, so no trace refers into the trace list afterwards.
+    with mstracelist:
 
-        # Process each continuous segment for this trace ID
-        for segment in traceid:
-            # Create Stats object
-            stats = Stats()
-            stats.network = network
-            stats.station = station
-            stats.location = location
-            stats.channel = channel
-            stats.sampling_rate = segment.samprate
-            stats.npts = segment.samplecnt
-
-            # Convert segment start time to UTCDateTime
-            stats.starttime = UTCDateTime(ns=segment.starttime)
-
-            # Add mseeds stats dictionary to stats object
-            stats.mseed3 = AttribDict()
-            stats.mseed3["source_id"] = traceid.sourceid
-            if segment.recordlist:
-                stats.mseed3["number_of_records"] = (
-                    segment.recordlist.recordcnt
+        # Iterate through each trace ID in the trace list
+        for traceid in mstracelist:
+            try:
+                (network, station, location, channel) = sourceid2nslc(
+                    traceid.sourceid
                 )
+            except ValueError:
+                network = station = location = channel = ""
 
-            # Summarize record details
-            if details and segment.recordlist:
-                # Walk record list and collect run-length-deduplicated values:
-                # a value is only appended when it differs from the previous.
-                timing_qualities = []
-                publication_versions = []
-                encodings = []
-                for record_ptr in segment.recordlist:
-                    record = record_ptr.record
-                    timing_quality = record.get_extra_header(
-                        "/FDSN/Time/Quality"
+            # Process each continuous segment for this trace ID
+            for segment in traceid:
+                # Create Stats object
+                stats = Stats()
+                stats.network = network
+                stats.station = station
+                stats.location = location
+                stats.channel = channel
+                stats.sampling_rate = segment.samprate
+                stats.npts = segment.samplecnt
+
+                # Convert segment start time to UTCDateTime
+                stats.starttime = UTCDateTime(ns=segment.starttime)
+
+                # Add mseeds stats dictionary to stats object
+                stats.mseed3 = AttribDict()
+                stats.mseed3["source_id"] = traceid.sourceid
+                if segment.recordlist:
+                    stats.mseed3["number_of_records"] = (
+                        segment.recordlist.recordcnt
                     )
-                    if timing_quality is not None and timing_quality != (
-                        timing_qualities[-1] if timing_qualities else object()
-                    ):
-                        timing_qualities.append(timing_quality)
-                    pubver = record.pubversion
-                    if pubver != (
-                        publication_versions[-1]
-                        if publication_versions
-                        else object()
-                    ):
-                        publication_versions.append(pubver)
-                    encoding = record.encoding_str()
-                    if encoding != (encodings[-1] if encodings else object()):
-                        encodings.append(encoding)
 
-                stats.mseed3["timing_qualities"] = timing_qualities
-                stats.mseed3["publication_versions"] = publication_versions
-                stats.mseed3["encodings"] = encodings
+                # Summarize record details
+                if details and segment.recordlist:
+                    stats.mseed3.update(
+                        _summarize_records(segment.recordlist)
+                    )
 
-            # If header-only mode create an empty trace
-            if headonly:
-                trace = Trace(data=np.array([]), header=stats)
-            # If twopass & no samples, unpack data samples into a numpy array
-            elif twopass and not segment.datasamples:
-                data = segment.create_numpy_array_from_recordlist()
-                trace = Trace(data=data, header=stats)
-            # Create a trace with the data samples
-            else:
-                data = segment.np_datasamples.copy()
-                trace = Trace(data=data, header=stats)
+                # If header-only mode create an empty trace
+                if headonly:
+                    trace = Trace(data=np.array([]), header=stats)
+                # If twopass & no samples, unpack samples into a numpy array
+                elif twopass and not segment.datasamples:
+                    data = segment.create_numpy_array_from_recordlist()
+                    trace = Trace(data=data, header=stats)
+                # Create a trace with the data samples
+                else:
+                    data = segment.np_datasamples.copy()
+                    trace = Trace(data=data, header=stats)
 
-            traces.append(trace)
+                traces.append(trace)
 
     stream = Stream(traces=traces)
 
