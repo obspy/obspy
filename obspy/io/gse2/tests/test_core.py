@@ -307,10 +307,12 @@ class TestCore():
         st = read(gse2file, apply_calib=False)
         tr = st[0]
         assert tr.data[0:13].tolist() == testdata
+        # save calib before resetting it using apply_calib = True in next step
+        calib = tr.stats.calib
         # read w/ apply_calib = True
         st = read(gse2file, apply_calib=True)
         tr = st[0]
-        testdata = [n * tr.stats.calib for n in testdata]
+        testdata = [n * calib for n in testdata]
         assert tr.data[0:13].tolist() == testdata
 
     def test_write_and_read_correct_network(self):

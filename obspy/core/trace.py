@@ -2843,6 +2843,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if not response.response_stages and response.instrument_polynomial:
             coefficients = response.instrument_polynomial.coefficients
             self.data = np.poly1d(coefficients[::-1])(self.data)
+            self.stats.calib = 1.0
             return self
 
         # cannot handle polynomial response we can still replicate
@@ -2868,7 +2869,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             # attempt to account for DC offset also
             if len(coefficients) >= 1 and coefficients[0] != 0:
                 self.data = self.data + coefficients[0]
-
+            self.stats.calib = 1.0
             return self
 
         # use evalresp
@@ -3007,6 +3008,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         # assign processed data and store processing information
         self.data = data
+        self.stats.calib = 1.0
         return self
 
     @_add_processing_info
@@ -3037,6 +3039,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             response.recalculate_overall_sensitivity()
 
         self.data = self.data / response.instrument_sensitivity.value
+        self.stats.calib = 1.0
         return self
 
     def newbyteorder(self, byteorder='native'):
