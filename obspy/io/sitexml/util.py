@@ -11,12 +11,15 @@ SiteXML schema and other helper functions.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import copy
+
 from obspy.core.event import ResourceIdentifier
 from obspy.core.util import Enum
 from obspy.core.util.base import ComparingObject
 
 from collections.abc import Iterable
 
+
+# SiteXML Specific Exceptions
 
 class SiteXMLError(Exception):
     """
@@ -40,34 +43,6 @@ class SiteXMLIOError(SiteXMLError, OSError):
     """
     Raised when SiteXML-related input paths or files cannot be accessed.
     """
-
-
-def _split_station_code(value):
-    """
-    Split a ``network.station`` code into FDSN network and station codes.
-
-    :rtype: tuple[str, str]
-    """
-    message = (
-        "station_code must use 'network.station' notation with a "
-        "2 character uppercase alphanumeric FDSN network code and a "
-        "3-5 character uppercase alphanumeric station code"
-    )
-    if not isinstance(value, str):
-        raise SiteXMLValidationError("station_code must be a string or None")
-    if value.count(".") != 1 or any(char.isspace() for char in value):
-        raise SiteXMLValidationError(message)
-    network_code, station_code = value.split(".")
-    if len(network_code) != 2 or \
-            not network_code.isascii() or \
-            not network_code.isalnum() or \
-            network_code != network_code.upper() or \
-            not 3 <= len(station_code) <= 5 or \
-            not station_code.isascii() or \
-            not station_code.isalnum() or \
-            station_code != station_code.upper():
-        raise SiteXMLValidationError(message)
-    return network_code, station_code
 
 
 class BaseNode(ComparingObject):
@@ -335,6 +310,8 @@ def _pretty_str(obj):
     )
 
 
+# Setters and getters for class attributes with validation
+
 def _enum_property(attr_name, enum_type):
     """
     Method to produce getter/setter functions
@@ -581,3 +558,87 @@ def _wrapped_list_property(attr_name, wrapper_type, allow_none=True):
         setattr(self, private_name, wrapped_items)
 
     return property(getter, setter)
+
+
+# TABULAR DATAFRAME UTILITIES
+
+def _require_dataframe_columns(df, columns, context):
+    """
+    Raise if required dataframe columns are missing.
+    """
+    missing = [column for column in columns if column not in df.columns]
+    if missing:
+        raise SiteXMLImportError(
+            f"{context} is missing required column(s): "
+            + ", ".join(missing)
+        )
+
+
+def _read_cell(df_row, argument, indicator=None):
+    """
+    Return a non-empty cell value, optionally using an indicator prefix.
+
+    :rtype: object or None
+    """
+
+    if indicator:
+        if indicator + "_" + argument in df_row and \
+                not _empty_value(df_row[indicator + "_" + argument]):
+            return df_row[indicator + "_" + argument]
+    else:
+        if argument in df_row and \
+                not _empty_value(df_row[argument]):
+            return df_row[argument]
+
+    return None
+
+
+def _empty_value(value):
+    """
+    Return whether a tabular cell should be treated as missing.
+
+    :rtype: bool
+    """
+    if value is None:
+        return True
+    if value.__class__.__name__ in ("NAType", "NaTType"):
+        return True
+    if isinstance(value, str):
+        if not value.strip():
+            return True
+    try:
+        return bool(value != value)
+    except (TypeError, ValueError):
+        return False
+
+    return False
+
+
+# Helper function for validating and splitting station codes
+
+def _split_station_code(value):
+    """
+    Split a ``network.station`` code into FDSN network and station codes.
+
+    :rtype: tuple[str, str]
+    """
+    message = (
+        "station_code must use 'network.station' notation with a "
+        "2 character uppercase alphanumeric FDSN network code and a "
+        "3-5 character uppercase alphanumeric station code"
+    )
+    if not isinstance(value, str):
+        raise SiteXMLValidationError("station_code must be a string or None")
+    if value.count(".") != 1 or any(char.isspace() for char in value):
+        raise SiteXMLValidationError(message)
+    network_code, station_code = value.split(".")
+    if len(network_code) != 2 or \
+            not network_code.isascii() or \
+            not network_code.isalnum() or \
+            network_code != network_code.upper() or \
+            not 3 <= len(station_code) <= 5 or \
+            not station_code.isascii() or \
+            not station_code.isalnum() or \
+            station_code != station_code.upper():
+        raise SiteXMLValidationError(message)
+    return network_code, station_code

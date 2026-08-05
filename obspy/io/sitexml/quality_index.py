@@ -14,8 +14,8 @@ For more information refer to `SERA D7.2 Deliverable.
 
 import warnings
 
-from .util import SiteXMLImportError
-
+from .util import (_read_cell, _require_dataframe_columns,
+                   SiteXMLImportError)
 
 _QUALITY_INDEX2_WEIGHTS = {
     "resonanceFrequency": 1,
@@ -377,7 +377,6 @@ def apply_quality_index_dataframe(sera_site_dict, df_quality_index):
     :rtype: dict
     :return: The input ``sera_site_dict`` after applying calculated values.
     """
-    from .tabular import _read_cell, _require_dataframe_columns
 
     _require_dataframe_columns(
         df_quality_index, ("siteID",), "Quality-index metadata")
@@ -452,6 +451,7 @@ def apply_quality_index_csv(sera_site_dict, quality_index_csv, delim=';'):
     :rtype: dict
     :return: The input ``sera_site_dict`` after applying calculated values.
     """
+    # Keep local to avoid circular import with obspy.io.sitexml.tabular
     from .tabular import _csv_to_dataframe
 
     df_quality_index = _csv_to_dataframe(
@@ -483,6 +483,7 @@ def apply_quality_index_excel(
     :rtype: dict
     :return: The input ``sera_site_dict`` after applying calculated values.
     """
+    # Keep local to avoid circular import with obspy.io.sitexml.tabular
     from .tabular import _excel_to_dataframe
 
     df_quality_index = _excel_to_dataframe(

@@ -24,94 +24,8 @@ from .core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
                    VelocityProfile, VelocityProfileData, VelocityProfileSet,
                    LiteratureSource, ValueWithUncertainty)
 from .quality_index import apply_quality_index_dataframe
-from .util import (SiteXMLIOError, SiteXMLImportError,
-                   SiteXMLValidationError)
-
-
-def _csv_to_dataframe(path_or_file_object, label, delim=';'):
-    """
-    Read CSV tabular metadata as a dataframe with SiteXML exceptions.
-
-    :rtype: :class:`pandas.DataFrame`
-    """
-    try:
-        return pd.read_csv(path_or_file_object, sep=delim)
-    except OSError as e:
-        raise SiteXMLIOError(
-            f"Could not access {label}: {path_or_file_object}"
-        ) from e
-    except Exception as e:
-        raise SiteXMLImportError(
-            f"Could not read {label}: {path_or_file_object}"
-        ) from e
-
-
-def _excel_to_dataframe(path_or_file_object, label, sheet_name=0,
-                        converters=None, missing_sheet_message=None):
-    """
-    Read Excel tabular metadata as dataframe(s) with SiteXML exceptions.
-
-    :rtype: :class:`pandas.DataFrame` or dict
-    """
-    try:
-        xls = pd.ExcelFile(path_or_file_object)
-    except OSError as e:
-        raise SiteXMLIOError(
-            f"Could not access {label}: {path_or_file_object}"
-        ) from e
-
-    try:
-        return pd.read_excel(
-            xls, sheet_name=sheet_name, converters=converters)
-    except ValueError as e:
-        if missing_sheet_message is not None:
-            raise SiteXMLImportError(missing_sheet_message) from e
-        raise SiteXMLImportError(
-            f"Could not read {label}: {path_or_file_object}"
-        ) from e
-    except Exception as e:
-        raise SiteXMLImportError(
-            f"Could not read {label}: {path_or_file_object}"
-        ) from e
-
-
-def _read_dataframe_metadata(reader, *args, context, **kwargs):
-    """
-    Convert dataframe metadata to SiteXML objects with phase context.
-    """
-    try:
-        return reader(*args, **kwargs)
-    except SiteXMLImportError:
-        raise
-    except Exception as e:
-        raise SiteXMLImportError(f"Could not build {context}.") from e
-
-
-def _require_dataframe_columns(df, columns, context):
-    """
-    Raise if required dataframe columns are missing.
-    """
-    missing = [column for column in columns if column not in df.columns]
-    if missing:
-        raise SiteXMLImportError(
-            f"{context} is missing required column(s): "
-            + ", ".join(missing)
-        )
-
-
-def _require_row_values(row, columns, context):
-    """
-    Raise if required row values are missing or empty.
-    """
-    missing = [
-        column for column in columns
-        if column not in row or _empty_value(row[column])
-    ]
-    if missing:
-        raise SiteXMLImportError(
-            f"{context} is missing required value(s): "
-            + ", ".join(missing)
-        )
+from .util import (_empty_value, _read_cell, _require_dataframe_columns,
+                   SiteXMLIOError, SiteXMLImportError, SiteXMLValidationError)
 
 
 def csv_to_sera_site(site_owner_csv,
@@ -315,41 +229,6 @@ def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
         apply_quality_index_dataframe(sera_site_dict, df_dict["qualityIndex"])
 
     return sera_site_dict
-
-
-def _clear_preferred_ids_without_target_metadata(
-        sera_site_dict, has_analysis_metadata, has_velocity_profile_metadata):
-    """
-    Drop preferred IDs that point to metadata tables omitted from tabular
-    input.
-    """
-    for site_id, sera_site in sera_site_dict.items():
-        site_description = sera_site.site_description
-        if not has_analysis_metadata:
-            preferred_id = site_description.preferred_site_analysisID
-            if preferred_id is not None:
-                warnings.warn(
-                    f"Site {site_id} provides preferredSiteAnalysisID "
-                    f"{preferred_id}, but analysis metadata was not provided. "
-                    "Ignoring preferredSiteAnalysisID for this import; the "
-                    "generated SiteXML will omit that unresolved preference.",
-                    UserWarning)
-                site_description.preferred_site_analysisID = None
-
-        if not has_analysis_metadata or not has_velocity_profile_metadata:
-            preferred_id = site_description.preferred_velocity_profileID
-            if preferred_id is not None:
-                missing = (
-                    "analysis metadata"
-                    if not has_analysis_metadata
-                    else "velocity-profile metadata")
-                warnings.warn(
-                    f"Site {site_id} provides preferredVelocityProfileID "
-                    f"{preferred_id}, but {missing} was not provided. "
-                    "Ignoring preferredVelocityProfileID for this import; the "
-                    "generated SiteXML will omit that unresolved preference.",
-                    UserWarning)
-                site_description.preferred_velocity_profileID = None
 
 
 def add_velocity_profiles(sera_sites, velocity_profiles,
@@ -975,25 +854,6 @@ def _read_site_owner(df):
     return obj
 
 
-def _read_cell(df_row, argument, indicator=None):
-    """
-    Return a non-empty cell value, optionally using an indicator prefix.
-
-    :rtype: object or None
-    """
-
-    if indicator:
-        if indicator + "_" + argument in df_row and \
-                not _empty_value(df_row[indicator + "_" + argument]):
-            return df_row[indicator + "_" + argument]
-    else:
-        if argument in df_row and \
-                not _empty_value(df_row[argument]):
-            return df_row[argument]
-
-    return None
-
-
 def _read_year_cell(value):
     """
     Normalize an Excel year cell to the schema's four-digit string form.
@@ -1016,16 +876,112 @@ def _read_year_cell(value):
     return value
 
 
-def _empty_value(value):
-    """
-    Return whether a tabular cell should be treated as missing.
+# HELPER FUNCTIONS
 
-    :rtype: bool
+def _clear_preferred_ids_without_target_metadata(
+        sera_site_dict, has_analysis_metadata, has_velocity_profile_metadata):
     """
-    if pd.isna(value):
-        return True
-    if isinstance(value, str):
-        if not value.strip():
-            return True
+    Drop preferred IDs that point to metadata tables omitted from tabular
+    input.
+    """
+    for site_id, sera_site in sera_site_dict.items():
+        site_description = sera_site.site_description
+        if not has_analysis_metadata:
+            preferred_id = site_description.preferred_site_analysisID
+            if preferred_id is not None:
+                warnings.warn(
+                    f"Site {site_id} provides preferredSiteAnalysisID "
+                    f"{preferred_id}, but analysis metadata was not provided. "
+                    "Ignoring preferredSiteAnalysisID for this import; the "
+                    "generated SiteXML will omit that unresolved preference.",
+                    UserWarning)
+                site_description.preferred_site_analysisID = None
 
-    return False
+        if not has_analysis_metadata or not has_velocity_profile_metadata:
+            preferred_id = site_description.preferred_velocity_profileID
+            if preferred_id is not None:
+                missing = (
+                    "analysis metadata"
+                    if not has_analysis_metadata
+                    else "velocity-profile metadata")
+                warnings.warn(
+                    f"Site {site_id} provides preferredVelocityProfileID "
+                    f"{preferred_id}, but {missing} was not provided. "
+                    "Ignoring preferredVelocityProfileID for this import; the "
+                    "generated SiteXML will omit that unresolved preference.",
+                    UserWarning)
+                site_description.preferred_velocity_profileID = None
+
+
+def _csv_to_dataframe(path_or_file_object, label, delim=';'):
+    """
+    Read CSV tabular metadata as a dataframe with SiteXML exceptions.
+
+    :rtype: :class:`pandas.DataFrame`
+    """
+    try:
+        return pd.read_csv(path_or_file_object, sep=delim)
+    except OSError as e:
+        raise SiteXMLIOError(
+            f"Could not access {label}: {path_or_file_object}"
+        ) from e
+    except Exception as e:
+        raise SiteXMLImportError(
+            f"Could not read {label}: {path_or_file_object}"
+        ) from e
+
+
+def _excel_to_dataframe(path_or_file_object, label, sheet_name=0,
+                        converters=None, missing_sheet_message=None):
+    """
+    Read Excel tabular metadata as dataframe(s) with SiteXML exceptions.
+
+    :rtype: :class:`pandas.DataFrame` or dict
+    """
+    try:
+        xls = pd.ExcelFile(path_or_file_object)
+    except OSError as e:
+        raise SiteXMLIOError(
+            f"Could not access {label}: {path_or_file_object}"
+        ) from e
+
+    try:
+        return pd.read_excel(
+            xls, sheet_name=sheet_name, converters=converters)
+    except ValueError as e:
+        if missing_sheet_message is not None:
+            raise SiteXMLImportError(missing_sheet_message) from e
+        raise SiteXMLImportError(
+            f"Could not read {label}: {path_or_file_object}"
+        ) from e
+    except Exception as e:
+        raise SiteXMLImportError(
+            f"Could not read {label}: {path_or_file_object}"
+        ) from e
+
+
+def _read_dataframe_metadata(reader, *args, context, **kwargs):
+    """
+    Convert dataframe metadata to SiteXML objects with phase context.
+    """
+    try:
+        return reader(*args, **kwargs)
+    except SiteXMLImportError:
+        raise
+    except Exception as e:
+        raise SiteXMLImportError(f"Could not build {context}.") from e
+
+
+def _require_row_values(row, columns, context):
+    """
+    Raise if required row values are missing or empty.
+    """
+    missing = [
+        column for column in columns
+        if column not in row or _empty_value(row[column])
+    ]
+    if missing:
+        raise SiteXMLImportError(
+            f"{context} is missing required value(s): "
+            + ", ".join(missing)
+        )
