@@ -16,7 +16,9 @@ import math
 import obspy
 from obspy.core.event import ResourceIdentifier
 from obspy.core.inventory.util import (Latitude, Longitude, Distance,
-                                       ExternalReference)
+                                       ExternalReference, Person, Operator)
+from obspy.core.util.obspy_types import FloatWithUncertainties
+
 from .util import (BaseNode, SiteXMLValidationError,
                    TopographySchemaA, TopographySchemaB, EC8Class,
                    ResonanceFrequencyMethod, VelocityS30Method,
@@ -24,6 +26,8 @@ from .util import (BaseNode, SiteXMLValidationError,
                    _pretty_str, _scalar_property, _resource_id_property,
                    _wrapped_property, _enum_property, _wrapped_list_property,
                    _enum_list_property, _split_station_code)
+from .quality_index import (quality_index1, quality_index2, quality_index3,
+                            overall_quality_index)
 
 
 class ValueWithUncertainty(BaseNode):
@@ -98,7 +102,6 @@ class ValueWithUncertainty(BaseNode):
         >>> obspy_value.upper_uncertainty
         0.5
         """
-        from obspy.core.util.obspy_types import FloatWithUncertainties
 
         return FloatWithUncertainties(
             float(self.value),
@@ -343,7 +346,6 @@ class SiteIndicator(BaseNode):
 
         :rtype: float
         """
-        from .quality_index import quality_index1
 
         value = quality_index1(
             method=method,
@@ -1197,7 +1199,6 @@ class SERASiteOwner(BaseNode):
         >>> person.emails
         ['someemail@domain.ab']
         """
-        from obspy.core.inventory.util import Person
 
         agencies = (
             [self.institution_name] if self.institution_name is not None
@@ -1235,7 +1236,6 @@ class SERASiteOwner(BaseNode):
         >>> operator.contacts[0].names
         ['Name Surname']
         """
-        from obspy.core.inventory.util import Operator
 
         return Operator(
             agency=self.owner_fullname,
@@ -2259,7 +2259,6 @@ class SERASite(BaseNode):
 
         :rtype: float
         """
-        from .quality_index import quality_index2
 
         return quality_index2(self)
 
@@ -2279,7 +2278,6 @@ class SERASite(BaseNode):
 
         :rtype: float or None
         """
-        from .quality_index import quality_index3
 
         return quality_index3(
             f0_vs30=f0_vs30,
@@ -2307,7 +2305,6 @@ class SERASite(BaseNode):
 
         :rtype: float
         """
-        from .quality_index import overall_quality_index
 
         q2 = self.calculate_quality_index2()
         q3 = self.calculate_quality_index3(
