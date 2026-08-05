@@ -86,9 +86,9 @@ The generated XML is **schema-validated** before it is written.
 
 Default output filenames are:
 
-- `Site_<network.station>_<DD-MM-YYYY>.xml` for station-backed sites, for
-  example `Site_XX.ABCD_13-05-2026.xml`.
-- `Site_<domain>.<site-id>_<DD-MM-YYYY>.xml` for sites without a station code,
+- `Site_<network.station>_<DD-MM-YYYY>.xml` for station-backed sites,   
+  for example `Site_XX.ABCD_13-05-2026.xml`.
+- `Site_<domain>.<site-id>_<DD-MM-YYYY>.xml` for sites without a station code,  
   for example `Site_domain.ab.003_13-05-2026.xml`.
 
 Existing files with the same generated name are overwritten.
