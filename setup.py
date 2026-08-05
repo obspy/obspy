@@ -108,6 +108,7 @@ EXTRAS_REQUIRES = {
     'geo': ['geographiclib'],
     'imaging': ['cartopy'],
     'io.shapefile': ['pyshp'],
+    'io.sitexml': ['pandas'],
 }
 EXTRAS_REQUIRES['all'] = [dep for depl in EXTRAS_REQUIRES.values()
                           for dep in depl]
