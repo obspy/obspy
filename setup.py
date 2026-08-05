@@ -128,10 +128,10 @@ KEYWORDS = [
     'REFTEK130', 'RG-1.6', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
     'SAGE', 'scardec', 'scml', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2',
     'SEG Y','SEISAN', 'Seismic Handler', 'seismology', 'seismogram',
-    'seismograms','shapefile', 'signal', 'slink', 'spectrogram', 'StationXML',
-    'taper','taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
-    'WaveServer','WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston',
-    'XML-SEED','XSEED', 'SiteXML']
+    'seismograms','shapefile', 'signal', 'SiteXML', 'slink', 'spectrogram',
+    'StationXML', 'taper','taup', 'travel time', 'trigger', 'VERCE', 'WAV',
+    'waveform', 'WaveServer','WaveServerV', 'WebDC', 'web service', 'WIN',
+    'Winston', 'XML-SEED','XSEED']
 
 ENTRY_POINTS = {
     'console_scripts': [
