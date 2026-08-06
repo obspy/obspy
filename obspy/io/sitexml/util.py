@@ -45,7 +45,7 @@ class SiteXMLIOError(SiteXMLError, OSError):
     """
 
 
-class BaseNode(ComparingObject):
+class SiteXMLBaseNode(ComparingObject):
     """
     The parent class for SERASite, SiteDescription, Analysis etc classes.
     """

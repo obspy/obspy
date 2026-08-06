@@ -19,7 +19,7 @@ from obspy.core.inventory.util import (Latitude, Longitude, Distance,
                                        ExternalReference, Person, Operator)
 from obspy.core.util.obspy_types import FloatWithUncertainties
 
-from .util import (BaseNode, SiteXMLValidationError,
+from .util import (SiteXMLBaseNode, SiteXMLValidationError,
                    TopographySchemaA, TopographySchemaB, EC8Class,
                    ResonanceFrequencyMethod, VelocityS30Method,
                    Vs30MethodCombined, Vs30ManualIndex,
@@ -30,7 +30,7 @@ from .quality_index import (quality_index1, quality_index2, quality_index3,
                             overall_quality_index)
 
 
-class ValueWithUncertainty(BaseNode):
+class ValueWithUncertainty(SiteXMLBaseNode):
     """
     Numeric SiteXML value with an optional uncertainty of the same type.
 
@@ -151,7 +151,7 @@ class ValueWithUncertainty(BaseNode):
             return f"{self.value:.2f}"
 
 
-class LiteratureSource(BaseNode):
+class LiteratureSource(SiteXMLBaseNode):
     """
     Bibliographic source metadata used to support the provided site
     indicator's value/values.
@@ -213,7 +213,7 @@ class LiteratureSource(BaseNode):
         self._year = value
 
 
-class Revision(BaseNode):
+class Revision(SiteXMLBaseNode):
     """
     One root-level SiteXML document revision entry.
 
@@ -257,7 +257,7 @@ class Revision(BaseNode):
         return _pretty_str(self)
 
 
-class SiteIndicator(BaseNode):
+class SiteIndicator(SiteXMLBaseNode):
     """
     Base class for SiteXML site-characterization indicator objects.
 
@@ -703,7 +703,7 @@ class VelocityProfileSet(SiteIndicator):
         return "\n".join(output)
 
 
-class VelocityProfile(BaseNode):
+class VelocityProfile(SiteXMLBaseNode):
     """
     Layered velocity profile.
 
@@ -857,7 +857,7 @@ class VelocityProfile(BaseNode):
         return "\n".join(lines)
 
 
-class VelocityProfileData(BaseNode):
+class VelocityProfileData(SiteXMLBaseNode):
     """
     Physical properties for a single velocity-profile layer.
 
@@ -899,7 +899,7 @@ class VelocityProfileData(BaseNode):
         self.density = density
 
 
-class SERASiteOwner(BaseNode):
+class SERASiteOwner(SiteXMLBaseNode):
     """
     Site owner and required contact-person metadata.
 
@@ -1277,7 +1277,7 @@ class SERASiteOwner(BaseNode):
         return ret
 
 
-class SiteDescription(BaseNode):
+class SiteDescription(SiteXMLBaseNode):
     """
     Location, QuakeML-STC-derived morphology indicators, and topographic
     classification for a SiteXML site.
@@ -1477,7 +1477,7 @@ class SiteDescription(BaseNode):
         self._station_code = value
 
 
-class Analysis(BaseNode):
+class Analysis(SiteXMLBaseNode):
     """
     Site-characterization analysis and related indicator metadata.
 
@@ -1623,7 +1623,7 @@ class Analysis(BaseNode):
             "borehole_logs_count", value)
 
 
-class SERASite(BaseNode):
+class SERASite(SiteXMLBaseNode):
     """
     This is the parent class for the siteXML object tree.
 
