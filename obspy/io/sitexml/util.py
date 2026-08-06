@@ -10,13 +10,13 @@ SiteXML schema and other helper functions.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+
 import copy
+from collections.abc import Iterable
 
 from obspy.core.event import ResourceIdentifier
 from obspy.core.util import Enum
 from obspy.core.util.base import ComparingObject
-
-from collections.abc import Iterable
 
 
 # SiteXML Specific Exceptions

@@ -10,22 +10,23 @@ files.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 
-from pathlib import Path
 import os
 import warnings
+from collections import defaultdict
+from pathlib import Path
 
 import pandas as pd
-from collections import defaultdict
 
 from obspy.core.inventory.util import ExternalReference
-from .core import (SERASite, SiteDescription, SERASiteOwner, Analysis,
-                   EC8, H800, BedrockDepth, GeologicalUnit,
-                   ResonanceFrequency, VelocityS30,
-                   VelocityProfile, VelocityProfileData, VelocityProfileSet,
-                   LiteratureSource, ValueWithUncertainty)
+
+from .core import (Analysis, BedrockDepth, EC8, GeologicalUnit, H800,
+                   LiteratureSource, ResonanceFrequency,
+                   SERASite, SERASiteOwner, SiteDescription,
+                   ValueWithUncertainty, VelocityProfile, VelocityProfileData,
+                   VelocityProfileSet, VelocityS30)
 from .quality_index import apply_quality_index_dataframe
-from .util import (_empty_value, _read_cell, _require_dataframe_columns,
-                   SiteXMLIOError, SiteXMLImportError, SiteXMLValidationError)
+from .util import (SiteXMLImportError, SiteXMLIOError, SiteXMLValidationError,
+                   _empty_value, _read_cell, _require_dataframe_columns)
 
 
 def csv_to_sera_site(site_owner_csv,

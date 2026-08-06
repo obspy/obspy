@@ -10,32 +10,33 @@ Test suite for the SiteXML reader and writer.
     (https://www.gnu.org/copyleft/lesser.html)
 """
 import io
-from pathlib import Path
 import re
 import warnings
+from pathlib import Path
 
-from lxml import etree
-import obspy
 import pytest
+from lxml import etree
+
+import obspy
 from obspy.core.event import ResourceIdentifier
 from obspy.core.inventory import Inventory, Network, Station
 from obspy.core.inventory.util import ExternalReference, Operator, Person
 from obspy.core.util.obspy_types import FloatWithUncertainties
+
+from obspy.io.sitexml import sitexml as sitexml_module
 from obspy.io.sitexml.core import (Analysis, EC8, LiteratureSource, Revision,
                                    SERASite, SERASiteOwner, SiteDescription,
                                    ResonanceFrequency,
                                    ValueWithUncertainty, VelocityProfile,
                                    VelocityProfileData,
                                    VelocityProfileSet, VelocityS30)
-from obspy.io.sitexml import sitexml as sitexml_module
-from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLValidationError
 from obspy.io.sitexml.quality_index import overall_quality_index
-from obspy.io.sitexml.sitexml import (_is_sitexml, _read_site_description,
-                                      _read_site_owner, add_sitexml_reference,
-                                      read_sitexml,
-                                      sitedict_to_sitexml,
-                                      sitexml_to_sitedict)
-from obspy.io.sitexml.sitexml import write_sitexml
+from obspy.io.sitexml.sitexml import (add_sitexml_reference, read_sitexml,
+                                      sitedict_to_sitexml, sitexml_to_sitedict,
+                                      write_sitexml,
+                                      _is_sitexml, _read_site_description,
+                                      _read_site_owner)
+from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLValidationError
 
 
 class TestSiteXML():

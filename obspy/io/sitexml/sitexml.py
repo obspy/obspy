@@ -11,25 +11,27 @@ Metadata is stored in a SERASite object.
 """
 
 import io
-from pathlib import Path
 import re
 import sys
+import warnings
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import unquote, urlparse
 from urllib.request import urlopen
-import warnings
 
 from lxml import etree
 
 import obspy
-from obspy.io.stationxml.core import _tag2obj, _attr2obj, _tags2obj
 from obspy.core.inventory.util import ExternalReference
-from .core import (SERASite, SERASiteOwner, SiteDescription, Analysis,
-                   EC8, H800, BedrockDepth, GeologicalUnit, ResonanceFrequency,
-                   VelocityProfileSet, VelocityProfile, VelocityProfileData,
-                   VelocityS30, ValueWithUncertainty, LiteratureSource,
-                   Revision)
-from .util import SiteXMLIOError, SiteXMLValidationError, _split_station_code
+from obspy.io.stationxml.core import (_attr2obj, _tag2obj, _tags2obj)
+
+from .core import (Analysis, BedrockDepth, EC8, GeologicalUnit, H800,
+                   LiteratureSource, ResonanceFrequency, Revision, 
+                   SERASite, SERASiteOwner, SiteDescription,
+                   ValueWithUncertainty, VelocityProfile, VelocityProfileData,
+                   VelocityProfileSet, VelocityS30)
+from .util import (SiteXMLIOError, SiteXMLValidationError, 
+                   _split_station_code)
 
 # Define some constants for writing SiteXML files.
 SCHEMA_VERSION = "1.3"

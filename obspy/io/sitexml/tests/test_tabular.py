@@ -12,20 +12,21 @@ Tests for SiteXML CSV and Excel import helpers.
 
 import warnings
 
-import obspy
-import pandas as pd
 import pytest
+import pandas as pd
 
-from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLImportError
-from obspy.io.sitexml.quality_index import (apply_quality_index_dataframe,
-                                            apply_quality_index_csv,
+import obspy
+
+from obspy.io.sitexml.quality_index import (apply_quality_index_csv,
+                                            apply_quality_index_dataframe,
                                             apply_quality_index_excel)
+from obspy.io.sitexml.sitexml import sitexml_to_sitedict
 from obspy.io.sitexml.scripts.csv2sitexml import main as csv2sitexml_main
 from obspy.io.sitexml.scripts.excel2sitexml import (
     main as excel2sitexml_main)
 from obspy.io.sitexml.tabular import (add_velocity_profiles, csv_to_sera_site,
                                       excel_to_sera_site, _read_year_cell)
-from obspy.io.sitexml.sitexml import sitexml_to_sitedict
+from obspy.io.sitexml.util import SiteXMLImportError, SiteXMLIOError
 
 
 class TestSiteXMLCSVImport():

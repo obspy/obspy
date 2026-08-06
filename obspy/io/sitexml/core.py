@@ -9,25 +9,26 @@ Provides the SERASite class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from collections.abc import Iterable
-import re
+
 import math
+import re
+from collections.abc import Iterable
 
 import obspy
 from obspy.core.event import ResourceIdentifier
-from obspy.core.inventory.util import (Latitude, Longitude, Distance,
-                                       ExternalReference, Person, Operator)
+from obspy.core.inventory.util import (Distance, ExternalReference, Latitude,
+                                       Longitude, Operator, Person)
 from obspy.core.util.obspy_types import FloatWithUncertainties
 
-from .util import (SiteXMLBaseNode, SiteXMLValidationError,
-                   TopographySchemaA, TopographySchemaB, EC8Class,
-                   ResonanceFrequencyMethod, VelocityS30Method,
-                   Vs30MethodCombined, Vs30ManualIndex,
-                   _pretty_str, _scalar_property, _resource_id_property,
-                   _wrapped_property, _enum_property, _wrapped_list_property,
-                   _enum_list_property, _split_station_code)
-from .quality_index import (quality_index1, quality_index2, quality_index3,
-                            overall_quality_index)
+from .quality_index import (overall_quality_index,
+                            quality_index1, quality_index2, quality_index3)
+from .util import (EC8Class, ResonanceFrequencyMethod, SiteXMLBaseNode,
+                   SiteXMLValidationError, TopographySchemaA, TopographySchemaB,
+                   VelocityS30Method, Vs30ManualIndex, Vs30MethodCombined,
+                   _enum_list_property, _enum_property, _pretty_str,
+                   _resource_id_property, _scalar_property,
+                   _split_station_code,
+                   _wrapped_list_property, _wrapped_property)
 
 
 class ValueWithUncertainty(SiteXMLBaseNode):

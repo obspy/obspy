@@ -14,8 +14,8 @@ For more information refer to `SERA D7.2 Deliverable.
 
 import warnings
 
-from .util import (_read_cell, _require_dataframe_columns,
-                   SiteXMLImportError)
+from .util import (SiteXMLImportError,
+                   _read_cell, _require_dataframe_columns)
 
 _QUALITY_INDEX2_WEIGHTS = {
     "resonanceFrequency": 1,
