@@ -134,7 +134,7 @@ def _read_scml(path_or_file_object, **kwargs):
         sender = "ObsPy Inventory"
 
     # Set source to this script
-    source = "scml import"
+    source = "ObsPy SCML import"
     module = None
     module_uri = None
 
@@ -286,10 +286,23 @@ def _read_station(instrumentation_register, sta_element, _ns):
                                datum=True)
     elevation = _read_floattype(sta_element, _ns("elevation"), Distance,
                                 unit=True)
+
+    public_id = sta_element.get("publicID")
+    extra_tag = obspy.core.util.AttribDict()
+    if public_id:
+        extra_tag.publicID = obspy.core.util.AttribDict({
+                'value': public_id,
+                'namespace': sta_element.nsmap[None],
+                'type': 'attribute',
+            }
+        )
+
     station = obspy.core.inventory.Station(code=sta_element.get("code"),
                                            latitude=latitude,
                                            longitude=longitude,
                                            elevation=elevation)
+    if extra_tag:
+        station.extra = extra_tag
     station.site = _read_site(sta_element, _ns)
 
     # There is no relevant info in the base node

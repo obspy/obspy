@@ -403,6 +403,9 @@ class TestInventory:
         assert sum_stations(inv.select(station="RJOB")) == 9
         assert sum_stations(inv.select(station="R?O*")) == 9
 
+        # Only Stations with public_id
+        assert sum_stations(inv.select(public_id="TEST")) == 0
+
         out = inv.select(
             minlatitude=47.5, maxlatitude=47.9,
             minlongitude=11.9, maxlongitude=13.3
@@ -436,7 +439,8 @@ class TestInventory:
             "latitude": None,
             "longitude": None,
             "minradius": None,
-            "maxradius": None}
+            "maxradius": None,
+            "public_id": None}
         with mock.patch("obspy.core.inventory.network.Network.select") as p:
             p.return_value = obspy.core.inventory.network.Network("BW")
             inv.select(**select_kwargs)

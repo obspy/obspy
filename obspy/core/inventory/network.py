@@ -364,7 +364,8 @@ class Network(BaseNode):
                starttime=None, endtime=None, sampling_rate=None,
                keep_empty=False, minlatitude=None, maxlatitude=None,
                minlongitude=None, maxlongitude=None, latitude=None,
-               longitude=None, minradius=None, maxradius=None):
+               longitude=None, minradius=None, maxradius=None,
+               public_id=None):
         r"""
         Returns the :class:`Network` object with only the
         :class:`~obspy.core.inventory.station.Station`\ s /
@@ -457,6 +458,9 @@ class Network(BaseNode):
             will be included in the result. This flag has no effect for
             initially empty stations which will always be retained if they
             are matched by the other parameters.
+        :type public_id: str, optional
+        :param public_id: Only include stations matching with extra.public_id
+            (only added when reading SCML)
         """
         stations = []
         for sta in self.stations:
@@ -465,6 +469,14 @@ class Network(BaseNode):
                 if not fnmatch.fnmatch(sta.code.upper(),
                                        station.upper()):
                     continue
+
+            if public_id is not None:
+                if not (hasattr(sta, 'extra') and
+                        hasattr(sta.extra, 'publicID') and
+                        fnmatch.fnmatch(sta.extra['publicID'].value,
+                                        public_id)):
+                    continue
+
             if any([t is not None for t in (time, starttime, endtime)]):
                 if not sta.is_active(time=time, starttime=starttime,
                                      endtime=endtime):

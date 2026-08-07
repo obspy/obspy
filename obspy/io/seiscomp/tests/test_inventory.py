@@ -81,7 +81,7 @@ class TestSCML():
 
         # The following tags can be different between scml/stationXML
 
-        # <Source>SeisComP3</Source> | <Source>scml import</Source>
+        # <Source>SeisComP3</Source> | <Source>ObsPy SCML import</Source>
         # <Sender>ODC</Sender> | <Sender>ObsPy Inventory</Sender>
         # <Created>2015-11-23T11:52:37+00:00</Created>
         # <Coefficients> | <Coefficients name="EBR.2002.091.H" ~
@@ -90,13 +90,17 @@ class TestSCML():
         excluded_tags = ["Source", "Sender", "Created", "Name",
                          "Coefficients"]
 
-        # also ignore StorageFormat which doesnt exist anymore in
-        # StationXML 1.1 and is saved into extra / a foreign tag
-        pattern_format_line = (
-            r'<([^:]*):format xmlns:\1='
-            r'"http://geofon.gfz-potsdam.de/ns/seiscomp3?-schema/[\.0-9]*">')
+        # ignore any foreign/namespaced tags
+        # e.g. StorageFormat which doesn't exist in StationXML 1.1
+        # and is saved into extra as a foreign tag
+        pattern_ns_line = re.compile(r'<\w+:\w+')
         scml_arr = [line for line in scml_arr
-                    if not re.search(pattern_format_line, line)]
+                    if not re.search(pattern_ns_line, line)]
+        # strip any namespaced attributes
+        # e.g. ns0:publicID from remaining lines
+        pattern_ns_attr = re.compile(
+            r'\s+xmlns:\w+="[^"]*"|\s+\w+:publicID="[^"]*"')
+        scml_arr = [pattern_ns_attr.sub('', line) for line in scml_arr]
 
         # Compare the two stationXMLs line by line
         # If one XML has an entry that the other one does not, this procedure
@@ -274,3 +278,23 @@ class TestSCML():
         poles = response.response_stages[1].poles
         assert zeros == []
         assert poles == []
+
+    def test_filter_public_id(self, testdata):
+        """
+        Tests various filters via public_id.
+        """
+        scml_inv = read_inventory(
+            testdata["4k_fissle.scml"]
+            )
+        s = scml_inv.select(
+            public_id="STA/4K/FIS02/20260322032606.102384.208"
+            )
+        assert s[0].stations[0].code == 'FIS02'
+        s = scml_inv.select(
+            public_id="STA/4K/FIS03/20260322032606.103369.227"
+            )
+        assert s[0].stations[0].code == 'FIS03'
+        s = scml_inv.select(
+            public_id="STA/4K/FIS03/typo"
+            )
+        assert s.networks == []
