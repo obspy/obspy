@@ -153,7 +153,6 @@ def _read_mseed3(
     headonly: bool = False,
     sourceid: Union[str, None] = None,
     sourcename: Union[str, None] = None,
-    twopass: bool = False,
     details: bool = False,
     skip_not_data: bool = False,
     validate_crc: bool = True,
@@ -188,17 +187,6 @@ def _read_mseed3(
         are not supported.  Use "*.LH?" or sourceid patterns instead.
         Defaults to ``None``.
     :type sourcename: str
-    :param twopass: If True, the data will be read in two passes.  During
-        the first pass, the data are read without unpacking the data samples.
-        During the second pass, data are unpacked directly into numpy arrays.
-        This unpack-on-demand approach avoids duplicating the data in memory;
-        the cost is reading the file twice.  The value of this tradeoff between
-        memory and I/O will vary depending on the use case and system
-        resources.  The second pass re-reads the source, which is only possible
-        for a file path or an in-memory buffer.  For a file-like object the
-        data are read in a single pass instead, with a warning.
-        Default is False.
-    :type twopass: bool
     :param details: If True, read additional information: timing quality,
         publication versions, and encodings. Stored in the mseed3 stats
         dictionary of each trace as run-length-deduplicated lists, which
@@ -263,14 +251,13 @@ def _read_mseed3(
         else:
             sourceid = sourcename.replace(".", "_")
 
-    # Select the reader for this source. A file-like object is consumed as it
-    # is read, unlike a path or buffer, which can be re-read for a second pass.
+    # Select the reader for this source.
     if isinstance(source, (str, os.PathLike)):
-        read_tracelist, rereadable = MS3TraceList.from_file, True
+        read_tracelist = MS3TraceList.from_file
     elif _supports_buffer_protocol(source):
-        read_tracelist, rereadable = MS3TraceList.from_buffer, True
+        read_tracelist = MS3TraceList.from_buffer
     elif callable(getattr(source, "read", None)):
-        read_tracelist, rereadable = MS3TraceList.from_filelike, False
+        read_tracelist = MS3TraceList.from_filelike
     else:
         raise IOError(f"Unsupported input source: {type(source).__name__}")
 
@@ -290,20 +277,6 @@ def _read_mseed3(
         "validate_crc": validate_crc,
         "split_version": split_version,
     }
-
-    # Without a re-readable source the record list has nothing to unpack
-    # samples from in the second pass, so read in a single pass instead.
-    if twopass and not rereadable:
-        warnings.warn(
-            "twopass reading requires a file path or in-memory buffer, "
-            f"reading {type(source).__name__} in a single pass instead"
-        )
-        twopass = False
-
-    # If twopass, read the record list first and unpack data later
-    if twopass:
-        common_kwargs["record_list"] = True
-        common_kwargs["unpack_data"] = False
 
     # Details requires a record list
     if details:
@@ -335,7 +308,8 @@ def _read_mseed3(
 
     # Close the trace list as soon as the traces are built, rather than
     # leaving its C memory to garbage collection. Every sample array below
-    # is copied out, so no trace refers into the trace list afterwards.
+    # is taken from its segment, so no trace refers into the trace list
+    # afterwards.
     with mstracelist:
 
         # Iterate through each trace ID in the trace list
@@ -378,13 +352,9 @@ def _read_mseed3(
                 # If header-only mode create an empty trace
                 if headonly:
                     trace = Trace(data=np.array([]), header=stats)
-                # If twopass & no samples, unpack samples into a numpy array
-                elif twopass and not segment.datasamples:
-                    data = segment.create_numpy_array_from_recordlist()
-                    trace = Trace(data=data, header=stats)
-                # Create a trace with the data samples
+                # Create a trace, taking ownership of the segment's decoded buffer
                 else:
-                    data = segment.np_datasamples.copy()
+                    data = segment.take_np_datasamples()
                     trace = Trace(data=data, header=stats)
 
                 traces.append(trace)

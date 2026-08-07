@@ -380,48 +380,26 @@ class TestReadMSEED3:
             assert tr.stats.npts == THREECH_NPTS
             assert len(tr.data) == 0
 
-    # ---- twopass ------------------------------------------------------
+    # ---- zero-copy data ownership --------------------------------------
 
-    def test_read_twopass_matches_default(self, testdata):
-        st1 = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
-        st2 = _read_mseed3(
-            testdata["testdata-3channel-signal.mseed3"], twopass=True
-        )
-        assert len(st1) == len(st2)
-        for tr1, tr2 in zip(st1, st2):
-            assert tr1.id == tr2.id
-            np.testing.assert_array_equal(tr1.data, tr2.data)
-        # twopass populates the per-segment record count
-        for tr in st2:
-            assert tr.stats.mseed3.number_of_records > 0
+    def test_read_takes_writable_ownership_of_data(self, testdata):
+        # take_np_datasamples() detaches the segment's decoded buffer into
+        # the returned array; the array must stay writable and correct
+        # after the trace list backing it has been closed.
+        st = _read_mseed3(testdata["testdata-3channel-signal.mseed3"])
+        assert len(st) == 3
+        for tr in st:
+            assert tr.data.flags.writeable
+            assert tr.stats.npts == THREECH_NPTS
 
-    def test_read_twopass_buffer_matches_default(self, testdata):
-        data = testdata["testdata-3channel-signal.mseed3"].read_bytes()
-        st1 = _read_mseed3(data)
-        st2 = _read_mseed3(data, twopass=True)
-        assert len(st1) == len(st2)
-        for tr1, tr2 in zip(st1, st2):
-            np.testing.assert_array_equal(tr1.data, tr2.data)
+        lh1 = st.select(channel="LH1")[0]
+        np.testing.assert_array_equal(lh1.data[:4], THREECH_LH1_FIRST4)
 
-    @pytest.mark.parametrize("wrap", [io.BytesIO, open])
-    def test_read_twopass_falls_back_for_file_like(self, testdata, wrap):
-        # A file-like source is consumed by the first pass, so there is
-        # nothing left to unpack samples from; read in a single pass.
-        path = testdata["testdata-3channel-signal.mseed3"]
-        expected = _read_mseed3(path)
-        source = (
-            io.BytesIO(path.read_bytes())
-            if wrap is io.BytesIO
-            else open(path, "rb")
-        )
-        try:
-            with pytest.warns(UserWarning, match="single pass"):
-                st = _read_mseed3(source, twopass=True)
-        finally:
-            source.close()
-        assert len(st) == len(expected)
-        for tr, ref in zip(st, expected):
-            np.testing.assert_array_equal(tr.data, ref.data)
+        # In-place mutation must succeed and must not alias other traces.
+        other = [tr for tr in st if tr is not lh1][0]
+        other_first_sample = other.data[0]
+        lh1.data[0] += 1
+        assert other.data[0] == other_first_sample
 
     # ---- filtering ----------------------------------------------------
 
