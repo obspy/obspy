@@ -311,7 +311,6 @@ def _read_mseed3(
     # is taken from its segment, so no trace refers into the trace list
     # afterwards.
     with mstracelist:
-
         # Iterate through each trace ID in the trace list
         for traceid in mstracelist:
             try:
@@ -345,14 +344,12 @@ def _read_mseed3(
 
                 # Summarize record details
                 if details and segment.recordlist:
-                    stats.mseed3.update(
-                        _summarize_records(segment.recordlist)
-                    )
+                    stats.mseed3.update(_summarize_records(segment.recordlist))
 
                 # If header-only mode create an empty trace
                 if headonly:
                     trace = Trace(data=np.array([]), header=stats)
-                # Create a trace, taking ownership of the segment's decoded buffer
+                # Create a trace, take ownership of the decoded buffer
                 else:
                     data = segment.take_np_datasamples()
                     trace = Trace(data=data, header=stats)
