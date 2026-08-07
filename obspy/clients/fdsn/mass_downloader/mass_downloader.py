@@ -324,14 +324,14 @@ class MassDownloader(object):
 
         # Catch warnings in the main thread. The catch_warnings() context
         # manager does not reliably work when used in multiple threads.
-        p = ThreadPool(len(self.providers))
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            clients = p.map(_get_client, self.providers)
-        p.close()
-        for warning in w:
-            logger.debug("Warning during initialization of one of the "
-                         "clients: " + str(warning.message))
+            with ThreadPool(len(self.providers)) as pool:
+                clients = pool.map(_get_client, self.providers)
+
+            for warning in w:
+                logger.debug("Warning during initialization of one of the "
+                             "clients: " + str(warning.message))
 
         clients = {key: value for key, value in clients if value is not None}
 

@@ -990,37 +990,39 @@ class Indexer(object):
                 self.request_handler.database is not None):
             self.bulk_params['-sqlite'] = self.request_handler.database
 
-        pool = Pool(processes=self.parallel)
         # run mseedindex on each file in parallel
-        try:
-            proccesses = []
-            for file_name in file_paths:
-                logger.debug("Indexing file '{}'.".format(file_name))
-                proc = pool.apply_async(Indexer._run_index_command,
-                                        args=(self.index_cmd,
-                                              self.root_path,
-                                              file_name,
-                                              self.bulk_params))
-                proccesses.append(proc)
-            pool.close()
-            # Without timeout, cannot respond to KeyboardInterrupt.
-            # Also need get to raise the exceptions workers may throw.
-            for proc in proccesses:
-                cmd, rc, out, err = proc.get(timeout=999999)
-                if rc:
-                    logger.warning("FAIL [{0}] '{1}' out: '{2}' err: '{3}'"
-                                   .format(rc, cmd, out, err))
-            pool.join()
-        except KeyboardInterrupt:
-            logger.warning('Parent received keyboard interrupt.')
-            if build_summary is True:
-                logger.warning("Skipped building timeseries summary "
-                               "table since indexing was ended "
-                               "prematurely.")
-            pool.terminate()
-        else:
-            if build_summary is True:
-                self.request_handler.build_tsindex_summary()
+        with Pool(processes=self.parallel) as pool:
+            try:
+                processes = []
+                for file_name in file_paths:
+                    logger.debug("Indexing file '{}'.".format(file_name))
+                    proc = pool.apply_async(Indexer._run_index_command,
+                                            args=(self.index_cmd,
+                                                  self.root_path,
+                                                  file_name,
+                                                  self.bulk_params))
+                    processes.append(proc)
+
+                # Without timeout, cannot respond to KeyboardInterrupt.
+                # Also need get to raise the exceptions workers may throw.
+                for proc in processes:
+                    cmd, rc, out, err = proc.get(timeout=999999)
+                    if rc:
+                        logger.warning("FAIL [{0}] '{1}' out: '{2}' "
+                                       "err: '{3}'"
+                                       .format(rc, cmd, out, err))
+
+            except KeyboardInterrupt:
+                logger.warning('Parent received keyboard interrupt.')
+                if build_summary is True:
+                    logger.warning("Skipped building timeseries summary "
+                                   "table since indexing was ended "
+                                   "prematurely.")
+                pool.terminate()
+                pool.join()
+            else:
+                if build_summary is True:
+                    self.request_handler.build_tsindex_summary()
 
     def build_file_list(self, relative_paths=False, reindex=False):
         """

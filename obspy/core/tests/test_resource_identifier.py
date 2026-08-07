@@ -11,7 +11,6 @@ import copy
 import gc
 import io
 import itertools
-import multiprocessing.pool
 import pickle
 import sys
 import warnings
@@ -499,11 +498,14 @@ class TestResourceIdentifier:
         Test that event-scoping of resource IDs still works when many
         threads are used to generate catalogs via various methods.
         """
-        pool = multiprocessing.pool.ThreadPool()
+        import concurrent.futures
         # currently it is not possible to avoid warnings with many threads
         with warnings.catch_warnings(record=True):
-            nested_catalogs = pool.map(make_diverse_catalog_list, range(5))
-        pool.close()
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                nested_catalogs = list(
+                    executor.map(make_diverse_catalog_list, range(5))
+                    )
+
         # get a flat list of catalogs
         catalogs = list(itertools.chain.from_iterable(nested_catalogs))
         # run catalogs through previous tests
