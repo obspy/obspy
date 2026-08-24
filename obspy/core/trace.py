@@ -27,6 +27,90 @@ from obspy.core.util.misc import (flat_not_masked_contiguous, get_window_times,
                                   limit_numpy_fft_cache)
 
 
+def _parse_channel_codes(channel):
+    """
+    Decompose a SEED channel (or FDSN "extended channel") string into the
+    ``(band, source, subsource)`` codes of an FDSN Source Identifier.
+
+    This is a pure read: it never mutates anything. Three input shapes are
+    recognised:
+
+    - a plain 3-character SEED channel (``"BHZ"``) -> one character each;
+    - an underscore-delimited extended channel (``"G_SR_D"``, ``"_H_Z"``) as
+      produced by libmseed / pymseed for non-SEED-conforming codes;
+    - an empty channel -> three empty codes.
+
+    Any other legacy string (e.g. ``"HZ"``, ``"Z"``) is returned as
+    ``('', channel, '')`` so that no information is lost; note that re-building
+    a channel from such codes yields the extended form.
+
+    :type channel: str
+    :param channel: SEED or extended channel string.
+    :rtype: tuple(str, str, str)
+    :return: ``(band, source, subsource)``.
+    """
+    channel = str(channel)
+    if '_' in channel:
+        parts = channel.split('_')
+        if len(parts) == 3:
+            return parts[0], parts[1], parts[2]
+        # malformed extended form: keep recoverable, whole thing as source
+        return '', channel, ''
+    if len(channel) == 3:
+        return channel[0], channel[1], channel[2]
+    if len(channel) == 0:
+        return '', '', ''
+    # legacy non-SEED, non-extended channel: whole string as source code
+    return '', channel, ''
+
+
+def _parse_sid(sid):
+    """
+    Parse an FDSN Source Identifier string into ``(network, station,
+    location, channel)``, where ``channel`` is the SEED or extended-channel
+    form of the band/source/subsource codes.
+
+    :type sid: str
+    :param sid: e.g. ``"FDSN:BW_MANZ__E_H_Z"`` (the ``"FDSN:"`` prefix is
+        optional).
+    :rtype: tuple(str, str, str, str)
+    :raises ValueError: if the identifier does not have the six FDSN fields.
+    """
+    sid = str(sid)
+    if sid.startswith("FDSN:"):
+        sid = sid[len("FDSN:"):]
+    parts = sid.split('_')
+    if len(parts) != 6:
+        msg = ("Not a valid FDSN Source Identifier (expected six "
+               "'_'-separated fields network_station_location_band_source_"
+               "subsource): %r" % sid)
+        raise ValueError(msg)
+    net, sta, loc, band, source, subsource = parts
+    return net, sta, loc, _build_channel_code(band, source, subsource)
+
+
+def _build_channel_code(band, source, subsource):
+    """
+    Compose a channel string from the three FDSN codes.
+
+    Uses the plain 3-character SEED form when each code is exactly one
+    character, and the underscore-delimited FDSN "extended channel" form
+    otherwise (matching libmseed / pymseed).
+
+    :type band: str
+    :type source: str
+    :type subsource: str
+    :rtype: str
+    :return: SEED or extended channel string.
+    """
+    band, source, subsource = str(band), str(source), str(subsource)
+    if not band and not source and not subsource:
+        return ''
+    if len(band) == 1 and len(source) == 1 and len(subsource) == 1:
+        return band + source + subsource
+    return '_'.join((band, source, subsource))
+
+
 class Stats(AttribDict):
     """
     A container for additional header information of a ObsPy
@@ -214,6 +298,26 @@ class Stats(AttribDict):
                 msg = 'Component must be set with single character'
                 raise ValueError(msg)
             value = self.channel[:-1] + value
+        # FDSN Source Identifier virtual attributes: band/source/subsource are
+        # derived views over ``channel``; setting one rebuilds ``channel``.
+        elif key in ('band', 'source', 'subsource'):
+            band, source, subsource = _parse_channel_codes(self.channel)
+            if key == 'band':
+                band = str(value)
+            elif key == 'source':
+                source = str(value)
+            else:
+                subsource = str(value)
+            key = 'channel'
+            value = _build_channel_code(band, source, subsource)
+        # setting the full FDSN Source Identifier populates all four codes
+        elif key == 'sid':
+            net, sta, loc, channel = _parse_sid(value)
+            self.__setitem__('network', net)
+            self.__setitem__('station', sta)
+            self.__setitem__('location', loc)
+            self.__setitem__('channel', channel)
+            return
         # prevent a calibration factor of 0
         elif key == 'calib' and value == 0:
             msg = 'Calibration factor set to 0.0!'
@@ -231,6 +335,19 @@ class Stats(AttribDict):
         """
         if key == 'component':
             return super(Stats, self).__getitem__('channel', default)[-1:]
+        if key in ('band', 'source', 'subsource'):
+            channel = super(Stats, self).__getitem__('channel', '')
+            band, source, subsource = _parse_channel_codes(channel)
+            return {'band': band, 'source': source,
+                    'subsource': subsource}[key]
+        if key == 'sid':
+            net = super(Stats, self).__getitem__('network', '')
+            sta = super(Stats, self).__getitem__('station', '')
+            loc = super(Stats, self).__getitem__('location', '')
+            cha = super(Stats, self).__getitem__('channel', '')
+            band, source, subsource = _parse_channel_codes(cha)
+            return "FDSN:%s_%s_%s_%s_%s_%s" % (
+                net, sta, loc, band, source, subsource)
         return super(Stats, self).__getitem__(key, default)
 
     def __str__(self):
@@ -240,6 +357,8 @@ class Stats(AttribDict):
         priorized_keys = ['network', 'station', 'location', 'channel',
                           'starttime', 'endtime', 'sampling_rate', 'delta',
                           'npts', 'calib']
+        # band/source/subsource/sid are virtual (derived from channel) and are
+        # intentionally not listed here to keep the default repr unchanged.
         return self._pretty_str(priorized_keys)
 
     def _repr_pretty_(self, p, cycle):
@@ -879,6 +998,34 @@ class Trace(object):
                          self.stats.location, self.stats.channel))
 
     id = property(get_id)
+
+    def get_sid(self):
+        """
+        Return the FDSN Source Identifier of the trace.
+
+        :rtype: str
+        :return: FDSN Source Identifier, e.g. ``"FDSN:BW_MANZ__E_H_Z"``.
+
+        The identifier is derived from the network, station, location and
+        channel codes following the
+        `FDSN Source Identifier specification
+        <https://docs.fdsn.org/projects/source-identifiers/>`_. For a
+        SEED-conforming 3-character channel each of the band, source and
+        subsource codes is one character; non-conforming channels use the
+        "extended channel" decomposition.
+
+        .. rubric:: Example
+
+        >>> meta = {'station': 'MANZ', 'network': 'BW', 'channel': 'EHZ'}
+        >>> tr = Trace(header=meta)
+        >>> print(tr.get_sid())
+        FDSN:BW_MANZ__E_H_Z
+        >>> print(tr.sid)
+        FDSN:BW_MANZ__E_H_Z
+        """
+        return self.stats.sid
+
+    sid = property(get_sid)
 
     @id.setter
     def id(self, value):

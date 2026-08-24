@@ -3,6 +3,13 @@ master
 
 Changes:
  - ...
+ - obspy.core:
+   * Trace.stats now exposes the FDSN Source Identifier codes ``band``,
+     ``source`` and ``subsource`` as derived attributes over ``channel``, plus
+     a full ``sid`` attribute (and ``Trace.sid``). ``Stream.select()`` gains
+     matching ``band``, ``source``, ``subsource`` and ``sid`` keyword
+     arguments. ``channel`` remains the stored field and all existing behaviour
+     is unchanged (see #3559).
 
 maintenance_1.5.x
 =================

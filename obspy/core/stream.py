@@ -1780,7 +1780,8 @@ class Stream(object):
 
     def select(self, network=None, station=None, location=None, channel=None,
                sampling_rate=None, npts=None, component=None, id=None,
-               inventory=None):
+               inventory=None, band=None, source=None, subsource=None,
+               sid=None):
         """
         Return new Stream object only with these traces that match the given
         stats criteria (e.g. all traces with ``channel="EHZ"``).
@@ -1852,6 +1853,12 @@ class Stream(object):
 
         All other selection criteria that accept strings (network, station,
         location) may also contain Unix style wildcards (``*``, ``?``, ...).
+
+        Traces may additionally be selected by their FDSN Source Identifier
+        codes: ``band``, ``source`` and ``subsource`` are tested against the
+        respective derived entries of the channel code, and ``sid`` is tested
+        against the full identifier (e.g. ``sid="FDSN:BW_MANZ__E_H_Z"``). These
+        also accept Unix style wildcards.
         """
         if inventory is None:
             traces = self.traces
@@ -1903,7 +1910,9 @@ class Stream(object):
                                 and sampling_rate is None and npts is None
                                 and network is None and station is None
                                 and location is None and channel is None
-                                and component is None)
+                                and component is None and band is None
+                                and source is None and subsource is None
+                                and sid is None)
         if quick_check_possible:
             no_wildcards = not any(['?' in id or '*' in id or '[' in id])
             if no_wildcards:
@@ -1946,6 +1955,21 @@ class Stream(object):
             if component is not None:
                 if not fnmatch.fnmatch(trace.stats.component.upper(),
                                        component.upper()):
+                    continue
+            if band is not None:
+                if not fnmatch.fnmatch(trace.stats.band.upper(),
+                                       band.upper()):
+                    continue
+            if source is not None:
+                if not fnmatch.fnmatch(trace.stats.source.upper(),
+                                       source.upper()):
+                    continue
+            if subsource is not None:
+                if not fnmatch.fnmatch(trace.stats.subsource.upper(),
+                                       subsource.upper()):
+                    continue
+            if sid is not None:
+                if not fnmatch.fnmatch(trace.stats.sid.upper(), sid.upper()):
                     continue
             traces.append(trace)
         return self.__class__(traces=traces)
