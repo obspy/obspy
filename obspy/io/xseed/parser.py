@@ -2443,7 +2443,7 @@ class Parser(object):
             "network": stream[0].stats.network,
             "station": stream[0].stats.station,
             "location": stream[0].stats.location,
-            "channel": stream[0].stats.channel[0:2],
+            "channel": stream[0].stats.band + stream[0].stats.source,
             "starttime": stream[0].stats.starttime,
             "sampling_rate": stream[0].stats.sampling_rate}
 

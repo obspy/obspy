@@ -1780,7 +1780,8 @@ class Stream(object):
 
     def select(self, network=None, station=None, location=None, channel=None,
                sampling_rate=None, npts=None, component=None, id=None,
-               inventory=None):
+               inventory=None, band=None, source=None, subsource=None,
+               sid=None):
         """
         Return new Stream object only with these traces that match the given
         stats criteria (e.g. all traces with ``channel="EHZ"``).
@@ -1852,6 +1853,12 @@ class Stream(object):
 
         All other selection criteria that accept strings (network, station,
         location) may also contain Unix style wildcards (``*``, ``?``, ...).
+
+        Traces may additionally be selected by their FDSN Source Identifier
+        codes: ``band``, ``source`` and ``subsource`` are tested against the
+        respective derived entries of the channel code, and ``sid`` is tested
+        against the full identifier (e.g. ``sid="FDSN:BW_MANZ__E_H_Z"``). These
+        also accept Unix style wildcards.
         """
         if inventory is None:
             traces = self.traces
@@ -1903,7 +1910,9 @@ class Stream(object):
                                 and sampling_rate is None and npts is None
                                 and network is None and station is None
                                 and location is None and channel is None
-                                and component is None)
+                                and component is None and band is None
+                                and source is None and subsource is None
+                                and sid is None)
         if quick_check_possible:
             no_wildcards = not any(['?' in id or '*' in id or '[' in id])
             if no_wildcards:
@@ -1946,6 +1955,21 @@ class Stream(object):
             if component is not None:
                 if not fnmatch.fnmatch(trace.stats.component.upper(),
                                        component.upper()):
+                    continue
+            if band is not None:
+                if not fnmatch.fnmatch(trace.stats.band.upper(),
+                                       band.upper()):
+                    continue
+            if source is not None:
+                if not fnmatch.fnmatch(trace.stats.source.upper(),
+                                       source.upper()):
+                    continue
+            if subsource is not None:
+                if not fnmatch.fnmatch(trace.stats.subsource.upper(),
+                                       subsource.upper()):
+                    continue
+            if sid is not None:
+                if not fnmatch.fnmatch(trace.stats.sid.upper(), sid.upper()):
                     continue
             traces.append(trace)
         return self.__class__(traces=traces)
@@ -2787,8 +2811,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             if not len(cha):
                 msg = "Channel code must be at least one character long."
                 raise ValueError(msg)
-            comp = cha[-1]
-            cha_prefix = cha[:-1]
+            cha_prefix = tr.stats.band + tr.stats.source
             seed_id_groups[(net, sta, loc, cha_prefix)] = None
         # recursively rotate each set of matching SEED IDs if needed
         if len(seed_id_groups) > 1:
@@ -2798,7 +2821,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 for tr in self:
                     if (tr.stats.network == net and tr.stats.station == sta and
                             tr.stats.location == loc and
-                            tr.stats.channel[:-1] == cha_prefix):
+                            tr.stats.band + tr.stats.source == cha_prefix):
                         st += tr
                 st.rotate(method, back_azimuth=back_azimuth,
                           inclination=inclination, inventory=inventory,
@@ -2856,10 +2879,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 i_1.data = output_1
                 i_2.data = output_2
                 # Rename the components.
-                i_1.stats.channel = i_1.stats.channel[:-1] + \
-                    output_components[0]
-                i_2.stats.channel = i_2.stats.channel[:-1] + \
-                    output_components[1]
+                i_1.stats.component = output_components[0]
+                i_2.stats.component = output_components[1]
                 # Add the azimuth and inclination to the stats object.
                 for comp in (i_1, i_2):
                     comp.stats.back_azimuth = baz
@@ -2902,12 +2923,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 i_2.data = output_2
                 i_3.data = output_3
                 # Rename the components.
-                i_1.stats.channel = i_1.stats.channel[:-1] + \
-                    output_components[0]
-                i_2.stats.channel = i_2.stats.channel[:-1] + \
-                    output_components[1]
-                i_3.stats.channel = i_3.stats.channel[:-1] + \
-                    output_components[2]
+                i_1.stats.component = output_components[0]
+                i_2.stats.component = output_components[1]
+                i_3.stats.component = output_components[2]
                 # Add the azimuth and inclination to the stats object.
                 for comp in (i_1, i_2, i_3):
                     comp.stats.back_azimuth = baz
@@ -3349,6 +3367,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                       if all(_attribdict_equal(tr.stats.get(k), v)
                              for tr in traces)}
             header.pop('endtime', None)
+            # band/source/subsource are the canonical codes backing the derived
+            # ``channel``. Treat the channel as a unit: keep the codes only
+            # when the full channel is common to all traces, otherwise blank
+            # all three (reproducing the historical behaviour where a differing
+            # channel was simply dropped from the stacked header).
+            channel_common = all(
+                tr.stats.channel == traces[0].stats.channel for tr in traces)
+            if not channel_common:
+                for _k in ('band', 'source', 'subsource', 'channel'):
+                    header.pop(_k, None)
             if 'sampling_rate' not in header:
                 msg = 'Sampling rate of traces to stack is different'
                 raise ValueError(msg)
@@ -3641,7 +3669,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 traces[2], orientation[2]["azimuth"], orientation[2]["dip"])
             for tr, new_data, component in zip(traces, zne, "ZNE"):
                 tr.data = new_data
-                tr.stats.channel = tr.stats.channel[:-1] + component
+                tr.stats.component = component
             self.traces += traces
         return self
 

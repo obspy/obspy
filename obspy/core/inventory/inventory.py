@@ -30,6 +30,28 @@ SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "https://www.obspy.org"
 
 
+def _seed_id_from_identifier(seed_id):
+    """
+    Normalise a channel identifier to a ``NET.STA.LOC.CHA`` seed-id string.
+
+    Accepts either an ordinary SEED id (returned unchanged) or a full FDSN
+    Source Identifier (``"FDSN:NET_STA_LOC_BAND_SOURCE_SUBSOURCE"``), which is
+    converted to the equivalent (possibly extended-channel) seed-id so that
+    response and metadata lookups work for SID-native callers, including
+    identifiers whose codes have no strict 3-character SEED channel form.
+
+    :type seed_id: str
+    :param seed_id: SEED id or FDSN Source Identifier.
+    :rtype: str
+    :return: ``NET.STA.LOC.CHA`` seed-id string.
+    """
+    if seed_id.startswith("FDSN:"):
+        from obspy.core.trace import _parse_sid
+        net, sta, loc, cha = _parse_sid(seed_id)
+        return "%s.%s.%s.%s" % (net, sta, loc, cha)
+    return seed_id
+
+
 def _create_example_inventory():
     """
     Create an example inventory.
@@ -436,6 +458,7 @@ class Inventory(ComparingObject):
         :rtype: :class:`~obspy.core.inventory.response.Response`
         :returns: Response for time series specified by input arguments.
         """
+        seed_id = _seed_id_from_identifier(seed_id)
         network, _, _, _ = seed_id.split(".")
 
         responses = []
@@ -466,6 +489,7 @@ class Inventory(ComparingObject):
         :return: Dictionary containing coordinates and orientation (latitude,
             longitude, elevation, azimuth, dip)
         """
+        seed_id = _seed_id_from_identifier(seed_id)
         network, _, _, _ = seed_id.split(".")
 
         metadata = []

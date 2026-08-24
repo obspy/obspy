@@ -229,7 +229,8 @@ class TestStats:
             'network': '', 'sampling_rate': 1.0, 'test': 1, 'station': '',
             'location': '', 'starttime': UTCDateTime(1970, 1, 1, 0, 0),
             'delta': 1.0, 'calib': 1.0, 'npts': 0,
-            'endtime': UTCDateTime(1970, 1, 1, 0, 0), 'channel': ''}
+            'endtime': UTCDateTime(1970, 1, 1, 0, 0), 'channel': '',
+            'band': '', 'source': '', 'subsource': ''}
         ad = Stats(adict)
         assert ad == adict
         assert adict == ad

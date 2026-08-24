@@ -233,7 +233,11 @@ class Network(BaseNode):
         :rtype: :class:`~obspy.core.inventory.response.Response`
         :returns: Response for time series specified by input arguments.
         """
-        network, station, location, channel = seed_id.split(".")
+        if seed_id.startswith("FDSN:"):
+            from obspy.core.trace import _parse_sid
+            network, station, location, channel = _parse_sid(seed_id)
+        else:
+            network, station, location, channel = seed_id.split(".")
         if self.code != network:
             responses = []
         else:
@@ -266,7 +270,11 @@ class Network(BaseNode):
         :return: Dictionary containing coordinates and orientation (latitude,
             longitude, elevation, azimuth, dip)
         """
-        network, station, location, channel = seed_id.split(".")
+        if seed_id.startswith("FDSN:"):
+            from obspy.core.trace import _parse_sid
+            network, station, location, channel = _parse_sid(seed_id)
+        else:
+            network, station, location, channel = seed_id.split(".")
         metadata = []
         if self.code != network:
             pass

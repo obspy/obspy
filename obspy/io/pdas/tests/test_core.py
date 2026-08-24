@@ -26,6 +26,7 @@ class TestPDAS():
                     ('VERT_UNITS', 'Counts')]
         assert sorted(tr.stats.pop("pdas").items()) == expected
         expected = [('_format', 'PDAS'),
+                    (u'band', u''),
                     (u'calib', 1.0),
                     (u'channel', u''),
                     (u'delta', 0.005),
@@ -34,8 +35,10 @@ class TestPDAS():
                     (u'network', u''),
                     (u'npts', 500),
                     (u'sampling_rate', 200.0),
+                    (u'source', u''),
                     (u'starttime', UTCDateTime(1994, 4, 18, 0, 0)),
-                    (u'station', u'')]
+                    (u'station', u''),
+                    (u'subsource', u'')]
         assert sorted(tr.stats.items()) == expected
         expected = np.array([895, 867, 747, 591, 359, -129, -185, 3, 115, 243],
                             dtype=np.int16)

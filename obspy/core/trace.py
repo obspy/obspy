@@ -27,6 +27,104 @@ from obspy.core.util.misc import (flat_not_masked_contiguous, get_window_times,
                                   limit_numpy_fft_cache)
 
 
+def _parse_channel_codes(channel):
+    """
+    Decompose a SEED channel (or FDSN "extended channel") string into the
+    ``(band, source, subsource)`` codes of an FDSN Source Identifier.
+
+    This is a pure read: it never mutates anything. Three input shapes are
+    recognised:
+
+    - a plain 3-character SEED channel (``"BHZ"``) -> one character each;
+    - an underscore-delimited extended channel (``"G_SR_D"``, ``"_H_Z"``) as
+      produced by libmseed / pymseed for non-SEED-conforming codes;
+    - an empty channel -> three empty codes.
+
+    Any other legacy string (e.g. ``"HZ"``, ``"Z"``) is returned as
+    ``('', channel, '')`` so that no information is lost; note that re-building
+    a channel from such codes yields the extended form.
+
+    :type channel: str
+    :param channel: SEED or extended channel string.
+    :rtype: tuple(str, str, str)
+    :return: ``(band, source, subsource)``.
+    """
+    channel = str(channel)
+    if '_' in channel:
+        parts = channel.split('_')
+        if len(parts) == 3:
+            return parts[0], parts[1], parts[2]
+        # malformed extended form: keep recoverable, whole thing as source
+        return '', channel, ''
+    if len(channel) == 3:
+        return channel[0], channel[1], channel[2]
+    if len(channel) == 0:
+        return '', '', ''
+    if len(channel) == 1:
+        # a single-character channel is the component: map it to the subsource
+        # so that ``stats.component`` keeps its historical meaning (e.g. SOH or
+        # single-letter Z/N/E channels).
+        return '', '', channel
+    # legacy non-SEED, non-extended channel: whole string as source code
+    return '', channel, ''
+
+
+def _parse_sid(sid):
+    """
+    Parse an FDSN Source Identifier string into ``(network, station,
+    location, channel)``, where ``channel`` is the SEED or extended-channel
+    form of the band/source/subsource codes.
+
+    :type sid: str
+    :param sid: e.g. ``"FDSN:BW_MANZ__E_H_Z"`` (the ``"FDSN:"`` prefix is
+        optional).
+    :rtype: tuple(str, str, str, str)
+    :raises ValueError: if the identifier does not have the six FDSN fields.
+    """
+    sid = str(sid)
+    if sid.startswith("FDSN:"):
+        sid = sid[len("FDSN:"):]
+    parts = sid.split('_')
+    if len(parts) != 6:
+        msg = ("Not a valid FDSN Source Identifier (expected six "
+               "'_'-separated fields network_station_location_band_source_"
+               "subsource): %r" % sid)
+        raise ValueError(msg)
+    net, sta, loc, band, source, subsource = parts
+    return net, sta, loc, _build_channel_code(band, source, subsource)
+
+
+def _build_channel_code(band, source, subsource):
+    """
+    Compose a channel string from the three FDSN codes.
+
+    - each code exactly one character -> plain SEED form (``"BHZ"``);
+    - band and subsource both empty -> the ``source`` verbatim, so that legacy
+      non-SEED channels (``"N"``, ``"LOG"``, ``"BHZ1"``) that decompose to
+      ``('', source, '')`` round-trip exactly;
+    - otherwise -> the underscore-delimited FDSN "extended channel" form
+      (matching libmseed / pymseed).
+
+    :type band: str
+    :type source: str
+    :type subsource: str
+    :rtype: str
+    :return: SEED or extended channel string.
+    """
+    band, source, subsource = str(band), str(source), str(subsource)
+    if not band and not source and not subsource:
+        return ''
+    if len(band) == 1 and len(source) == 1 and len(subsource) == 1:
+        return band + source + subsource
+    if not band and not subsource:
+        # legacy / non-SEED channel stored whole in the source code
+        return source
+    if not band and not source:
+        # single component code (e.g. a bare "Z"): reproduce it verbatim
+        return subsource
+    return '_'.join((band, source, subsource))
+
+
 class Stats(AttribDict):
     """
     A container for additional header information of a ObsPy
@@ -155,6 +253,19 @@ class Stats(AttribDict):
         'network': '',
         'station': '',
         'location': '',
+        # FDSN Source Identifier codes are the canonical stored channel
+        # identity; ``channel`` is a derived view over them (see the class
+        # docstring). ``channel`` is kept in ``defaults`` so that it is always
+        # a recognised key, but its stored value is ignored in favour of the
+        # three codes.
+        'band': '',
+        'source': '',
+        'subsource': '',
+        # ``channel`` is derived from band/source/subsource. It is kept
+        # materialised in ``__dict__`` (as a mirror, refreshed whenever the
+        # codes change) so that Stats stays fully dict-compatible:
+        # ``dict(stats)``, ``str.format(**stats)`` and equality against a plain
+        # dict all continue to see a ``channel`` entry.
         'channel': '',
     }
     # keys which need to refresh derived values
@@ -165,6 +276,9 @@ class Stats(AttribDict):
         'station': str,
         'location': str,
         'channel': str,
+        'band': str,
+        'source': str,
+        'subsource': str,
     }
 
     def __init__(self, header={}):
@@ -207,15 +321,48 @@ class Stats(AttribDict):
             endtime_ns = self_dict['starttime'].ns + int(round(timediff * 1e9))
             self_dict['endtime'] = UTCDateTime(ns=endtime_ns)
             return
+        if key == 'channel':
+            # ``channel`` is a derived view: setting it decomposes into the
+            # canonical band/source/subsource codes, then refreshes the mirror.
+            # Preserve the historical str type-check/warning on assignment.
+            if not isinstance(value, str):
+                value = self._cast_type('channel', value)
+            band, source, subsource = _parse_channel_codes(value)
+            self_dict['band'] = band
+            self_dict['source'] = source
+            self_dict['subsource'] = subsource
+            self_dict['channel'] = _build_channel_code(band, source, subsource)
+            return
         if key == 'component':
-            key = 'channel'
             value = str(value)
             if len(value) != 1:
                 msg = 'Component must be set with single character'
                 raise ValueError(msg)
-            value = self.channel[:-1] + value
+            # component is the last character of the subsource code
+            subsource = self_dict.get('subsource', '')
+            self_dict['subsource'] = subsource[:-1] + value
+            self_dict['channel'] = _build_channel_code(
+                self_dict.get('band', ''), self_dict.get('source', ''),
+                self_dict['subsource'])
+            return
+        # FDSN Source Identifier codes are stored directly (canonical); each
+        # write refreshes the derived ``channel`` mirror.
+        if key in ('band', 'source', 'subsource'):
+            self_dict[key] = str(value)
+            self_dict['channel'] = _build_channel_code(
+                self_dict.get('band', ''), self_dict.get('source', ''),
+                self_dict.get('subsource', ''))
+            return
+        # setting the full FDSN Source Identifier populates all codes
+        if key == 'sid':
+            net, sta, loc, channel = _parse_sid(value)
+            self.__setitem__('network', net)
+            self.__setitem__('station', sta)
+            self.__setitem__('location', loc)
+            self.__setitem__('channel', channel)
+            return
         # prevent a calibration factor of 0
-        elif key == 'calib' and value == 0:
+        if key == 'calib' and value == 0:
             msg = 'Calibration factor set to 0.0!'
             warnings.warn(msg, UserWarning)
         # all other keys
@@ -230,7 +377,17 @@ class Stats(AttribDict):
         """
         """
         if key == 'component':
-            return super(Stats, self).__getitem__('channel', default)[-1:]
+            subsource = super(Stats, self).__getitem__('subsource', '')
+            return subsource[-1:]
+        if key == 'sid':
+            net = super(Stats, self).__getitem__('network', '')
+            sta = super(Stats, self).__getitem__('station', '')
+            loc = super(Stats, self).__getitem__('location', '')
+            band = super(Stats, self).__getitem__('band', '')
+            source = super(Stats, self).__getitem__('source', '')
+            subsource = super(Stats, self).__getitem__('subsource', '')
+            return "FDSN:%s_%s_%s_%s_%s_%s" % (
+                net, sta, loc, band, source, subsource)
         return super(Stats, self).__getitem__(key, default)
 
     def __str__(self):
@@ -240,7 +397,14 @@ class Stats(AttribDict):
         priorized_keys = ['network', 'station', 'location', 'channel',
                           'starttime', 'endtime', 'sampling_rate', 'delta',
                           'npts', 'calib']
-        return self._pretty_str(priorized_keys)
+        # the raw band/source/subsource codes back the materialised ``channel``
+        # entry and are hidden from the default repr to keep it unchanged
+        hidden = {'band', 'source', 'subsource'}
+        pattern = "%%%ds: %%s" % 16
+        other_keys = [k for k in self.__dict__
+                      if k not in priorized_keys and k not in hidden]
+        keys = priorized_keys + sorted(other_keys)
+        return "\n".join(pattern % (k, self.__dict__[k]) for k in keys)
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
@@ -253,7 +417,19 @@ class Stats(AttribDict):
         return state
 
     def __setstate__(self, state):
+        # Backwards compatibility: pickles written before the FDSN Source
+        # Identifier codes became canonical carry a stored ``channel`` but no
+        # band/source/subsource. Decompose it so old data loads correctly.
+        if 'channel' in state and 'source' not in state:
+            band, source, subsource = _parse_channel_codes(state['channel'])
+            state['band'] = band
+            state['source'] = source
+            state['subsource'] = subsource
         self.__dict__.update(state)
+        # refresh the derived ``channel`` mirror from the canonical codes
+        self.__dict__['channel'] = _build_channel_code(
+            self.__dict__.get('band', ''), self.__dict__.get('source', ''),
+            self.__dict__.get('subsource', ''))
         # trigger refreshing
         self.__setitem__('sampling_rate', state['sampling_rate'])
 
@@ -879,6 +1055,34 @@ class Trace(object):
                          self.stats.location, self.stats.channel))
 
     id = property(get_id)
+
+    def get_sid(self):
+        """
+        Return the FDSN Source Identifier of the trace.
+
+        :rtype: str
+        :return: FDSN Source Identifier, e.g. ``"FDSN:BW_MANZ__E_H_Z"``.
+
+        The identifier is derived from the network, station, location and
+        channel codes following the
+        `FDSN Source Identifier specification
+        <https://docs.fdsn.org/projects/source-identifiers/>`_. For a
+        SEED-conforming 3-character channel each of the band, source and
+        subsource codes is one character; non-conforming channels use the
+        "extended channel" decomposition.
+
+        .. rubric:: Example
+
+        >>> meta = {'station': 'MANZ', 'network': 'BW', 'channel': 'EHZ'}
+        >>> tr = Trace(header=meta)
+        >>> print(tr.get_sid())
+        FDSN:BW_MANZ__E_H_Z
+        >>> print(tr.sid)
+        FDSN:BW_MANZ__E_H_Z
+        """
+        return self.stats.sid
+
+    sid = property(get_sid)
 
     @id.setter
     def id(self, value):
