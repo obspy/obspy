@@ -3669,7 +3669,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 traces[2], orientation[2]["azimuth"], orientation[2]["dip"])
             for tr, new_data, component in zip(traces, zne, "ZNE"):
                 tr.data = new_data
-                tr.stats.channel = tr.stats.channel[:-1] + component
+                tr.stats.component = component
             self.traces += traces
         return self
 
