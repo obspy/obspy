@@ -556,11 +556,11 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
                     dat = tr.data[spoint[i] + offset:
                                   spoint[i] + offset + nsamp]
                     dat = (dat - dat.mean()) * tap
-                    if tr.stats.channel[-1].upper() == "Z":
+                    if tr.stats.component.upper() == "Z":
                         z = dat.copy()
-                    elif tr.stats.channel[-1].upper() == "N":
+                    elif tr.stats.component.upper() == "N":
                         n = dat.copy()
-                    elif tr.stats.channel[-1].upper() == "E":
+                    elif tr.stats.component.upper() == "E":
                         e = dat.copy()
                     else:
                         msg = "Unexpected channel code '%s'" % tr.stats.channel

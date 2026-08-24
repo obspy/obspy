@@ -268,12 +268,12 @@ def _write_asc(stream, filename, included_headers=None, npl=4,
             dt = trace.stats.starttime
             sio.write("START: %s\n" % from_utcdatetime(dt))
         # component must be split
-        if len(trace.stats.channel) > 2 and "COMP" in included_headers:
-            sio.write("COMP: %c\n" % trace.stats.channel[2])
-        if len(trace.stats.channel) > 0 and "CHAN1" in included_headers:
-            sio.write("CHAN1: %c\n" % trace.stats.channel[0])
-        if len(trace.stats.channel) > 1 and "CHAN2" in included_headers:
-            sio.write("CHAN2: %c\n" % trace.stats.channel[1])
+        if trace.stats.subsource and "COMP" in included_headers:
+            sio.write("COMP: %c\n" % trace.stats.subsource[0])
+        if trace.stats.band and "CHAN1" in included_headers:
+            sio.write("CHAN1: %c\n" % trace.stats.band[0])
+        if trace.stats.source and "CHAN2" in included_headers:
+            sio.write("CHAN2: %c\n" % trace.stats.source[0])
         if "STATION" in included_headers:
             sio.write("STATION: %s\n" % trace.stats.station)
         if "CALIB" in included_headers:
@@ -538,12 +538,12 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
         if trace.stats.station:
             temp += "S001:%s~ " % trace.stats.station
         # component must be split
-        if len(trace.stats.channel) > 2:
-            temp += "C000:%c~ " % trace.stats.channel[2]
-        if len(trace.stats.channel) > 0:
-            temp += "C001:%c~ " % trace.stats.channel[0]
-        if len(trace.stats.channel) > 1:
-            temp += "C002:%c~ " % trace.stats.channel[1]
+        if trace.stats.subsource:
+            temp += "C000:%c~ " % trace.stats.subsource[0]
+        if trace.stats.band:
+            temp += "C001:%c~ " % trace.stats.band[0]
+        if trace.stats.source:
+            temp += "C002:%c~ " % trace.stats.source[0]
         # special format for start time
         dt = trace.stats.starttime
         temp += "S021:%s~ " % from_utcdatetime(dt)

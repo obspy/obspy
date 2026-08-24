@@ -2811,8 +2811,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             if not len(cha):
                 msg = "Channel code must be at least one character long."
                 raise ValueError(msg)
-            comp = cha[-1]
-            cha_prefix = cha[:-1]
+            cha_prefix = tr.stats.band + tr.stats.source
             seed_id_groups[(net, sta, loc, cha_prefix)] = None
         # recursively rotate each set of matching SEED IDs if needed
         if len(seed_id_groups) > 1:
@@ -2822,7 +2821,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 for tr in self:
                     if (tr.stats.network == net and tr.stats.station == sta and
                             tr.stats.location == loc and
-                            tr.stats.channel[:-1] == cha_prefix):
+                            tr.stats.band + tr.stats.source == cha_prefix):
                         st += tr
                 st.rotate(method, back_azimuth=back_azimuth,
                           inclination=inclination, inventory=inventory,
@@ -2880,10 +2879,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 i_1.data = output_1
                 i_2.data = output_2
                 # Rename the components.
-                i_1.stats.channel = i_1.stats.channel[:-1] + \
-                    output_components[0]
-                i_2.stats.channel = i_2.stats.channel[:-1] + \
-                    output_components[1]
+                i_1.stats.component = output_components[0]
+                i_2.stats.component = output_components[1]
                 # Add the azimuth and inclination to the stats object.
                 for comp in (i_1, i_2):
                     comp.stats.back_azimuth = baz
@@ -2926,12 +2923,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 i_2.data = output_2
                 i_3.data = output_3
                 # Rename the components.
-                i_1.stats.channel = i_1.stats.channel[:-1] + \
-                    output_components[0]
-                i_2.stats.channel = i_2.stats.channel[:-1] + \
-                    output_components[1]
-                i_3.stats.channel = i_3.stats.channel[:-1] + \
-                    output_components[2]
+                i_1.stats.component = output_components[0]
+                i_2.stats.component = output_components[1]
+                i_3.stats.component = output_components[2]
                 # Add the azimuth and inclination to the stats object.
                 for comp in (i_1, i_2, i_3):
                     comp.stats.back_azimuth = baz

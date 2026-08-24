@@ -215,3 +215,43 @@ class TestStreamSelectSID:
         st = self._stream()
         assert len(st.select(channel="EHZ")) == 1
         assert len(st.select(id="BW.MANZ..EHZ")) == 1
+
+
+class TestExtendedChannelRotation:
+    """Stage B: rotation must group and rename multi-character (extended)
+    channel codes correctly, not just 3-character SEED channels."""
+
+    def _zne_stream(self, band, source):
+        st = Stream()
+        for comp in ("Z", "N", "E"):
+            tr = Trace(np.random.RandomState(0).randn(100).astype(np.float64))
+            tr.stats.network = "XX"
+            tr.stats.station = "STA"
+            tr.stats.band = band
+            tr.stats.source = source
+            tr.stats.subsource = comp
+            tr.stats.back_azimuth = 30.0
+            tr.stats.inclination = 10.0
+            st.append(tr)
+        return st
+
+    def test_rotate_multichar_source_groups_and_renames(self):
+        # multi-character source code "HH" -> extended channel "B_HH_Z" etc.
+        st = self._zne_stream("B", "HH")
+        assert [tr.stats.channel for tr in st] == \
+            ["B_HH_Z", "B_HH_N", "B_HH_E"]
+        st2 = st.copy().rotate("NE->RT")
+        # all three must survive (grouped by the common band+source prefix)
+        assert len(st2) == 3
+        # the source code must be preserved intact, not corrupted by a
+        # positional channel[:-1] split
+        assert all(tr.stats.band == "B" and tr.stats.source == "HH"
+                   for tr in st2)
+        assert {tr.stats.component for tr in st2} == {"Z", "R", "T"}
+
+    def test_rotate_plain_seed_channel_unchanged(self):
+        # the ordinary 3-character path must still behave exactly as before
+        st = self._zne_stream("B", "H")
+        assert [tr.stats.channel for tr in st] == ["BHZ", "BHN", "BHE"]
+        st2 = st.copy().rotate("NE->RT")
+        assert {tr.stats.channel for tr in st2} == {"BHZ", "BHR", "BHT"}

@@ -863,8 +863,8 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
             use_stream_id = gcf_stats.stream_id.upper()
         else:
             use_stream_id = (trace.stats.station.ljust(4, "X")[:4] +
-                             (trace.stats.channel[-1]
-                              if trace.stats.channel
+                             (trace.stats.component
+                              if trace.stats.component
                               else 'X')+'0').upper()
         if len(use_stream_id) != 6:
             if stream_id is None:

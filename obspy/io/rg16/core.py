@@ -150,7 +150,7 @@ def _make_trace(fi, trace_block_start, headonly, standard_orientation,
         nbr_sample_trace = _read(fi, trace_block_start + 27, 3, 'binary')
         nbr_bytes_trace = 4 * nbr_sample_trace
         data = _read(fi, trace_start, nbr_bytes_trace, 'IEEE')
-        if stats.channel[-1] == 'Z':
+        if stats.component == 'Z':
             data = -data
             data = data.astype('>f4')
     return Trace(data=data, header=stats)
