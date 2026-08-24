@@ -3373,6 +3373,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                       if all(_attribdict_equal(tr.stats.get(k), v)
                              for tr in traces)}
             header.pop('endtime', None)
+            # band/source/subsource are the canonical codes backing the derived
+            # ``channel``. Treat the channel as a unit: keep the codes only
+            # when the full channel is common to all traces, otherwise blank
+            # all three (reproducing the historical behaviour where a differing
+            # channel was simply dropped from the stacked header).
+            channel_common = all(
+                tr.stats.channel == traces[0].stats.channel for tr in traces)
+            if not channel_common:
+                for _k in ('band', 'source', 'subsource', 'channel'):
+                    header.pop(_k, None)
             if 'sampling_rate' not in header:
                 msg = 'Sampling rate of traces to stack is different'
                 raise ValueError(msg)

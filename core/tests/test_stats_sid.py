@@ -26,7 +26,7 @@ class TestChannelCodeHelpers:
         ("B_HH_ZZ", ("B", "HH", "ZZ")),    # extended, multi-char source+sub
         ("", ("", "", "")),                # empty channel
         ("HZ", ("", "HZ", "")),            # legacy 2-char -> whole to source
-        ("Z", ("", "Z", "")),              # legacy 1-char
+        ("Z", ("", "", "Z")),              # 1-char -> component (subsource)
     ])
     def test_parse_channel_codes(self, channel, expected):
         assert _parse_channel_codes(channel) == expected
