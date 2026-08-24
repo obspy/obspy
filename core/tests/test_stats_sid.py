@@ -255,3 +255,37 @@ class TestExtendedChannelRotation:
         assert [tr.stats.channel for tr in st] == ["BHZ", "BHN", "BHE"]
         st2 = st.copy().rotate("NE->RT")
         assert {tr.stats.channel for tr in st2} == {"BHZ", "BHR", "BHT"}
+
+
+class TestInventorySIDLookup:
+    """Stage B3a: response / metadata lookup must accept a full FDSN Source
+    Identifier as well as an ordinary SEED id."""
+
+    def _inv_and_id(self):
+        from obspy import read_inventory
+        inv = read_inventory()
+        # pick a real channel from the example inventory
+        cha = [(n.code, s.code, c.location_code, c.code)
+               for n in inv for s in n for c in s][0]
+        net, sta, loc, code = cha
+        seed_id = "%s.%s.%s.%s" % (net, sta, loc, code)
+        # build the equivalent SID (code is a 3-char SEED channel here)
+        sid = "FDSN:%s_%s_%s_%s_%s_%s" % (
+            net, sta, loc, code[0], code[1], code[2])
+        return inv, seed_id, sid
+
+    def test_get_response_accepts_sid(self):
+        from obspy import UTCDateTime
+        inv, seed_id, sid = self._inv_and_id()
+        t = UTCDateTime("2007-01-01")
+        r_nslc = inv.get_response(seed_id, t)
+        r_sid = inv.get_response(sid, t)
+        assert r_sid == r_nslc
+
+    def test_get_channel_metadata_accepts_sid(self):
+        from obspy import UTCDateTime
+        inv, seed_id, sid = self._inv_and_id()
+        t = UTCDateTime("2007-01-01")
+        m_nslc = inv.get_channel_metadata(seed_id, t)
+        m_sid = inv.get_channel_metadata(sid, t)
+        assert m_sid == m_nslc
