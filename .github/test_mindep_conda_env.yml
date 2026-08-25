@@ -4,6 +4,8 @@ channels:
   - defaults
 dependencies:
   # obspy
+  # No optional feature deps installed here. Keep the test tooling in sync with
+  # .github/uv_mindep_requirements.txt (the uv counterpart).
   - decorator
   - lxml
   - matplotlib
