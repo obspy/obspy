@@ -22,6 +22,8 @@ for seismology**.
 Getting Started
 ---------------
 
+Install instructions are available on the `wiki <https://github.com/obspy/obspy/wiki/#installation>`_.
+
 .. hlist::
 
     * `Tutorial <tutorial/index.html>`_
