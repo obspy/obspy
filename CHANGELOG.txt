@@ -7,6 +7,7 @@ Changes:
      mimicks the behavior of numpy <2.5, which is to downcast results to real
      valued arrays when possible. Replacing all `numpy.linalg.eig` calls in the
      code base with this wrapper (see #3760)
+   * dummy change to trigger the wheel builder on maintenance branch.
  - obspy.core:
    * inventory: fix a bug that Latitude, Longitude and Distance did not accept
      'measurement_units' when being initialized (see #3623)
