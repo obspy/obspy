@@ -20,6 +20,9 @@ Changes:
    * deprecate flinnengdahl web service, which EarthScope announced will be
      retired in July 2026. Users should use obspy.geodetics instead.
      (see #3756)
+ - obspy.imaging:
+   * fix a bug in dayplot when data is only available for part of the time
+     window (see #3780)
  - obspy.io.mseed:
    * fix the type of exception raised when trying to read an empty file
      (see #3709)
