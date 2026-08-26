@@ -1,12 +1,4 @@
-maintenance_1.5.x
-=================
-
-Changes:
- - obspy.clients.fdsn:
-   * skip non-query related parameters when parsing WADL files for now and
-     improve warning messages for these cases (see #3788)
-
-1.5.1rc2
+1.5.1rc3
 ========
 
 Changes:
@@ -25,6 +17,8 @@ Changes:
      IRIS-now-EarthScope discontinued serving an event web service which was a
      mirror of USGS event web service (see #3784).
    * update URL endpoint for IGN to https (see #3744)
+   * skip non-query related parameters when parsing WADL files for now and
+     improve warning messages for these cases (see #3788)
  - obspy.clients.filesystem:
    * tsindex: improve handling of sql sessions, less connections staying open
      (see #3736)
