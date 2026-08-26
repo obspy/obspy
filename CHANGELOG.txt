@@ -11,6 +11,11 @@ Changes:
    * inventory: fix a bug that Latitude, Longitude and Distance did not accept
      'measurement_units' when being initialized (see #3623)
  - obspy.clients.fdsn:
+   * add new URL mapping 'EARTHSCOPE+USGS' and make it the default. This will
+     use EarthScope for dataselect and station web services and use USGS for
+     event web service. This is basically restoring the output users got before
+     IRIS-now-EarthScope discontinued serving an event web service which was a
+     mirror of USGS event web service (see #3784).
    * update URL endpoint for IGN to https (see #3744)
  - obspy.clients.filesystem:
    * tsindex: improve handling of sql sessions, less connections staying open

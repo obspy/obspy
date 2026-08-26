@@ -1896,3 +1896,33 @@ class TestClientNoNetwork():
         msg = 'Timed Out'
         with pytest.raises(FDSNException, match=msg):
             raise_on_error(code, data)
+
+    @mock.patch('obspy.clients.fdsn.client.download_url')
+    def test_default_client_earthscope_and_usgs(self, download_mock):
+        """
+        Test that by default the client uses EarthScope for dataselect+station
+        and USGS for event
+        """
+        # just mock an empty response, we're just interested to see what
+        # URL was going to be downloaded
+        download_mock.return_value = (204, None)
+        t = UTCDateTime(2010, 1, 1)
+
+        client_default = Client(_discover_services=False)
+        client_explicit = Client('EARTHSCOPE+USGS', _discover_services=False)
+        for client in (client_default, client_explicit):
+            # check event endpoint
+            with pytest.raises(FDSNNoDataException):
+                client.get_events()
+            assert download_mock.call_args.args[0].startswith(
+                'https://earthquake.usgs.gov/fdsnws/event/')
+            # check dataselect endpoint
+            with pytest.raises(FDSNNoDataException):
+                client.get_waveforms('IU', 'ANMO', '', '*', t, t+1)
+            assert download_mock.call_args.args[0].startswith(
+                'https://service.earthscope.org/fdsnws/dataselect/')
+            # check station endpoint
+            with pytest.raises(FDSNNoDataException):
+                client.get_stations()
+            assert download_mock.call_args.args[0].startswith(
+                'https://service.earthscope.org/fdsnws/station/')

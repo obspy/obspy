@@ -105,6 +105,10 @@ URL_MAPPINGS = {
     "BGR": "https://eida.bgr.de",
     "BGS": 'https://eida.bgs.ac.uk',
     "EARTHSCOPE": "https://service.earthscope.org",
+    # the following will use USGS as endpoint for event web service.
+    # to keep things simple we just keep the base URL from earthscope here and
+    # simply set a custom event service mapping during Client init
+    "EARTHSCOPE+USGS": "https://service.earthscope.org",
     "EIDA": "http://eida-federator.ethz.ch",
     "EPOSFR": "https://seisdata.epos-france.fr",
     "ETH": "https://eida.ethz.ch",
