@@ -1028,8 +1028,6 @@ class SeedLinkConnection(object):
             server.
         :raise IOError: if an I/O error occurs.
         """
-        timeout = 4.0
-
         try:
             host_name = self.sladdr[0:self.sladdr.find(':')]
             nport = int(self.sladdr[self.sladdr.find(':') + 1:])
@@ -1040,6 +1038,7 @@ class SeedLinkConnection(object):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            sock.settimeout(self.timeout)
             # print("DEBUG: sock.connect:", self.sladdr, host_name, nport)
             sock.connect((host_name, nport))
             # print("DEBUG: sock.connect: sock:", sock)
@@ -1048,8 +1047,8 @@ class SeedLinkConnection(object):
             self.socket = sock
 
             # Check if socket is connected
-            if not self.is_connected(timeout):
-                msg = "socket connect time-out %ss" % (timeout)
+            if not self.is_connected(self.timeout):
+                msg = f"socket connect time-out {self.timeout}s"
                 try:
                     self.socket.close()
                 except Exception:
