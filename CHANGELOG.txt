@@ -1,3 +1,11 @@
+maintenance_1.5.x
+=================
+
+Changes:
+ - obspy.clients.fdsn:
+   * skip non-query related parameters when parsing WADL files for now and
+     improve warning messages for these cases (see #3788)
+
 1.5.1rc2
 ========
 
