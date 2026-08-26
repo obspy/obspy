@@ -19,10 +19,9 @@ from obspy.core.util import CatchAndAssertWarnings
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.obspy_types import ObsPyException
 from obspy.io.xseed import Parser
-from obspy.signal.spectral_estimation import (PPSD, welch_taper, welch_window)
-from obspy.signal.spectral_estimation import earthquake_models
-from obspy.signal.spectral_estimation import get_idc_infra_low_noise
-from obspy.signal.spectral_estimation import get_idc_infra_hi_noise
+from obspy.signal.spectral_estimation import (
+    PPSD, welch_taper, welch_window, earthquake_models,
+    get_idc_infra_low_noise, get_idc_infra_hi_noise, get_rlnm, get_rhnm)
 
 
 @pytest.fixture(scope="module")
@@ -946,3 +945,50 @@ class TestPsd:
         assert not len(ppsd.times_processed)  # should be empty, nothing added
         # contains start/end times of traces added in, even if not processed
         assert len(ppsd.times_data) == 1
+
+    def test_rotational_noise_models(self, datapath):
+        """
+        Test the functions to get Rotational Low/High Noise Models
+        """
+        model_data = np.load(
+            datapath.parent.parent / 'data' / 'rotational_noise_models.npz')
+
+        periods_expected = model_data['period']
+        rlnm_expected = model_data['rlnm_rot_rate']
+        rhnm_expected = model_data['rhnm_rot_rate']
+        rlnm_angle_expected = rlnm_expected / (
+            2.0 * np.pi / periods_expected) ** 2
+        rhnm_angle_expected = rhnm_expected / (
+            2.0 * np.pi / periods_expected) ** 2
+        rlnm_expected_db = 10.0 * np.log10(rlnm_expected)
+        rhnm_expected_db = 10.0 * np.log10(rhnm_expected)
+        rlnm_angle_expected_db = 10.0 * np.log10(rlnm_angle_expected)
+        rhnm_angle_expected_db = 10.0 * np.log10(rhnm_angle_expected)
+
+        periods, rlnm = get_rlnm(output_db=False)
+        np.testing.assert_array_equal(periods_expected, periods)
+        np.testing.assert_array_equal(rlnm_expected, rlnm)
+        periods, rhnm = get_rhnm(output_db=False)
+        np.testing.assert_array_equal(periods_expected, periods)
+        np.testing.assert_array_equal(rhnm_expected, rhnm)
+
+        periods, rlnm = get_rlnm(output_db=False, output_type='angle')
+        np.testing.assert_array_equal(periods_expected, periods)
+        np.testing.assert_array_equal(rlnm_angle_expected, rlnm)
+        periods, rhnm = get_rhnm(output_db=False, output_type='angle')
+        np.testing.assert_array_equal(periods_expected, periods)
+        np.testing.assert_array_equal(rhnm_angle_expected, rhnm)
+
+        periods, rlnm = get_rlnm()
+        np.testing.assert_array_equal(periods_expected, periods)
+        np.testing.assert_array_equal(rlnm_expected_db, rlnm)
+        periods, rhnm = get_rhnm()
+        np.testing.assert_array_equal(periods_expected, periods)
+        np.testing.assert_array_equal(rhnm_expected_db, rhnm)
+
+        periods, rlnm = get_rlnm(output_type='angle')
+        np.testing.assert_array_equal(periods_expected, periods)
+        np.testing.assert_array_equal(rlnm_angle_expected_db, rlnm)
+        periods, rhnm = get_rhnm(output_type='angle')
+        np.testing.assert_array_equal(periods_expected, periods)
+        np.testing.assert_array_equal(rhnm_angle_expected_db, rhnm)
