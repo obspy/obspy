@@ -41,6 +41,42 @@ def _create_test_data():
     return sz
 
 
+def _create_rotating_test_data(fs=20.0, npts=2048, f0=3.0, az1=20.0, az2=70.0,
+                               inc1=30.0, inc2=75.0):
+    """
+    Synthetic, rectilinearly polarized 3C signal whose polarization *axis*
+    rotates along the trace: the horizontal azimuth ramps linearly from
+    ``az1`` to ``az2`` while the incidence angle (measured from the vertical)
+    ramps from ``inc1`` to ``inc2`` (the vertical amplitude ``cos(inc)`` thus
+    varies too). All three components stay non-zero.
+
+    A correct adaptive-window Vidale analysis must recover both the *time
+    varying* azimuth and incidence. Used by the regression test for
+    :issue:`3725`, where the covariance was computed from the whole trace
+    (collapsing every window onto the trace-averaged direction) instead of
+    from the current analysis window.
+    """
+    t = np.arange(npts) / fs
+    carrier = np.cos(2.0 * np.pi * f0 * t)
+    theta = np.deg2rad(np.linspace(az1, az2, npts))    # rotating azimuth
+    phi = np.deg2rad(np.linspace(inc1, inc2, npts))    # rotating incidence
+    data_e = carrier * np.sin(theta) * np.sin(phi)
+    data_n = carrier * np.cos(theta) * np.sin(phi)
+    data_z = carrier * np.cos(phi)
+
+    st = obspy.Stream()
+    for data, chan in [(data_z, 'HHZ'), (data_n, 'HHN'), (data_e, 'HHE')]:
+        tr = obspy.Trace(data=np.ascontiguousarray(data, dtype=np.float64))
+        tr.stats.sampling_rate = fs
+        tr.stats.starttime = obspy.UTCDateTime('2014-03-01T00:00')
+        tr.stats.network = 'XX'
+        tr.stats.station = 'POLR'
+        tr.stats.channel = chan
+        st.append(tr)
+    st.sort(reverse=True)
+    return st
+
+
 class TestPolarization():
     """
     Test cases for polarization analysis
@@ -195,3 +231,70 @@ class TestPolarization():
             assert np.allclose(got / got[0], np.ones_like(got), rtol=1e-4)
         assert np.allclose(out["timestamp"] - out["timestamp"][0],
                            np.arange(0, 97.85, 0.05), rtol=1e-5)
+
+    def test_polarization_vidale_windowed_covariance(self):
+        """
+        Regression test for :issue:`3725`.
+
+        The adaptive-window Vidale analysis must build the covariance matrix
+        from the current analysis window, not from the full trace. For a
+        source whose azimuth rotates 20 -> 70 degrees and incidence rotates
+        30 -> 75 degrees, the recovered azimuth and incidence must follow
+        those rotations; using the full trace instead collapses every window
+        onto the trace-averaged direction (azimuth ~45 degrees, incidence
+        ~52 degrees, each with a peak-to-peak spread of about 1 degree) and
+        smears the rectilinearity down to ~0.7.
+        """
+        st = _create_rotating_test_data(az1=20.0, az2=70.0, inc1=30.0,
+                                        inc2=75.0)
+        t = st[0].stats.starttime
+        e = st[0].stats.endtime
+
+        out = polarization.polarization_analysis(
+            st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
+            verbose=False, stime=t, etime=e, method="vidale", var_noise=0.0)
+
+        azimuth = out["azimuth"]
+        # azimuth must vary across the trace (the full-trace covariance bug
+        # yields a near-constant azimuth) and track the imposed rotation
+        assert np.ptp(azimuth) > 30.0
+        assert abs(azimuth[:20].mean() - 20.0) < 5.0
+        assert abs(azimuth[-20:].mean() - 70.0) < 5.0
+        # incidence must likewise track its rotation, not collapse to the
+        # trace-averaged value (~52 degrees)
+        incidence = out["incidence"]
+        assert np.ptp(incidence) > 30.0
+        assert abs(incidence[:20].mean() - 30.0) < 6.0
+        assert abs(incidence[-20:].mean() - 75.0) < 6.0
+        # the per-window motion stays rectilinear; the full-trace covariance
+        # bug smears energy over the rotating directions and drops this to ~0.7
+        assert np.all(out["rectilinearity"] > 0.95)
+
+    def test_polarization_vidale_noise_threshold(self):
+        """
+        Regression test for :issue:`3725`.
+
+        With a non-zero noise threshold (``var_noise > 0``) the Vidale
+        covariance estimation must exclude low-energy samples inside the
+        window instead of attempting to broadcast the full-length signal into
+        a shortened array, which previously raised a ``ValueError``.
+        """
+        st = _create_test_data()
+        t = st[0].stats.starttime
+        e = st[0].stats.endtime
+
+        out = polarization.polarization_analysis(
+            st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
+            verbose=False, stime=t, etime=e, method="vidale", var_noise=0.5)
+
+        # must run to completion and return finite results ...
+        for key in ["azimuth", "incidence", "rectilinearity", "planarity",
+                    "ellipticity"]:
+            assert np.all(np.isfinite(out[key]))
+        # ... the perfectly rectilinear input must stay rectilinear ...
+        assert np.allclose(out["rectilinearity"], 1.0, atol=1e-4)
+        assert np.allclose(out["planarity"], 1.0, atol=1e-4)
+        # ... and excluding low-energy samples must not shift the recovered
+        # orientation away from the known (noise-free) reference values
+        assert np.allclose(out["azimuth"], 26.56505117707799, atol=1e-4)
+        assert np.allclose(out["incidence"], 65.905157447889309, atol=1e-4)
