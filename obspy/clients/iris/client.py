@@ -164,6 +164,12 @@ class Client(object):
             if file_opened is True:
                 fh.close()
 
+    # new deprecation in 1.5.1, remove in 1.6.0 or 1.7.0
+    @deprecated(
+        'EarthScope has announced the retirement of its "irisws-timeseries" '
+        'web service for August 26, 2026. For details see '
+        'https://www.earthscope.org/news/mailing-lists/. This method will '
+        'be removed in a future obspy release, so please adjust accordingly.')
     def timeseries(self, network, station, location, channel,
                    starttime, endtime, filter=[], filename=None,
                    output='miniseed', **kwargs):
@@ -348,6 +354,12 @@ class Client(object):
                 stream = Stream()
         return stream
 
+    # new deprecation in 1.5.1, remove in 1.6.0 or 1.7.0
+    @deprecated(
+        'EarthScope has announced the retirement of its "irisws-resp" web '
+        'service for August 31, 2026. For details see '
+        'https://www.earthscope.org/news/mailing-lists/. This method will '
+        'be removed in a future obspy release, so please adjust accordingly.')
     def resp(self, network, station, location="*", channel="*",
              starttime=None, endtime=None, filename=None, **kwargs):
         """
@@ -442,6 +454,12 @@ class Client(object):
             raise Exception(msg)
         return self._to_file_or_data(filename, data)
 
+    # new deprecation in 1.5.1, remove in 1.6.0 or 1.7.0
+    @deprecated(
+        'EarthScope has announced the retirement of its "irisws-sacpz" web '
+        'service for August 31, 2026. For details see '
+        'https://www.earthscope.org/news/mailing-lists/. This method will '
+        'be removed in a future obspy release, so please adjust accordingly.')
     def sacpz(self, network, station, location="*", channel="*",
               starttime=None, endtime=None, filename=None, **kwargs):
         """
@@ -542,6 +560,12 @@ class Client(object):
         data = self._fetch("sacpz", **kwargs)
         return self._to_file_or_data(filename, data)
 
+    # new deprecation in 1.5.1, remove in 1.6.0 or 1.7.0
+    @deprecated(
+        'EarthScope has announced the retirement of its "irisws-distaz" '
+        'web service for August 27, 2026. For details see '
+        'https://www.earthscope.org/news/mailing-lists/. This method will '
+        'be removed in a future obspy release, so please adjust accordingly.')
     def distaz(self, stalat, stalon, evtlat, evtlon):
         """
         Low-level interface for `distaz` Web service of EarthScope
@@ -674,6 +698,12 @@ class Client(object):
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
 
+    # new deprecation in 1.5.1, remove in 1.6.0 or 1.7.0
+    @deprecated(
+        'EarthScope has announced the retirement of its "irisws-traveltime" '
+        'web service for August 27, 2026. For details see '
+        'https://www.earthscope.org/news/mailing-lists/. This method will '
+        'be removed in a future obspy release, so please adjust accordingly.')
     def traveltime(self, model='iasp91', phases=DEFAULT_PHASES, evdepth=0.0,
                    distdeg=None, distkm=None, evloc=None, staloc=None,
                    noheader=False, traveltimeonly=False, rayparamonly=False,

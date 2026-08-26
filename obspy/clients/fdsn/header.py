@@ -143,6 +143,8 @@ URL_MAPPINGS = {
     "USGS": "https://earthquake.usgs.gov",
     "USP": "https://sismo.iag.usp.br"
 }
+# Earthscope PH5 WS will get removed Sept 1 2026, we start showing a warning
+# with 1.5.1, so get rid of it completely with 1.6.0 or 1.7.0
 URL_MAPPING_SUBPATHS = {
     "IRISPH5": "/ph5ws",
 }
