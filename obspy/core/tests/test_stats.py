@@ -208,7 +208,7 @@ class TestStats:
         x = Stats()
         # this should work
         x.update({'calib': 1.23})
-        assert x.calib, 1.23
+        assert x.calib == 1.23
         # this raises UserWarning
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
@@ -219,7 +219,7 @@ class TestStats:
             with pytest.raises(UserWarning):
                 x.update({'calib': 0})
         # calib value should nevertheless be set to 0
-        assert x.calib, 0
+        assert x.calib == 0
 
     def test_compare_with_dict(self):
         """

@@ -2289,7 +2289,7 @@ class TestStream:
 
         assert temp is st
         # Cutout duplicates the number of traces.
-        assert len(st), 6
+        assert len(st) == 6
         # Clearing also works for method chaining.
         assert len(st.clear()) == 0
 
