@@ -185,6 +185,21 @@ def pytest_configure(config):
     """
     Configure pytest with custom logic for ObsPy before test run.
     """
+    # obspy-runtests chdirs into ObsPy's package directory so that pytest
+    # collects the installed package. That directory contains sub-packages
+    # whose names shadow standard library modules (most notably
+    # ``obspy/signal``). Any helper interpreter that multiprocessing spawns
+    # with ``python -c`` under the ``spawn``/``forkserver`` start methods
+    # prepends the current working directory to ``sys.path`` and would then
+    # import ``obspy/signal`` in place of the stdlib ``signal`` module and
+    # crash on startup -- e.g. the multiprocessing ``resource_tracker`` on
+    # Python 3.14, where ``forkserver`` became the default start method on
+    # Linux. Exporting ``PYTHONSAFEPATH`` is inherited by those subprocesses
+    # and stops the unsafe ``sys.path`` prepend so the stdlib modules resolve
+    # correctly. It does not affect this already-running interpreter or test
+    # collection, and it is a no-op on Python < 3.11.
+    os.environ["PYTHONSAFEPATH"] = "1"
+
     # Skip or select network options based on options
     network_selected = config.getoption('--network')
     all_selected = config.getoption('--all')

@@ -11,10 +11,10 @@ import copy
 import gc
 import io
 import itertools
-import multiprocessing.pool
 import pickle
 import sys
 import warnings
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
@@ -499,11 +499,22 @@ class TestResourceIdentifier:
         Test that event-scoping of resource IDs still works when many
         threads are used to generate catalogs via various methods.
         """
-        pool = multiprocessing.pool.ThreadPool()
+        # Use a plain threading pool (concurrent.futures) rather than
+        # multiprocessing.pool.ThreadPool. Although ThreadPool runs the work
+        # in threads, its construction builds a multiprocessing SimpleQueue
+        # backed by a POSIX semaphore that registers with the
+        # multiprocessing.resource_tracker under any non-"fork" start method.
+        # Python 3.14 makes "forkserver" the default start method on Linux, so
+        # this registration now happens and can emit a "resource_tracker:
+        # process died unexpectedly" UserWarning during pool construction
+        # (i.e. outside the catch_warnings block below), which is escalated to
+        # an error when the suite runs with -W error. ThreadPoolExecutor is
+        # pure threading and never touches the resource_tracker.
         # currently it is not possible to avoid warnings with many threads
         with warnings.catch_warnings(record=True):
-            nested_catalogs = pool.map(make_diverse_catalog_list, range(5))
-        pool.close()
+            with ThreadPoolExecutor() as pool:
+                nested_catalogs = list(
+                    pool.map(make_diverse_catalog_list, range(5)))
         # get a flat list of catalogs
         catalogs = list(itertools.chain.from_iterable(nested_catalogs))
         # run catalogs through previous tests
