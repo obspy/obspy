@@ -33,6 +33,7 @@ Changes:
      connection no timeout is used, which in practice leads to a default 2min
      timeout even if user sets a shorter timeout when establishing the client
      (see #3767)
+   * fix seedlink for EPOSFR to rtserve.resif.fr (see #3793)
  - obspy.imaging:
    * fix a bug in dayplot when data is only available for part of the time
      window (see #3780)
