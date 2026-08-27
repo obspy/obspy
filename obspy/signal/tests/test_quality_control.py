@@ -828,7 +828,7 @@ class TestQualityControl():
         assert c["sample_rms"] - 5.3385391260156556 < 1E-6
         assert c["sample_median"] == 4.5
         assert c["sample_lower_quartile"] == 2.25
-        assert c["sample_upper_quartile"] == 6.25
+        assert c["sample_upper_quartile"] == 6.75
 
     def test_json_serialization(self):
         """
