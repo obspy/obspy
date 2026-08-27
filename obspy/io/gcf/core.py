@@ -724,9 +724,9 @@ def _write_gcf(stream, filename, stream_id=None, system_id=None, is_leap=False,
         # Check sampling rate
         sps_denom = 1
         if not compatible_sps(trace.stats.sampling_rate):
-            sps = ".3f" % (trace.stats.sampling_rate) if \
-                           trace.stats.sampling_rate < 1 else \
-                           "%d" % (trace.stats.sampling_rate)
+            sps = "%.3f" % (trace.stats.sampling_rate) if \
+                            trace.stats.sampling_rate < 1 else \
+                            "%d" % (trace.stats.sampling_rate)
             raise ValueError("trace sampling rate, %s, in trace %d not "
                              "supported in GCF format" % (sps, i+1))
         else:
