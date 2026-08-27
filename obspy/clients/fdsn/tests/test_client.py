@@ -274,7 +274,9 @@ class TestClient():
         Tests the IRISPH5 URL mapping, which is special due to its custom
         subpath.
         """
-        client = Client('IRISPH5')
+        with pytest.warns(ObsPyDeprecationWarning,
+                          match="EarthScope PH5 WS will get retired"):
+            client = Client('IRISPH5')
 
         # Event id query.
         cat = client.get_events(catalog='8A')
@@ -825,10 +827,12 @@ class TestClient():
         for tr in st:
             assert isinstance(tr.stats.get("response"), Response)
 
-        st = client.get_waveforms("IU", "ANMO", "00", "BHZ",
-                                  UTCDateTime("2000-02-27T06:00:00.000"),
-                                  UTCDateTime("2000-02-27T06:00:05.000"),
-                                  attach_response=True)
+        with pytest.warns(ObsPyDeprecationWarning,
+                          match="attach_response is deprecated"):
+            st = client.get_waveforms("IU", "ANMO", "00", "BHZ",
+                                      UTCDateTime("2000-02-27T06:00:00.000"),
+                                      UTCDateTime("2000-02-27T06:00:05.000"),
+                                      attach_response=True)
         for tr in st:
             assert isinstance(tr.stats.get("response"), Response)
 

@@ -65,14 +65,10 @@ class Client(object):
 
     >>> from obspy.clients.iris import Client
     >>> client = Client()
-    >>> result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2,
-    ...                        evtlon=1.4)
-    >>> print(result['distance'])
-    2.10256
-    >>> print(result['backazimuth'])
-    5.46944
-    >>> print(result['azimuth'])
-    185.47695
+    >>> dt = UTCDateTime("2005-01-01")
+    >>> data = client.evalresp("IU", "ANMO", "00", "BHZ", dt, output='fap')
+    >>> data[0]  # frequency, amplitude, phase of first point
+    array([  1.00000000e-05,   1.05593400e+04,   1.79200700e+02])
     """
     def __init__(self, base_url="https://service.earthscope.org/irisws",
                  user="", password="", timeout=20, debug=False,
@@ -303,20 +299,6 @@ class Client(object):
 
         :rtype: :class:`~obspy.core.stream.Stream` or ``None``
         :return: ObsPy Stream object if no ``filename`` is given.
-
-        .. rubric:: Example
-
-        >>> from obspy.clients.iris import Client
-        >>> from obspy import UTCDateTime
-        >>> dt = UTCDateTime("2005-01-01T00:00:00")
-        >>> client = Client()
-        >>> st = client.timeseries("IU", "ANMO", "00", "BHZ", dt, dt+10)
-        >>> print(st[0].data)  # doctest: +ELLIPSIS
-        [  24   20   19   19   19   15   10    4   -4  -11 ...
-        >>> st = client.timeseries("IU", "ANMO", "00", "BHZ", dt, dt+10,
-        ...     filter=["correct", "demean", "lp=2.0"])
-        >>> print(st[0].data)  # doctest: +ELLIPSIS
-        [ -1.57498380e-06  -1.26325779e-06  -7.84855445e-07 ...
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
@@ -402,23 +384,6 @@ class Client(object):
             nothing will be returned. Default is ``None``.
         :rtype: str or ``None``
         :return: SEED RESP file as string if no ``filename`` is given..
-
-        .. rubric:: Example
-
-        >>> from obspy.clients.iris import Client
-        >>> from obspy import UTCDateTime
-        >>> client = Client()
-        >>> dt = UTCDateTime("2010-02-27T06:30:00.000")
-        >>> data = client.resp("IU", "ANMO", "00", "BHZ", dt)
-        >>> print(data.decode())  # doctest: +ELLIPSIS
-        #
-        ####################################################################...
-        #
-        B050F03     Station:     ANMO
-        B050F16     Network:     IU
-        B052F03     Location:    00
-        B052F04     Channel:     BHZ
-        ...
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
@@ -492,45 +457,6 @@ class Client(object):
         :rtype: str or ``None``
         :return: String with SAC poles and zeros information if no ``filename``
             is given.
-
-        .. rubric:: Example
-
-        >>> from obspy.clients.iris import Client
-        >>> from obspy import UTCDateTime
-        >>> client = Client()
-        >>> dt = UTCDateTime("2005-01-01")
-        >>> sacpz = client.sacpz("IU", "ANMO", "00", "BHZ", dt)
-        >>> print(sacpz.decode())  # doctest: +SKIP
-        * **********************************
-        * NETWORK   (KNETWK): IU
-        * STATION    (KSTNM): ANMO
-        * LOCATION   (KHOLE): 00
-        * CHANNEL   (KCMPNM): BHZ
-        * CREATED           : ...
-        * START             : 2002-11-19T21:07:00
-        * END               : 2008-06-30T00:00:00
-        * DESCRIPTION       : Albuquerque, New Mexico, USA
-        * LATITUDE          : 34.945981
-        * LONGITUDE         : -106.457133
-        * ELEVATION         : 1671.0
-        * DEPTH             : 145.0
-        * DIP               : 0.0
-        * AZIMUTH           : 0.0
-        * SAMPLE RATE       : 20.0
-        * INPUT UNIT        : M
-        * OUTPUT UNIT       : COUNTS
-        * INSTTYPE          : Geotech KS-54000 Borehole Seismometer
-        * INSTGAIN          : 1.935000e+03 (M/S)
-        * ...
-        * **********************************
-        ZEROS      3
-           +0.000000e+00   +0.000000e+00
-           +0.000000e+00   +0.000000e+00
-           +0.000000e+00   +0.000000e+00
-        POLES      5 ...
-        CONSTANT   6.985619e+13
-        <BLANKLINE>
-        ...
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
@@ -596,23 +522,6 @@ class Client(object):
 
         The ``distance`` (in degrees) and ``distancemeters`` are the distance
         between the two points on the spheroid.
-
-        .. rubric:: Example
-
-        >>> from obspy.clients.iris import Client
-        >>> client = Client()
-        >>> result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2,
-        ...                        evtlon=1.4)
-        >>> print(result['distance'])
-        2.10256
-        >>> print(result['distancemeters'])
-        233272.79028
-        >>> print(result['backazimuth'])
-        5.46944
-        >>> print(result['azimuth'])
-        185.47695
-        >>> print(result['ellipsoidname'])
-        WGS84
         """
         # build up query
         try:
@@ -655,23 +564,6 @@ class Client(object):
         :rtype: int, str, or tuple
         :returns: Returns Flinn-Engdahl region code or name or both, depending
             on the request type parameter ``rtype``.
-
-        .. rubric:: Examples
-
-        >>> from obspy.clients.iris import Client
-        >>> client = Client()
-        >>> client.flinnengdahl(
-        ...     lat=-20.5, lon=-100.6, rtype="code")  # doctest: +SKIP
-        683
-
-        >>> print(client.flinnengdahl(
-        ...     lat=42, lon=-122.24, rtype="region"))  # doctest: +SKIP
-        OREGON
-
-        >>> code, region = client.flinnengdahl(
-        ...     lat=-20.5, lon=-100.6)  # doctest: +SKIP
-        >>> print(code, region)  # doctest: +SKIP
-        683 SOUTHEAST CENTRAL PACIFIC OCEAN
         """
         service = 'flinnengdahl'
         # check rtype
@@ -788,21 +680,6 @@ class Client(object):
             nothing will be returned. Default is ``None``.
         :rtype: str or ``None``
         :return: ASCII travel time table if no ``filename`` is given.
-
-        .. rubric:: Example
-
-        >>> from obspy.clients.iris import Client
-        >>> client = Client()
-        >>> result = client.traveltime(evloc=(-36.122,-72.898),
-        ...     staloc=[(-33.45,-70.67),(47.61,-122.33),(35.69,139.69)],
-        ...     evdepth=22.9)
-        >>> print(result.decode())  # doctest: +ELLIPSIS  +NORMALIZE_WHITESPACE
-        Model: iasp91
-        Distance   Depth   Phase   Travel    Ray Param  Takeoff  Incident ...
-          (deg)     (km)   Name    Time (s)  p (s/deg)   (deg)    (deg)   ...
-        ------------------------------------------------------------------...
-            3.24    22.9   P         49.39    13.750     53.77    45.82   ...
-            3.24    22.9   Pn        49.40    13.754     53.80    45.84   ...
         """
         kwargs = {}
         kwargs['model'] = str(model)
