@@ -23,12 +23,12 @@ from obspy.core.util.obspy_types import FloatWithUncertainties
 from .quality_index import (overall_quality_index,
                             quality_index1, quality_index2, quality_index3)
 from .util import (EC8Class, ResonanceFrequencyMethod, SiteXMLBaseNode,
-                   SiteXMLValidationError, TopographySchemaA, TopographySchemaB,
-                   VelocityS30Method, Vs30ManualIndex, Vs30MethodCombined,
-                   _enum_list_property, _enum_property, _pretty_str,
-                   _resource_id_property, _scalar_property,
-                   _split_station_code,
-                   _wrapped_list_property, _wrapped_property)
+                   SiteXMLValidationError, TopographySchemaA,
+                   TopographySchemaB, VelocityS30Method, Vs30ManualIndex,
+                   Vs30MethodCombined, _enum_list_property, _enum_property,
+                   _pretty_str, _resource_id_property, _scalar_property,
+                   _split_station_code, _wrapped_list_property,
+                   _wrapped_property)
 
 
 class ValueWithUncertainty(SiteXMLBaseNode):

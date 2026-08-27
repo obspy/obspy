@@ -26,11 +26,11 @@ from obspy.core.inventory.util import ExternalReference
 from obspy.io.stationxml.core import (_attr2obj, _tag2obj, _tags2obj)
 
 from .core import (Analysis, BedrockDepth, EC8, GeologicalUnit, H800,
-                   LiteratureSource, ResonanceFrequency, Revision, 
+                   LiteratureSource, ResonanceFrequency, Revision,
                    SERASite, SERASiteOwner, SiteDescription,
                    ValueWithUncertainty, VelocityProfile, VelocityProfileData,
                    VelocityProfileSet, VelocityS30)
-from .util import (SiteXMLIOError, SiteXMLValidationError, 
+from .util import (SiteXMLIOError, SiteXMLValidationError,
                    _split_station_code)
 
 # Define some constants for writing SiteXML files.
