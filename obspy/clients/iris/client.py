@@ -161,144 +161,17 @@ class Client(object):
                 fh.close()
 
     # new deprecation in 1.5.1, remove in 1.6.0 or 1.7.0
-    @deprecated(
-        'EarthScope has announced the retirement of its "irisws-timeseries" '
-        'web service for August 26, 2026. For details see '
-        'https://www.earthscope.org/news/mailing-lists/. This method will '
-        'be removed in a future obspy release, so please adjust accordingly.')
+    @deprecated()
     def timeseries(self, network, station, location, channel,
                    starttime, endtime, filter=[], filename=None,
                    output='miniseed', **kwargs):
         """
-        Low-level interface for `timeseries` Web service of EarthScope
-        (https://service.earthscope.org/irisws/timeseries/)- release 1.3.5
-        (2012-06-07).
+        DEPRECATED as of 1.5.1 - will be removed in future release
 
-        This method fetches segments of seismic data and returns data formatted
-        in either MiniSEED, ASCII or SAC. It can optionally filter the data.
-
-        **Channel and temporal constraints (required)**
-
-        The four SCNL parameters (Station - Channel - Network - Location) are
-        used to determine the channel of interest, and are all required.
-        Wildcards are not accepted.
-
-        :type network: str
-        :param network: Network code, e.g. ``'IU'``.
-        :type station: str
-        :param station: Station code, e.g. ``'ANMO'``.
-        :type location: str
-        :param location: Location code, e.g. ``'00'``
-        :type channel: str
-        :param channel: Channel code, e.g. ``'BHZ'``.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Start date and time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End date and time.
-
-        **Filter Options**
-
-        The following parameters act as filters upon the time series.
-
-        :type filter: list[str], optional
-        :param filter: Filter list.  List order matters because each filter
-            operation is performed in the order given. For example
-            ``filter=["demean", "lp=2.0"]`` will demean and then apply a
-            low-pass filter, while ``filter=["lp=2.0", "demean"]`` will apply
-            the low-pass filter first, and then demean.
-
-            ``"taper=WIDTH,TYPE"``
-                Apply a time domain symmetric tapering function to the
-                time series data. The width is specified as a fraction of the
-                trace length from 0 to 0.5. The window types HANNING (default),
-                HAMMING, or COSINE may be optionally followed, e.g.
-                ``"taper=0.25"`` or ``"taper=0.5,COSINE"``.
-            ``"envelope=true"``
-                Calculate the envelope of the time series. This calculation
-                uses a Hilbert transform approximated by a time domain filter.
-            ``"lp=FREQ"``
-                Low-pass filter the time-series using an IIR 4th order filter,
-                using this value (in Hertz) as the cutoff, e.g. ``"lp=1.0"``.
-            ``"hp=FREQ"``
-                High-pass filter the time-series using an IIR 4th order filter,
-                using this value (in Hertz) as the cutoff, e.g. ``"hp=3.0"``.
-            ``"bp=FREQ1,FREQ2"``
-                Band pass frequencies, in Hz, e.g. ``"bp=0.1,1.0"``.
-            ``"demean"``
-                Remove mean value from data.
-            ``"scale"``
-                Scale data samples by specified factor, e.g. ``"scale=2.0"``
-                If ``"scale=AUTO"``, the data will be scaled by the stage-zero
-                gain. Cannot specify both ``scale`` and ``divscale``.
-                Cannot specify both ``correct`` and ``scale=AUTO``.
-            ``"divscale"``
-                Scale data samples by the inverse of the specified factor, e.g
-                ``"divscale=2.0"``. You cannot specify both ``scale`` and
-                ``divscale``.
-            ``"correct"``
-                Apply instrument correction to convert to earth units. Uses
-                either deconvolution or polynomial response correction. Cannot
-                specify both ``correct`` and ``scale=AUTO``. Correction
-                on > 10^7 samples will result in an error. At a sample rate of
-                20 Hz, 10^7 samples is approximately 5.8 days.
-            ``"freqlimits=FREQ1,FREQ2,FREQ3,FREQ4"``
-                Specify an envelope for a spectrum taper for deconvolution,
-                e.g. ``"freqlimits=0.0033,0.004,0.05,0.06"``. Frequencies are
-                specified in Hertz. This cosine taper scales the spectrum from
-                0 to 1 between FREQ1 and FREQ2 and from 1 to 0 between FREQ3
-                and FREQ4. Can only be used with the correct option. Cannot be
-                used in combination with the ``autolimits`` option.
-            ``"autolimits=X,Y"``
-                Automatically determine frequency limits for deconvolution,
-                e.g. ``"autolimits=3.0,3.0"``. A pass band is determined for
-                all frequencies with the lower and upper corner cutoffs defined
-                in terms of dB down from the maximum amplitude. This algorithm
-                is designed to work with flat responses, i.e. a response in
-                velocity for an instrument which is flat to velocity. Other
-                combinations will likely result in unsatisfactory results.
-                Cannot be used in combination with the ``freqlimits`` option.
-            ``"units=UNIT"``
-                Specify output units. Can be DIS, VEL, ACC or DEF, where DEF
-                results in no unit conversion, e.g. ``"units=VEL"``. Option
-                ``units`` can only be used with ``correct``.
-            ``"diff"``
-                Differentiate using 2 point (uncentered) method
-            ``"int"``
-                Integrate using trapezoidal (midpoint) method
-            ``"decimate=SAMPLERATE"``
-                Specify the sample-rate to decimate to, e.g.
-                ``"decimate=2.0"``. The sample-rate of the source divided by
-                the given sample-rate must be factorable by 2,3,4,7.
-
-        **Miscelleneous options**
-
-        :type filename: str, optional
-        :param filename: Name of a output file. If this parameter is given
-            nothing will be returned. Default is ``None``.
-        :type output: str, optional
-        :param output: Output format if parameter ``filename`` is used.
-
-            ``'ascii'``
-                Data format, 1 column (values)
-            ``'ascii2'``
-                ASCII data format, 2 columns (time, value)
-            ``'ascii'``
-                Same as ascii2
-            ``'audio'``
-                audio WAV file
-            ``'miniseed'``
-                MiniSEED format
-            ``'plot'``
-                A simple plot of the time series
-            ``'saca'``
-                SAC, ASCII format
-            ``'sacbb'``
-                SAC, binary big-endian format
-            ``'sacbl'``
-                SAC, binary little-endian format
-
-        :rtype: :class:`~obspy.core.stream.Stream` or ``None``
-        :return: ObsPy Stream object if no ``filename`` is given.
+        EarthScope has announced the retirement of its "irisws-timeseries" web
+        service for August 26, 2026. For details see
+        https://www.earthscope.org/news/mailing-lists/. This method will be
+        removed in a future obspy release, so please adjust accordingly.
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
@@ -337,53 +210,16 @@ class Client(object):
         return stream
 
     # new deprecation in 1.5.1, remove in 1.6.0 or 1.7.0
-    @deprecated(
-        'EarthScope has announced the retirement of its "irisws-resp" web '
-        'service for August 31, 2026. For details see '
-        'https://www.earthscope.org/news/mailing-lists/. This method will '
-        'be removed in a future obspy release, so please adjust accordingly.')
+    @deprecated()
     def resp(self, network, station, location="*", channel="*",
              starttime=None, endtime=None, filename=None, **kwargs):
         """
-        Low-level interface for `resp` Web service of EarthScope
-        (https://service.earthscope.org/irisws/resp/) - 1.4.1 (2011-04-14).
+        DEPRECATED as of 1.5.1 - will be removed in future release
 
-        This method provides access to channel response information in the SEED
-        `RESP <https://ds.iris.edu/ds/nodes/dmc/kb/questions/60>`_
-        format (as used by evalresp). Users can query for channel response by
-        network, station, channel, location and time.
-
-        :type network: str
-        :param network: Network code, e.g. ``'IU'``.
-        :type station: str
-        :param station: Station code, e.g. ``'ANMO'``.
-        :type location: str, optional
-        :param location: Location code, e.g. ``'00'``, wildcards allowed.
-            Defaults to ``'*'``.
-        :type channel: str, optional
-        :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
-            Defaults to ``'*'``.
-
-        **Temporal constraints**
-
-        The following three parameters impose time constraints on the query.
-        Time may be requested through the use of either time OR the start and
-        end times. If no time is specified, then the current time is assumed.
-
-        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param time: Find the response for the given time. Time cannot be used
-            with ``starttime`` or ``endtime`` parameters
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param starttime: Start time, may be used in conjunction with
-            ``endtime``.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param endtime: End time, may be used in conjunction with
-            ``starttime``.
-        :type filename: str, optional
-        :param filename: Name of a output file. If this parameter is given
-            nothing will be returned. Default is ``None``.
-        :rtype: str or ``None``
-        :return: SEED RESP file as string if no ``filename`` is given..
+        EarthScope has announced the retirement of its "irisws-resp" web
+        service for August 31, 2026. For details see
+        https://www.earthscope.org/news/mailing-lists/. This method will
+        be removed in a future obspy release, so please adjust accordingly.
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
@@ -420,43 +256,16 @@ class Client(object):
         return self._to_file_or_data(filename, data)
 
     # new deprecation in 1.5.1, remove in 1.6.0 or 1.7.0
-    @deprecated(
-        'EarthScope has announced the retirement of its "irisws-sacpz" web '
-        'service for August 31, 2026. For details see '
-        'https://www.earthscope.org/news/mailing-lists/. This method will '
-        'be removed in a future obspy release, so please adjust accordingly.')
+    @deprecated()
     def sacpz(self, network, station, location="*", channel="*",
               starttime=None, endtime=None, filename=None, **kwargs):
         """
-        Low-level interface for `sacpz` Web service of EarthScope
-        (https://service.earthscope.org/irisws/sacpz/)
-        release 1.1.1 (2012-1-9).
+        DEPRECATED as of 1.5.1 - will be removed in future release
 
-        This method provides access to instrument response information
-        (per-channel) as poles and zeros in the ASCII format used by SAC and
-        other programs. Users can query for channel response by network,
-        station, channel, location and time.
-
-        :type network: str
-        :param network: Network code, e.g. ``'IU'``.
-        :type station: str
-        :param station: Station code, e.g. ``'ANMO'``.
-        :type location: str, optional
-        :param location: Location code, e.g. ``'00'``, wildcards allowed.
-            Defaults to ``'*'``.
-        :type channel: str, optional
-        :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
-            Defaults to ``'*'``.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param starttime: Start date and time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param endtime: End date and time. Requires ``starttime`` parameter.
-        :type filename: str, optional
-        :param filename: Name of a output file. If this parameter is given
-            nothing will be returned. Default is ``None``.
-        :rtype: str or ``None``
-        :return: String with SAC poles and zeros information if no ``filename``
-            is given.
+        EarthScope has announced the retirement of its "irisws-sacpz" web
+        service for August 31, 2026. For details see
+        https://www.earthscope.org/news/mailing-lists/. This method will
+        be removed in a future obspy release, so please adjust accordingly.
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
@@ -487,41 +296,15 @@ class Client(object):
         return self._to_file_or_data(filename, data)
 
     # new deprecation in 1.5.1, remove in 1.6.0 or 1.7.0
-    @deprecated(
-        'EarthScope has announced the retirement of its "irisws-distaz" '
-        'web service for August 27, 2026. For details see '
-        'https://www.earthscope.org/news/mailing-lists/. This method will '
-        'be removed in a future obspy release, so please adjust accordingly.')
+    @deprecated()
     def distaz(self, stalat, stalon, evtlat, evtlon):
         """
-        Low-level interface for `distaz` Web service of EarthScope
-        (https://service.earthscope.org/irisws/distaz/) - release 1.0.3 (2016).
+        DEPRECATED as of 1.5.1 - will be removed in future release
 
-        This method will calculate the great-circle angular distance, azimuth,
-        and backazimuth between two geographic coordinate pairs. All results
-        are reported in degrees, with azimuth and backazimuth measured
-        clockwise from North.
-
-        :type stalat: float
-        :param stalat: Station latitude.
-        :type stalon: float
-        :param stalon: Station longitude.
-        :type evtlat: float
-        :param evtlat: Event latitude.
-        :type evtlon: float
-        :param evtlon: Event longitude.
-        :rtype: dict
-        :return: Dictionary containing values for azimuth, backazimuth and
-            distance.
-
-        The ``azimuth`` is the angle from the station to the event, while the
-        ``backazimuth`` is the angle from the event to the station.
-
-        Latitudes are converted to geocentric latitudes using the WGS84
-        spheroid to correct for ellipticity.
-
-        The ``distance`` (in degrees) and ``distancemeters`` are the distance
-        between the two points on the spheroid.
+        EarthScope has announced the retirement of its "irisws-distaz"
+        web service for August 27, 2026. For details see
+        https://www.earthscope.org/news/mailing-lists/. This method will
+        be removed in a future obspy release, so please adjust accordingly.
         """
         # build up query
         try:
@@ -540,30 +323,14 @@ class Client(object):
         results['azimuth'] = float(data.azimuth)
         return results
 
-    @deprecated(
-        'EarthScope has announced the retirement of its Flinn-Engdahl web '
-        'service on or after July 6th 2026. Try using '
-        'obspy.geodetics.flinnengdahl instead.')
+    @deprecated()
     def flinnengdahl(self, lat, lon, rtype="both"):
         """
-        Low-level interface for `flinnengdahl` Web service of EarthScope
-        (https://service.earthscope.org/irisws/flinnengdahl/) - release 1.1
-        (2011-06-08).
+        DEPRECATED as of 1.5.1 - will be removed in future release
 
-        This method converts a latitude, longitude pair into either a
-        `Flinn-Engdahl <https://en.wikipedia.org/wiki/Flinn-Engdahl_regions>`_
-        seismic region code or region name.
-
-        :type lat: float
-        :param lat: Latitude of interest.
-        :type lon: float
-        :param lon: Longitude of interest.
-        :type rtype: str, optional
-        :param rtype: Return type. Can be one of ``'code'``, ``'region'`` or
-            ``'both'``. Defaults to ``'both'``.
-        :rtype: int, str, or tuple
-        :returns: Returns Flinn-Engdahl region code or name or both, depending
-            on the request type parameter ``rtype``.
+        EarthScope has announced the retirement of its Flinn-Engdahl web
+        service on or after July 6th 2026. Try using
+        obspy.geodetics.flinnengdahl instead.
         """
         service = 'flinnengdahl'
         # check rtype
@@ -591,95 +358,18 @@ class Client(object):
             raise Exception(msg)
 
     # new deprecation in 1.5.1, remove in 1.6.0 or 1.7.0
-    @deprecated(
-        'EarthScope has announced the retirement of its "irisws-traveltime" '
-        'web service for August 27, 2026. For details see '
-        'https://www.earthscope.org/news/mailing-lists/. This method will '
-        'be removed in a future obspy release, so please adjust accordingly.')
+    @deprecated()
     def traveltime(self, model='iasp91', phases=DEFAULT_PHASES, evdepth=0.0,
                    distdeg=None, distkm=None, evloc=None, staloc=None,
                    noheader=False, traveltimeonly=False, rayparamonly=False,
                    mintimeonly=False, filename=None):
         """
-        Low-level interface for `traveltime` Web service of EarthScope
-        (https://service.earthscope.org/irisws/traveltime/) - release 1.1.1
-        (2012-05-15).
+        DEPRECATED as of 1.5.1 - will be removed in future release
 
-        This method will calculates travel-times for seismic phases using a 1-D
-        spherical earth model.
-
-        :type model: str, optional
-        :param model: Name of 1-D earth velocity model to be used. Available
-            models include:
-
-            * ``'iasp91'`` (default) - by Int'l Assoc of Seismology and
-              Physics of the Earth's Interior
-            * ``'prem'`` - Preliminary Reference Earth Model
-            * ``'ak135'``
-
-        :type phases: list[str], optional
-        :param phases: Comma separated list of phases. The default is as
-            follows::
-
-                ['p','s','P','S','Pn','Sn','PcP','ScS','Pdiff','Sdiff',
-                 'PKP','SKS','PKiKP','SKiKS','PKIKP','SKIKS']
-
-            Invalid phases will be ignored. Valid arbitrary phases can be made
-            up e.g. sSKJKP. See
-            `TauP documentation <http://www.seis.sc.edu/TauP/>`_ for more
-            information.
-        :type evdepth: float, optional
-        :param evdepth: The depth of the event, in kilometers. Default is ``0``
-            km.
-
-        **Geographical Parameters - required**
-
-        The travel time web service requires a great-circle distance between an
-        event and station be specified. There are three methods of specifying
-        this distance:
-
-        * Specify a great-circle distance in degrees, using ``distdeg``
-        * Specify a great-circle distance in kilometers, using ``distkm``
-        * Specify an event location and one or more station locations,
-          using ``evloc`` and ``staloc``
-
-        :type distdeg: float or list[float], optional
-        :param evtlon: Great-circle distance from source to station, in decimal
-            degrees. Multiple distances may be specified as a list.
-        :type distkm: float or list[float], optional
-        :param distkm: Distance between the source and station, in kilometers.
-            Multiple distances may be specified as a list.
-        :type evloc: tuple(float, float), optional
-        :param evloc: The Event location (lat,lon) using decimal degrees.
-        :type staloc: tuple(float, float) or list[tuple(float, float)],
-            optional
-        :param staloc: Station locations for which the phases will be listed.
-            The general format is (lat,lon). Specify multiple station locations
-            with a list, e.g. ``[(lat1,lon1),(lat2,lon2),...,(latn,lonn)]``.
-
-        **Output Parameters**
-
-        :type noheader: bool, optional
-        :param noheader: Specifying noheader will strip the header from the
-            resulting table. Defaults to ``False``.
-        :type traveltimeonly: bool, optional
-        :param traveltimeonly: Returns a space-separated list of travel
-            times, in seconds. Defaults to ``False``.
-
-            .. note:: Travel times are produced in ascending order regardless
-                of the order in which the phases are specified
-
-        :type rayparamonly: bool, optional
-        :param rayparamonly: Returns a space-separated list of ray parameters,
-            in sec/deg.. Defaults to ``False``.
-        :type mintimeonly: bool, optional
-        :param mintimeonly: Returns only the first arrival of each phase for
-            each distance. Defaults to ``False``.
-        :type filename: str, optional
-        :param filename: Name of a output file. If this parameter is given
-            nothing will be returned. Default is ``None``.
-        :rtype: str or ``None``
-        :return: ASCII travel time table if no ``filename`` is given.
+        EarthScope has announced the retirement of its "irisws-traveltime"
+        web service for August 27, 2026. For details see
+        https://www.earthscope.org/news/mailing-lists/. This method will
+        be removed in a future obspy release, so please adjust accordingly.
         """
         kwargs = {}
         kwargs['model'] = str(model)

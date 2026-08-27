@@ -242,9 +242,7 @@ class TestClient():
 def test_flinnengdahl_deprecation_warning():
     with mock.patch('obspy.clients.iris.Client._fetch'):
         client = Client()
-        msg = ('EarthScope has announced the retirement of its Flinn-Engdahl '
-               'web service on or after July 6th 2026. Try using '
-               'obspy.geodetics.flinnengdahl instead')
+        msg = ('EarthScope has announced the retirement')
         with pytest.warns(ObsPyDeprecationWarning, match=msg):
             with pytest.raises(Exception, match="410: Gone"):
                 client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
