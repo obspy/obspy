@@ -27,6 +27,8 @@ Changes:
    * deprecate flinnengdahl web service, which EarthScope announced will be
      retired in July 2026. Users should use obspy.geodetics instead.
      (see #3756)
+   * deprecate all services except the evalresp service. Services get retired
+     throughout August 2026 (see #3791)
  - obspy.clients.neic:
    * change of IP address and domain to 137.227.252.145 and cwbp2.usgs.gov
      (see #3792).
