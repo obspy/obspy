@@ -4,7 +4,6 @@ The obspy.clients.iris.client test suite.
 """
 import numpy as np
 import pytest
-from unittest import mock
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
@@ -238,9 +237,7 @@ class TestClient():
                 client.timeseries("IU", "ANMO", "00", "BHZ", t1, t2,
                                   filter=["correct"])
 
-
-def test_flinnengdahl_deprecation_warning():
-    with mock.patch('obspy.clients.iris.Client._fetch'):
+    def test_flinnengdahl_deprecation_warning(self):
         client = Client()
         msg = ('EarthScope has announced the retirement')
         with pytest.warns(ObsPyDeprecationWarning, match=msg):
