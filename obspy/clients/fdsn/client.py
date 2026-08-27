@@ -256,6 +256,13 @@ class Client(object):
                    "client short URL to 'EARTHSCOPE'.")
             warnings.warn(msg, ObsPyDeprecationWarning)
 
+        if base_url.upper() == 'IRISPH5':
+            msg = ("EarthScope PH5 WS will get retired on Sept. 1st 2026. See "
+                   "https://www.earthscope.org/news/mailing-lists/ for more "
+                   "information. The short URL 'IRISPH5' will get removed in "
+                   "a future obspy release so please adjust accordingly.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
+
         if base_url.upper() == 'RESIF':
             msg = ("RESIF is now EPOSFR. Webservices and client will be "
                    "shutdown in 2026. Please consider changing the FDSN "
