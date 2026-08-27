@@ -698,7 +698,7 @@ class VelocityProfileSet(SiteIndicator):
         output = []
         output.append(super().__str__())
         if self.velocity_profiles:
-            for i in range(0, len(self.velocity_profiles)):
+            for i in range(len(self.velocity_profiles)):
                 output.append("\nVelocity Profile # " + str(i) + "\n")
                 output.append(self.velocity_profiles[i].__str__())
         return "\n".join(output)
@@ -2095,7 +2095,7 @@ class SERASite(SiteXMLBaseNode):
         Example:
 
         >>> from obspy.io.sitexml.core import (EC8, ValueWithUncertainty,
-                                                VelocityS30)
+        ...                                    VelocityS30)
         >>> site.add_site_indicator([EC8("B")])  # doctest: +SKIP
         >>> site.add_site_indicator(  # doctest: +SKIP
         ...     [VelocityS30(ValueWithUncertainty(620.0))],
@@ -2439,7 +2439,7 @@ class SERASite(SiteXMLBaseNode):
         output.append(self.site_description.__str__())
 
         if self.analysis:
-            for i in range(0, len(self.analysis)):
+            for i in range(len(self.analysis)):
                 output.append("\nAnalysis # " + str(i) + "\n")
                 output.append(self.analysis[i].__str__())
         return "\n".join(output)
