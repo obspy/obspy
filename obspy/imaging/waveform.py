@@ -467,16 +467,22 @@ class WaveformPlotting(object):
         intervals = self.extreme_values.shape[0]
 
         for _i in range(intervals):
-            # Create offset array.
+            row_center = intervals - _i - 0.5
+
+            lower = self.extreme_values[_i, :, 0]
+            upper = self.extreme_values[_i, :, 1]
+
+            waveform_center = np.ma.mean((lower + upper) / 2.0)
+
             y_values = np.ma.empty(self.width * 2)
-            y_values.fill(intervals - (_i + 1))
             # Add min and max values.
-            y_values[0::2] += self.extreme_values[_i, :, 0]
-            y_values[1::2] += self.extreme_values[_i, :, 1]
+            y_values[0::2] = row_center + lower - waveform_center
+            y_values[1::2] = row_center + upper - waveform_center
             # Plot the values.
             ax.plot(x_values, y_values,
                     color=self.color[_i % len(self.color)],
                     linewidth=self.linewidth, linestyle=self.linestyle)
+
         # Plot the scale, if required.
         scale_unit = kwargs.get("data_unit", None)
         if scale_unit is not None:

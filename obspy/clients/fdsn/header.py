@@ -105,6 +105,10 @@ URL_MAPPINGS = {
     "BGR": "https://eida.bgr.de",
     "BGS": 'https://eida.bgs.ac.uk',
     "EARTHSCOPE": "https://service.earthscope.org",
+    # the following will use USGS as endpoint for event web service.
+    # to keep things simple we just keep the base URL from earthscope here and
+    # simply set a custom event service mapping during Client init
+    "EARTHSCOPE+USGS": "https://service.earthscope.org",
     "EIDA": "http://eida-federator.ethz.ch",
     "EPOSFR": "https://seisdata.epos-france.fr",
     "ETH": "https://eida.ethz.ch",
@@ -139,6 +143,8 @@ URL_MAPPINGS = {
     "USGS": "https://earthquake.usgs.gov",
     "USP": "https://sismo.iag.usp.br"
 }
+# Earthscope PH5 WS will get removed Sept 1 2026, we start showing a warning
+# with 1.5.1, so get rid of it completely with 1.6.0 or 1.7.0
 URL_MAPPING_SUBPATHS = {
     "IRISPH5": "/ph5ws",
 }

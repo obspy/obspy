@@ -154,10 +154,11 @@ class Client(object):
         else:
             return False
 
-    def __init__(self, base_url="EARTHSCOPE", major_versions=None, user=None,
-                 password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=120, service_mappings=None, force_redirect=False,
-                 eida_token=None, _discover_services=True, use_gzip=True):
+    def __init__(self, base_url="EARTHSCOPE+USGS", major_versions=None,
+                 user=None, password=None, user_agent=DEFAULT_USER_AGENT,
+                 debug=False, timeout=120, service_mappings=None,
+                 force_redirect=False, eida_token=None,
+                 _discover_services=True, use_gzip=True):
         """
         Initializes an FDSN Web Service client.
 
@@ -173,7 +174,14 @@ class Client(object):
         :type base_url: str
         :param base_url: Base URL of FDSN web service compatible server
             (e.g. "https://service.earthscope.org") or key string for
-            recognized server (one of %s).
+            recognized server (one of %s). To mimick the previous behavior of
+            former IRIS (now EarthScope) as default which used to mirror the
+            event web service of USGS but which since recently discontinued
+            their event web service mirror, we made the client by default (when
+            `base_url` is not explicitly specified otherwise) use EarthScope
+            for dataselect and station web services and use USGS for event web
+            service, indicated by a `base_url` URL mapping named
+            'EARTHSCOPE+USGS' (unless `service_mappings` is specified).
         :type major_versions: dict
         :param major_versions: Allows to specify custom major version numbers
             for individual services (e.g.
@@ -248,6 +256,13 @@ class Client(object):
                    "client short URL to 'EARTHSCOPE'.")
             warnings.warn(msg, ObsPyDeprecationWarning)
 
+        if base_url.upper() == 'IRISPH5':
+            msg = ("EarthScope PH5 WS will get retired on Sept. 1st 2026. See "
+                   "https://www.earthscope.org/news/mailing-lists/ for more "
+                   "information. The short URL 'IRISPH5' will get removed in "
+                   "a future obspy release so please adjust accordingly.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
+
         if base_url.upper() == 'RESIF':
             msg = ("RESIF is now EPOSFR. Webservices and client will be "
                    "shutdown in 2026. Please consider changing the FDSN "
@@ -255,6 +270,9 @@ class Client(object):
             warnings.warn(msg, ObsPyDeprecationWarning)
 
         if base_url.upper() in URL_MAPPINGS:
+            if base_url.upper() == "EARTHSCOPE+USGS" and not service_mappings:
+                service_mappings = {
+                    'event': 'https://earthquake.usgs.gov/fdsnws/event/1'}
             url_mapping = base_url.upper()
             base_url = URL_MAPPINGS[url_mapping]
             url_subpath = URL_MAPPING_SUBPATHS.get(
