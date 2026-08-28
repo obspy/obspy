@@ -2,6 +2,9 @@ master
 ======
 
 Changes:
+ - General:
+   * adjusted minimum dependency versions to Python >=3.12, numpy >=2.2,
+     scipy >=1.15 and matplotlib >=3.9 (see #3570)
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
