@@ -128,6 +128,7 @@ def _is_segy(file):
 
 def _read_segy(filename, headonly=False, byteorder=None,
                textual_header_encoding=None, unpack_trace_headers=False,
+               skip_corrupt_traces=False,
                **kwargs):  # @UnusedVariable
     """
     Reads a SEG Y file and returns an ObsPy Stream object.
@@ -157,6 +158,11 @@ def _read_segy(filename, headonly=False, byteorder=None,
         header values can still be accessed and will be calculated on the fly
         but tab completion will no longer work. Look in the headers.py for a
         list of all possible trace header values. Defaults to ``False``.
+    :type skip_corrupt_traces: bool
+    :param skip_corrupt_traces: Large segy files often have corrup traces,
+     setting this parameter to True causes them to be skipped instead of 
+     raising a SEGYTraceReadingError.Defaulted to False so as not to 
+     upset any exsisting workflows which use this.
     :returns: A ObsPy :class:`~obspy.core.stream.Stream` object.
 
     .. rubric:: Example
@@ -173,7 +179,8 @@ def _read_segy(filename, headonly=False, byteorder=None,
     segy_object = _read_segyrev1(
         filename, endian=byteorder,
         textual_header_encoding=textual_header_encoding,
-        unpack_headers=unpack_trace_headers)
+        unpack_headers=unpack_trace_headers,
+        skip_corrupt_traces=skip_corrupt_traces)
     # Create the stream object.
     stream = Stream()
     # SEGY has several file headers that apply to all traces. They will be
@@ -201,10 +208,17 @@ def _read_segy(filename, headonly=False, byteorder=None,
 
     # Convert traces to ObsPy Trace objects.
     for tr in segy_object.traces:
-        stream.append(tr.to_obspy_trace(
-            headonly=headonly,
-            unpack_trace_headers=unpack_trace_headers))
-
+        try:
+            stream.append(tr.to_obspy_trace(
+                headonly=headonly,
+                unpack_trace_headers=unpack_trace_headers))
+        except ValueError as e:
+            #skip the remaining corrupt traces
+            if(not skip_corrupt_traces):
+                raise e
+            #otherwise stop at the current trace
+            break
+            
     return stream
 
 
