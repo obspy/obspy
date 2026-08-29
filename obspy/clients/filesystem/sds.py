@@ -112,6 +112,78 @@ class Client(object):
         self.fileborder_seconds = fileborder_seconds
         self.fileborder_samples = fileborder_samples
 
+    def get_gaps(self, network, station, location, channel, starttime,
+                 endtime, sds_type=None, **kwargs):
+        """
+        Get a list of gaps in the SDS archive.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+            Wildcards '*' and '?' are supported.
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+            Wildcards '*' and '?' are supported.
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+            Wildcards '*' and '?' are supported.
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+            Wildcards '*' and '?' are supported.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start of requested time window.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End of requested time window.
+        :type merge: int or None
+        :param merge: Specifies, which merge operation should be performed
+            on the stream before returning the data. Default (``-1``) means
+            only a conservative cleanup merge is performed to merge seamless
+            traces (e.g. when reading across day boundaries). See
+            :meth:`Stream.merge(...) <obspy.core.stream.Stream.merge>` for
+            details. If set to ``None`` (or ``False``) no merge operation at
+            all will be performed.
+        :type sds_type: str
+        :param sds_type: Override SDS data type identifier that was specified
+            during client initialization.
+        :param kwargs: Additional kwargs that get passed on to
+            :func:`~obspy.core.stream.read` internally, mostly for internal
+            low-level purposes used by other methods.
+        :rtype: :class:`~obspy.core.stream.Stream`
+        """
+        if starttime >= endtime:
+            msg = ("'endtime' must be after 'starttime'.")
+            raise ValueError(msg)
+        sds_type = sds_type or self.sds_type
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", _headonly_warning_msg, UserWarning,
+                "obspy.core.stream")
+            st = self.get_waveforms(
+                network=network, station=station, location=location,
+                channel=channel, starttime=starttime, endtime=endtime,
+                sds_type=sds_type, headonly=True, _no_trim_or_merge=True)
+        # even if the warning was silently caught and not shown it gets
+        # registered in the __warningregistry__ and will not be shown
+        # subsequently in a place were it's not caught
+        # see https://bugs.python.org/issue4180
+        # see e.g. http://blog.ionelmc.ro/2013/06/26/testing-python-warnings/
+        try:
+            from obspy.core.stream import __warningregistry__ as \
+                stream_warningregistry
+        except ImportError:
+            # import error means no warning has been issued from
+            # obspy.core.stream before, so nothing to do.
+            pass
+        else:
+            for key in list(stream_warningregistry.keys()):
+                if key[0] == _headonly_warning_msg:
+                    stream_warningregistry.pop(key)
+        st.sort(keys=['starttime', 'endtime'])
+        st.traces = [tr for tr in st
+                     if not (tr.stats.endtime < starttime or
+                             tr.stats.starttime > endtime)]
+
+        return st.get_gaps()
+
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime, merge=-1, sds_type=None, **kwargs):
         """
