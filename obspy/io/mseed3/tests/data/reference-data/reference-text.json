@@ -1,0 +1,17 @@
+[{
+    "SID": "FDSN:XX_TEST__L_O_G",
+    "RecordLength": 294,
+    "FormatVersion": 3,
+    "Flags": {
+        "RawUInt8": 0
+    },
+    "StartTime": "2022-06-05T20:32:38.123456789Z",
+    "EncodingFormat": 0,
+    "SampleRate": 0.0,
+    "SampleCount": 235,
+    "CRC": "0xC3204B22",
+    "PublicationVersion": 1,
+    "ExtraLength": 0,
+    "DataLength": 235,
+    "Data": "I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion. I watched C-beams glitter in the dark near the Tannhäuser Gate. All those moments will be lost in time, like tears...in...rain. Time to die."
+}]
