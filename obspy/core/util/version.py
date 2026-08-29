@@ -126,7 +126,7 @@ def call_git_describe(abbrev=10, dirty=True,
 
 def read_release_version():
     try:
-        with io.open(VERSION_FILE, "rt") as fh:
+        with io.open(VERSION_FILE, "rt", encoding="ascii") as fh:
             version = fh.readline()
         return version.strip()
     except IOError:
