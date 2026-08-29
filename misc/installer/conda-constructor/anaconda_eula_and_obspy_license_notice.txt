@@ -1,0 +1,8 @@
+ObsPy is licensed under the GNU Lesser General Public License Version 3 (LGPLv3).
+Using ObsPy implies agreement to the license.
+A copy of the LGPLv3 can be obtained at:
+https://opensource.org/licenses/lgpl-3.0.html
+
+Furthermore, installing this bundled Anaconda Python including ObsPy implies
+agreement to the Anaconda End User License Agreement (EULA) that can be viewed at:
+https://docs.continuum.io/anaconda/eula
