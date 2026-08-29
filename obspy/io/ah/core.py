@@ -388,11 +388,34 @@ def _pack_trace_wout_ah_dict(tr, packer, codesize, chansize,
     packer.pack_float(0)
 
     # Poles and Zeros are not provided by stream object, are set to 0
-    for _i in range(0, 30):
+    if hasattr(tr.stats, 'response'):
+        poles = tr.stats.response.get_paz().poles
+        zeros = tr.stats.response.get_paz().zeros
+        packer.pack_float(len(poles))
         packer.pack_float(0)
+        packer.pack_float(len(zeros))
         packer.pack_float(0)
-        packer.pack_float(0)
-        packer.pack_float(0)
+
+        for _i in range(1, 30):
+            try:
+                r, i = poles[_i].real, poles[_i].imag
+            except IndexError:
+                r, i = 0, 0
+            packer.pack_float(r)
+            packer.pack_float(i)
+
+            try:
+                r, i = zeros[_i].real, zeros[_i].imag
+            except IndexError:
+                r, i = 0, 0
+            packer.pack_float(r)
+            packer.pack_float(i)
+    else:
+        for _i in range(0, 30):
+            packer.pack_float(0)
+            packer.pack_float(0)
+            packer.pack_float(0)
+            packer.pack_float(0)
 
     # event info
     packer.pack_float(0)
