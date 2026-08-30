@@ -205,21 +205,27 @@ class TestStats:
         """
         Test to prevent setting a calibration factor of 0
         """
+        msg = "Calibration factor set to 0.0"
+
         x = Stats()
         # this should work
         x.update({'calib': 1.23})
-        assert x.calib, 1.23
+        assert x.calib == 1.23
+
         # this raises UserWarning
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter('error', UserWarning)
-            # 1
-            with pytest.raises(UserWarning):
-                x.__setitem__('calib', 0)
-            # 2
-            with pytest.raises(UserWarning):
-                x.update({'calib': 0})
+        # 1
+        with pytest.warns(UserWarning, match=msg):
+            x.__setitem__('calib', 0)
         # calib value should nevertheless be set to 0
-        assert x.calib, 0
+        assert x.calib == 0
+
+        # 2
+        x.calib = 1.23
+        assert x.calib == 1.23
+        with pytest.warns(UserWarning, match=msg):
+            x.update({'calib': 0})
+        # calib value should nevertheless be set to 0
+        assert x.calib == 0
 
     def test_compare_with_dict(self):
         """

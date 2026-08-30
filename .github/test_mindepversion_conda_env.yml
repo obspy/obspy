@@ -3,16 +3,16 @@ channels:
   - conda-forge
 dependencies:
   # obspy
-  - numpy=1.25
-  - scipy=1.11
-  - matplotlib=3.8
+  - numpy=2.2
+  - scipy=1.15
+  - matplotlib=3.10
   - decorator
   - lxml
   - requests
   # see pypa/setuptools#4480
   - setuptools !=71.0.1
   # see #3258
-  - sqlalchemy < 2.0
+  - sqlalchemy
   # soft dependencies
   - cartopy
   - geographiclib
@@ -20,7 +20,7 @@ dependencies:
   - pyshp != 3.0.0
   # tests
   - packaging
-  - pyproj < 3.5
+  - pyproj
   - pytest
   - pytest-cov
   - pytest-json-report >= 1.4

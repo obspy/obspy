@@ -47,14 +47,19 @@ from obspy.signal.invsim import paz_to_freq_resp
 
 dtiny = np.finfo(0.0).tiny
 
-NOISE_MODEL_FILE = Path(__file__).parent / "data" / "noise_models.npz"
+DATAPATH = Path(__file__).parent / "data"
+
+NOISE_MODEL_FILE = DATAPATH / "noise_models.npz"
 
 # timestamps before/after any valid start/end for simple comparison
 UTCDATETIME_OPEN_START = UTCDateTime("1900-01-01")
 UTCDATETIME_OPEN_END = UTCDateTime("2099-01-01")
 
 # Noise models for special_handling="infrasound"
-NOISE_MODEL_FILE_INF = Path(__file__).parent / "data" / "idc_noise_models.npz"
+NOISE_MODEL_FILE_INF = DATAPATH / "idc_noise_models.npz"
+
+# Noise model for rotational motions
+NOISE_MODEL_FILE_ROT = DATAPATH / "rotational_noise_models.npz"
 
 earthquake_models = {
     (1.5, 10): [[7.0700000e-01, 1.4140000e+00, 2.8280000e+00, 5.6600000e+00,
@@ -2290,6 +2295,91 @@ def get_idc_infra_hi_noise():
     periods = data['model_periods']
     nhnm = data['high_noise']
     return (periods, nhnm)
+
+
+def get_rlnm(output_type='angular_rate', output_db=True):
+    """
+    Returns periods and psd values for the Rotational Low Noise Model (RLNM).
+
+    For information on Rotational Low Noise Model see [Brotzer2023]_.
+
+    :type output_type: str
+    :param output_type: Type of output data. Can be 'angular_rate' (default)
+        for angular rate in rad/s, or 'angle' for angle in rad.
+    :type output_db: bool
+    :param output_db: If True (default), returns PSD values in dB. If False,
+        returns PSD values in linear units (rad**2/s**2/Hz for angular_rate or
+        rad**2/Hz for angle).
+    :rtype: tuple
+    :returns: Tuple of (periods, values) with periods (s) and PSD values
+        in dB (if output_db=True) or linear units (if output_db=False).
+    """
+    data = np.load(NOISE_MODEL_FILE_ROT)
+    periods = data['period']
+    rlnm_angular_rate = data['rlnm_rot_rate']
+
+    # Convert to requested output type
+    if output_type == 'angular_rate':
+        rlnm = rlnm_angular_rate
+    elif output_type == 'angle':
+        # Convert from angular rate PSD to angle PSD
+        # angle_PSD = angular_rate_PSD / (2*pi*f)^2
+        rlnm = rlnm_angular_rate / (2.0 * np.pi / periods) ** 2
+    else:
+        msg = ("output_type must be 'angular_rate' or 'angle', "
+               "got: %s") % output_type
+        raise ValueError(msg)
+
+    # Convert to dB if requested
+    if output_db:
+        rlnm_output = 10.0 * np.log10(rlnm)
+    else:
+        rlnm_output = rlnm
+
+    return (periods, rlnm_output)
+
+
+def get_rhnm(output_type='angular_rate', output_db=True):
+    """
+    Returns periods and psd values for the Rotational High Noise Model (RHNM).
+
+    For information on Rotational High Noise Model see [Brotzer2023]_.
+
+    :type output_type: str
+    :param output_type: Type of output data. Can be 'angular_rate' (default)
+        for angular rate in rad/s, or 'angle' for angle in rad.
+    :type output_db: bool
+    :param output_db: If True (default), returns PSD values in dB. If False,
+        returns PSD values in linear units (rad**2/s**2/Hz for angular_rate or
+        rad**2/Hz for angle).
+    :rtype: tuple
+    :returns: Tuple of (periods, values) where xaxis_values are
+        periods (s) or frequencies (Hz) and rhnm_values are PSD values in dB
+        (if output_db=True) or linear units (if output_db=False).
+    """
+    data = np.load(NOISE_MODEL_FILE_ROT)
+    periods = data['period']
+    rhnm_angular_rate = data['rhnm_rot_rate']
+
+    # Convert to requested output type
+    if output_type == 'angular_rate':
+        rhnm = rhnm_angular_rate
+    elif output_type == 'angle':
+        # Convert from angular rate PSD to angle PSD
+        # angle_PSD = angular_rate_PSD / (2*pi*f)^2
+        rhnm = rhnm_angular_rate / (2.0 * np.pi / periods) ** 2
+    else:
+        msg = ("output_type must be 'angular_rate' or 'angle', "
+               "got: %s") % output_type
+        raise ValueError(msg)
+
+    # Convert to dB if requested
+    if output_db:
+        rhnm_output = 10.0 * np.log10(rhnm)
+    else:
+        rhnm_output = rhnm
+
+    return (periods, rhnm_output)
 
 
 def _check_npz_ppsd_version(ppsd, npzfile):

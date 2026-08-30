@@ -260,19 +260,18 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime,
                 int(spoint[1] + offset + adapt / 2)]
         ex = ea[int(spoint[0] + offset - adapt / 2):
                 int(spoint[0] + offset + adapt / 2)]
-        zx -= zx.mean()
-        nx -= nx.mean()
-        ex -= ex.mean()
+        zx = zx - zx.mean()
+        nx = nx - nx.mean()
+        ex = ex - ex.mean()
 
-        mask = (stream[0][:] ** 2 + stream[1][:] ** 2 + stream[2][:] ** 2) > \
-            noise_thres
-        xx = np.zeros((3, mask.sum()), dtype=np.complex128)
-        # East
-        xx[0, :] = ea
-        # North
-        xx[1, :] = na
-        # Z
-        xx[2, :] = za
+        # exclude low-energy samples *inside the analysis window* that fall
+        # within the noise sphere of radius sqrt(noise_thres) (Vidale 1986)
+        power = np.abs(ex) ** 2 + np.abs(nx) ** 2 + np.abs(zx) ** 2
+        mask = power > noise_thres
+        if mask.sum() < 2:
+            mask = np.ones_like(mask)
+        # build the 3xN data matrix from the *windowed* analytic signals
+        xx = np.vstack([ex[mask], nx[mask], zx[mask]])
 
         covmat = np.cov(xx)
         eigvec, eigenval, v = np.linalg.svd(covmat)
