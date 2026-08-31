@@ -437,12 +437,12 @@ class TestWaveformPlugins:
 
     def test_raise_on_unknown_format(self):
         """
-        Test case for issue #338:
+        Writes and reads a small non-empty file.
         """
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
-            # create empty file
-            open(tmpfile, 'wb').close()
+            # create small non-empty file
+            open(tmpfile, 'wb').write(b'\x82\x00\x00')
             # using format keyword
             with pytest.raises(TypeError):
                 read(tmpfile)
