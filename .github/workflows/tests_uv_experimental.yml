@@ -6,8 +6,9 @@
 # Purpose: early warning on how ObsPy and its *core* dependency stack fare on
 # these builds, well before they are officially supported. This is a CANARY,
 # not a gate: every job is continue-on-error, so a red run here never blocks a
-# PR or master. Runs manually, weekly, and opt-in per-PR (label below) -- NOT
-# on every PR, because the source builds are slow and expected to be flaky.
+# PR or master. It triggers exactly like tests_uv.yml -- every PR (opt out with
+# the `no_ci` label) and every push to master / maintenance_*.*.x -- but, being
+# non-gating, its failures are informational only.
 #
 # Dependency set: core ObsPy (.) + test runners only, from
 # .github/uv_mindep_requirements.txt (same slim set as the `mindep` variant in
@@ -29,11 +30,13 @@
 name: tests-uv-experimental
 
 on:
-  workflow_dispatch:
-  schedule:
-    # Weekly, Monday 05:00 UTC.
-    - cron: '0 5 * * 1'
   pull_request:
+  push:
+    branches:
+      - master
+      - 'maintenance_*.*.x'
+    tags-ignore:
+      - '**'
 
 concurrency:
   group: tests-uv-experimental-${{ github.event.pull_request.number || github.run_id }}
@@ -41,11 +44,9 @@ concurrency:
 
 jobs:
   run_tests_uv_experimental:
-    # On PRs, run only when explicitly opted in with the `test_experimental`
-    # label; always run on manual dispatch and the weekly schedule.
-    if: >-
-      github.event_name != 'pull_request' ||
-      contains(github.event.pull_request.labels.*.name, 'test_experimental')
+    # Same gating as tests_uv.yml: always on push; on PRs unless opted out with
+    # the `no_ci` label.
+    if: github.event_name == 'push' || !contains(github.event.pull_request.labels.*.name, 'no_ci')
     strategy:
       fail-fast: false
       matrix:
@@ -56,7 +57,15 @@ jobs:
     # Canary: never gate on these.
     continue-on-error: true
     env:
+      # Distinct node name so exotic results are identifiable on tests.obspy.org
+      # and never conflated with the supported matrix.
       OBSPY_NODE_NAME: gh-actions-uv-experimental
+      # Report metadata consumed by obspy/conftest.py get_github_actions_info(),
+      # same as tests_uv.yml, so --report submissions are traceable to the PR
+      # and the Actions run. Network-only secrets are omitted (no --network job).
+      ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      CI_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - uses: actions/checkout@v7
         with:
