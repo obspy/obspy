@@ -1,0 +1,8 @@
+# Test tooling for the uv `mindep` CI variant. The scenario installs core
+# ObsPy only (via `.`, i.e. install_requires) plus these test runners, with NO
+# optional feature dependencies (no cartopy, geographiclib, pyshp, pyproj, ...).
+# This is the pip/uv counterpart of .github/test_mindep_conda_env.yml -- keep
+# the two in sync.
+pytest
+pytest-cov
+pytest-json-report>=1.4

@@ -1,0 +1,159 @@
+# Additive, EXPERIMENTAL uv-based test workflow.
+#
+# Runs *alongside* the existing conda-based `tests.yml`; it does not replace
+# it. Purpose: validate that ObsPy builds, installs and passes its test suite
+# using uv + PyPI wheels (instead of conda-forge binaries), and that ObsPy's
+# install_requires resolves and builds across the supported OS/Python matrix.
+# (The optional stack is provisioned from .github/uv_requirements.txt, not the
+# .[all] extra -- see the dependency-set note below.)
+#
+# Dependency sets (all three provisioned from .github/ files, never from the
+# user-facing .[all] extra, so CI controls the exact optional stack per job):
+#   * default        -> core ObsPy (.) + optional feature/test deps from
+#                       .github/uv_requirements.txt (mirror of the `all` extra)
+#   * mindep         -> core ObsPy (.) + test runners only, from
+#                       .github/uv_mindep_requirements.txt (no optional deps)
+#   * mindepversion  -> default set (. + uv_requirements.txt) capped to the
+#                       minimum supported numerical stack via
+#                       .github/uv_mindepversion_constraints.txt (-c)
+# These sets are the pip/uv counterparts of the test_*_conda_env.yml files and
+# live in .github/ rather than setup.py extras, so CI-only scenarios are not
+# exposed to end users. Consequence: no job installs .[all], so setup.py's
+# extras_require is no longer exercised here; uv_requirements.txt must be kept
+# in sync with EXTRAS_REQUIRES / test_conda_env.yml by hand.
+# pyshp!=3.0.0 is pinned in the CI files only (doctest workaround, see #3600);
+# it is intentionally NOT pinned in the user-facing extra.
+#
+# Notes / known differences vs the conda job (intentional, not bugs):
+#   * The bundled C extensions are compiled from source here exactly as they
+#     are in the conda job (which also does `pip install --no-deps .`); only
+#     the dependency provisioning differs (PyPI wheels vs conda-forge).
+#   * On EOL Pythons uv and the conda solver may select different newest
+#     numpy/scipy. Expected.
+#   * This workflow submits its report to tests.obspy.org (--report). Because
+#     the conda job already reports, this produces a second report entry per
+#     PR; switch to --no-report below if that duplication is unwanted.
+
+name: tests-uv
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - 'maintenance_*.*.x'
+    tags-ignore:
+      - '**'
+
+concurrency:
+  group: tests-uv-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  run_tests_uv:
+    if: github.event_name == 'push' || !contains(github.event.pull_request.labels.*.name, 'no_ci')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.12', '3.13', '3.14']
+        options: [default]
+        include:
+          # Core-only install, no optional feature deps.
+          - os: ubuntu-latest
+            python-version: '3.12'
+            options: mindep
+          # Pinned minimum dependency versions (setup.py `mindepversion` extra).
+          - os: ubuntu-latest
+            python-version: '3.12'
+            options: mindepversion
+          - os: macos-latest
+            python-version: '3.12'
+            options: mindepversion
+          - os: windows-latest
+            python-version: '3.12'
+            options: mindepversion
+          # Network variant: runs ONLY on push events or when the PR carries
+          # the `test_network` label (mirrors the gating in tests.yml).
+          # Otherwise this row evaluates to `default`, which merges into the
+          # existing (ubuntu-latest, 3.14, default) combination and adds no job.
+          - os: ubuntu-latest
+            python-version: '3.14'
+            options: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test_network')) && 'network' || 'default' }}
+          # Warnings variant (non-blocking).
+          - os: ubuntu-latest
+            python-version: '3.14'
+            options: warnings
+    name: uv ${{ matrix.options }} (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ contains(matrix.options, 'network') || contains(matrix.options, 'warnings') }}
+    env:
+      OBSPY_NODE_NAME: gh-actions-uv
+      # Consumed by obspy/conftest.py get_github_actions_info() -> report
+      # ci_info; ISSUE_NUMBER is what tests.obspy.org shows in the PR column.
+      # These are not standard GitHub vars, so they must be set explicitly
+      # (the conda tests.yml sets the same three).
+      ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      CI_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      OBSPY_TESTS_USER_AGENT: ${{ secrets.OBSPY_TESTS_USER_AGENT }}
+      OBSPY_TESTS_EARTHSCOPE_AUTH_USER: ${{ secrets.OBSPY_TESTS_EARTHSCOPE_AUTH_USER }}
+      OBSPY_TESTS_EARTHSCOPE_AUTH_PASSWORD: ${{ secrets.OBSPY_TESTS_EARTHSCOPE_AUTH_PASSWORD }}
+      # --report auto-submits to tests.obspy.org; either --report or --no-report
+      # is REQUIRED so obspy-runtests never blocks on the interactive prompt
+      # (which raises EOFError with no stdin in CI).
+      # Under -W error, ignore the benign CPython 3.14 multiprocessing
+      # resource_tracker UserWarning ("process died unexpectedly, relaunching"),
+      # which is infrastructure noise unrelated to ObsPy. The later -W wins, so
+      # only that specific module's warning is downgraded; ObsPy's own warnings
+      # still error.
+      runtest_options: --report ${{ contains(matrix.options, 'network') && '--network' || '' }} ${{ contains(matrix.options, 'warnings') && '-W error -W ignore::UserWarning:multiprocessing.resource_tracker' || '' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            setup.py
+            pyproject.toml
+            .github/uv_requirements.txt
+            .github/uv_mindep_requirements.txt
+            .github/uv_mindepversion_constraints.txt
+
+      - name: Create virtual environment
+        run: uv venv --python ${{ matrix.python-version }} .venv
+
+      # --- Dependency install: one branch per variant ---------------------
+      - name: Install (default / network / warnings)
+        if: matrix.options != 'mindep' && matrix.options != 'mindepversion'
+        run: uv pip install --python .venv . -r .github/uv_requirements.txt
+
+      - name: Install (mindep - core only)
+        if: matrix.options == 'mindep'
+        run: uv pip install --python .venv . -r .github/uv_mindep_requirements.txt
+
+      - name: Install (mindepversion - pinned floors)
+        if: matrix.options == 'mindepversion'
+        run: uv pip install --python .venv . -r .github/uv_requirements.txt -c .github/uv_mindepversion_constraints.txt
+
+      - name: Print package info
+        run: uv pip list --python .venv
+
+      # Run from outside the source tree so the *installed* package (with the
+      # compiled .so/.pyd) is imported, not the source checkout. The venv's
+      # console script is invoked directly to avoid the bin/ (Unix) vs
+      # Scripts/ (Windows) divergence.
+      - name: Run tests (Unix)
+        if: runner.os != 'Windows'
+        working-directory: ${{ runner.temp }}
+        run: |
+          "${{ github.workspace }}/.venv/bin/obspy-runtests" ${{ env.runtest_options }}
+
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
+        working-directory: ${{ runner.temp }}
+        run: |
+          & "${{ github.workspace }}\.venv\Scripts\obspy-runtests.exe" ${{ env.runtest_options }}
