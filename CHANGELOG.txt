@@ -5,6 +5,14 @@ Changes:
  - General:
    * adjusted minimum dependency versions to Python >=3.12, numpy >=2.2,
      scipy >=1.15 and matplotlib >=3.9 (see #3570)
+ - obspy.clients.filesystem:
+   * tsindex: fix a remaining connection pool leak that could exhaust the pool
+     with a "QueuePool limit ... reached" error. The session refactor in #3736
+     wrapped the index/summary row queries in a session context manager but
+     closed it before the lazily evaluated query was iterated, so iteration
+     re-opened a connection on the already-closed session that was never
+     returned to the pool. The query is now consumed inside the session
+     context (see #3430, follow-up to #3736)
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)

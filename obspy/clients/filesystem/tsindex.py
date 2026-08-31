@@ -1475,33 +1475,38 @@ class TSIndexDatabaseHandler(object):
             except Exception as err:
                 raise ValueError(str(err))
 
-        index_rows = []
-        try:
-            for rt in result:
-                # convert to a named tuple
-                NamedRow = namedtuple('NamedRow',
-                                      ['network', 'station', 'location',
-                                       'channel', 'quality', 'version',
-                                       'starttime', 'endtime', 'samplerate',
-                                       'filename', 'byteoffset', 'bytes',
-                                       'hash', 'timeindex', 'timespans',
-                                       'timerates', 'format', 'filemodtime',
-                                       'updated', 'scanned', 'requeststart',
-                                       'requestend'])
-                row, requeststart, requestend = rt
-                nrow = NamedRow(
-                        row.network, row.station, row.location,
-                        row.channel, row.quality, row.version,
-                        row.starttime, row.endtime, row.samplerate,
-                        row.filename, row.byteoffset, row.bytes,
-                        row.hash, row.timeindex, row.timespans,
-                        row.timerates, row.format, row.filemodtime,
-                        row.updated, row.scanned,
-                        requeststart, requestend
-                       )
-                index_rows.append(nrow)
-        except ResourceClosedError:
-            pass  # query returned no results
+            # NOTE: ``result`` is a lazily evaluated query. It must be
+            # consumed *inside* the ``with self.session()`` block, otherwise
+            # iterating it re-opens a connection on the already-closed session
+            # that is never returned to the pool, eventually exhausting it
+            # (see #3430).
+            index_rows = []
+            NamedRow = namedtuple('NamedRow',
+                                  ['network', 'station', 'location',
+                                   'channel', 'quality', 'version',
+                                   'starttime', 'endtime', 'samplerate',
+                                   'filename', 'byteoffset', 'bytes',
+                                   'hash', 'timeindex', 'timespans',
+                                   'timerates', 'format', 'filemodtime',
+                                   'updated', 'scanned', 'requeststart',
+                                   'requestend'])
+            try:
+                for rt in result:
+                    # convert to a named tuple
+                    row, requeststart, requestend = rt
+                    nrow = NamedRow(
+                            row.network, row.station, row.location,
+                            row.channel, row.quality, row.version,
+                            row.starttime, row.endtime, row.samplerate,
+                            row.filename, row.byteoffset, row.bytes,
+                            row.hash, row.timeindex, row.timespans,
+                            row.timerates, row.format, row.filemodtime,
+                            row.updated, row.scanned,
+                            requeststart, requestend
+                           )
+                    index_rows.append(nrow)
+            except ResourceClosedError:
+                pass  # query returned no results
         logger.debug("Fetched %d index rows" % len(index_rows))
         return index_rows
 
@@ -1586,16 +1591,21 @@ class TSIndexDatabaseHandler(object):
             except Exception as err:
                 raise ValueError(str(err))
 
-        # Map raw tuples to named tuples for clear referencing
-        NamedRow = namedtuple('NamedRow',
-                              ['network', 'station', 'location', 'channel',
-                               'earliest', 'latest', 'updated'])
-        summary_rows = []
-        try:
-            for row in result:
-                summary_rows.append(NamedRow(*row))
-        except ResourceClosedError:
-            pass  # query returned no results
+            # Map raw tuples to named tuples for clear referencing.
+            # NOTE: ``result`` is a lazily evaluated query and must be
+            # consumed *inside* the ``with self.session()`` block, otherwise
+            # iterating it re-opens a connection on the already-closed session
+            # that is never returned to the pool, eventually exhausting it
+            # (see #3430).
+            NamedRow = namedtuple('NamedRow',
+                                  ['network', 'station', 'location', 'channel',
+                                   'earliest', 'latest', 'updated'])
+            summary_rows = []
+            try:
+                for row in result:
+                    summary_rows.append(NamedRow(*row))
+            except ResourceClosedError:
+                pass  # query returned no results
         logger.debug("Fetched %d summary rows" % len(summary_rows))
         return summary_rows
 
