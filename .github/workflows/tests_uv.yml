@@ -2,23 +2,27 @@
 #
 # Runs *alongside* the existing conda-based `tests.yml`; it does not replace
 # it. Purpose: validate that ObsPy builds, installs and passes its test suite
-# using uv + PyPI wheels (instead of conda-forge binaries), and that the pip
-# packaging metadata (install_requires / extras_require) is self-consistent
-# across the supported OS/Python matrix.
+# using uv + PyPI wheels (instead of conda-forge binaries), and that ObsPy's
+# install_requires resolves and builds across the supported OS/Python matrix.
+# (The optional stack is provisioned from .github/uv_requirements.txt, not the
+# .[all] extra -- see the dependency-set note below.)
 #
-# Dependency sets:
-#   * default        -> .[all] (every optional feature + test dependency:
-#                       cartopy, geographiclib, pyshp, pyproj, pytest,
-#                       pytest-cov, pytest-json-report, ...)
+# Dependency sets (all three provisioned from .github/ files, never from the
+# user-facing .[all] extra, so CI controls the exact optional stack per job):
+#   * default        -> core ObsPy (.) + optional feature/test deps from
+#                       .github/uv_requirements.txt (mirror of the `all` extra)
 #   * mindep         -> core ObsPy (.) + test runners only, from
 #                       .github/uv_mindep_requirements.txt (no optional deps)
-#   * mindepversion  -> .[all] capped to the minimum supported numerical stack
-#                       via .github/uv_mindepversion_constraints.txt (-c)
-# The mindep/mindepversion sets are CI-only, so they live in .github/ files
-# (the pip/uv counterparts of the test_*_conda_env.yml files) rather than in
-# setup.py extras, to avoid exposing CI-only scenarios to end users.
-# pyshp!=3.0.0 is appended for the test runs only (doctest workaround, see
-# #3600); it is intentionally NOT pinned in the user-facing extra.
+#   * mindepversion  -> default set (. + uv_requirements.txt) capped to the
+#                       minimum supported numerical stack via
+#                       .github/uv_mindepversion_constraints.txt (-c)
+# These sets are the pip/uv counterparts of the test_*_conda_env.yml files and
+# live in .github/ rather than setup.py extras, so CI-only scenarios are not
+# exposed to end users. Consequence: no job installs .[all], so setup.py's
+# extras_require is no longer exercised here; uv_requirements.txt must be kept
+# in sync with EXTRAS_REQUIRES / test_conda_env.yml by hand.
+# pyshp!=3.0.0 is pinned in the CI files only (doctest workaround, see #3600);
+# it is intentionally NOT pinned in the user-facing extra.
 #
 # Notes / known differences vs the conda job (intentional, not bugs):
 #   * The bundled C extensions are compiled from source here exactly as they
@@ -124,7 +128,7 @@ jobs:
       # --- Dependency install: one branch per variant ---------------------
       - name: Install (default / network / warnings)
         if: matrix.options != 'mindep' && matrix.options != 'mindepversion'
-        run: uv pip install --python .venv ".[all]" "pyshp!=3.0.0"
+        run: uv pip install --python .venv . -r .github/uv_requirements.txt
 
       - name: Install (mindep - core only)
         if: matrix.options == 'mindep'
@@ -132,7 +136,7 @@ jobs:
 
       - name: Install (mindepversion - pinned floors)
         if: matrix.options == 'mindepversion'
-        run: uv pip install --python .venv ".[all]" "pyshp!=3.0.0" -c .github/uv_mindepversion_constraints.txt
+        run: uv pip install --python .venv . -r .github/uv_requirements.txt -c .github/uv_mindepversion_constraints.txt
 
       - name: Print package info
         run: uv pip list --python .venv
