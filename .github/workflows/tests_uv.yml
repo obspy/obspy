@@ -119,6 +119,7 @@ jobs:
           cache-dependency-glob: |
             setup.py
             pyproject.toml
+            .github/uv_requirements.txt
             .github/uv_mindep_requirements.txt
             .github/uv_mindepversion_constraints.txt
 
