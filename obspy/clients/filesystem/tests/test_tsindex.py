@@ -552,6 +552,28 @@ class TestClient():
         assert not client.has_data(starttime=UTCDateTime(1970, 12, 31),
                                    endtime=UTCDateTime(2013, 1, 7))
 
+    def test_no_connection_pool_leak(self, client):
+        """
+        Repeated queries must not leak connections from the pool (#3430).
+
+        The index/summary row queries are lazily evaluated. The session
+        refactor in #3736 wrapped them in a ``with self.session()`` context
+        manager but closed it before iterating the query, so iteration
+        re-opened a connection on the already-closed session that was never
+        returned to the pool. After enough queries this exhausted the pool
+        with a ``QueuePool limit ... reached`` ``ValueError``.
+        """
+        pool = client.request_handler.engine.pool
+        # run comfortably more queries than the pool can ever hold at once
+        n_iter = pool.size() + pool._max_overflow + 10
+        for _ in range(n_iter):
+            client.has_data(network="*", station="*", location="*",
+                            channel="*")
+            client.get_availability(network="*", station="*", location="*",
+                                    channel="*")
+        # all connections must have been returned to the pool
+        assert pool.checkedout() == 0
+
 
 def purge(dir, pattern):
     """
