@@ -1,0 +1,101 @@
+# Experimental uv-based canary for "exotic" CPython builds:
+#   * 3.14t  -> free-threaded 3.14 (GIL-disabled)
+#   * 3.15   -> pre-release 3.15 (alpha/beta)
+#   * 3.15t  -> free-threaded pre-release 3.15
+#
+# Purpose: early warning on how ObsPy and its *core* dependency stack fare on
+# these builds, well before they are officially supported. This is a CANARY,
+# not a gate: every job is continue-on-error, so a red run here never blocks a
+# PR or master. Runs manually, weekly, and opt-in per-PR (label below) -- NOT
+# on every PR, because the source builds are slow and expected to be flaky.
+#
+# Dependency set: core ObsPy (.) + test runners only, from
+# .github/uv_mindep_requirements.txt (same slim set as the `mindep` variant in
+# tests_uv.yml). The optional geo stack (cartopy/pyproj/shapely) is deliberately
+# excluded: it has no free-threaded/pre-release wheels and would only measure
+# GEOS/PROJ buildability, not ObsPy.
+#
+# Install strategy: plain `uv pip install` -- wheels when they exist, source
+# build when they do not (no --only-binary). Empirically (Aug 2026) that means:
+#   * 3.14t        -> all wheels (numpy/scipy/matplotlib/lxml cp314t), no builds
+#   * 3.15 / 3.15t -> only matplotlib is built from source (no cp315/cp315t
+#                     wheel yet); numpy/scipy/lxml ship cp315/cp315t wheels.
+# The apt step provides matplotlib's build deps (C/C++ toolchain + FreeType).
+# The 3.15 lines are expected to stay red until matplotlib publishes cp315
+# wheels; that red is the signal, not a regression.
+#
+
+
+name: tests-uv-experimental
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly, Monday 05:00 UTC.
+    - cron: '0 5 * * 1'
+  pull_request:
+
+concurrency:
+  group: tests-uv-experimental-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  run_tests_uv_experimental:
+    # On PRs, run only when explicitly opted in with the `test_experimental`
+    # label; always run on manual dispatch and the weekly schedule.
+    if: >-
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'test_experimental')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.14t', '3.15', '3.15t']
+    name: uv exotic (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    # Canary: never gate on these.
+    continue-on-error: true
+    env:
+      OBSPY_NODE_NAME: gh-actions-uv-experimental
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            setup.py
+            pyproject.toml
+            .github/uv_mindep_requirements.txt
+
+      # Build deps for the one package that is compiled from source here
+      # (matplotlib on 3.15/3.15t). No-op cost on 3.14t where all wheels exist.
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config libfreetype-dev
+
+      - name: Create virtual environment
+        # uv resolves 't' (free-threaded) and pre-release specifiers directly.
+        run: uv venv --python ${{ matrix.python-version }} .venv
+
+      # Wheels first, source build as fallback (uv default). Core ObsPy plus
+      # test runners; no optional feature deps.
+      - name: Install (core + test runners)
+        run: uv pip install --python .venv . -r .github/uv_mindep_requirements.txt
+
+      - name: Print package info
+        run: |
+          uv pip list --python .venv
+          .venv/bin/python -c "import sys; print('free-threaded build:', not sys._is_gil_enabled()) if hasattr(sys, '_is_gil_enabled') else print('free-threaded build: n/a')"
+
+      # Run the installed package (compiled .so imported from site-packages, not
+      # the source checkout), from outside the source tree.
+      - name: Run tests
+        working-directory: ${{ runner.temp }}
+        run: |
+          "${{ github.workspace }}/.venv/bin/obspy-runtests" --report
