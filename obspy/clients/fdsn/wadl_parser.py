@@ -172,7 +172,7 @@ class WADLParser(object):
 
         default_value = param_doc.get("default")
         if default_value is not None:
-            if param_type == bool:
+            if param_type is bool:
                 default_value = self._convert_boolean(default_value)
             else:
                 default_value = param_type(default_value)
