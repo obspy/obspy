@@ -472,7 +472,7 @@ Optional columns may be present with empty cells or omitted entirely. Missing
 optional values are imported as absent metadata.
 
 Site Owner
-~~~~~~~~~
+~~~~~~~~~~
 
 The owner CSV describes the data owner and contact person:
 
@@ -488,7 +488,7 @@ The owner CSV describes the data owner and contact person:
       - All other columns are optional, including the resource identifiers.
 
 Site Description
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 The site-description CSV has one row per site. The site this description
 refers to is designated by the ``siteID``. The unique resource identifier
