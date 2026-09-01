@@ -485,7 +485,7 @@ class TestParser():
         sp = Parser(testdata['dataless.seed.BW_RJOB'])
         result = {'elevation': 860.0, 'latitude': 47.737166999999999,
                   'longitude': 12.795714, 'local_depth': 0,
-                  'azimuth': 0.0, 'local_depth': 0, 'dip': -90.0}
+                  'azimuth': 0.0, 'dip': -90.0}
         paz = sp.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         assert sorted(paz.items()) == sorted(result.items())
         paz = sp.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
@@ -500,7 +500,7 @@ class TestParser():
         sp = Parser(testdata['dataless.seed.II_COCO'])
         result = {'elevation': 1.0, 'latitude': -12.1901,
                   'longitude': 96.8349, 'local_depth': 1.3,
-                  'azimuth': 92.0, 'local_depth': 1.3, 'dip': 0.0}
+                  'azimuth': 92.0, 'dip': 0.0}
         paz = sp.get_coordinates("II.COCO.10.BH2", UTCDateTime("2010-11-11"))
         assert sorted(paz.items()) == sorted(result.items())
 
