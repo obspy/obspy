@@ -15,8 +15,6 @@ import warnings
 from collections import defaultdict
 from pathlib import Path
 
-import pandas as pd
-
 from obspy.core.inventory.util import ExternalReference
 
 from .core import (Analysis, BedrockDepth, EC8, GeologicalUnit, H800,
@@ -27,6 +25,17 @@ from .core import (Analysis, BedrockDepth, EC8, GeologicalUnit, H800,
 from .quality_index import apply_quality_index_dataframe
 from .util import (SiteXMLImportError, SiteXMLIOError, SiteXMLValidationError,
                    _empty_value, _read_cell, _require_dataframe_columns)
+
+try:
+    import pandas as pd
+except ImportError as e:
+    HAS_PANDAS = False
+    PANDAS_IMPORTERROR_MSG = (
+        f"{e}. Some functionality in 'obspy.io.sitexml' requires the 'pandas' "
+        "module to be installed in addition to the general ObsPy "
+        "dependencies.")
+else:
+    HAS_PANDAS = True
 
 
 def csv_to_sera_site(site_owner_csv,
@@ -596,6 +605,9 @@ def _import_velocity_profiles(path, kind=None, delim=';'):
 
     :rtype: dict or None
     """
+    if not HAS_PANDAS:
+        raise ImportError(PANDAS_IMPORTERROR_MSG)
+
     if not path:
         return None
 
@@ -717,6 +729,9 @@ def _read_velocity_profile_excel_file(file_path):
 
     :rtype: :class:`pandas.DataFrame`
     """
+    if not HAS_PANDAS:
+        raise ImportError(PANDAS_IMPORTERROR_MSG)
+
     df_dict = _excel_to_dataframe(
         file_path, "velocity-profile Excel file", sheet_name=None)
 
@@ -920,6 +935,9 @@ def _csv_to_dataframe(path_or_file_object, label, delim=';'):
 
     :rtype: :class:`pandas.DataFrame`
     """
+    if not HAS_PANDAS:
+        raise ImportError(PANDAS_IMPORTERROR_MSG)
+
     try:
         return pd.read_csv(path_or_file_object, sep=delim)
     except OSError as e:
@@ -939,6 +957,9 @@ def _excel_to_dataframe(path_or_file_object, label, sheet_name=0,
 
     :rtype: :class:`pandas.DataFrame` or dict
     """
+    if not HAS_PANDAS:
+        raise ImportError(PANDAS_IMPORTERROR_MSG)
+
     try:
         xls = pd.ExcelFile(path_or_file_object)
     except OSError as e:

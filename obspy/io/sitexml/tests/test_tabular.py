@@ -13,10 +13,15 @@ Tests for SiteXML CSV and Excel import helpers.
 import warnings
 
 import pytest
-import pandas as pd
+
+try:
+    import pandas as pd
+except ImportError:
+    HAS_PANDAS = False
+else:
+    HAS_PANDAS = True
 
 import obspy
-
 from obspy.io.sitexml.quality_index import (apply_quality_index_csv,
                                             apply_quality_index_dataframe,
                                             apply_quality_index_excel)
@@ -29,6 +34,7 @@ from obspy.io.sitexml.tabular import (add_velocity_profiles, csv_to_sera_site,
 from obspy.io.sitexml.util import SiteXMLImportError, SiteXMLIOError
 
 
+@pytest.mark.skipif(not HAS_PANDAS, reason='pandas not installed')
 class TestSiteXMLCSVImport():
     def test_read_year_cell_preserves_schema_string_type(self):
         assert _read_year_cell(2018) == "2018"
