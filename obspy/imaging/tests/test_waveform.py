@@ -445,6 +445,43 @@ class TestWaveformPlot:
             '.' not in label.get_text() for label in ax.get_xticklabels()]
         assert all(labels_are_integers) == expected_all_integer_labels
 
+    @pytest.mark.parametrize('width', [4000, 4050, 4800, 3999, 6000])
+    def test_plot_day_plot_no_right_cutoff(self, width):
+        """
+        A spike at a known fraction of each interval must render at that same
+        fraction of the axis width, for any plot width (see #3466).
+        """
+        sr = 40.0
+        interval_min = 15
+        spike_frac = 0.92
+        start = UTCDateTime(0)
+        spi = int(interval_min * 60 * sr)
+        n = 24 * 3600 * int(sr)
+        data = np.zeros(n, dtype=np.float32)
+        data[np.arange(0, n, spi) + int(spike_frac * spi)] = 1.0
+        tr = Trace(data)
+        tr.stats.sampling_rate = sr
+        tr.stats.starttime = start
+        fig = Stream([tr]).plot(type='dayplot', interval=interval_min,
+                                size=(width, 800), handle=True)
+        ax = fig.axes[0]
+        # each interval is drawn as a Line2D with x = repeat(arange(width), 2)
+        found = 0
+        for line in ax.lines:
+            xdata = np.asarray(line.get_xdata())
+            ydata = np.asarray(line.get_ydata())
+            if xdata.size != 2 * width:
+                continue
+            deviation = np.abs(ydata - np.median(ydata))
+            if deviation.max() < 1e-6:
+                continue  # interval without the spike (e.g. padded tail)
+            spike_x = xdata[np.argmax(deviation)]
+            assert abs(spike_x / width - spike_frac) < 1.5 / width, \
+                f"spike at {spike_x / width:.3f} of width, expected " \
+                f"{spike_frac} (width={width})"
+            found += 1
+        assert found > 0
+
     def test_plot_day_plot_explicit_event(self, image_path):
         """
         Plots day plot, starting Jan 1970, with several events.

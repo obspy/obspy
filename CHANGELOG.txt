@@ -53,6 +53,11 @@ Changes:
  - obspy.imaging:
    * fix a bug in dayplot when data is only available for part of the time
      window (see #3780)
+   * dayplot: fix the right-hand side of each interval being cut off / squashed
+     into the last pixel at plot widths where the samples per interval are not
+     an integer multiple of the pixel width. Samples are now distributed evenly
+     across pixels instead of folding the remainder into the last one
+     (see #3466)
  - obspy.io.mseed:
    * fix the type of exception raised when trying to read an empty file
      (see #3709)
