@@ -1532,8 +1532,13 @@ class Response(ComparingObject):
 
                 amp = scipy.interpolate.InterpolatedUnivariateSpline(
                     f, amp, k=3)(frequencies)
+                # Interpolate the *unwrapped* phase and wrap the result back to
+                # (-180, 180]. Splining the raw wrapped phase makes the spline
+                # oscillate wildly across +/-180 deg wraps (see #3585).
+                phase = np.unwrap(phase, period=360.0)
                 phase = scipy.interpolate.InterpolatedUnivariateSpline(
                     f, phase, k=3)(frequencies)
+                phase = (phase + 180.0) % 360.0 - 180.0
 
                 # Set static offset to zero.
                 amp[amp == 0] = 0
