@@ -1,0 +1,1614 @@
+# -*- coding: utf-8 -*-
+"""
+Functions dealing with reading and writing SiteXML.
+Metadata is stored in a SERASite object.
+
+:copyright:
+    ORFEUS, 2026
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
+"""
+
+import io
+import re
+import sys
+import warnings
+from pathlib import Path
+from urllib.error import HTTPError, URLError
+from urllib.parse import unquote, urlparse
+from urllib.request import urlopen
+
+from lxml import etree
+
+import obspy
+from obspy.core.inventory.util import ExternalReference
+from obspy.io.stationxml.core import (_attr2obj, _tag2obj, _tags2obj)
+
+from .core import (Analysis, BedrockDepth, EC8, GeologicalUnit, H800,
+                   LiteratureSource, ResonanceFrequency, Revision,
+                   SERASite, SERASiteOwner, SiteDescription,
+                   ValueWithUncertainty, VelocityProfile, VelocityProfileData,
+                   VelocityProfileSet, VelocityS30)
+from .util import (SiteXMLIOError, SiteXMLValidationError,
+                   _split_station_code)
+
+# Define some constants for writing SiteXML files.
+SCHEMA_VERSION = "1.3"
+NAMESPACE = "http://www.orfeus-eu.org/xml/site/1"
+
+
+def _is_url(path_or_file_object):
+    """
+    Return ``True`` for HTTP(S) URL strings accepted by the SiteXML reader.
+
+    :rtype: bool
+    """
+    if not isinstance(path_or_file_object, (str, bytes)):
+        return False
+    parsed = urlparse(path_or_file_object)
+    return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+
+
+def _url_to_bytesio(url):
+    """
+    Fetch a URL and return its body as a seekable bytes buffer.
+
+    :rtype: io.BytesIO
+    """
+    try:
+        with urlopen(url, timeout=30) as response:
+            return io.BytesIO(response.read())
+    except (HTTPError, URLError, TimeoutError, OSError) as e:
+        raise SiteXMLIOError(
+            "Could not retrieve SiteXML URL '%s': %s" % (url, e)
+        )
+
+
+def _ns(tagname):
+    """
+    Return a namespaced SiteXML tag name for lxml lookups.
+
+    :rtype: str
+    """
+    return "{%s}%s" % (NAMESPACE, tagname)
+
+
+def _package_data_path(*parts):
+    """
+    Resolve SiteXML package data in source trees and PyInstaller bundles.
+
+    :rtype: :class:`pathlib.Path`
+    """
+    package_path = Path(__file__).resolve().parent.joinpath(*parts)
+    if package_path.exists():
+        return package_path
+
+    bundle_root = getattr(sys, "_MEIPASS", None)
+    if bundle_root is not None:
+        bundle_path = Path(bundle_root) / "obspy" / "io" / "sitexml"
+        bundle_path = bundle_path.joinpath(*parts)
+        if bundle_path.exists():
+            return bundle_path
+
+    return package_path
+
+
+def _get_version_from_xmldoc(xmldoc):
+    """
+    Return SiteXML version string or ``None`` if parsing fails.
+
+    :rtype: str or None
+    """
+    root = xmldoc.getroot()
+    try:
+        match = re.match(
+            r'{http://www.orfeus-eu.org/xml/site/[0-9]+}SERA_quakeml',
+            root.tag)
+        assert match is not None
+    except Exception:
+        return None
+    try:
+        version = root.attrib["schemaVersion"]
+    except KeyError:
+        return None
+    return version
+
+
+def _is_sitexml(path_or_file_object):
+    """
+    Simple function checking if the passed object contains a valid
+    SiteXML file. Returns True of False.
+
+    The test is not exhaustive -
+    it only checks the root tag and the schema version.
+
+    :type path_or_file_object: str, pathlib.Path, or file-like object
+    :param path_or_file_object: File name or file like object.
+    :rtype: bool
+    """
+    if (hasattr(path_or_file_object, "tell")
+            and hasattr(path_or_file_object, "seek")):
+        current_position = path_or_file_object.tell()
+
+    try:
+        if isinstance(path_or_file_object, etree._Element):
+            xmldoc = path_or_file_object
+        else:
+            try:
+                xmldoc = etree.parse(path_or_file_object)
+            except etree.XMLSyntaxError:
+                return False
+        version = _get_version_from_xmldoc(xmldoc)
+        if version is None:
+            return False
+        if version != SCHEMA_VERSION:
+            warnings.warn("The SiteXML file has version %s, ObsPy can "
+                          "read version (%s)." % (
+                              version, ", ".join(SCHEMA_VERSION)))
+        return True
+    finally:
+        # Make sure to reset file pointer position.
+        try:
+            path_or_file_object.seek(current_position, 0)
+        except Exception:
+            pass
+
+
+def validate_sitexml(path_or_object):
+    """
+    Checks if the given path is a valid SiteXML file.
+
+    Returns a tuple. The first item is a boolean describing if the validation
+    was successful or not. The second item is a list of all found validation
+    errors, if existent.
+
+    :param path_or_object: File name or file like object. Can also be an etree
+        element.
+    :rtype: tuple
+
+    Example
+
+    >>> from obspy.io.sitexml.sitexml import validate_sitexml
+    >>> validates, errors = validate_sitexml("site.xml")  # doctest: +SKIP
+    >>> if validates:  # doctest: +SKIP
+    ...     print("This is valid SiteXML file")
+    ... else:
+    ...     print("The provided SiteXML file fails to validate "
+    ...           "against the schema.")
+
+    """
+    if hasattr(path_or_object, "tell") and hasattr(path_or_object, "seek"):
+        current_position = path_or_object.tell()
+    else:
+        current_position = None
+
+    try:
+        if isinstance(path_or_object, etree._Element):
+            xmldoc = path_or_object
+        else:
+            try:
+                xmldoc = etree.parse(path_or_object)
+            except etree.XMLSyntaxError:
+                return (False, ("Not a XML file.",))
+        version = _get_version_from_xmldoc(xmldoc)
+
+        # Get the schema location.
+        schema_location = _package_data_path(
+            "data", "QuakeML-SERA-%s.xsd" % version)
+
+        if not schema_location.exists():
+            msg = "No schema file found to validate SiteXML version '%s'"
+            raise SiteXMLValidationError(msg % version)
+
+        xmlschema = etree.XMLSchema(etree.parse(str(schema_location)))
+
+        valid = xmlschema.validate(xmldoc)
+
+        # Pretty error printing if the validation fails.
+        if valid is not True:
+            return (False, xmlschema.error_log)
+        return (True, ())
+    finally:
+        if current_position is not None:
+            try:
+                path_or_object.seek(current_position, 0)
+            except Exception:
+                pass
+
+
+# ##### READ SiteXML functionality
+#
+def sitexml_to_sitedict(path_or_file_object, pattern="*.xml"):
+    """
+    Read one SiteXML file or all matching files in a directory.
+
+    The returned dictionary is keyed by each site's resource ID.
+
+    :type path_or_file_object: str, pathlib.Path, or file-like object
+    :param path_or_file_object: SiteXML file, file-like object, or
+        directory containing SiteXML files.
+    :type pattern: str, optional
+    :param pattern: Glob pattern used when ``path_or_file_object`` is a
+        directory. Defaults to ``"*.xml"``.
+    :rtype: dict of :class:`~obspy.io.sitexml.core.SERASite`
+    """
+    def _add_site(sera_site_dict, sera_site):
+        if sera_site.resource_id in sera_site_dict:
+            raise SiteXMLValidationError(
+                f"Duplicate SiteXML site resource_id: {sera_site.resource_id}"
+            )
+        sera_site_dict[sera_site.resource_id] = sera_site
+
+    sera_site_dict = {}
+
+    if hasattr(path_or_file_object, "read"):
+        _add_site(sera_site_dict, read_sitexml(path_or_file_object))
+        return sera_site_dict
+
+    path = Path(path_or_file_object)
+    if path.is_file():
+        _add_site(sera_site_dict, read_sitexml(path))
+        return sera_site_dict
+
+    if path.is_dir():
+        for filename in sorted(path.glob(pattern)):
+            if filename.is_file():
+                _add_site(sera_site_dict, read_sitexml(filename))
+        return sera_site_dict
+
+    raise SiteXMLIOError(
+        f"Could not access SiteXML file or directory: {path_or_file_object}"
+    )
+
+
+def read_sitexml(path_or_file_object):
+    """
+    Function reading a SiteXML file.
+
+    :type path_or_file_object: str, pathlib.Path, URL, or file-like object
+    :param path_or_file_object: The file name, HTTP(S) URL, or
+        file-like object to read from.
+    :rtype: :class:`~obspy.io.sitexml.core.SERASite`
+
+    Returns a SERASite object with metadata read from the provided SiteXML
+    file. Input can be a Path, a URL, or a file-like object.
+
+    At least site owner and site description metadata should be present
+    in XML file in order to create the SERASite object.
+
+    Example
+
+    >>> from obspy.io.sitexml.sitexml import read_sitexml
+    >>> site = read_sitexml("site.xml")  # doctest: +SKIP
+    >>> site = read_sitexml(  # doctest: +SKIP
+    ...     "https://example.org/sitexml/Site_XX.ABCD.xml")
+
+    """
+    if _is_url(path_or_file_object):
+        path_or_file_object = _url_to_bytesio(path_or_file_object)
+
+    validates, errors = validate_sitexml(path_or_file_object)
+    if validates is False:
+        msg = (
+            "The provided SiteXML file fails to validate against the "
+            "schema.\n"
+        )
+        for err in errors:
+            msg += "\t%s\n" % err
+        raise SiteXMLValidationError(msg)
+
+    root = etree.parse(path_or_file_object).getroot()
+
+    siteID = _attr2obj(root, "publicID", str)
+    created = obspy.UTCDateTime(root.find(_ns("creationTime")).text)
+    revision_history = _read_revision_history(root)
+
+    site_owner_element = root.find(_ns("siteOwner"))
+    if site_owner_element is not None:
+        site_owner = _read_site_owner(site_owner_element)
+
+    site_description_element = root.find(_ns(
+        "siteDescription"))
+    if site_description_element is not None:
+        site_description = _read_site_description(
+            site_description_element)
+
+    # Create the SERA_Site object only if both
+    # site_owner and site_description exists
+    #
+    if site_owner and site_description:
+        sera_site = SERASite(site_owner=site_owner,
+                             site_description=site_description,
+                             resource_id=siteID,
+                             created=created,
+                             revision_history=revision_history)
+    else:
+        raise SiteXMLValidationError(
+            "Missing site owner and/or site description in provided "
+            "SiteXML file."
+        )
+
+    # Analysis element is optional
+    #
+    analysis_element_list = root.findall(_ns("analysis"))
+    if len(analysis_element_list) != 0:
+        analysis = []
+        for analysis_element in analysis_element_list:
+            analysis.append(_read_analysis(analysis_element))
+        sera_site.analysis = analysis
+
+    # Read External References
+    #
+    ref_element_list = root.findall(_ns("externalReference"))
+    if len(ref_element_list) != 0:
+        references = []
+        for reference_element in ref_element_list:
+            references.append(_read_external_reference(reference_element))
+        sera_site.external_references = references
+
+    return sera_site
+
+
+def _read_revision_history(root):
+    """
+    Read the optional root-level revisionHistory element.
+
+    :rtype: list[:class:`~obspy.io.sitexml.core.Revision`] or None
+    """
+    revision_history_element = root.find(_ns("revisionHistory"))
+    if revision_history_element is None:
+        return None
+
+    revisions = []
+    for revision_element in revision_history_element.findall(_ns("revision")):
+        revision_time = _tag2obj(
+            revision_element, _ns("revisionTime"), obspy.UTCDateTime)
+        description = _tag2obj(
+            revision_element, _ns("description"), str)
+        author = _tag2obj(
+            revision_element, _ns("author"), str)
+        version = _tag2obj(
+            revision_element, _ns("version"), str)
+        previous_version = _tag2obj(
+            revision_element, _ns("previousVersion"), str)
+        revisions.append(Revision(
+            revision_time=revision_time,
+            description=description,
+            author=author,
+            version=version,
+            previous_version=previous_version))
+    return revisions
+
+
+def _read_site_owner(owner_element):
+    """
+    Read the <siteOwner> element
+
+    :type owner_element: :class:`~lxml.etree._Element`, required
+
+    :rtype: :class:`~obspy.io.sitexml.core.SERASiteOwner`
+    :return: A `SERASiteOwner` object populated with the values read
+            from the <siteOwner> element.
+
+    <siteOwner> element structure:
+
+    - publicID (attribute)
+    - codeName, fullName
+    - contact
+        - person
+            - publicID (attribute)
+            - firstname, lastname, mbox, homepage
+        - affiliation
+            - department, function
+            - institution
+                - publicID (attribute)
+                - name, mbox, phone, homepage
+                - postalAddress
+                    - streetAddress, locality, postalCode
+                    - country
+                        - country, code
+    """
+
+    ownerID = _attr2obj(owner_element, "publicID", str)
+    codeName = _tag2obj(owner_element, _ns("codeName"), str)
+    fullName = _tag2obj(owner_element, _ns("fullName"), str)
+
+    # Read person element
+    contact_element = owner_element.find(_ns("contact"))
+    person_element = (
+        contact_element.find(_ns("person"))
+        if contact_element is not None
+        else None
+    )
+    if person_element is None:
+        personID = None
+        person_firstname = None
+        person_lastname = None
+        person_mbox = None
+        person_homepage = None
+    else:
+        personID = _attr2obj(person_element, "publicID", str)
+        person_firstname = _tag2obj(
+            person_element, _ns("firstname"), str)
+        person_lastname = _tag2obj(
+            person_element, _ns("lastname"), str)
+        person_mbox = _tag2obj(
+            person_element, _ns("mbox"), str)
+        person_homepage = _tag2obj(
+            person_element, _ns("homepage"), str)
+
+    site_owner = SERASiteOwner(
+        owner_codename=codeName,
+        owner_fullname=fullName,
+        ownerID=ownerID,
+        personID=personID,
+        person_firstname=person_firstname,
+        person_lastname=person_lastname,
+        person_mbox=person_mbox,
+        person_homepage=person_homepage)
+
+    # Read affiliation element
+    affiliation_element = contact_element.find(_ns("affiliation"))
+    if affiliation_element is None:
+        return site_owner
+
+    site_owner.affiliation_department = \
+        _tag2obj(affiliation_element, _ns("department"), str)
+    site_owner.affiliation_function = \
+        _tag2obj(affiliation_element, _ns("function"), str)
+
+    # Read institution element
+    institution_element = affiliation_element.find(_ns("institution"))
+    if institution_element is None:
+        return site_owner
+
+    site_owner.institutionID = \
+        _attr2obj(institution_element, "publicID", str)
+    site_owner.institution_name = \
+        _tag2obj(institution_element, _ns("name"), str)
+    site_owner.institution_mbox = \
+        _tag2obj(institution_element, _ns("mbox"), str)
+    site_owner.institution_phone = \
+        _tag2obj(institution_element, _ns("phone"), str)
+    site_owner.institution_homepage = \
+        _tag2obj(institution_element, _ns("homepage"), str)
+
+    # Read postalAddress element
+    postal_address_element = \
+        institution_element.find(_ns("postalAddress"))
+    if postal_address_element is None:
+        return site_owner
+
+    site_owner.address_street = \
+        _tag2obj(postal_address_element, _ns("streetAddress"), str)
+    site_owner.address_locality = \
+        _tag2obj(postal_address_element, _ns("locality"), str)
+    site_owner.address_postal_code = \
+        _tag2obj(postal_address_element, _ns("postalCode"), str)
+
+    # Read country element
+    country_element = postal_address_element.find(_ns("country"))
+    if country_element is None:
+        return site_owner
+
+    site_owner.address_country = \
+        _tag2obj(country_element, _ns("country"), str)
+    site_owner.address_country_code = \
+        _tag2obj(country_element, _ns("code"), str)
+
+    return site_owner
+
+
+def _read_site_description(site_description_element):
+    """
+    Read the <siteDescription> element
+
+    :type site_description_element: :class:`~lxml.etree._Element`, required
+
+    :rtype: :class:`~obspy.io.sitexml.core.SiteDescription`
+    :return: A `SiteDescription` object populated with the values read from
+            the <siteDescription> element.
+
+    <siteDescription> element structure:
+
+    - publicID (attribute)
+    - station_code, latitude, longitude, altitude, minDistanceFromStation,
+      maxDistanceFromStation
+    - OverallQindex
+    - siteTopography (formal topographic/terrain classification)
+        - schemaA, schemaB
+    - siteMorphology (QuakeML-STC-derived site indicator group)
+        - morphology
+        - siteClassEC8
+            - value, qualityIndex, reference
+        - bedrockDepth
+            - value, qualityIndex, reference
+        - h800
+            - value, qualityIndex, reference
+        - geologicalUnit
+            - value, geologicalMapScale, geologicalUnitOGE,
+              qualityIndex, reference
+    - preferredSiteAnalysisID
+    - preferredVelocityProfileID
+    """
+    resource_id = _attr2obj(site_description_element, "publicID", str)
+    station_code = _tag2obj(site_description_element, _ns("station"), str)
+
+    latitude = _tag2obj(site_description_element, _ns("latitude"), float)
+    longitude = _tag2obj(site_description_element, _ns("longitude"), float)
+    if resource_id is None or latitude is None or longitude is None:
+        raise SiteXMLValidationError(
+            "Missing required site description publicID, latitude or "
+            "longitude value."
+        )
+
+    site_description = SiteDescription(resource_id=resource_id,
+                                       station_code=station_code,
+                                       latitude=latitude,
+                                       longitude=longitude)
+
+    site_description.altitude = \
+        _tag2obj(site_description_element, _ns("altitude"), float)
+    site_description.min_distance_from_station = \
+        _tag2obj(site_description_element,
+                 _ns("minDistanceFromStation"), float)
+    site_description.max_distance_from_station = \
+        _tag2obj(site_description_element,
+                 _ns("maxDistanceFromStation"), float)
+
+    # Formal topographic/terrain classification schemes.
+    topography_element = site_description_element.find(_ns("siteTopography"))
+    if topography_element is not None:
+        site_description.topographyA = \
+            _tag2obj(topography_element, _ns("schemaA"), str)
+        site_description.topographyB = \
+            _tag2obj(topography_element, _ns("schemaB"), str)
+
+    # QuakeML-STC-derived site morphology and near-surface indicators.
+    morphology_element = site_description_element.find(_ns("siteMorphology"))
+    if morphology_element is not None:
+        _read_morphology(morphology_element, site_description)
+
+    site_description.preferred_site_analysisID = \
+        _tag2obj(site_description_element,
+                 _ns("preferredSiteAnalysisID"), str)
+    site_description.preferred_velocity_profileID = \
+        _tag2obj(site_description_element,
+                 _ns("preferredVelocityProfileID"), str)
+
+    # Overall Quality Index
+    site_description.overall_quality_index = \
+        _tag2obj(site_description_element,
+                 _ns("overallQindex"), float)
+
+    return site_description
+
+
+def _read_morphology(morphology_element, site_description_obj):
+    """
+    Read the QuakeML-STC-derived <siteMorphology> element.
+
+    :rtype: None
+
+     <siteMorphology> element structure:
+
+    - siteMorphology
+        - morphology
+        - siteClassEC8
+            - value, qualityIndex, reference
+        - bedrockDepth
+            - value, qualityIndex, reference
+        - h800
+            - value, qualityIndex, reference
+        - geologicalUnit
+            - value, geologicalMapScale, geologicalUnitOGE,
+              qualityIndex, reference
+    """
+    site_description_obj.morphology = \
+        _tag2obj(morphology_element, _ns("morphology"), str)
+
+    site_description_obj.ec8 = _read_site_indicator(
+        morphology_element, "siteClassEC8", EC8)
+    site_description_obj.bedrock_depth = _read_site_indicator(
+        morphology_element, "bedrockDepth", BedrockDepth,
+        value_with_uncertainty=True)
+    site_description_obj.h800 = _read_site_indicator(
+        morphology_element, "h800", H800,
+        value_with_uncertainty=True)
+    site_description_obj.geological_unit = _read_site_indicator(
+        morphology_element, "geologicalUnit", GeologicalUnit)
+
+
+def _read_analysis(analysis_element):
+    """
+    Read the <Analysis> element
+
+    :type analysis_element: :class:`~lxml.etree._Element`, required
+
+    :rtype: :class:`~obspy.io.sitexml.core.Analysis`
+    :return: An Analysis object populated with the values read from
+            the <Analysis> element.
+
+    <Analysis> element structure:
+
+    - Analysis [List]
+        - PublicID (attr)
+        - creationTime
+        - resonanceFrequency
+            - value, method, qualityIndex, reference
+        - velocityS30
+            - value, method, manualIndex, methodCombIndex,
+              qualityIndex, reference
+        - sptLogsCount
+        - cptLogsCount
+        - boreholeLogsCount
+        - velocityProfileSet
+            - velocityProfile [List]
+                - PublicID (attr)
+                - layerCount
+                - velocityProfileData [List]
+                    - density
+                    - velocityP
+                    - velocityS
+                    - layerThickness
+                        - layerTopDepth
+                        - layerBottomDepth
+            - qualityIndex
+            - reference
+    """
+
+    resource_id = _attr2obj(analysis_element, "publicID", str)
+    site_descriptionID = _tag2obj(
+        analysis_element, _ns("siteDescriptionID"), str)
+
+    analysis_obj = Analysis(resource_id=resource_id,
+                            site_descriptionID=site_descriptionID)
+
+    creation_time = _tag2obj(analysis_element, _ns("creationTime"), str)
+    if creation_time is not None:
+        analysis_obj.creation_date = obspy.UTCDateTime(creation_time)
+    analysis_obj.resonance_frequency = _read_site_indicator(
+        analysis_element, "resonanceFrequency", ResonanceFrequency,
+        value_with_uncertainty=True)
+    analysis_obj.velocity_s30 = _read_site_indicator(
+        analysis_element, "velocityS30", VelocityS30,
+        value_with_uncertainty=True)
+
+    analysis_obj.spt_logs_count = \
+        _tag2obj(analysis_element, _ns("sptLogsCount"), int)
+    analysis_obj.cpt_logs_count = \
+        _tag2obj(analysis_element, _ns("cptLogsCount"), int)
+    analysis_obj.borehole_logs_count = \
+        _tag2obj(analysis_element, _ns("boreholeLogsCount"), int)
+
+    _read_velocity_profile_set(analysis_element, analysis_obj)
+
+    return analysis_obj
+
+
+def _read_velocity_profile_set(analysis_element, analysis_obj):
+    """
+    Read the <velocityProfileSet> element
+
+    :type analysis_element: :class:`~lxml.etree._Element`, required
+    :param analysis_element:
+    :type analysis_obj:
+        :class:`~obspy.io.sitexml.core.Analysis`, required
+    :param analysis_obj: Analysis object to store values read from the
+        <velocityProfileSet> element. It should be pre-initialized by
+        the calling function.
+    :rtype: :class:`~obspy.io.sitexml.core.VelocityProfileSet`
+    """
+
+    velocity_profile_set_element = analysis_element.find(
+        _ns("velocityProfileSet"))
+    if velocity_profile_set_element is None:
+        return None
+
+    velocity_profile_element_list = (
+        velocity_profile_set_element.findall(_ns("velocityProfile")))
+    vp_qindex = _tag2obj(
+        velocity_profile_set_element, _ns("qualityIndex"), float)
+    vp_literature_source = _read_literature_source(
+        velocity_profile_set_element)
+    vp_external_references = _read_external_references(
+        velocity_profile_set_element)
+
+    # At least one velocity profile or a reference should be present in
+    # SiteXML in order to create the VelocityProfileSet object.
+    if len(velocity_profile_element_list) == 0 \
+            and vp_literature_source is None \
+            and not vp_external_references:
+        return None
+
+    analysis_obj.velocity_profile_set = \
+        VelocityProfileSet(velocity_profiles=[],    # We will fill this later
+                           quality_index=vp_qindex,
+                           literature_source=vp_literature_source,
+                           external_references=vp_external_references)
+
+    # Go through the nested velocityProfile elements.
+    # For each velocityProfile tree element create a VelocityProfile object.
+    #
+    for velocity_profile_element in velocity_profile_element_list:
+        resource_id = _attr2obj(velocity_profile_element, "publicID", str)
+        layer_count = _tag2obj(
+            velocity_profile_element, _ns("layerCount"), int)
+        vp_data_element_list = velocity_profile_element.findall(
+            _ns("velocityProfileData"))
+        vp_data_list = []
+
+        # Go through the velocityProfileData elements.
+        # For each velocityProfileData tree element create a
+        # VelocityProfileData object and add it to the VelocityProfile object
+        #
+        if vp_data_element_list is not None:
+            for vp_data_element in vp_data_element_list:
+                velocity_profile_data = _read_velocity_profile_data(
+                    vp_data_element)
+                vp_data_list.append(velocity_profile_data)
+
+        vp = VelocityProfile(resource_id=resource_id,
+                             velocity_profile_data=vp_data_list,
+                             layer_count=layer_count)
+
+        analysis_obj.velocity_profile_set.velocity_profiles.append(vp)
+
+
+def _read_velocity_profile_data(vp_data_element):
+    """
+    Read one velocityProfileData element into a layer object.
+
+    :rtype: :class:`~obspy.io.sitexml.core.VelocityProfileData`
+    """
+
+    velocityS = \
+        _read_value_with_uncertainty(vp_data_element, "velocityS", float)
+    if velocityS is None:
+        raise SiteXMLValidationError(
+            "velocityProfileData requires a velocityS element."
+        )
+    velocityP = \
+        _read_value_with_uncertainty(vp_data_element, "velocityP", float)
+    density = \
+        _read_value_with_uncertainty(vp_data_element, "density", float)
+
+    geometry_element = vp_data_element.find(_ns("layerThickness"))
+    if geometry_element is None:
+        raise SiteXMLValidationError(
+            "velocityProfileData requires a layerThickness element."
+        )
+    top_depth = \
+        _read_value_with_uncertainty(geometry_element,
+                                     "layerTopDepth", float)
+    bottom_depth = \
+        _read_value_with_uncertainty(geometry_element,
+                                     "layerBottomDepth", float)
+
+    if top_depth is None:
+        raise SiteXMLValidationError(
+            "velocityProfileData requires layerTopDepth."
+        )
+
+    vp_data = VelocityProfileData(
+        velocityS=velocityS,
+        velocityP=velocityP,
+        density=density,
+        top_depth=top_depth,
+        bottom_depth=bottom_depth
+        )
+
+    return vp_data
+
+
+def _read_site_indicator(parent, site_indicator_name, site_indicator_cls,
+                         value_with_uncertainty=False):
+    """
+    Read one nested SiteXML site indicator into its API object.
+
+    :rtype: :class:`~obspy.io.sitexml.core.SiteIndicator` or None
+    """
+    indicator_element = parent.find(_ns(site_indicator_name))
+    if indicator_element is None:
+        return None
+
+    if value_with_uncertainty:
+        indicator_value = _read_value_with_uncertainty(
+            indicator_element, "value", float)
+    else:
+        indicator_value = _tag2obj(indicator_element, _ns("value"), str)
+
+    quality_index = _tag2obj(indicator_element, _ns("qualityIndex"), float)
+    literature_source = _read_literature_source(indicator_element)
+    external_references = _read_external_references(indicator_element)
+
+    kwargs = {
+        "value": indicator_value,
+        "quality_index": quality_index,
+        "literature_source": literature_source,
+        "external_references": external_references,
+    }
+
+    if site_indicator_name in ("resonanceFrequency", "velocityS30"):
+        kwargs["methods"] = _tags2obj(indicator_element, _ns("method"), str)
+
+    if site_indicator_name == "geologicalUnit":
+        kwargs["geological_map_scale"] = _tag2obj(
+            indicator_element, _ns("geologicalMapScale"), str)
+        kwargs["geological_unit_OGE"] = _tag2obj(
+            indicator_element, _ns("geologicalUnitOGE"), str)
+
+    if site_indicator_name == "velocityS30":
+        kwargs["method_combined_qindex"] = _tag2obj(
+            indicator_element, _ns("methodCombIndex"), str)
+        kwargs["manual_qindex"] = _tag2obj(
+            indicator_element, _ns("manualIndex"), str)
+
+    return site_indicator_cls(**kwargs)
+
+
+def _read_external_references(parent):
+    """
+    Read all externalReference elements from ``parent``.
+
+    :rtype: list or None
+    """
+    return [
+        _read_external_reference(external_reference_element)
+        for external_reference_element in parent.findall(
+            _ns("externalReference"))
+    ] or None
+
+
+def _read_literature_source(parent):
+    """
+    Read a literatureSource element from ``parent``.
+
+    :rtype: :class:`~obspy.io.sitexml.core.LiteratureSource` or None
+    """
+    literature_source_element = parent.find(_ns("literatureSource"))
+    if literature_source_element is None:
+        return None
+
+    title = _tag2obj(
+        literature_source_element, _ns("title"), str)
+    first_author = _tag2obj(
+        literature_source_element, _ns("firstAuthor"), str)
+    secondary_authors = _tag2obj(
+        literature_source_element, _ns("secondaryAuthors"), str)
+    year = _tag2obj(
+        literature_source_element, _ns("year"), str)
+    booktitle = _tag2obj(
+        literature_source_element, _ns("booktitle"), str)
+    doi = _tag2obj(
+        literature_source_element, _ns("doi"), str)
+    language = _tag2obj(
+        literature_source_element, _ns("languageCode"), str)
+
+    return LiteratureSource(title=title,
+                            first_author=first_author,
+                            secondary_authors=secondary_authors,
+                            year=year,
+                            booktitle=booktitle,
+                            language=language,
+                            doi=doi)
+
+
+# ## NOT USED anymore
+#
+def _read_value(parent, tag, type):
+    """
+    Read a nested value from an element.
+
+    :rtype: object or None
+
+    The element should have the following structure::
+
+        <parent>
+            <tag>
+                <value>...</value>
+            </tag>
+        </parent>
+    """
+    element = parent.find(_ns(tag))
+    if element is None:
+        return None
+    return _tag2obj(element, _ns("value"), type)
+
+
+def _read_value_with_uncertainty(parent, tag, type):
+    """
+    Read a nested value/uncertainty pair from an element.
+
+    :rtype: :class:`~obspy.io.sitexml.core.ValueWithUncertainty` or None
+
+    The element should have the following structure::
+
+        <parent>
+            <tag>
+                <value>...</value>
+                <uncertainty>...</uncertainty>
+            </tag>
+        </parent>
+    """
+    element = parent.find(_ns(tag))
+    if element is None:
+        return None
+
+    value = _tag2obj(element, _ns("value"), type)
+    uncertainty = _tag2obj(element, _ns("uncertainty"), type)
+
+    return ValueWithUncertainty(value, uncertainty)
+
+
+def _read_external_reference(ref_element):
+    """
+    Read an ExternalReference object.
+
+    :rtype: :class:`~obspy.core.inventory.util.ExternalReference`
+    """
+    uri = _tag2obj(ref_element, _ns("uri"), str)
+    description = _tag2obj(ref_element, _ns("description"), str)
+    return ExternalReference(uri=uri, description=description)
+
+
+# ##### WRITE SiteXML functionality
+#
+def sitedict_to_sitexml(sera_site_dict, output_folder="."):
+    """
+    Exports a dictionary of SERASite objects to SiteXML files.
+
+    The files are written to a folder given with argument ``output_folder``.
+    The name of each SiteXML file uses
+    :meth:`~obspy.io.sitexml.core.SERASite.get_sitexml_filename`, currently
+    ``Site_<station-or-site-id>_<DD-MM-YYYY>.xml``. The date is the same
+    creation time written to the root ``creationTime`` element.
+
+    :type sera_site_dict: dict of
+        :class:`~obspy.io.sitexml.core.SERASite`, required
+    :param sera_site_dict: Dictionary of SERASite objects.
+    :type output_folder: str or pathlib.Path, optional
+    :param output_folder: Output folder to write the SiteXML files. If not
+        provided writes to the current folder.
+    :rtype: None
+    """
+    output_folder = Path(output_folder)
+    for sera_site in sera_site_dict.values():
+        creation_time = obspy.UTCDateTime()
+        output_file = output_folder / sera_site.get_sitexml_filename(
+            creation_time)
+        write_sitexml(
+            sera_site, output_file, validate=True,
+            creation_time=creation_time)
+
+
+def write_sitexml(sera_site, file_or_file_object=None, validate=True,
+                  creation_time=None):
+    """
+    Writes a sera_site object to a buffer.
+
+    :type sera_site: :class:`~obspy.io.sitexml.core.SERASite`, required
+    :param sera_site: The sitexml instance to be written.
+    :type file_or_file_object: str, pathlib.Path, file-like object, or None,
+        optional
+    :param file_or_file_object: The file or file-like object to be written
+        to. If omitted or None, the file is written to the current directory
+        using a default SiteXML filename.
+    :type validate: bool, optional
+    :param validate: If True, the created document will be validated with
+        the SiteXML schema before being written. Defaults to True which is
+        the recommended usage.
+    :type creation_time: :class:`~obspy.core.utcdatetime.UTCDateTime` or
+        convertible, optional
+    :param creation_time: Creation time to stamp into the root
+        ``creationTime`` element. If omitted, the current time is used.
+        Use this parameter if you provide an already timestamped
+        output filename.
+    :rtype: None
+
+    Example
+
+    >>> from obspy.io.sitexml.sitexml import write_sitexml
+    >>> write_sitexml(sera_site, validate=True)  # doctest: +SKIP
+
+    """
+    # Validate cross-references in the in-memory SiteXML object graph before
+    # emitting XML, so broken internal IDs fail early with API-level errors.
+    sera_site.validate_references()
+
+    attribs = {"schemaVersion": SCHEMA_VERSION}
+    if sera_site.resource_id:
+        attribs["publicID"] = sera_site.resource_id
+
+    root = etree.Element("SERA_quakeml", attribs, nsmap={None: NAMESPACE})
+
+    # Root-level creationTime is document serialization metadata. Always
+    # stamp it with the current write time, even when rewriting an unchanged
+    # SERASite object that was read from an existing XML document.
+    if creation_time is None:
+        creation_time = obspy.UTCDateTime()
+    else:
+        creation_time = obspy.UTCDateTime(creation_time)
+    sera_site.created = creation_time
+    etree.SubElement(root, "creationTime").text = str(creation_time)
+
+    if file_or_file_object is None:
+        file_or_file_object = sera_site.get_sitexml_filename(creation_time)
+
+    _write_revision_history(root, sera_site.revision_history)
+
+    if sera_site.external_references:
+        for ref in sera_site.external_references:
+            _write_external_reference(root, ref)
+
+    if sera_site.site_owner:
+        _write_site_owner(root, sera_site.site_owner)
+    if sera_site.site_description:
+        _write_site_description(root, sera_site.site_description)
+    if sera_site.analysis:
+        _write_analysis(root, sera_site.analysis)
+
+    tree = root.getroottree()
+    if validate is True:
+        buf = io.BytesIO()
+        tree.write(buf)
+        buf.seek(0)
+        validates, errors = validate_sitexml(buf)
+        buf.close()
+        if validates is False:
+            msg = "The created file fails to validate.\n"
+            for err in errors:
+                msg += "\t%s\n" % err
+            raise SiteXMLValidationError(msg)
+
+    etree.indent(tree, "    ")
+    tree.write(file_or_file_object, pretty_print=True,
+               xml_declaration=True, encoding="UTF-8")
+
+
+def _write_site_owner(parent, site_owner):
+    """
+    Append a siteOwner element to ``parent``.
+
+    :rtype: None
+    """
+    if site_owner.owner_codename and site_owner.owner_fullname:
+        attribs = (
+            {"publicID": site_owner.ownerID}
+            if site_owner.ownerID else None
+        )
+        site_owner_elem = etree.SubElement(parent, "siteOwner", attribs)
+        _obj2tag(site_owner_elem, "codeName", site_owner.owner_codename)
+        _obj2tag(site_owner_elem, "fullName", site_owner.owner_fullname)
+    else:
+        raise SiteXMLValidationError(
+            "Site owner requires owner_codename and owner_fullname."
+        )
+
+    if (site_owner.person_firstname and site_owner.person_lastname and
+            site_owner.person_mbox):
+        contact_elem = etree.SubElement(site_owner_elem, "contact")
+        attribs = (
+            {"publicID": site_owner.personID}
+            if site_owner.personID else None
+        )
+        person_elem = etree.SubElement(contact_elem, "person", attribs)
+        _obj2tag(person_elem, "firstname", site_owner.person_firstname)
+        _obj2tag(person_elem, "lastname", site_owner.person_lastname)
+        _obj2tag(person_elem, "mbox", site_owner.person_mbox)
+        _obj2tag(person_elem, "homepage", site_owner.person_homepage)
+    else:
+        raise SiteXMLValidationError(
+            "Site owner contact person requires firstname, "
+            "lastname and mbox."
+        )
+
+    if site_owner.institution_name and site_owner.institution_mbox:
+        affiliation_elem = etree.SubElement(contact_elem, "affiliation")
+        attribs = (
+            {"publicID": site_owner.institutionID}
+            if site_owner.institutionID else None
+        )
+        institution_elem = etree.SubElement(affiliation_elem,
+                                            "institution", attribs)
+        _obj2tag(institution_elem, "name",
+                 site_owner.institution_name)
+        _obj2tag(institution_elem, "mbox",
+                 site_owner.institution_mbox)
+        _obj2tag(institution_elem, "phone",
+                 site_owner.institution_phone)
+        _obj2tag(institution_elem, "homepage",
+                 site_owner.institution_homepage)
+        _obj2tag(affiliation_elem, "department",
+                 site_owner.affiliation_department)
+        _obj2tag(affiliation_elem, "function",
+                 site_owner.affiliation_function)
+
+        if site_owner.address_street:
+            postal_address_elem = \
+                etree.SubElement(institution_elem, "postalAddress")
+            _obj2tag(postal_address_elem,
+                     "streetAddress", site_owner.address_street)
+            _obj2tag(postal_address_elem,
+                     "locality", site_owner.address_locality)
+            _obj2tag(postal_address_elem,
+                     "postalCode", site_owner.address_postal_code)
+
+            country_elem = etree.SubElement(postal_address_elem, "country")
+            _obj2tag(country_elem, "code", site_owner.address_country_code)
+            _obj2tag(country_elem, "country", site_owner.address_country)
+
+
+def _write_revision_history(parent, revision_history):
+    """
+    Append a root-level revisionHistory element.
+
+    :rtype: None
+    """
+    if not revision_history:
+        return
+
+    revision_history_elem = etree.SubElement(parent, "revisionHistory")
+    for revision in revision_history:
+        revision_elem = etree.SubElement(revision_history_elem, "revision")
+        _obj2tag(revision_elem, "revisionTime", revision.revision_time)
+        _obj2tag(revision_elem, "description", revision.description)
+        _obj2tag(revision_elem, "author", revision.author)
+        _obj2tag(revision_elem, "version", revision.version)
+        _obj2tag(revision_elem, "previousVersion",
+                 revision.previous_version)
+
+
+def _write_site_description(parent, site_description):
+    """
+    Append a siteDescription element to ``parent``.
+
+    :rtype: None
+    """
+    attribs = (
+        {"publicID": site_description.resource_id}
+        if site_description.resource_id else None
+    )
+    site_description_elem = etree.SubElement(parent,
+                                             "siteDescription", attribs)
+
+    _obj2tag(site_description_elem, "station", site_description.station_code)
+    _obj2tag(site_description_elem, "latitude", site_description.latitude)
+    _obj2tag(site_description_elem, "longitude", site_description.longitude)
+    _obj2tag(site_description_elem, "altitude", site_description.altitude)
+    _obj2tag(site_description_elem, "minDistanceFromStation",
+             site_description.min_distance_from_station)
+    _obj2tag(site_description_elem, "maxDistanceFromStation",
+             site_description.max_distance_from_station)
+
+    if site_description.topographyA or site_description.topographyB:
+        site_topography_elem = etree.SubElement(site_description_elem,
+                                                "siteTopography")
+        _obj2tag(site_topography_elem, "schemaA", site_description.topographyA)
+        _obj2tag(site_topography_elem, "schemaB", site_description.topographyB)
+
+    if (site_description.morphology or site_description.ec8 or
+            site_description.bedrock_depth or site_description.h800 or
+            site_description.geological_unit):
+        site_morphology_elem = etree.SubElement(site_description_elem,
+                                                "siteMorphology")
+        _obj2tag(site_morphology_elem, "morphology",
+                 site_description.morphology)
+
+        _write_site_indicator(site_morphology_elem, "siteClassEC8",
+                              site_description.ec8)
+        _write_site_indicator(site_morphology_elem, "bedrockDepth",
+                              site_description.bedrock_depth)
+        _write_site_indicator(site_morphology_elem, "h800",
+                              site_description.h800)
+        _write_site_indicator(site_morphology_elem, "geologicalUnit",
+                              site_description.geological_unit)
+
+    _obj2tag(site_description_elem, "preferredSiteAnalysisID",
+             site_description.preferred_site_analysisID)
+    _obj2tag(site_description_elem, "preferredVelocityProfileID",
+             site_description.preferred_velocity_profileID)
+    _obj2tag(site_description_elem, "overallQindex",
+             site_description.overall_quality_index)
+
+
+def _write_analysis(parent, analysis_list):
+    """
+    Append all analysis elements to ``parent``.
+
+    :rtype: None
+    """
+    for analysis in analysis_list:
+        attribs = (
+            {"publicID": analysis.resource_id}
+            if analysis.resource_id else None
+        )
+        analysis_elem = etree.SubElement(parent, "analysis", attribs)
+
+        _obj2tag(analysis_elem, "siteDescriptionID",
+                 analysis.site_descriptionID)
+        _obj2tag(analysis_elem, "creationTime",
+                 analysis.creation_date)
+        _write_site_indicator(analysis_elem, "resonanceFrequency",
+                              analysis.resonance_frequency)
+        _write_site_indicator(analysis_elem, "velocityS30",
+                              analysis.velocity_s30)
+        _obj2tag(analysis_elem, "sptLogsCount",
+                 analysis.spt_logs_count)
+        _obj2tag(analysis_elem, "cptLogsCount",
+                 analysis.cpt_logs_count)
+        _obj2tag(analysis_elem, "boreholeLogsCount",
+                 analysis.borehole_logs_count)
+        _write_velocity_profile_set(
+            analysis_elem, analysis.velocity_profile_set)
+
+
+def _write_velocity_profile_set(parent, velocity_profile_set):
+    """
+    Append the velocity-profile set and its metadata to ``parent``.
+
+    :rtype: None
+    """
+    if _has_velocity_profile_set_content(velocity_profile_set):
+        velocity_profile_set_elem = etree.SubElement(
+            parent, "velocityProfileSet")
+        if velocity_profile_set.velocity_profiles:
+            for vp in velocity_profile_set.velocity_profiles:
+                index = velocity_profile_set.velocity_profiles.index(vp)
+                comment = etree.Comment(f" Velocity profile # {index + 1} ")
+                velocity_profile_set_elem.append(comment)
+
+                attribs = {"publicID": vp.resource_id}
+                velocity_profile_elem = etree.SubElement(
+                    velocity_profile_set_elem, "velocityProfile", attribs)
+                if vp.layer_count != len(vp.velocity_profile_data):
+                    raise SiteXMLValidationError(
+                        "Number of velocity profile data layers does not "
+                        "match the layer_count value."
+                    )
+                _obj2tag(velocity_profile_elem, "layerCount", vp.layer_count)
+
+                for vp_data in vp.velocity_profile_data:
+                    vp_data_elem = etree.SubElement(
+                        velocity_profile_elem, "velocityProfileData")
+                    _write_value_with_uncertainty(
+                        vp_data_elem, "velocityS", vp_data.velocityS)
+                    _write_value_with_uncertainty(
+                        vp_data_elem, "velocityP", vp_data.velocityP)
+                    _write_value_with_uncertainty(
+                        vp_data_elem, "density", vp_data.density)
+                    geometry_elem = etree.SubElement(
+                        vp_data_elem, "layerThickness")
+                    _write_value_with_uncertainty(
+                        geometry_elem, "layerTopDepth",
+                        vp_data.top_depth)
+                    _write_value_with_uncertainty(
+                        geometry_elem, "layerBottomDepth",
+                        vp_data.bottom_depth)
+
+        _obj2tag(velocity_profile_set_elem, "qualityIndex",
+                 velocity_profile_set.quality_index)
+        if velocity_profile_set.literature_source:
+            _write_literature_source(
+                velocity_profile_set_elem,
+                velocity_profile_set.literature_source)
+        if velocity_profile_set.external_references:
+            for external_reference in velocity_profile_set.external_references:
+                _write_external_reference(
+                    velocity_profile_set_elem, external_reference)
+
+
+def _has_velocity_profile_set_content(velocity_profile_set):
+    """
+    Return whether a velocity-profile set has schema-meaningful content.
+
+    Quality index alone is not sufficient because it must qualify either
+    embedded profile data or a supporting reference.
+
+    :rtype: bool
+    """
+    if not velocity_profile_set:
+        return False
+    return bool(
+        velocity_profile_set.velocity_profiles or
+        velocity_profile_set.literature_source or
+        velocity_profile_set.external_references)
+
+
+def _write_site_indicator(parent, site_indicator_name, site_indicator_obj):
+    """
+    Append a site indicator value, methods, quality index, and reference.
+
+    :rtype: None
+    """
+    if site_indicator_obj:
+        site_indicator_elem = etree.SubElement(parent, site_indicator_name)
+        if isinstance(site_indicator_obj.value, ValueWithUncertainty):
+            _write_value_with_uncertainty(site_indicator_elem, "value",
+                                          site_indicator_obj.value)
+        else:
+            etree.SubElement(site_indicator_elem, "value").text = (
+                str(site_indicator_obj.value)
+            )
+
+        _write_methods(site_indicator_elem, site_indicator_obj)
+
+        if site_indicator_name == "velocityS30":
+            _obj2tag(site_indicator_elem, "methodCombIndex",
+                     site_indicator_obj.method_combined_qindex)
+            _obj2tag(site_indicator_elem, "manualIndex",
+                     site_indicator_obj.manual_qindex)
+
+        if site_indicator_name == "geologicalUnit":
+            _obj2tag(site_indicator_elem, "geologicalMapScale",
+                     site_indicator_obj.geological_map_scale)
+            _obj2tag(site_indicator_elem, "geologicalUnitOGE",
+                     site_indicator_obj.geological_unit_OGE)
+
+        _obj2tag(site_indicator_elem, "qualityIndex",
+                 site_indicator_obj.quality_index)
+
+        if site_indicator_obj.literature_source:
+            _write_literature_source(
+                site_indicator_elem, site_indicator_obj.literature_source)
+        if site_indicator_obj.external_references:
+            for external_reference in site_indicator_obj.external_references:
+                _write_external_reference(site_indicator_elem,
+                                          external_reference)
+
+
+def _write_literature_source(parent, literature_obj):
+    """
+    Append a literatureSource element.
+
+    :rtype: None
+    """
+    literature_elem = etree.SubElement(parent, "literatureSource")
+    _obj2tag(literature_elem, "title", literature_obj.title)
+    _obj2tag(literature_elem, "firstAuthor", literature_obj.first_author)
+    _obj2tag(literature_elem, "secondaryAuthors",
+             literature_obj.secondary_authors)
+    _obj2tag(literature_elem, "year", literature_obj.year)
+    _obj2tag(literature_elem, "booktitle", literature_obj.booktitle)
+    _obj2tag(literature_elem, "doi", literature_obj.doi)
+    _obj2tag(literature_elem, "languageCode", literature_obj.language)
+
+
+def _write_methods(parent, site_indicator_obj):
+    """
+    Append method elements for a site indicator.
+
+    :rtype: None
+    """
+    if site_indicator_obj.methods:
+        for method in site_indicator_obj.methods:
+            _obj2tag(parent, "method", method)
+
+
+# ## NOT USED anymore
+#
+def _write_value(parent, tag, value):
+    """
+    Append an element containing a nested value child.
+
+    :rtype: None
+    """
+    if value is not None:
+        element = etree.SubElement(parent, tag)
+        etree.SubElement(element, "value").text = str(value)
+
+
+def _write_value_with_uncertainty(parent, tag, value):
+    """
+    Append a value/uncertainty quantity element.
+
+    :rtype: None
+    """
+    if isinstance(value, ValueWithUncertainty):
+        element = etree.SubElement(parent, tag)
+        etree.SubElement(element, "value").text = str(value.value)
+        if value.uncertainty is not None:
+            etree.SubElement(element, "uncertainty").text = \
+                str(value.uncertainty)
+
+
+def _write_external_reference(parent, ref):
+    """
+    Append an externalReference element.
+
+    :rtype: None
+    """
+    ref_elem = etree.SubElement(parent, "externalReference")
+    etree.SubElement(ref_elem, "uri").text = ref.uri
+    etree.SubElement(ref_elem, "description").text = ref.description
+
+
+def _obj2tag(parent, tag_name, tag_value):
+    """
+    Append a simple text element when ``tag_value`` is present.
+
+    :rtype: None
+    """
+    if tag_value is not None:
+        etree.SubElement(parent, tag_name).text = str(tag_value)
+
+
+# ##### Associate SiteXML with the respective StationXML
+#
+_STATIONXML_SITEXML_DESCRIPTION = "SERA SiteXML site characterization"
+
+
+def _is_station_sitexml_uri(uri, station_code):
+    """
+    Return whether ``uri`` looks like the official SiteXML file for station.
+
+    :type uri: str or None
+    :param uri: External-reference URI to inspect.
+    :type station_code: str
+    :param station_code: FDSN network and station code in ``network.station``
+        notation. The full station code is matched against the default
+        SiteXML filename patterns.
+    :rtype: bool
+    """
+    if not uri:
+        return False
+    filename = unquote(Path(urlparse(uri).path).name)
+    station = re.escape(station_code)
+    return re.match(
+        r"^(?:Site_%s(?:_[0-3][0-9]-[01][0-9]-[0-9]{4})?|%s)\.xml$" %
+        (station, station),
+        filename
+    ) is not None
+
+
+def _is_managed_sitexml_reference(ref):
+    """
+    Return whether ``ref`` was written by the SiteXML StationXML helper.
+
+    :type ref: :class:`~obspy.core.inventory.util.ExternalReference`
+    :param ref: Station-level external reference to inspect.
+    :rtype: bool
+    """
+    description = (ref.description or "").lower()
+    return _STATIONXML_SITEXML_DESCRIPTION.lower() in description
+
+
+def _add_station_sitexml_reference(station, station_code, sitexml_url,
+                                   description, replace_existing):
+    """
+    Add or replace the station-level SiteXML ``ExternalReference``.
+
+    :type station: :class:`~obspy.core.inventory.station.Station`
+    :param station: StationXML station object whose ``external_references``
+        list will be updated in place.
+    :type station_code: str
+    :param station_code: FDSN network and station code in ``network.station``
+        notation. Used to recognize existing default SiteXML filenames.
+    :type sitexml_url: str
+    :param sitexml_url: URL of the SiteXML document to store in the new
+        external reference.
+    :type description: str
+    :param description: Complete external-reference description, including
+        the ``added YYYY-MM-DD`` marker.
+    :type replace_existing: bool
+    :param replace_existing: If ``True``, replace matching SiteXML references;
+        if ``False``, append the new reference unless its URL is already
+        present.
+    :rtype: None
+    """
+    new_ref = ExternalReference(uri=sitexml_url, description=description)
+
+    if not replace_existing:
+        # append a new reference unless the exact URL is already present.
+        if not any(ref.uri == sitexml_url for ref in
+                   station.external_references):
+            station.external_references.append(new_ref)
+        return
+
+    updated_refs = []
+    inserted = False
+    for ref in station.external_references:
+        # Search for matching references.
+        replace_ref = (
+            ref.uri == sitexml_url or
+            _is_managed_sitexml_reference(ref) or
+            _is_station_sitexml_uri(ref.uri, station_code)
+        )
+        # If a matching reference is found replace it
+        if replace_ref:
+            if not inserted:
+                updated_refs.append(new_ref)
+                inserted = True
+        else:
+            updated_refs.append(ref)
+
+    # If no matching references were found, add the new reference
+    if not inserted:
+        updated_refs.append(new_ref)
+    station.external_references = updated_refs
+
+
+def add_sitexml_reference(inventory, station_code, sitexml_url, *,
+                          description=None, added_time=None,
+                          replace_existing=True):
+    """
+    Add a station-level SiteXML reference to a StationXML inventory.
+
+    Attach a SiteXML remote URL as a StationXML
+    :class:`~obspy.core.inventory.util.ExternalReference`.
+
+    Use ``station_code`` to select a
+    :class:`~obspy.core.inventory.station.Station` object from ``inventory``,
+    add an ``ExternalReference`` pointing to the current URL of the SiteXML
+    file, and return the updated inventory. By default, an existing SiteXML
+    reference for the same station is replaced so the StationXML pointer
+    stays current when dated SiteXML filenames change.
+
+    The ``ExternalReference.description`` is timestamped with either the
+    date the reference is written or a date provided by the user with
+    ``added_time``. The helper does not read the SiteXML document to
+    reuse its root ``creationTime`` for that purpose.
+
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+    :param inventory: StationXML inventory to update in place.
+    :type station_code: str, required
+    :param station_code: FDSN network and station code in ``network.station``
+        notation.
+    :type sitexml_url: str, required
+    :param sitexml_url: URL of the SiteXML document to reference.
+    :type description: str, optional
+    :param description: StationXML external-reference description. If
+        omitted, a SERA SiteXML description is used. The date the reference
+        was added is appended to the description.
+    :type added_time: :class:`~obspy.core.utcdatetime.UTCDateTime` or
+        compatible, optional
+    :param added_time: Timestamp used for the ``added YYYY-MM-DD`` marker in
+        the external-reference description. Defaults to the current UTC time.
+    :type replace_existing: bool, optional
+    :param replace_existing: If ``True`` (default), replace an existing
+        SiteXML station reference written by this helper or one whose URL
+        uses the default SiteXML filename pattern for ``station_code``. If
+        ``False``, append a new reference unless the exact URL is already
+        present.
+
+    :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
+    :return: The updated inventory.
+
+    Example
+
+        >>> from obspy import read_inventory
+        >>> from obspy.io.sitexml.sitexml import add_sitexml_reference
+        >>> inventory = read_inventory("./station.xml")  # doctest: +SKIP
+        >>> inventory = add_sitexml_reference(  # doctest: +SKIP
+        ...     inventory, "XX.ABCD", "https://url/to/site.xml")
+        >>> inventory.write(  # doctest: +SKIP
+        ...     "./updated_station.xml", format="STATIONXML")
+    """
+    if not station_code:
+        raise SiteXMLValidationError(
+            "Cannot add SiteXML reference without station_code."
+        )
+    network_code, station_only_code = _split_station_code(station_code)
+    matches = [
+        (network, station)
+        for network in inventory
+        for station in network
+        if station.code == station_only_code and network.code == network_code
+    ]
+
+    if not matches:
+        raise SiteXMLValidationError(
+            "StationXML inventory did not contain station "
+            f"{station_code!r}."
+        )
+
+    _, station = matches[0]
+    description = description or _STATIONXML_SITEXML_DESCRIPTION
+    added_utc = (obspy.UTCDateTime() if added_time is None
+                 else obspy.UTCDateTime(added_time))
+    added_date = added_utc.date
+    description = f"{description}; added {added_date.isoformat()}"
+    _add_station_sitexml_reference(
+        station, station_code, sitexml_url, description, replace_existing)
+    return inventory

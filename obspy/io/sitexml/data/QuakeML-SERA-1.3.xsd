@@ -1,0 +1,1516 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- 
+	The SERA_quakeML schema has been created to facilitate the exchange of 
+	site characterization information. It is based on the QuakeML 2.0 Draft and 
+	complies with the requirements set by the European Geotechnical Database 
+	(EGD) and by EU-SERA.
+
+	Schema versions:
+	1.2: Created in the context of the SERA Project (Tasks 7.1-7.5)
+		Author: Cecile Cornou (cecile.cornou@univ-grenoble-alpes.fr)
+	1.3: Updated in the context of a software implementation
+		for handling site characterization metadata funded by ORFEUS.
+		Author: Kiriaki Konstantinidou (kiriaki@itsak.gr)	
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.orfeus-eu.org/xml/site/1"
+	xmlns:doc="https://www.orfeus-eu.org/xml/site/documentation"
+	targetNamespace="http://www.orfeus-eu.org/xml/site/1" elementFormDefault="qualified"
+	attributeFormDefault="unqualified" version="1.3">
+	
+	<xs:element name="SERA_quakeml" type="RootType">
+		<xs:annotation>
+			<xs:documentation>
+				The <strong>SERA_quakeML</strong> schema has been created to facilitate 
+				the exchange of site characterization information. It is based on the QuakeML 
+				2.0 Draft and complies with the requirements set by the European Geotechnical 
+				Database (EGD) and by EU-SERA.
+			</xs:documentation>
+		</xs:annotation>
+		<!-- All attributes with name "publicID" should have unique values -->
+		<xs:unique name="uniquePublicID">
+			<xs:selector xpath=".//*"/>
+			<xs:field xpath="@publicID"/>
+		</xs:unique>
+		<xs:key name="siteDescriptionPublicIDKey"
+			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
+			<xs:selector xpath="ssx:siteDescription"/>
+			<xs:field xpath="@publicID"/>
+		</xs:key>
+		<xs:key name="analysisPublicIDKey"
+			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
+			<xs:selector xpath="ssx:analysis"/>
+			<xs:field xpath="@publicID"/>
+		</xs:key>
+		<xs:key name="velocityProfilePublicIDKey"
+			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
+			<xs:selector xpath="ssx:analysis/ssx:velocityProfileSet/ssx:velocityProfile"/>
+			<xs:field xpath="@publicID"/>
+		</xs:key>
+		<xs:keyref name="analysisSiteDescriptionRef"
+			refer="siteDescriptionPublicIDKey"
+			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
+			<xs:selector xpath="ssx:analysis"/>
+			<xs:field xpath="ssx:siteDescriptionID"/>
+		</xs:keyref>
+		<xs:keyref name="preferredAnalysisRef"
+			refer="analysisPublicIDKey"
+			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
+			<xs:selector xpath="ssx:siteDescription"/>
+			<xs:field xpath="ssx:preferredSiteAnalysisID"/>
+		</xs:keyref>
+		<xs:keyref name="preferredVelocityProfileRef"
+			refer="velocityProfilePublicIDKey"
+			xmlns:ssx="http://www.orfeus-eu.org/xml/site/1">
+			<xs:selector xpath="ssx:siteDescription"/>
+			<xs:field xpath="ssx:preferredVelocityProfileID"/>
+		</xs:keyref>
+	</xs:element>
+
+	<xs:complexType name="RootType">
+		<xs:annotation>
+			<xs:documentation>
+				Root-level for SiteXML documents.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="creationTime" type="xs:dateTime"> 
+				<xs:annotation>
+					<xs:documentation>Date and time that this document was generated. 
+						DateTime format should follow the <strong>ISO 8601</strong> 
+						specification.
+						<p><strong>Example: </strong>2025-11-26T12:49:55Z</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="revisionHistory" type="RevisionHistoryType"
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Structured update history for this SiteXML
+						document. It records document-level provenance.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="externalReference" type="ExternalReferenceType" 
+						minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>URI of any type of external resource that may 
+						include site characterization information on this site. 
+						May occur more than one time. 
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="siteOwner" type="SiteOwnerType"/> 
+			<xs:element name="siteDescription" type="SiteDescriptionType"/> 
+			<xs:element name="analysis" type="AnalysisType" 
+						minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation> 
+					<xs:documentation>Each SiteXML document may include more 
+						than one Analysis object.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="publicID" type="ResourceIdentifier" use="required">
+			<xs:annotation>
+				<xs:documentation>Unique resource ID of the site.
+					<p><strong>Example: </strong>quakeml:domain.ab/site/001.</p>
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="schemaVersion" type="SchemaVersionType" use="required">
+			<xs:annotation>
+				<xs:documentation>The schema version of the XML file.
+					<p><strong>Example: </strong>1.3</p>
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="RevisionHistoryType">
+		<xs:annotation>
+			<xs:documentation>
+				Document-level revision history for a SiteXML file.
+				Each revision describes a published or generated version of this
+				document.
+				<p><strong>Note: </strong>Document Revision metadata are not included 
+					in the QuakeML 2.0 Draft</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="revision" type="RevisionType"
+						minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="RevisionType">
+		<xs:annotation>
+			<xs:documentation>
+				One document revision entry. The entry should summarize what changed
+				in the SiteXML document, when the revision was made, optionally
+				<strong>(but strongly recommented)</strong> who
+				made it and where the previous version can be found.
+				<p><strong>Note: </strong>Document Revision metadata are not included 
+					in the QuakeML 2.0 Draft</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="revisionTime" type="xs:dateTime">
+				<xs:annotation>
+					<xs:documentation>Date and time of this document revision.
+						<p><strong>Example: </strong>2026-05-02T12:00:00Z</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="description" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Human-readable summary of the document
+						update.
+						<p><strong>Example: </strong>Updated velocity profile and
+						quality indexes.</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="author" type="xs:string"
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Person, institution, or system responsible for
+						this document revision.
+						<p><strong>Example: </strong>ORFEUS</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="version" type="xs:string"
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Optional version label assigned by the publisher.
+						<p><strong>Example: </strong>2026-05-02</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="previousVersion" type="HttpURIType"
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>URI of the previous published SiteXML document
+						version, when available.
+						<p><strong>Example: </strong>
+						https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- Site Owner Type Definition -->
+
+	<xs:complexType name="SiteOwnerType">
+		<xs:annotation>
+			<xs:documentation>
+				Owner of the site. You must provide at least the Institution 
+				and a contact person.
+				<p><strong>Note: </strong>SiteOwnerType is based on 
+				QuakeML 2.0 Draft <strong>stc:SiteOwner</strong></p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="codeName" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						Short code name of the owner institution
+						<p><strong>Example: </strong>SIOF</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="fullName" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						Full name / title of the owner institution
+						<p><strong>Example: </strong>Some Institute of Seismology</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="contact" type="ContactType">
+				<xs:annotation>
+					<xs:documentation>
+						Contact person for this site.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="publicID" type="ResourceIdentifier">
+			<xs:annotation>
+				<xs:documentation>
+					Unique resource ID of the site owner. Optional.
+					<p><strong>Example: </strong>quakeml:domain.ab/site_owner/001.</p>
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	
+	<xs:complexType name="ContactType">
+		<xs:annotation>
+			<xs:documentation>
+				Contact information for a person. 
+				Includes personal informational and institution affiliation.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="person" type="PersonType"/>
+			<xs:element name="affiliation" type="AffiliationType" 
+						minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="PersonType">
+		<xs:annotation>
+			<xs:documentation>
+				Contact information for a person.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="firstname" type="xs:string"/>
+			<xs:element name="lastname" type="xs:string"/>
+			<xs:element name="mbox" type="EmailType">
+				<xs:annotation>
+					<xs:documentation>
+						<p><strong>Example: </strong>someemail@domain.ab</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="homepage" type="HttpURIType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						<p><strong>Example: </strong>https://www.domain.ab/person</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="publicID" type="ResourceIdentifier">
+			<xs:annotation>
+				<xs:documentation>Unique resource ID of the person. Optional.
+					<p><strong>Example: </strong>quakeml:domain.ab/person/001.</p>
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="AffiliationType">
+		<xs:annotation>
+			<xs:documentation>
+				Affiliation information for a person. Includes the 
+				institution and position within the institution. 
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="institution" type="InstitutionType"/>
+			<xs:element name="department" type="xs:string" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						<p><strong>Example: </strong>Engineering Seismology Department</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="function" type="xs:string" 
+						minOccurs="0" maxOccurs="1">
+			<xs:annotation>
+					<xs:documentation>
+						<p><strong>Example: </strong>Senior researcher</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="InstitutionType">
+		<xs:annotation>
+			<xs:documentation>
+				Information on the institution.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="name" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						<p><strong>Example: </strong>Seismological Institute</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="mbox" type="EmailType">
+				<xs:annotation>
+					<xs:documentation>
+						<p><strong>Example: </strong>info@domain.ab</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="phone" type="xs:string" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						<p><strong>Example: </strong>+30 123 4567890</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="homepage" type="HttpURIType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						<p><strong>Example: </strong>https://www.domain.ab</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="postalAddress" type="PostalAddressType"
+						minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="publicID" type="ResourceIdentifier">
+			<xs:annotation>
+				<xs:documentation>Unique resource ID of the institution. Optional.
+					<p><strong>Example: </strong>quakeml:domain.ab/institution/001.</p>
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	
+	<xs:complexType name="PostalAddressType">
+		<xs:annotation>
+			<xs:documentation>
+				A physical postal address.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="streetAddress" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						<p><strong>Example: </strong>Some streetAddress</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="locality" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						Use this field to provide the city of the location.
+						<p><strong>Example: </strong>Thessaloniki</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="postalCode" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						<p><strong>Example: </strong>12 345</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="country" type="CountryType"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="CountryType">
+		<xs:annotation>
+			<xs:documentation>
+				Information on the country. 
+				Includes country code according to ISO 3166-1.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="code" type="CountryCodeType">
+				<xs:annotation>
+					<xs:documentation>
+						Country code according to ISO 3166-1. 
+						It should be a two letter uppercase value.
+						<p><strong>Example: </strong>GR</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="country" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						Country name
+						<p><strong>Example: </strong>Greece</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>	
+
+	<!-- Site Description Type Definitions -->
+
+	<xs:complexType name="SiteDescriptionType">
+		<xs:annotation>
+			<xs:documentation>
+				<p><strong>Note: </strong>SiteDescriptionType is loosely 
+				based on QuakeML 2.0 Draft
+				<strong>stc:StationDescription</strong></p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="station" type="StationCodeType" 
+				minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>FDSN network and station code in 
+						network.station notation. Fill this if site metadata 
+						refers to a station. Otherwise leave empty.
+						<p><strong>Example: </strong>XX.ABC1</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="latitude" type="LatitudeType">
+				<xs:annotation>
+					<xs:documentation>Geographic latitude (+/- for northern/
+						southern hemisphere, respectively). <br/>
+						Value range (-90, 90). <br/>
+						<strong>Unit (degress)</strong>.
+						<p><strong>Example: </strong>34.1567</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="longitude" type="LongitudeType">
+				<xs:annotation>
+					<xs:documentation>Geographic longitude from Greenwich 
+						(+/- for eastern/western longitude, respectively). 
+						Value range (-180, 180). <br/>
+						<strong>Unit (degress)</strong>.
+						<p><strong>Example: </strong>28.1567</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="altitude" type="xs:double" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Elevation of ground with respect to sea 
+						level (+/- for above/below sea level, respectively).<br/> 
+						<strong>Unit (m)</strong>.
+						<p><strong>Example: </strong>130.80</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="minDistanceFromStation" type="NonNegativeDouble" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Minimum distance between the permanent 
+						seismological station and the site characterization 
+						measurement. Should be used only when representative 
+						latitude and longitude of site characterization 
+						measurements cannot be provided.<br/>
+						<strong>Unit (m).</strong>
+						<p><strong>Example: </strong>520.20</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="maxDistanceFromStation" type="NonNegativeDouble" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Maximum distance between the permanent 
+						seismological station and the site characterization 
+						measurement. Should be used only when representative 
+						latitude and longitude of site characterization 
+						measurements cannot be provided.<br/>
+						<strong>Unit (m).</strong>
+						<p><strong>Example: </strong>520.20</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="siteTopography" type="SiteTopographyType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>SERA topographic/terrain classification 
+						according to one or both supported classification schemes. 
+						This is kept as a sibling of siteMorphology to distinguish 
+						formal topographic classification from the QuakeML-STC-derived
+						site morphology indicator group.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="siteMorphology" type="SiteMorphologyType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Site morphology and near-surface
+						site indicators, including qualitative morphology, 
+						EC8 class, bedrock depth, H800, and geological unit.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="preferredSiteAnalysisID" type="ResourceIdentifier" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>If you provide one or more analysis 
+						for this site you should use this field to designate the 
+						prefered analysis.<br/>
+						<p><strong>Note: </strong>The Overall Quality index of the 
+						Site Characterization will be calculated using the 
+						preferred analysis.</p>
+						<p><strong>Example: </strong>quakeml:domain.ab/analysis/001</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="preferredVelocityProfileID" type="ResourceIdentifier" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>If you provide one or more velocity profiles 
+						for this site you should use this field to designate the 
+						prefered Velocity Profile.<br/>
+						If preferredSiteAnalysisID is also provided, the preferred 
+						Velocity Profile must belong to the preferred analysis.<br/>
+						<p><strong>Note: </strong>The Overall Quality index of the 
+						Site Characterization will be calculated using the Velocity 
+						Profile Survey quality index associated with the preferred 
+						analysis.</p>
+						<p><strong>Example: </strong>quakeml:domain.ab/velocity_profile/001</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="overallQindex" type="QIndexType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation
+						source="https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf"
+						doc:sourceLabel="SERA Deliverable 7.2, pg. 31">
+						The Overall Quality index for this site. 
+						Must be a decimal value between 0 an 1.<br/>
+						<p><strong>Note: </strong>For a description of the Overall
+						Quality Index of a site and guidelines for it's calculation 
+						refer to SERA Deliverable 7.2 - Best practice and quality 
+						assessment guidelines for site characterization.</p>
+						<p><strong>Example: </strong>0.8</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="publicID" type="ResourceIdentifier" use="required">
+			<xs:annotation>
+				<xs:documentation>
+					Unique resource ID of the site description.
+					<p><strong>Example: </strong>quakeml:domain.ab/site_description/001.</p>
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="SiteMorphologyType">
+		<xs:annotation>
+			<xs:documentation>
+				Group of site morphology and near-surface site indicators,
+				as suggested by SERA.
+				<p><strong>Note: </strong>SiteMorphologyType is based on QuakeML 
+				2.0 Draft <strong>stc:SiteMorphology</strong></p>
+				These include:
+				<ul>
+					<li>Qualitative Morphology</li>
+					<li>EC8 class site indicator</li>
+					<li>Seismological Bedrock Depth site indicator</li>
+					<li>Engineering Bedrock Depth (H800) site indicator</li>
+					<li>Geological Unit site indicator</li>
+				</ul>
+				For each site indicator network operators can provide at least the following information. 
+				For the allowed values in each case check the respective type.
+				<ul>
+					<li>Value</li>
+					<li>Reference</li>
+					<li>Quality Index</li>
+				</ul>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="morphology" type="MorphologyType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Qualitative description of the shape of the earth's surface.
+						Takes specific values.
+						<p><strong>Example: </strong>Slope</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="siteClassEC8" type="EC8IndicatorType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Ground type according to Eurocode 8 
+						(EC8 § 3.1.2, Table 3.1), based on the velocityS30 
+						value and the geotechnical description.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="bedrockDepth" type="BedrockDepthIndicatorType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Seismological Bedrock Depth.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="h800" type="H800IndicatorType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Engineering Bedrock Depth.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="geologicalUnit" type="GeologicalUnitIndicatorType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Free text description of the surface geology of a site.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+			
+	<xs:complexType name="SiteTopographyType">
+		<xs:annotation>
+					<xs:documentation 
+						source="https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf"
+						doc:sourceLabel="SERA Deliverable 7.1, Appendix I">
+						Formal topographic/terrain classification according to two
+						different schemas.<br/>
+						You can provide information for schemaA, schemaB or both.
+						<p><strong>Note: </strong>This in not included in the QuakeML 
+							2.0 Draft</p>
+						<ul>
+							<li>Example schema A: <strong>T1</strong></li>
+							<li>Example schema B: <strong>Flat</strong></li>
+						</ul>
+					</xs:documentation>
+				</xs:annotation>
+		<xs:choice>
+			<xs:sequence>
+				<xs:element name="schemaA" type="TopographySchemaAType"/>
+				<xs:element name="schemaB" type="TopographySchemaBType" 
+							minOccurs="0" maxOccurs="1"/>
+			</xs:sequence>
+			<xs:element name="schemaB" type="TopographySchemaBType"/>
+		</xs:choice>
+	</xs:complexType>
+
+	<xs:complexType name="EC8IndicatorType">
+		<xs:annotation>
+			<xs:documentation>
+				Ground type according to Eurocode 8 (EC8 § 3.1.2, Table 3.1),
+				based on the velocityS30 value and the geotechnical description. 
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="value" type="EC8ClassType"/>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="BedrockDepthIndicatorType">
+		<xs:annotation>
+			<xs:documentation>
+				Seismological Bedrock Depth.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="value" type="RealQuantity"/>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="H800IndicatorType">
+		<xs:annotation>
+			<xs:documentation>
+				Depth beyond which the shear-wave velocity Vs exceeds 
+				800 m/s (only if measured).
+				<p><strong>Note: </strong>This in not included in the 
+				QuakeML 2.0 Draft</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="value" type="RealQuantity"/>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="GeologicalUnitIndicatorType">
+		<xs:annotation>
+			<xs:documentation>
+				Free text description of the surface geology of a site. <br/>
+				Maximum 255 characters. 
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="value">
+				<xs:annotation>
+					<xs:documentation>
+						Free text description of the surface geology of a site.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="255"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="geologicalMapScale" type="xs:string" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Scale of geological map used for the description of
+						surface geology provided in geologicalUnit.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="geologicalUnitOGE" type="xs:string" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Description of the surface geology according to a
+						Unified, Pan-European Map.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:group name="SiteIndicatorMetadataGroup">
+		<xs:annotation>
+			<xs:documentation>
+				Common metadata for SiteXML site indicators. SiteXML groups an
+				indicator value with its quality index, supporting literature
+				source, and supporting external reference inside the indicator
+				element.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="qualityIndex" type="QIndexType"
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation
+						source="https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf"
+						doc:sourceLabel="SERA Deliverable 7.2, pg. 19">
+						Quality index for the provided site-indicator value.
+						This is the SERA specific Quality Index #1. It is
+						used to calculate the Overall Quality Index of the site.
+						<p><strong>Note: </strong>For a description of a site 
+						indicator's Quality Index #1, and guidelines for it's 
+						calculation refer to SERA Deliverable 7.2 - Best practice
+						and quality assessment guidelines for site characterization.</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="literatureSource" type="LiteratureSourceType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Literature source supporting the provided site-indicator value.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="externalReference" type="ExternalReferenceType" 
+						minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						External reference supporting the provided site-indicator value.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:group>
+	
+	<!-- Site Analysis Type Definitions -->
+
+	<xs:complexType name="AnalysisType">
+		<xs:annotation>
+			<xs:documentation>
+				<p><strong>Note: </strong>AnalysisType is based on QuakeML 
+				2.0 Draft <strong>sic:Analysis</strong></p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="siteDescriptionID" type="ResourceIdentifier"> <!-- required -->
+				<xs:annotation>
+					<xs:documentation>
+						The Site Description this Analysis object refers to.
+						<p><strong>Example: </strong>quakeml:domain.ab/site_description/001</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="creationTime" type="xs:dateTime" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Date that this analysis was generated.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="resonanceFrequency" 
+						type="ResonanceFrequencyIndicatorType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Resonance frequency of the soil column at each location/site.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="velocityS30" type="VelocityS30IndicatorType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Average shear-wave velocity between 0 and 30 meters depth.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<!--  **************** OTHER PARAMETERS REQUIRED BY EGD ******* -->
+			<!-- <xs:element name="velocityProfileCount" type="CounterType" minOccurs="0" maxOccurs="1">
+			Removed because it can be calculated -->
+			
+			<xs:element name="sptLogsCount" type="CounterType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Number of SPT log profile(s) that are 
+						available for this site.
+						<p><strong>Note: </strong>This counter is retained 
+						temporarily, but its exact meaning is ambiguous because 
+						SiteXML does not currently include the corresponding 
+						log objects. This element should be reviewed before the 
+						schema is distributed.</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="cptLogsCount" type="CounterType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Number of CPT log profile(s) that are 
+						available for this site.
+						<p><strong>Note: </strong>This counter is retained 
+						temporarily, but its exact meaning is ambiguous because 
+						SiteXML does not currently include the corresponding 
+						log objects. This element should be reviewed before the 
+						schema is distributed.</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="boreholeLogsCount" type="CounterType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Number of borehole log profile(s) that are 
+						available for this site.
+						<p><strong>Note: </strong>This counter is retained 
+						temporarily, but its exact meaning is ambiguous because 
+						SiteXML does not currently include the corresponding 
+						log objects. This element should be reviewed before the 
+						schema is distributed.</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<!-- **************** VELOCITY PROFILES *********************** -->
+			<xs:element name="velocityProfileSet" type="VelocityProfileSetIndicatorType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						One or more velocity profiles associated with this analysis.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="publicID" type="ResourceIdentifier" use="required"> 
+			<xs:annotation>
+				<xs:documentation>
+					Unique resource ID of the analysis.
+					<p><strong>Example: </strong>quakeml:domain.ab/analysis/001.</p>
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="ResonanceFrequencyIndicatorType">	
+		<xs:sequence>
+			<xs:element name="value" type="RealQuantity"/>
+			<xs:element name="method" type="ResonanceFrequencyMethodType" 
+						minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						Method by which resonance frequency value has been
+						determined. Multiple values are allowed.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="VelocityS30IndicatorType">
+		<xs:sequence>
+			<xs:element name="value" type="RealQuantity"/>
+			<xs:element name="method" type="VelocityS30MethodType" 
+						minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						Method by which velocityS30 value has been determined.
+						Multiple values are allowed.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="methodCombIndex" type="VelocityS30MethodCombIndexType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Information on whether a combination of two or more
+						methods has been applied to estimate velocityS30.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="manualIndex" type="VelocityS30ManualIndexType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Overall qualitative factor on the knowledge of the
+						maximum depth of Vs measurements.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="VelocityProfileSetIndicatorType">
+		<xs:annotation>
+			<xs:documentation>
+				Bundles zero or more velocity profiles associated with a 
+				specific analysis. 
+				<p><strong>Note: </strong>literatureSource, externalReference 
+				and qualityIndex refer to the bundle of velocity profiles.</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="velocityProfile" type="VelocityProfile" 
+						minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						Velocity profiles associated with this analysis.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:group ref="SiteIndicatorMetadataGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="VelocityProfile">
+		<xs:annotation>
+			<xs:documentation>
+				Data of <strong>one</strong> velocity profile.
+				<p><strong>Note: </strong>VelocityProfile is based on QuakeML 
+				2.0 Draft <strong>sic:VelocityProfile</strong></p>
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:sequence>
+        	<xs:element name="layerCount" type="CounterType" 
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Number of layers in this Velocity Profile. Optional;
+						if omitted, it is inferred from the number of
+						velocityProfileData elements. If provided, it should much 
+						the number of velocityProfileData elements.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+        	<xs:element name="velocityProfileData" type="VelocityProfileData" 
+						minOccurs="1" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						Velocity Profile data per layer.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+      	</xs:sequence>
+    	<xs:attribute name="publicID" use="required" type="ResourceIdentifier">
+			 <xs:annotation>
+				<xs:documentation>
+					Unique resource ID of the velocity profile.
+					<p><strong>Example: </strong>quakeml:domain.ab/velocity_profile/001.</p>
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+    </xs:complexType>
+
+	<xs:complexType name="VelocityProfileData">
+		<xs:annotation>
+			<xs:documentation>
+				Velocity Profile data for each layer.
+				<p><strong>Note: </strong>VelocityProfileData is based on QuakeML 
+				2.0 Draft <strong>sic:VelocityProfileData</strong></p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+    		<xs:element name="velocityS" type="RealQuantity" minOccurs="1" maxOccurs="1"/>
+    		<xs:element name="velocityP" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+    		<xs:element name="density" type="RealQuantity" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="layerThickness" type="LayerGeometry" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+    </xs:complexType>
+
+	<xs:complexType name="LayerGeometry">
+		<xs:annotation>
+			<xs:documentation>
+				Geometry of the Velocity Profile layer.
+				<p><strong>Note: </strong>LayerGeometry is based on QuakeML 
+				2.0 Draft <strong>sic:LayerGeometry</strong></p>
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:sequence>
+    		<xs:element name="layerTopDepth" type="RealQuantity"/>
+    		<xs:element name="layerBottomDepth" type="RealQuantity" 
+						minOccurs="0" maxOccurs="1"/>  <!-- Bottom depth may be missing for last layer -->
+		</xs:sequence>
+    </xs:complexType>
+
+	<!-- Common COMPLEX TYPES --> 
+
+	<xs:complexType name="LiteratureSourceType">
+		<xs:annotation>
+			<xs:documentation>
+				This type is used to provide information on a published resource.
+				<p><strong>Note: </strong>LiteratureSourceType is based on QuakeML 
+				2.0 Draft <strong>rm:LiteratureSource</strong></p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="title" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						Title of the publication.
+						<p><strong>Example: </strong>Characterization of site 
+							conditions (soil class, Vs30, velocity profiles) 
+							for 33 stations from the French permanent 
+							accelerometric network (RAP) using surface-wave methods</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="firstAuthor" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						Main author of the publication.
+						<p><strong>Example: </strong>Hollender F.</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="secondaryAuthors" type="xs:string"
+						minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Comma seperated list of the secondary authors.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="year" type="YearType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Year of the publication.
+						<p><strong>Example: </strong>2018</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="booktitle" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Title of the journal, book, etc this work was published.
+						<p><strong>Example: </strong>Bulletin Earthquake Engineering</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="doi" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Digital Object Identifier (DOI) of the publication.
+						This is optional to allow for older publications,
+						but <strong>strongly recommended</strong> unless you also provide an 
+						externalReference.
+						<p><strong>Example: </strong>10.1007/s10518-017-0135-5</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="languageCode" type="LanguageCodeType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						Language code according to ISO 639-1.
+						It should be a two letter lowercase value.
+						<p><strong>Example: </strong>en</p>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+				<!--
+				<xs:simpleType>
+					<xs:restriction base="ResourceIdentifier">
+						<xs:pattern value="doi:.*"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+				-->
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="ExternalReferenceType">
+		<xs:annotation>
+			<xs:documentation>
+				This type contains a URI and a description for external data that users
+				may want to reference in SiteXML. At the top level this describes external
+				resources for the site/document; inside a site indicator it supports the
+				specific indicator value that contains it.
+				<p><strong>Note:</strong> This type follows the FDSN StationXML 
+				ExternalReferenceType structure.</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="uri" type="xs:anyURI"/>
+			<xs:element name="description" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="RealQuantity">
+		<xs:annotation>
+			<xs:documentation>
+				This type is used to represent real values with uncertainty. <br/>
+				Uncertainty must be a non negative double.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="value" type="xs:double"/>
+			<xs:element name="uncertainty" type="NonNegativeDouble" 
+						minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- SIMPLE TYPES --> 
+
+	<xs:simpleType name="TopographySchemaAType">
+		<xs:annotation>
+			<xs:documentation
+				source="https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf"
+				doc:sourceLabel="SERA Deliverable 7.1, Appendix I">
+				Topographic class of the site according to the Italian Code 
+				topographic classification scheme.
+				<ul>
+					<li>T1 : Flat surface, isolated slopes and cliffs with 
+						average slope angle </li>
+					<li>T2 : Slopes with average slope angle i&gt;15</li>
+					<li>T3 : Ridges with crest width significantly less than 
+						the base width and average slope angle 15</li>
+					<li>T4 : Ridges with crest width significantly less than 
+						the base width and average slope angle i&gt;30</li>
+				</ul>
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:restriction base="xs:string">
+      		<xs:enumeration value="T1"/>
+      		<xs:enumeration value="T2"/>
+      		<xs:enumeration value="T3"/>
+      		<xs:enumeration value="T4"/>
+		</xs:restriction>
+  	</xs:simpleType>
+
+	<xs:simpleType name="TopographySchemaBType">
+		<xs:annotation>
+			<xs:documentation 
+				source="https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf"
+				doc:sourceLabel="SERA Deliverable 7.1, Appendix I">
+				Topographic position class of the site according to the 
+				Burjánek et al. terrain classification scheme. <br/>
+				For the precise definition of the allowed values refer to 
+				SERA Deliverable D7.1.
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:restriction base="xs:string">
+      		<xs:enumeration value="Valley"/>
+      		<xs:enumeration value="Lower slope"/>
+      		<xs:enumeration value="Flat"/>
+      		<xs:enumeration value="Middle slope"/>
+			<xs:enumeration value="Upper slope"/>
+			<xs:enumeration value="Ridge"/>
+		</xs:restriction>
+  	</xs:simpleType>
+
+	<xs:simpleType name="MorphologyType">
+		<xs:annotation>
+			<xs:documentation 
+				source="https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf"
+				doc:sourceLabel="SERA Deliverable 7.1, pg 4">
+				Qualitative description of the general landform or
+				surface shape at the site.
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:restriction base="xs:string">
+      		<xs:enumeration value="Plain"/>
+      		<xs:enumeration value="Valley - Basin"/>
+      		<xs:enumeration value="Slope"/>
+			<xs:enumeration value="Ridge"/>
+		</xs:restriction>
+  	</xs:simpleType>
+
+	<xs:simpleType name="EC8ClassType">
+		<xs:annotation>
+			<xs:documentation>
+				Ground type according to <strong>Eurocode 8 (EC8 § 3.1.2, Table 3.1)</strong>, 
+				based on the velocityS30Value and geotechnical description
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:restriction base="xs:string">
+      		<xs:enumeration value="A"/>
+      		<xs:enumeration value="B"/>
+      		<xs:enumeration value="C"/>
+      		<xs:enumeration value="D"/>
+			<xs:enumeration value="E"/>
+			<xs:enumeration value="S1"/>
+			<xs:enumeration value="S2"/>
+			<xs:enumeration value="Undefined"/>
+    	</xs:restriction>
+  	</xs:simpleType>
+	
+	<xs:simpleType name="ResonanceFrequencyMethodType">
+		<xs:annotation>
+			<xs:documentation
+				source="https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf"
+				doc:sourceLabel="SERA Deliverable 7.1, Appendix II">
+				Method by which resonance frequency (dominant_frequency) has been determined.
+				<p><strong>Note: EGD requirement.</strong> Used to determine the
+				EGD specific Quality Index of the provided resonance frequency of a site.</p>
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:restriction base="xs:string">
+      		<xs:enumeration value="HVSR EARTHQUAKE RECORDS"/>
+      		<xs:enumeration value="HVSR NOISE"/>
+			<xs:enumeration value="SSR EARTHQUAKE RECORDS"/>
+      		<xs:enumeration value="SSR NOISE"/>
+			<xs:enumeration value="INFERRED"/>
+		</xs:restriction>
+  	</xs:simpleType>
+
+	<xs:simpleType name="VelocityS30MethodType">
+		<xs:annotation>
+			<xs:documentation
+				source="https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf"
+				doc:sourceLabel="SERA Deliverable 7.1, Appendix IV">
+				Method used for the extraction of S-wave velocity profiles
+				and, thus, of the average shear-wave velocity over the top 30 
+				meters of the soil column, Vs30.
+				<p><strong>Note: EGD requirement.</strong> Used to determine the
+				EGD specific Quality Index of the provided Vs30 of a site.</p>
+			</xs:documentation>
+		</xs:annotation>
+    	<xs:restriction base="xs:string">
+      		<xs:enumeration value="Geology"/>
+      		<xs:enumeration value="Topographic Slope"/>
+      		<xs:enumeration value="SPT"/>
+			<xs:enumeration value="CPT"/>
+			<xs:enumeration value="Laboratory"/>
+			<xs:enumeration value="S-REFR"/>
+			<xs:enumeration value="S-REFL"/>
+			<xs:enumeration value="SASW"/>
+			<xs:enumeration value="MASW"/>
+			<xs:enumeration value="SWI"/>
+			<xs:enumeration value="SPAC/F-K"/>
+			<xs:enumeration value="ReMi"/>
+			<xs:enumeration value="Crosshole"/>
+			<xs:enumeration value="Downhole"/>
+			<xs:enumeration value="Uphole"/>
+			<xs:enumeration value="P-S Log"/>
+			<xs:enumeration value="Seismic Cone"/>
+			<xs:enumeration value="DH Strong Motion Arrays"/>
+		</xs:restriction>
+  	</xs:simpleType>
+
+	<xs:simpleType name="VelocityS30MethodCombIndexType">
+		<xs:annotation>
+			<xs:documentation> 
+				Carries the information on whether a combination of two
+				methods or more has been applied to estimate the Vs30 value. 
+				<p><strong>Note: EGD requirement.</strong> Used to determine the
+				EGD specific Quality Index of the provided Vs30 of a site.</p>
+				Allowed values: 
+				<ul>
+					<li><strong>1.0</strong> : if only one method has been used to estimate the 
+						Vs30 value</li>
+					<li><strong>1.2</strong> : if a combination of two or more methods has been 
+						applied to estimate the Vs30 value</li>
+				</ul>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:enumeration value="1.0"/>
+			<xs:enumeration value="1.2"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="VelocityS30ManualIndexType">
+		<xs:annotation>
+			<xs:documentation 
+				source="https://www.itsak.gr/SiteXML/SERA_D7.1_Standard-for-site-condition-metadata.pdf"
+				doc:sourceLabel="SERA Deliverable 7.1, Appendix III."> 
+				Overall qualitative factor on the knowledge of the maximum depth of Vs measurements, 
+				which is most commonly related to the depth the EC8 engineering bedrock (Vs≥800 m/s). <br/>
+				The reasoning for introducing this index and description of its values is provided in 
+				SERA Deliverable 7.1.
+				<p><strong>Note: EGD requirement.</strong> Used to determine the
+				EGD specific Quality Index of the provided Vs30 of a site.</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:enumeration value="0.2"/>
+			<xs:enumeration value="0.4"/>
+			<xs:enumeration value="0.8"/>
+			<xs:enumeration value="1.0"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- Type tightening and basic lexical constraints -->
+
+	<xs:simpleType name="NonNegativeDouble">
+		<xs:annotation>
+			<xs:documentation>
+				Double value greater than or equal to 0.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:minInclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="CounterType">
+		<xs:annotation>
+			<xs:documentation>
+				Integers greater than or equal to 0.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:nonNegativeInteger">
+			</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="LatitudeType">
+		<xs:annotation>
+			<xs:documentation>
+				Latitude expressed in decimal degrees.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:minInclusive value="-90"/>
+			<xs:maxInclusive value="90"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="LongitudeType">
+		<xs:annotation>
+			<xs:documentation>
+				Longitude expressed in decimal degrees.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:minInclusive value="-180"/>
+			<xs:maxInclusive value="180"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="HttpURIType">
+		<xs:annotation>
+			<xs:documentation>
+				HTTP, HTTPS, or FTP URI.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:anyURI">
+			<xs:pattern value="(https?|ftp)://.+"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="QIndexType">
+		<xs:annotation>
+			<xs:documentation>
+				This type is used to restrict the values of a 
+				quality index between 0 an 1. 
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:minInclusive value="0"/>
+			<xs:maxInclusive value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="ResourceIdentifier">
+		<xs:annotation>
+			<xs:documentation>
+				An identifier that serves to uniquely identify a resource. 
+				<p><strong>Note: </strong>It is recommended to follow the 
+				QuakeML Resource ID convention
+				<em>authority:domain/resource-type/local-id</em>, althought 
+				it is not enforced.</p>
+				<p><strong>Example: </strong>quakeml:domain.ab/analysis/001</p>
+				<p><strong>Example: </strong>quakeml:domain.ab/person/002</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:anyURI"/>
+	</xs:simpleType>
+	
+	<xs:simpleType name="SchemaVersionType">
+		<xs:annotation>
+			<xs:documentation>
+				Schema version string.
+				<p><strong>Example: </strong>1.3.4</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9]+\.[0-9]+(\.[0-9]+)?"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="StationCodeType">
+		<xs:annotation>
+			<xs:documentation>
+				FDSN network and station code in NET.STA notation.
+				The network code must have exactly two uppercase alphanumeric
+				characters, and the station code must have three to five 
+				uppercase alphanumeric characters. Bare station codes are 
+				rejected because they are not globally unique.
+				<p><strong>Example: </strong>XX.ABCD</p>
+				<p><strong>Example: </strong>X1.ABC2</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z0-9]{2}\.[A-Z0-9]{3,5}"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="EmailType">
+		<xs:annotation>
+			<xs:documentation>
+				Email address.
+				<p><strong>Example: </strong>someemail@domain.ab</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="CountryCodeType">
+		<xs:annotation>
+			<xs:documentation>
+				ISO 3166-1 alpha-2 country code (two uppercase letters).
+				<p><strong>Example: </strong>GR</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="LanguageCodeType">
+		<xs:annotation>
+			<xs:documentation> 
+				Two letter language code according to ISO 639-1. 
+				Should be lowercase.
+				<p><strong>Example: </strong>el</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+              <xs:pattern value="[a-z]{2}"/>
+			  <xs:maxLength value="2"/>
+        </xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="YearType">
+		<xs:annotation>
+			<xs:documentation>Four-digit year.
+				<p><strong>Example: </strong>2018</p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[12][0-9]{3}"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

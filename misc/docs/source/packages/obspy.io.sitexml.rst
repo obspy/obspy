@@ -1,0 +1,466 @@
+.. currentmodule:: obspy.io.sitexml
+.. automodule:: obspy.io.sitexml
+    
+    .. comment to end block
+    
+    Overview
+    --------
+    
+    ``obspy.io.sitexml`` provides tools for working with seismological station
+    metadata stored in SiteXML files, published SiteXML URLs, and related tabular
+    inputs. The module reads and writes SiteXML, validates XML files against the
+    bundled schema, and imports metadata from CSV and Excel sources into the
+    internal :class:`~obspy.io.sitexml.core.SERASite` object model.
+
+    .. seealso::
+
+        The public SiteXML schema documentation is available at
+        `https://www.itsak.gr/SiteXML/ <https://www.itsak.gr/SiteXML/>`_.
+    
+    The top-level metadata object is :class:`~obspy.io.sitexml.core.SERASite`.
+    It contains required :class:`~obspy.io.sitexml.core.SERASiteOwner` and
+    :class:`~obspy.io.sitexml.core.SiteDescription` objects, plus optional
+    :class:`~obspy.io.sitexml.core.Analysis` objects with site-characterization
+    indicators such as Vs30, resonance frequency, and velocity profiles.
+    ``SERASite`` also provides object-level helpers for common relationship
+    edits, including adding analyses, setting preferred analysis/profile IDs,
+    iterating site indicators, and adding velocity profiles to one analysis.
+    
+    The following illustration shows the relationships between the most basic 
+    SiteXML objects.
+
+    .. figure:: /_images/SERASite.png
+    
+    Common Workflows
+    ----------------
+    
+    Read/Write SiteXML
+    ~~~~~~~~~~~~~~~~~~
+
+    Read a local SiteXML file into a ``SERASite`` object:
+    
+    .. code-block:: python
+    
+        from obspy.io.sitexml.sitexml import read_sitexml
+    
+        sera_site = read_sitexml("site.xml")
+        print(sera_site.resource_id)
+        print(sera_site.site_description.latitude)
+
+    The same reader accepts HTTP(S) URLs. ObsPy retrieves the remote XML and
+    then applies the same schema validation and parsing used for local files:
+
+    .. code-block:: python
+
+        from obspy.io.sitexml.sitexml import read_sitexml
+
+        sera_site = read_sitexml(
+            "https://example.org/sitexml/Site_XX.ABCD.xml")
+    
+    Validate a SiteXML file against the bundled schema:
+    
+    .. code-block:: python
+    
+        from obspy.io.sitexml.sitexml import validate_sitexml
+    
+        valid, errors = validate_sitexml("site.xml")
+        if not valid:
+            for err in errors:
+                print(err)
+    
+    Write a ``SERASite`` object back to XML:
+    
+    .. code-block:: python
+
+        from obspy.io.sitexml.sitexml import write_sitexml
+
+        write_sitexml(sera_site, validate=True)
+        write_sitexml(sera_site, "site_out.xml", validate=True)
+
+    When no output path or file-like object is supplied, the file is written in
+    the current directory using a default filename pattern, for example
+    ``Site_XX.ABCD_12-01-2026.xml``. The date in the filename is taken from the
+    same serialization timestamp written to the root ``creationTime`` element.
+
+    Add document revision history when the SiteXML file should record what
+    changed across published versions:
+
+    .. code-block:: python
+
+        sera_site.add_revision(
+            revision_time="2026-05-02T12:00:00Z",
+            description="Updated velocity profile and quality indexes.",
+            author="ORFEUS",
+            version="2026-05-02",
+            previous_version=(
+                "https://example.org/sitexml/"
+                "Site_XX.ABCD_01-05-2026.xml"))
+
+        write_sitexml(sera_site, validate=True)
+
+    ``creationTime`` records when a particular XML file is generated.
+    ``Revision.revision_time`` records when one document revision occurred;
+    the two times can differ when metadata changes are exported later.
+
+    Associate with StationXML
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Associate the current published SiteXML URL with the corresponding
+    StationXML:
+
+    .. code-block:: python
+
+        from obspy import read_inventory
+        from obspy.io.sitexml.sitexml import add_sitexml_reference
+
+        inventory = read_inventory("XX.ABCD.stationxml.xml")
+        inventory = add_sitexml_reference(
+            inventory,
+            station_code="XX.ABCD",
+            sitexml_url=("Site_XX.ABCD_12-01-2026.xml"))
+        inventory.write("XX.ABCD.with_sitexml.stationxml.xml",
+                        format="STATIONXML")
+
+    The helper adds a station-level StationXML ``ExternalReference`` and
+    returns the updated :class:`~obspy.core.inventory.inventory.Inventory`.
+    Read and write the StationXML outside the helper when file I/O is needed.
+    Because SiteXML filenames can include the document creation date, an
+    existing SiteXML reference for the same station is replaced by default so
+    StationXML points at the current SiteXML file. References written by this
+    helper are recognized by their standard description, and manually added
+    references can also be replaced when their URL basename follows the
+    default SiteXML filename pattern. Other station external
+    references are preserved. Pass ``replace_existing=False`` to append
+    SiteXML reference history instead.
+    
+    Import from CSV/Excel
+    ~~~~~~~~~~~~~~~~~~~~~
+
+    Import site metadata from CSV files. The imported metadata is stored in a
+    dictionary of ``SERASite`` objects keyed by the ``siteID``:
+    
+    .. code-block:: python
+    
+        from obspy.io.sitexml.tabular import csv_to_sera_site
+    
+        sites = csv_to_sera_site(
+            "site_owner.csv",
+            "site_description.csv",
+            analysis_csv="site_analysis.csv",
+            velocity_profiles_csv="velocity_profiles",
+            delim=";")
+    
+        sera_site = sites["quakeml:domain.ab/site/001"]
+    
+    Import site metadata from Excel files. The imported metadata is stored in a
+    dictionary of ``SERASite`` objects keyed by the ``siteID``:
+    
+    .. code-block:: python
+    
+        from obspy.io.sitexml.tabular import excel_to_sera_site
+    
+        sites = excel_to_sera_site(
+            "full_site.xlsx",
+            velocity_profiles="velocity_profiles.xlsx")
+
+    Velocity profiles can also be added later to existing SiteXML objects. Use
+    :meth:`~obspy.io.sitexml.core.SERASite.add_velocity_profiles` when you
+    already have ``VelocityProfile`` objects for one site and analysis. Use
+    :func:`~obspy.io.sitexml.tabular.add_velocity_profiles` when the profiles
+    are still in CSV or Excel form, or when one sidecar table may update
+    several sites and analyses:
+
+    .. code-block:: python
+
+        from obspy.io.sitexml.sitexml import read_sitexml
+        from obspy.io.sitexml.tabular import add_velocity_profiles
+
+        sera_site = read_sitexml("site.xml")
+        add_velocity_profiles(
+            sera_site,
+            "velocity_profiles.csv",
+            replace_existing=True)
+    
+    Tutorial With Bundled Test Fixtures
+    -----------------------------------
+    
+    The ``sitexml`` package ships with XML, CSV, and Excel fixtures under
+    ``obspy/io/sitexml/tests/data``. These files are useful for interactive
+    exploration.
+
+    Read a bundled SiteXML example:
+    
+    .. code-block:: python
+    
+        from obspy.core.util import get_example_file
+        from obspy.io.sitexml.sitexml import read_sitexml
+    
+        filename = get_example_file("xml/full_sitexml.xml")
+        sera_site = read_sitexml(filename)
+    
+        print(sera_site.resource_id)
+        print(len(sera_site.analysis))
+    
+    Import bundled CSV fixtures and inspect one imported site:
+    
+    .. code-block:: python
+    
+        from pathlib import Path
+    
+        from obspy.core.util import get_example_file
+        from obspy.io.sitexml.tabular import csv_to_sera_site
+    
+        site_owner_csv = get_example_file("csv/site_owner.csv")
+        data_dir = Path(site_owner_csv).parent
+    
+        sites = csv_to_sera_site(
+            site_owner_csv=site_owner_csv,
+            site_description_csv=data_dir / "site_description.csv",
+            analysis_csv=data_dir / "site_analysis.csv",
+            velocity_profiles_csv=data_dir / "velocity_profiles",
+            delim=";")
+    
+        sera_site = sites["quakeml:domain.ab/site/001"]
+        analysis = sera_site.analysis[0]
+        first_profile = analysis.velocity_profile_set.velocity_profiles[0]
+    
+        print(sera_site.site_owner.owner_codename)
+        print(analysis.velocity_s30.value.value)
+        print(first_profile.layer_count)
+    
+    Import bundled Excel fixtures:
+    
+    .. code-block:: python
+    
+        from pathlib import Path
+    
+        from obspy.core.util import get_example_file
+        from obspy.io.sitexml.tabular import excel_to_sera_site
+    
+        excel_file = get_example_file("xlsx/full_site.xlsx")
+        data_dir = Path(excel_file).parent
+    
+        sites = excel_to_sera_site(
+            excel_file,
+            velocity_profiles=data_dir / "velocity_profiles.xlsx")
+    
+        sera_site = sites["quakeml:domain.ab/site/001"]
+        print(sera_site.site_description.station_code)
+    
+    Apply optional quality-index sidecar inputs during CSV import. The sidecar
+    stores Q_Index1 criteria and Q_Index3 consistency checks used for the
+    calculation; only schema-supported calculated outputs are stored on the
+    imported ``SERASite`` objects:
+    
+    .. code-block:: python
+    
+        sites = csv_to_sera_site(
+            site_owner_csv,
+            site_description_csv,
+            analysis_csv=analysis_csv,
+            velocity_profiles_csv=velocity_profiles_dir,
+            quality_index_csv="quality_index.csv",
+            delim=";")
+    
+        sera_site = sites["quakeml:domain.ab/site/001"]
+        print(sera_site.site_description.overall_quality_index)
+    
+    Apply quality-index sidecar inputs later to an existing dictionary, for
+    example after reading SiteXML files:
+    
+    .. code-block:: python
+    
+        from obspy.io.sitexml.quality_index import apply_quality_index_csv
+        from obspy.io.sitexml.sitexml import sitexml_to_sitedict
+    
+        sites = sitexml_to_sitedict("./sitexml_files")
+        apply_quality_index_csv(sites, "quality_index.csv", delim=";")
+    
+    Write a site dictionary created from a CSV or Excel import back to
+    schema-validated SiteXML:
+    
+    .. code-block:: python
+    
+        from obspy.io.sitexml.sitexml import sitedict_to_sitexml
+    
+        sitedict_to_sitexml(sites, "./output_folder")
+    
+    Write one imported site back to schema-validated SiteXML:
+    
+    .. code-block:: python
+
+        from obspy.io.sitexml.sitexml import write_sitexml
+
+        write_sitexml(sera_site, validate=True)
+
+    Uncertainty Values
+    ------------------
+    
+    SiteXML value/uncertainty pairs are represented by
+    :class:`~obspy.io.sitexml.core.ValueWithUncertainty`. The class intentionally
+    keeps the SiteXML shape: one numeric ``value`` and one optional symmetric
+    ``uncertainty``. ObsPy also provides
+    :class:`~obspy.core.util.obspy_types.FloatWithUncertainties`, but that type
+    stores separate lower and upper uncertainties, so using it directly would
+    require a policy for asymmetric values that SiteXML cannot represent.
+    
+    Use the conversion helpers when interoperability with ObsPy's float subtype is
+    needed:
+    
+    .. code-block:: python
+    
+        from obspy.core.util.obspy_types import FloatWithUncertainties
+        from obspy.io.sitexml.core import ValueWithUncertainty
+    
+        site_value = ValueWithUncertainty(18.2, uncertainty=0.5)
+        obspy_value = site_value.to_float_with_uncertainties()
+    
+        symmetric = FloatWithUncertainties(
+            18.2, lower_uncertainty=0.5, upper_uncertainty=0.5)
+        site_value = ValueWithUncertainty.from_float_with_uncertainties(symmetric)
+    
+    Asymmetric ObsPy uncertainties are rejected during conversion to avoid silent
+    data loss. The ObsPy ``measurement_method`` metadata is not represented in the
+    SiteXML value/uncertainty pair.
+    
+    Owner Contact Conversion
+    ------------------------
+    
+    SiteXML owner metadata is represented by
+    :class:`~obspy.io.sitexml.core.SERASiteOwner`. The closest ObsPy inventory
+    types are :class:`~obspy.core.inventory.util.Person` and
+    :class:`~obspy.core.inventory.util.Operator`, but the models are not identical:
+    SiteXML has one required owner and one required contact person, while ObsPy
+    persons can have multiple names, agencies, emails, and operators can have
+    multiple contacts.
+    
+    Use the conversion helpers when exchanging contact metadata with ObsPy
+    inventory objects:
+    
+    .. code-block:: python
+    
+        from obspy.core.inventory.util import Operator, Person
+        from obspy.io.sitexml.core import SERASiteOwner
+    
+        person = Person(
+            names=["Name Surname"],
+            agencies=["INSTITUTION_ABBR"],
+            emails=["someemail@domain.ab"])
+        site_owner = SERASiteOwner.from_person(
+            person,
+            owner_codename="SITEOWNER",
+            owner_fullname="Site Owner Full Name")
+    
+        operator = site_owner.to_operator()
+    
+    When converting from an ObsPy ``Operator`` with multiple contacts, pass
+    ``contact_index`` to select the contact to use. Without an explicit selection,
+    the conversion raises a SiteXML validation error to avoid silently discarding
+    contacts. SiteXML public IDs, contact homepage metadata, and institution
+    address fields are not represented by ObsPy ``Person`` and ``Operator`` in a
+    fully round-trippable way.
+    
+    Import Requirements
+    -------------------
+    
+    The CSV and Excel import helpers expect required owner/contact and
+    site-description metadata to be present. In particular, owner metadata must
+    include owner code/name and contact person first name, last name, and email
+    address. Site descriptions require a site ID, site-description ID, latitude,
+    and longitude. Optional analysis and velocity-profile inputs may be omitted;
+    when they are explicitly provided but malformed, the import raises a
+    SiteXML-specific exception instead of silently ignoring the broken metadata.
+    
+    Reference metadata follows the current SiteXML terminology: literature
+    sources use required ``title`` and ``firstAuthor`` fields, and external
+    resources use ``externalReference`` metadata with ``uri`` and
+    ``description`` fields. Resource identifiers are stored internally as plain
+    strings; ObsPy ``ResourceIdentifier`` values may be passed as input
+    conveniences and are normalized to their string IDs.
+    
+    Notes
+    -----
+    
+    - XML handling should follow the schema files bundled under
+      ``obspy/io/sitexml/data``.
+    - CSV and Excel import paths build the same internal ``SERASite``-based object
+      graph used by the XML reader and writer.
+    - The active writer entry point is
+      :func:`~obspy.io.sitexml.sitexml.write_sitexml`.
+    
+    Enums
+    -----
+
+    .. autosummary::
+       :toctree: autogen
+       :nosignatures:
+
+       ~util.TopographySchemaA
+       ~util.TopographySchemaB
+       ~util.MorphologyType
+       ~util.EC8Class
+       ~util.ResonanceFrequencyMethod
+       ~util.VelocityS30Method
+       ~util.Vs30MethodCombined
+       ~util.Vs30ManualIndex
+
+    .. comment to end block
+
+    Functions
+    ---------
+    
+    .. autosummary::
+       :toctree: autogen
+       :nosignatures:
+    
+       ~sitexml._is_sitexml
+       ~sitexml.validate_sitexml
+       ~sitexml.read_sitexml
+       ~sitexml.write_sitexml
+       ~sitexml.sitedict_to_sitexml
+       ~sitexml.sitexml_to_sitedict
+       ~sitexml.add_sitexml_reference
+       ~tabular.csv_to_sera_site
+       ~tabular.excel_to_sera_site
+       ~tabular.add_velocity_profiles
+       ~quality_index.quality_index1
+       ~quality_index.quality_index2
+       ~quality_index.quality_index3
+       ~quality_index.overall_quality_index
+       ~quality_index.apply_quality_index_dataframe
+       ~quality_index.apply_quality_index_csv
+       ~quality_index.apply_quality_index_excel
+       
+    .. comment to end block
+
+    Classes
+    -------
+    
+    .. autosummary::
+       :toctree: autogen
+       :nosignatures:
+    
+       ~core.SERASite
+       ~core.SERASiteOwner
+       ~core.SiteDescription
+       ~core.Analysis
+       ~core.VelocityProfile
+       ~core.VelocityProfileData
+       ~core.Revision
+
+    .. comment to end block
+
+    Modules
+    -------
+    
+    .. autosummary::
+       :toctree: autogen
+       :nosignatures:
+    
+       core
+       sitexml
+       tabular
+       quality_index
+       util
+
+    .. comment to end block

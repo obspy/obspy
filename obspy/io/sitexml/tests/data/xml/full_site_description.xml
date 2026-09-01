@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SERA_quakeml xmlns="http://www.orfeus-eu.org/xml/site/1" schemaVersion="1.3" publicID="quakeml:domain.ab/site/001">
+    <creationTime>2025-09-20T12:42:17.000000Z</creationTime>
+    <siteOwner>
+        <codeName>SITEOWNER</codeName>
+        <fullName>Site Owner Full Name</fullName>
+        <contact>
+            <person>
+                <firstname>Name</firstname>
+                <lastname>Surname</lastname>
+                <mbox>someemail@domain.ab</mbox>
+            </person>
+            <affiliation>
+                <institution>
+                    <name>INSTITUTION_ABBR</name>
+                    <mbox>info@domain.ab</mbox>
+                </institution>
+            </affiliation>
+        </contact>
+    </siteOwner>
+    <siteDescription publicID="quakeml:domain.ab/site_description/001">
+        <station>XX.ABCD</station>
+        <latitude>45.137174</latitude>
+        <longitude>5.998905</longitude>
+        <altitude>239.0</altitude>
+        <minDistanceFromStation>10.3</minDistanceFromStation>
+        <maxDistanceFromStation>10.3</maxDistanceFromStation>
+        <siteTopography>
+            <schemaA>T1</schemaA>
+            <schemaB>Valley</schemaB>
+        </siteTopography>
+        <siteMorphology>
+            <morphology>Valley - Basin</morphology>
+            <siteClassEC8>
+                <value>C</value>
+                <qualityIndex>1.0</qualityIndex>
+                <literatureSource>
+                    <title>Some title</title>
+                    <firstAuthor>Author A.</firstAuthor>
+                    <secondaryAuthors>Author B., Author C.</secondaryAuthors>
+                    <year>2018</year>
+                    <booktitle>Some magazine</booktitle>
+                    <doi>10.1007/s10518-017-0135-5</doi>
+                    <languageCode>en</languageCode>
+                </literatureSource>
+                <externalReference>
+                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                    <description>paper</description>
+                </externalReference>
+                <externalReference>
+                    <uri>https://www.domain.ab/SiteXML/ec8-supporting-resource</uri>
+                    <description>supporting resource</description>
+                </externalReference>
+            </siteClassEC8>
+            <bedrockDepth>
+                <value>
+                    <value>774.6218</value>
+                    <uncertainty>107.8669</uncertainty>
+                </value>
+                <qualityIndex>0.5</qualityIndex>
+                <literatureSource>
+                    <title>Some title</title>
+                    <firstAuthor>Author A.</firstAuthor>
+                    <secondaryAuthors>Author B, Author. C</secondaryAuthors>
+                    <year>2018</year>
+                    <booktitle>Some magazine</booktitle>
+                    <doi>10.1007/s10518-017-0135-5</doi>
+                    <languageCode>en</languageCode>
+                </literatureSource>
+                <externalReference>
+                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                    <description>paper</description>
+                </externalReference>
+            </bedrockDepth>
+            <h800>
+                <value>
+                    <value>94.0736</value>
+                    <uncertainty>15.5748</uncertainty>
+                </value>
+                <qualityIndex>0.43</qualityIndex>
+                <literatureSource>
+                    <title>Some title</title>
+                    <firstAuthor>Author A.</firstAuthor>
+                    <secondaryAuthors>Author B, Author. C</secondaryAuthors>
+                    <year>2018</year>
+                    <booktitle>Some magazine</booktitle>
+                    <doi>10.1007/s10518-017-0135-5</doi>
+                    <languageCode>en</languageCode>
+                </literatureSource>
+                <externalReference>
+                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                    <description>paper</description>
+                </externalReference>
+            </h800>
+            <geologicalUnit>
+                <value>Some geology</value>
+                <geologicalMapScale>1:50000</geologicalMapScale>
+                <geologicalUnitOGE>Some description</geologicalUnitOGE>
+                <qualityIndex>0.25</qualityIndex>
+                <literatureSource>
+                    <title>Some title</title>
+                    <firstAuthor>Author A.</firstAuthor>
+                    <secondaryAuthors>Author B, Author. C</secondaryAuthors>
+                    <year>2018</year>
+                    <booktitle>Some magazine</booktitle>
+                    <doi>10.1007/s10518-017-0135-5</doi>
+                    <languageCode>en</languageCode>
+                </literatureSource>
+                <externalReference>
+                    <uri>https://doi.org/10.1007/s10518-017-0135-5/</uri>
+                    <description>paper</description>
+                </externalReference>
+            </geologicalUnit>
+        </siteMorphology>
+        <overallQindex>0.41</overallQindex>
+    </siteDescription>
+</SERA_quakeml>
