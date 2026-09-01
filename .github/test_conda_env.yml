@@ -18,6 +18,7 @@ dependencies:
   - cartopy
   - geographiclib
   - pandas  # for io.sitexml
+  - openpyxl  # for io.sitexml
   # Pinning version != 3.0.0 for the tests
   # because of doctest failures linked to hardcoded
   # doctest.NORMALIZE_WHITESPACE = 1 (see #3600)
