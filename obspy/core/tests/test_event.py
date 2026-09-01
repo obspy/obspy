@@ -611,6 +611,40 @@ class TestWaveformStreamID:
         waveform_id = WaveformStreamID(seed_string="BW.FUR.01.EHZ")
         assert waveform_id.id == waveform_id.get_seed_string()
 
+    def test_equality(self):
+        """
+        Equality is based on the stream the id refers to, so an unset (None)
+        and an empty ("") code compare equal - a round-trip through a seed
+        string in particular stays equal (see #3658).
+        """
+        by_parts = WaveformStreamID(network_code="VN", station_code="TDVB",
+                                    channel_code="HHL")
+        assert by_parts.location_code is None
+        # round-trip through the seed string sets location_code to ""
+        round_trip = WaveformStreamID(seed_string=by_parts.get_seed_string())
+        assert round_trip.location_code == ""
+        assert by_parts == round_trip
+        assert not (by_parts != round_trip)
+        # explicit empty location is also equal to the unset one
+        empty = WaveformStreamID(network_code="VN", station_code="TDVB",
+                                 location_code="", channel_code="HHL")
+        assert by_parts == empty
+        # genuinely different streams are not equal
+        assert by_parts != WaveformStreamID(network_code="VN",
+                                            station_code="TDVB",
+                                            channel_code="HHZ")
+        assert by_parts != WaveformStreamID(network_code="VN",
+                                            station_code="TDVB",
+                                            location_code="00",
+                                            channel_code="HHL")
+        # a differing resource_uri still distinguishes two ids
+        with_uri = WaveformStreamID(
+            network_code="VN", station_code="TDVB", channel_code="HHL",
+            resource_uri=ResourceIdentifier("smi:local/x"))
+        assert by_parts != with_uri
+        # comparison with an unrelated type is False, not an error
+        assert by_parts != "VN.TDVB..HHL"
+
 
 class TestBase:
     """
