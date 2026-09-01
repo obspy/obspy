@@ -57,10 +57,10 @@ class TestWADLParser():
         assert params["endtime"]["type"] == UTCDateTime
         assert params["endtime"]["required"]
 
-        assert params["network"]["type"] == str
-        assert params["station"]["type"] == str
-        assert params["location"]["type"] == str
-        assert params["channel"]["type"] == str
+        assert params["network"]["type"] is str
+        assert params["station"]["type"] is str
+        assert params["location"]["type"] is str
+        assert params["channel"]["type"] is str
 
         assert sorted(params["quality"]["options"]) == \
             sorted(["D", "R", "Q", "M", "B"])
@@ -173,21 +173,21 @@ class TestWADLParser():
         assert params["startafter"]["type"] == UTCDateTime
         assert params["endbefore"]["type"] == UTCDateTime
         assert params["endafter"]["type"] == UTCDateTime
-        assert params["network"]["type"] == str
-        assert params["station"]["type"] == str
-        assert params["location"]["type"] == str
-        assert params["channel"]["type"] == str
-        assert params["minlatitude"]["type"] == float
-        assert params["maxlatitude"]["type"] == float
-        assert params["latitude"]["type"] == float
-        assert params["minlongitude"]["type"] == float
-        assert params["maxlongitude"]["type"] == float
-        assert params["longitude"]["type"] == float
-        assert params["minradius"]["type"] == float
-        assert params["maxradius"]["type"] == float
-        assert params["level"]["type"] == str
-        assert params["includerestricted"]["type"] == bool
-        assert params["includeavailability"]["type"] == bool
+        assert params["network"]["type"] is str
+        assert params["station"]["type"] is str
+        assert params["location"]["type"] is str
+        assert params["channel"]["type"] is str
+        assert params["minlatitude"]["type"] is float
+        assert params["maxlatitude"]["type"] is float
+        assert params["latitude"]["type"] is float
+        assert params["minlongitude"]["type"] is float
+        assert params["maxlongitude"]["type"] is float
+        assert params["longitude"]["type"] is float
+        assert params["minradius"]["type"] is float
+        assert params["maxradius"]["type"] is float
+        assert params["level"]["type"] is str
+        assert params["includerestricted"]["type"] is bool
+        assert params["includeavailability"]["type"] is bool
         assert params["updatedafter"]["type"] == UTCDateTime
 
         # Now read a dataselect file with no types.
@@ -199,13 +199,13 @@ class TestWADLParser():
         # Assert that types have been assigned.
         assert params["starttime"]["type"] == UTCDateTime
         assert params["endtime"]["type"] == UTCDateTime
-        assert params["network"]["type"] == str
-        assert params["station"]["type"] == str
-        assert params["location"]["type"] == str
-        assert params["channel"]["type"] == str
-        assert params["quality"]["type"] == str
-        assert params["minimumlength"]["type"] == float
-        assert params["longestonly"]["type"] == bool
+        assert params["network"]["type"] is str
+        assert params["station"]["type"] is str
+        assert params["location"]["type"] is str
+        assert params["channel"]["type"] is str
+        assert params["quality"]["type"] is str
+        assert params["minimumlength"]["type"] is float
+        assert params["longestonly"]["type"] is bool
 
     def test_usgs_event_wadl_parsing(self, testdata):
         """

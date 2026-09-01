@@ -1359,7 +1359,7 @@ class TestTrace:
             warnings.simplefilter("always", UserWarning)
             tr.taper(max_percentage=None, side="left")
         assert len(w) == 1
-        assert w[0].category == UserWarning
+        assert w[0].category is UserWarning
 
         assert tr.data[:5].sum() < 5.
         assert tr.data[6:].sum() == 5.
@@ -1372,7 +1372,7 @@ class TestTrace:
             warnings.simplefilter("always", UserWarning)
             tr.taper(max_percentage=None, side="right")
         assert len(w) == 1
-        assert w[0].category == UserWarning
+        assert w[0].category is UserWarning
 
         assert tr.data[:5].sum() == 5.
         assert tr.data[6:].sum() < 5.
@@ -1389,7 +1389,7 @@ class TestTrace:
             warnings.simplefilter("always", UserWarning)
             tr.taper(max_percentage=0.7, max_length=int(npts / 2) + 1)
         assert len(w) == 1
-        assert w[0].category == UserWarning
+        assert w[0].category is UserWarning
 
         data = np.ones(npts)
         tr = Trace(data=data, header={'sampling': 1.})
@@ -1772,7 +1772,7 @@ class TestTrace:
             warnings.simplefilter("always", UserWarning)
             tr.remove_response(inventory=inv)
         assert len(w) == 1
-        assert w[0].category == UserWarning
+        assert w[0].category is UserWarning
 
     def test_processing_info_remove_response_and_sensitivity(self):
         """
@@ -2371,7 +2371,7 @@ class TestTrace:
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             tr.normalize()
-        assert w[0].category == UserWarning
+        assert w[0].category is UserWarning
         msg = "Attempting to normalize by dividing through zero."
         assert msg in w[0].message.args[0]
         np.testing.assert_allclose(tr.data, np.array([-0.0, 0.0, 0.0, -0.0]))
@@ -2387,7 +2387,7 @@ class TestTrace:
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             tr.normalize(norm=0)
-        assert w[0].category == UserWarning
+        assert w[0].category is UserWarning
         msg = "Attempting to normalize by dividing through zero."
         assert msg in w[0].message.args[0]
         np.testing.assert_allclose(tr.data, np.array([10.0, 10.0, 0.0, 0.0]))
@@ -2399,7 +2399,7 @@ class TestTrace:
             warnings.simplefilter("always")
             tr.normalize(norm=-2)
 
-        assert w[0].category == UserWarning
+        assert w[0].category is UserWarning
         msg = "Normalizing with negative values is forbidden."
         assert msg in w[0].message.args[0]
 
@@ -2716,7 +2716,7 @@ class TestTrace:
             tr.resample(30)
 
         assert len(w) == 1
-        assert w[0].category == UserWarning
+        assert w[0].category is UserWarning
 
         assert tr.stats.sampling_rate == 30
         assert tr.data.shape[0] == 1

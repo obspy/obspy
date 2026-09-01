@@ -167,7 +167,7 @@ class Unpickler(object):
         text = q[0].text
         if text is None or text == '':
             return None
-        if convert_to == bool:
+        if convert_to is bool:
             if text.lower() in ["true", "1"]:
                 return True
             elif text.lower() in ["false", "0"]:
@@ -309,7 +309,7 @@ class Unpickler(object):
         confidence_level = self._xpath2obj('confidenceLevel', el, float)
         if confidence_level is not None:
             error.confidence_level = confidence_level
-        if quantity_type != int:
+        if quantity_type is not int:
             uncertainty = self._xpath2obj('uncertainty', el, float)
             if uncertainty is not None:
                 error.uncertainty = uncertainty

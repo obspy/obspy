@@ -298,7 +298,7 @@ class TestMSEEDSpecialIssue():
             # invalid reclen
             read(file, reclen=111)
             assert 'Invalid record length' in str(w[0].message)
-            assert w[0].category == UserWarning
+            assert w[0].category is UserWarning
             # wrong reclen - raises and also displays a warning
             with pytest.raises(Exception):
                 read(file, reclen=4096)
