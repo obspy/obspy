@@ -38,7 +38,6 @@ import io
 import os
 import re
 from subprocess import STDOUT, CalledProcessError, check_output
-import sys
 import warnings
 
 
@@ -49,16 +48,6 @@ script_dir = os.path.abspath(os.path.dirname(inspect.getfile(
 OBSPY_ROOT = os.path.abspath(os.path.join(script_dir, os.pardir,
                                           os.pardir, os.pardir))
 VERSION_FILE = os.path.join(OBSPY_ROOT, "obspy", "RELEASE-VERSION")
-
-
-def _version_file_candidates():
-    """
-    Return possible RELEASE-VERSION locations.
-    """
-    bundle_root = getattr(sys, "_MEIPASS", None)
-    if bundle_root is not None:
-        yield os.path.join(bundle_root, "obspy", "RELEASE-VERSION")
-    yield VERSION_FILE
 
 
 def call_git_describe(abbrev=10, dirty=True,
@@ -136,14 +125,12 @@ def call_git_describe(abbrev=10, dirty=True,
 
 
 def read_release_version():
-    for version_file in _version_file_candidates():
-        try:
-            with io.open(version_file, "rt") as fh:
-                version = fh.readline()
-            return version.strip()
-        except IOError:
-            pass
-    return None
+    try:
+        with io.open(VERSION_FILE, "rt") as fh:
+            version = fh.readline()
+        return version.strip()
+    except IOError:
+        return None
 
 
 def write_release_version(version):
@@ -155,16 +142,10 @@ def get_git_version(abbrev=10, dirty=True, append_remote_tracking_branch=True):
     # Read in the version that's currently in RELEASE-VERSION.
     release_version = read_release_version()
 
-    # Frozen PyInstaller executables should report the bundled release version
-    # and must not discover a nearby source-tree Git checkout.
-    if getattr(sys, "frozen", False):
-        version = release_version
-    else:
-        # First try to get the current version using “git describe”.
-        version = call_git_describe(
-            abbrev, dirty=dirty,
-            append_remote_tracking_branch=append_remote_tracking_branch)
-
+    # First try to get the current version using “git describe”.
+    version = call_git_describe(
+        abbrev, dirty=dirty,
+        append_remote_tracking_branch=append_remote_tracking_branch)
     # If that doesn't work, fall back on the value that's in
     # RELEASE-VERSION.
     if version is None:
