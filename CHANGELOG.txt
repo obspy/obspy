@@ -8,6 +8,10 @@ Changes:
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
+ - obspy.core:
+   * event: WaveformStreamID equality is now based on the stream it refers to,
+     so an unset (None) and an empty ("") code compare equal and a round-trip
+     through a seed string stays equal (see #3658)
 
 1.5.1 (doi: 10.5281/zenodo.22108563)
 ====================================
