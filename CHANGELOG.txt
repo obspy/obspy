@@ -8,6 +8,10 @@ Changes:
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
+ - obspy.core:
+   * inventory: unwrap the phase of a response list (FAP) stage before
+     interpolating it, so a cubic spline no longer oscillates across +/-180
+     degree phase wraps (see #3585)
 
 1.5.1 (doi: 10.5281/zenodo.22108563)
 ====================================
