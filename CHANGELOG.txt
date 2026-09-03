@@ -8,6 +8,12 @@ Changes:
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
+ - obspy.imaging:
+   * dayplot: fix the right-hand side of each interval being cut off / squashed
+     into the last pixel at plot widths where the samples per interval are not
+     an integer multiple of the pixel width. Samples are now distributed evenly
+     across pixels instead of folding the remainder into the last one
+     (see #3466)
 
 1.5.1 (doi: 10.5281/zenodo.22108563)
 ====================================

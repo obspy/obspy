@@ -899,29 +899,26 @@ class WaveformPlotting(object):
         extreme_values = np.ma.empty((noi, self.width, 2))
         data = trace.data.reshape((noi, spi))
 
-        ispp = int(spp)
-        fspp = spp % 1.0
-        if fspp == 0.0:
-            delta = None
-        else:
-            delta = spi - ispp * self.width
+        # Bin the samples of each interval evenly into self.width pixels. Using
+        # a fixed int(spp) samples per pixel and dumping the remainder into the
+        # last pixel used to cut off the right-hand side of the plot, see #3466
+        edges = np.linspace(0, spi, self.width + 1).astype(np.intp)
+        starts = edges[:-1]
 
         # Loop over each interval to avoid larger errors towards the end.
         for _i in range(noi):
-            if delta:
-                cur_interval = data[_i][:-delta]
-                rest = data[_i][-delta:]
+            row = data[_i]
+            if np.ma.isMaskedArray(row):
+                # ignore masked (gap) samples in the min/max
+                mins = np.minimum.reduceat(np.ma.filled(row, np.inf), starts)
+                maxs = np.maximum.reduceat(np.ma.filled(row, -np.inf), starts)
+                empty = np.add.reduceat(
+                    (~np.ma.getmaskarray(row)).astype(np.intp), starts) == 0
+                extreme_values[_i, :, 0] = np.ma.array(mins, mask=empty)
+                extreme_values[_i, :, 1] = np.ma.array(maxs, mask=empty)
             else:
-                cur_interval = data[_i]
-            cur_interval = cur_interval.reshape((self.width, ispp))
-            extreme_values[_i, :, 0] = cur_interval.min(axis=1)
-            extreme_values[_i, :, 1] = cur_interval.max(axis=1)
-            # Add the rest.
-            if delta:
-                extreme_values[_i, -1, 0] = min(extreme_values[_i, -1, 0],
-                                                rest.min())
-                extreme_values[_i, -1, 1] = max(extreme_values[_i, -1, 0],
-                                                rest.max())
+                extreme_values[_i, :, 0] = np.minimum.reduceat(row, starts)
+                extreme_values[_i, :, 1] = np.maximum.reduceat(row, starts)
         # Set class variable.
         self.extreme_values = extreme_values
 
