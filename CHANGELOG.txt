@@ -5,7 +5,7 @@ Changes:
  - obspy.clients.fdsn:
    * add GEOSHAKE (GeoShake Global Seismic Network, FDSN network GW) to
      URL_MAPPINGS; excluded from the mass downloader by default like
-     RASPISHAKE (see #XXXX)
+     RASPISHAKE (see #3805)
  - General:
    * adjusted minimum dependency versions to Python >=3.12, numpy >=2.2,
      scipy >=1.15 and matplotlib >=3.9 (see #3570)
