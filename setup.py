@@ -108,6 +108,7 @@ EXTRAS_REQUIRES = {
     'geo': ['geographiclib'],
     'imaging': ['cartopy'],
     'io.shapefile': ['pyshp'],
+    'io.sitexml': ['pandas'],
 }
 EXTRAS_REQUIRES['all'] = [dep for depl in EXTRAS_REQUIRES.values()
                           for dep in depl]
@@ -128,10 +129,10 @@ KEYWORDS = [
     'REFTEK130', 'RG-1.6', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
     'SAGE', 'scardec', 'scml', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2',
     'SEG Y','SEISAN', 'Seismic Handler', 'seismology', 'seismogram',
-    'seismograms','shapefile', 'signal', 'slink', 'spectrogram', 'StationXML',
-    'taper','taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
-    'WaveServer','WaveServerV', 'WebDC', 'web service', 'WIN', 'Winston',
-    'XML-SEED','XSEED']
+    'seismograms','shapefile', 'signal', 'SiteXML', 'slink', 'spectrogram',
+    'StationXML', 'taper','taup', 'travel time', 'trigger', 'VERCE', 'WAV',
+    'waveform', 'WaveServer','WaveServerV', 'WebDC', 'web service', 'WIN',
+    'Winston', 'XML-SEED','XSEED']
 
 ENTRY_POINTS = {
     'console_scripts': [
@@ -148,6 +149,8 @@ ENTRY_POINTS = {
         'obspy-dataless2xseed = obspy.io.xseed.scripts.dataless2xseed:main',
         'obspy-xseed2dataless = obspy.io.xseed.scripts.xseed2dataless:main',
         'obspy-dataless2resp = obspy.io.xseed.scripts.dataless2resp:main',
+        'obspy-csv2sitexml = obspy.io.sitexml.scripts.csv2sitexml:main',
+        'obspy-excel2sitexml = obspy.io.sitexml.scripts.excel2sitexml:main',
         ],
     'obspy.plugin.waveform': [
         'TSPAIR = obspy.io.ascii.core',
@@ -582,6 +585,14 @@ ENTRY_POINTS = {
         'energyratio = obspy.signal.trigger:energy_ratio',
         'modifiedenergyratio = obspy.signal.trigger:modified_energy_ratio',
         ],
+    'obspy.plugin.sitexml': [
+    '   SITEXML = obspy.io.sitexml.sitexml',
+    ],
+    'obspy.plugin.sitexml.SITEXML': [
+        'isFormat = obspy.io.sitexml.sitexml:_is_sitexml',
+        'readFormat = obspy.io.sitexml.sitexml:read_sitexml',
+        'writeFormat = obspy.io.sitexml.sitexml:write_sitexml',
+    ],
     }
 
 

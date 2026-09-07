@@ -69,6 +69,7 @@
 /obspy/io/seiscomp       @filefolder
 /obspy/io/sh             @trichter
 /obspy/io/shapefile      @megies
+/obspy/io/sitexml        @kiriaki
 /obspy/io/stationtxt
 /obspy/io/stationxml
 /obspy/io/wav
