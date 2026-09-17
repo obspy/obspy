@@ -25,6 +25,7 @@ import numpy as np
 from lxml.etree import XMLSyntaxError
 
 import obspy
+from obspy.clients.hooks import RequestHookError
 from obspy.core.util import Enum
 
 from . import utils
@@ -1125,6 +1126,11 @@ class ClientDownloadHelper(object):
                 "Client '{0}' - Failed getting availability: %s".format(
                     self.client_name), str(e))
             return
+        except RequestHookError:
+            # Let a broken request hook fail loudly rather than being
+            # downgraded to a per-client log message - see download_url()'s
+            # equivalent guard in obspy.clients.fdsn.client.
+            raise
         # This sometimes fires if a service returns some random stuff which
         # is not a valid station file.
         except Exception as e:

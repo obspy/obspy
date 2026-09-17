@@ -24,6 +24,7 @@ import numpy as np
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client
+from obspy.clients.hooks import RequestHookError
 from obspy.clients.fdsn.mass_downloader import (domain, Restrictions,
                                                 MassDownloader)
 from obspy.clients.fdsn.mass_downloader.utils import (
@@ -2184,6 +2185,18 @@ class TestClientDownloadHelper():
         c.client.get_stations.return_value = obspy.read_inventory(
             testdata["channel_level_fdsn.txt"])
         c.get_availability()
+
+    def test_get_availability_request_hook_error_not_swallowed(self):
+        """
+        A RequestHookError raised by the client's get_stations() call must
+        propagate out of get_availability() rather than being logged and
+        swallowed like every other exception - see the dedicated except
+        clause there for why.
+        """
+        c = self._init_client()
+        c.client.get_stations.side_effect = RequestHookError("broken hook")
+        with pytest.raises(RequestHookError):
+            c.get_availability()
 
     def test_get_availability_with_multiple_channel_epochs(self, testdata):
         """

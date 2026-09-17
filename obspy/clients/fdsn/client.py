@@ -46,6 +46,7 @@ from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      FDSNDoubleAuthenticationException,
                      FDSNInvalidRequestException)
 from .wadl_parser import WADLParser
+from ..hooks import RequestHookError, RequestHookHandler
 
 from urllib.parse import urlencode
 import urllib.request as urllib_request
@@ -150,7 +151,8 @@ class Client(object):
                  user=None, password=None, user_agent=DEFAULT_USER_AGENT,
                  debug=False, timeout=120, service_mappings=None,
                  force_redirect=False, eida_token=None,
-                 _discover_services=True, use_gzip=True):
+                 _discover_services=True, use_gzip=True,
+                 request_hook=None):
         """
         Initializes an FDSN Web Service client.
 
@@ -231,12 +233,21 @@ class Client(object):
             on results. Can be used if servers experience server side issues
             with gzip compression but results in downloads being larger in
             size.
+        :type request_hook: callable or None
+        :param request_hook: A request hook invoked on every outgoing
+            request, which may add headers to it (e.g. an authentication
+            token) - see :mod:`obspy.clients.hooks`. Unlike ``user``/
+            ``password`` and ``eida_token``, this is not itself an
+            authentication mechanism, just a way to plug one in; the
+            hook decides for itself, based on where a given request is
+            going, whether and what to attach.
         """
         self.debug = debug
         self.user = user
         self.timeout = timeout
         self._force_redirect = force_redirect
         self.use_gzip = use_gzip
+        self._request_hook = request_hook
 
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
@@ -350,6 +361,28 @@ class Client(object):
         self.user = user
         self._set_opener(user, password)
 
+    def set_request_hook(self, hook):
+        """
+        Set a request hook, invoked on every outgoing request from now on.
+
+        This will overwrite any previously set request hook. It does not
+        touch ``user``/``password`` or EIDA token authentication, which can
+        be combined with a request hook freely - unlike
+        :meth:`set_credentials`, this does not rebuild the opener from
+        scratch, so whatever authentication handlers are already installed
+        are left untouched.
+
+        :type hook: callable or None
+        :param hook: See the ``request_hook`` parameter of :meth:`__init__`
+            and :mod:`obspy.clients.hooks`.
+        """
+        self._request_hook = hook
+        handlers = [h for h in self._url_opener.handlers
+                    if not isinstance(h, RequestHookHandler)]
+        if hook is not None:
+            handlers.append(RequestHookHandler(hook))
+        self._url_opener = urllib_request.build_opener(*handlers)
+
     def set_eida_token(self, token, validate=True):
         """
         Fetch user and password from the server using the provided token,
@@ -389,6 +422,9 @@ class Client(object):
             handlers.append(CustomRedirectHandler())
         else:
             handlers.append(NoRedirectionHandler())
+
+        if self._request_hook is not None:
+            handlers.append(RequestHookHandler(self._request_hook))
 
         # Don't install globally to not mess with other codes.
         self._url_opener = urllib_request.build_opener(*handlers)
@@ -1953,6 +1989,11 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
                   (e.code, str(e.reason), url, error_data or '')
             print(msg)
         return e.code, error_data
+    except RequestHookError:
+        # Let a broken request hook fail loudly, with its own message and
+        # traceback, rather than being swallowed into the generic
+        # FDSNException raised below for every other kind of error.
+        raise
     except Exception as e:
         if debug is True:
             print("Error while downloading: %s" % url)

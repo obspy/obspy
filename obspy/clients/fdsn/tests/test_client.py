@@ -33,7 +33,7 @@ from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.clients.fdsn import Client, RoutingClient
 from obspy.clients.fdsn.client import (build_url, parse_simple_xml,
                                        get_bulk_string, _cleanup_earthscope,
-                                       raise_on_error)
+                                       raise_on_error, CustomRedirectHandler)
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNException, FDSNRedirectException,
                                        FDSNNoDataException,
@@ -52,6 +52,8 @@ from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
                                        FDSNDoubleAuthenticationException,
                                        FDSNInvalidRequestException,
                                        DEFAULT_SERVICES)
+from obspy.clients.hooks import (
+    BearerTokenHook, RequestHookError, RequestHookHandler)
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
 
@@ -1526,6 +1528,92 @@ class TestClientNoNetwork():
         # (which is tested when checking which endpoint to use, query or
         # queryauth)
         assert client.user == user
+
+    @staticmethod
+    def _get_request_hook_handler(client):
+        handlers = [h for h in client._url_opener.handlers
+                    if isinstance(h, RequestHookHandler)]
+        assert len(handlers) <= 1
+        return handlers[0] if handlers else None
+
+    def test_request_hook_installed(self):
+        """
+        A request_hook passed to __init__ ends up on the opener, and a
+        client without one has no such handler.
+        """
+        assert self._get_request_hook_handler(self.client) is None
+
+        hook = mock.Mock()
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                        _discover_services=False, request_hook=hook)
+        handler = self._get_request_hook_handler(client)
+        assert handler is not None
+
+        req = urllib_request.Request(
+            "https://service.earthscope.org/fdsnws/dataselect/1/query")
+        handler.http_request(req)
+        assert hook.call_count == 1
+
+    def test_set_request_hook(self):
+        """
+        set_request_hook() installs the handler on an existing client and
+        does not disturb user/password based authentication.
+        """
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                        user="nobody@earthscope.org", password="anonymous",
+                        _discover_services=False)
+        assert self._get_request_hook_handler(client) is None
+
+        hook = mock.Mock()
+        client.set_request_hook(hook)
+        assert self._get_request_hook_handler(client) is not None
+        # Digest auth handler should still be present and unchanged.
+        digest_handlers = [
+            h for h in client._url_opener.handlers
+            if isinstance(h, urllib_request.HTTPDigestAuthHandler)]
+        assert len(digest_handlers) == 1
+        assert client.user == "nobody@earthscope.org"
+        assert client._build_url(
+            "dataselect", "query", {}) == (
+                "https://service.earthscope.org/fdsnws/dataselect/1/"
+                "queryauth")
+
+    def test_request_hook_error_wrapping(self):
+        """
+        A hook that raises should surface as RequestHookError with the
+        original exception preserved as __cause__, not be swallowed into a
+        generic FDSNException by download_url()'s catch-all.
+        """
+        def _broken_hook(request):
+            raise ValueError("boom")
+
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                        _discover_services=False, request_hook=_broken_hook)
+        with pytest.raises(RequestHookError) as excinfo:
+            client.get_stations(network="00", station="123")
+        assert isinstance(excinfo.value.__cause__, ValueError)
+
+    def test_bearer_token_hook_not_copied_on_redirect(self):
+        """
+        The Authorization header BearerTokenHook attaches must not survive
+        being copied onto a redirect target by CustomRedirectHandler - it is
+        added via add_unredirected_header() for exactly this reason. The
+        generic parts of this (BearerTokenHook scoping, redirect-safety of
+        set_secret_header) are covered in obspy.clients.tests.test_hooks;
+        this test is the one that exercises the real CustomRedirectHandler.
+        """
+        hook = BearerTokenHook({"service.earthscope.org": "secret-token"})
+        handler = RequestHookHandler(hook)
+
+        req = urllib_request.Request(
+            "https://service.earthscope.org/fdsnws/dataselect/1/query")
+        handler.http_request(req)
+
+        redirect_handler = CustomRedirectHandler()
+        new_req = redirect_handler.redirect_request(
+            req, None, 302, "Found", {},
+            "https://not-earthscope.example.com/steal")
+        assert "Authorization" not in dict(new_req.header_items())
 
     def test_discover_services_defaults(self):
         """

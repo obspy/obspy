@@ -86,6 +86,15 @@ class ClientHTTPException(ClientException,
     pass
 
 
+class RequestHookError(ClientException):
+    """
+    Raised when a request hook raises while processing a request.
+
+    See :mod:`obspy.clients.hooks`.
+    """
+    pass
+
+
 class BaseClient(object):
     """
     Base class for common methods.
@@ -123,6 +132,9 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
     :type debug: bool
     :param timeout: Passed on to the :class:`RemoteBaseClient` constructor.
     :type timeout: float
+    :param request_hook: A request hook to invoke on every outgoing
+        request, or ``None``. See :mod:`obspy.clients.hooks`.
+    :type request_hook: callable or None
 
     .. rubric:: Example
 
@@ -145,8 +157,9 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
             ...
     """
     def __init__(self, debug=False, timeout=120,
-                 user_agent=DEFAULT_USER_AGENT):
+                 user_agent=DEFAULT_USER_AGENT, request_hook=None):
         self._user_agent = user_agent
+        self._request_hook = request_hook
         RemoteBaseClient.__init__(self, debug=debug, timeout=timeout)
 
     @abstractmethod
@@ -204,6 +217,25 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
                          "params": params,
                          "timeout": self._timeout}
 
+        if self._request_hook is not None:
+            # requests' auth= callable is invoked on the fully prepared
+            # request and must return it - the same shape as a request
+            # hook, just wrapped in a stack-neutral view. See
+            # obspy.clients.hooks for why the view is needed.
+            #
+            # Two things to be aware of, both documented in the
+            # obspy.clients.hooks module docstring: requests never
+            # re-invokes auth= while following a redirect, unlike urllib's
+            # per-hop handler, so a host-aware hook is not re-run for a
+            # redirect target; and setting auth= here means requests skips
+            # its own .netrc lookup for this request.
+            from obspy.clients.hooks import _RequestsHookRequest, _call_hook
+
+            def _auth(r, _hook=self._request_hook):
+                _call_hook(_hook, _RequestsHookRequest(r), r.url)
+                return r
+            _request_args["auth"] = _auth
+
         # Stream to file - no need to keep it in memory for large files.
         if filename:
             _request_args["stream"] = True
@@ -214,10 +246,14 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
             p = PreparedRequest()
             # request doesnt use timeout parameter, it's used when actually
             # sending the request, but the request is never sent in this debug
-            # block anyway, it's just for printing info on what would be sent
+            # block anyway, it's just for printing info on what would be sent.
+            # Also drop "auth" here - it is the request hook, and this
+            # throwaway request is never sent, so invoking the hook on it
+            # would run it an extra, spurious time.
             p.prepare(
                 method="GET",
-                **{k: v for k, v in _request_args.items() if k != "timeout"})
+                **{k: v for k, v in _request_args.items()
+                   if k not in ("timeout", "auth")})
             print("Downloading %s ..." % p.url)
             if data is not None:
                 print("Sending along the following payload:")

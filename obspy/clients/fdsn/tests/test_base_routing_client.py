@@ -17,6 +17,7 @@ import obspy
 from obspy.clients.fdsn.header import FDSNNoDataException
 from obspy.clients.fdsn.routing.routing_client import (
     BaseRoutingClient, RoutingClient)
+from obspy.clients.hooks import RequestHookError
 from obspy.clients.fdsn.routing.eidaws_routing_client import (
     EIDAWSRoutingClient)
 from obspy.clients.fdsn.routing.federator_routing_client import (
@@ -160,6 +161,48 @@ class TestBaseRoutingClient():
               "inclusion/exclusion filters have been applied."
         with pytest.raises(FDSNNoDataException, match=msg):
             c._download_waveforms(split=split, test1="a", test2="b")
+
+    def test_request_hook_propagation(self):
+        """
+        A router-wide request_hook is forwarded to every Client the router
+        constructs internally, since the whole point of a routing client is
+        that the endpoints are not known in advance.
+        """
+        split = {
+            "https://example.com": "1234",
+            "https://service.earthscope.org": "1234",
+        }
+        router_hook = mock.Mock(name="router_hook")
+        with mock.patch("obspy.clients.fdsn.client.Client") as p:
+            mock_instance = p.return_value
+            mock_instance.get_waveforms_bulk.return_value = obspy.read()
+            mock_instance.services = {"dataselect": {}}
+            c = self._cls_object(request_hook=router_hook)
+            c._download_waveforms(split=split)
+
+        hooks_by_endpoint = {
+            call.args[0]: call.kwargs["request_hook"]
+            for call in p.call_args_list}
+        assert hooks_by_endpoint == {
+            "https://example.com": router_hook,
+            "https://service.earthscope.org": router_hook}
+
+    def test_request_hook_error_not_swallowed(self):
+        """
+        A RequestHookError raised while downloading from one endpoint must
+        propagate out of _download_parallel() rather than being downgraded
+        to a per-endpoint warning like every other exception - see
+        _try_download_bulk()'s dedicated except clause for why.
+        """
+        split = {"https://example.com": "1234"}
+        with mock.patch("obspy.clients.fdsn.client.Client") as p:
+            mock_instance = p.return_value
+            mock_instance.get_waveforms_bulk.side_effect = \
+                RequestHookError("broken hook")
+            mock_instance.services = {"dataselect": {}}
+            c = self._cls_object()
+            with pytest.raises(RequestHookError):
+                c._download_waveforms(split=split)
 
     def test_downloading_stations(self):
         split = {

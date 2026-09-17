@@ -5,6 +5,12 @@ Changes:
  - General:
    * adjusted minimum dependency versions to Python >=3.12, numpy >=2.2,
      scipy >=1.15 and matplotlib >=3.9 (see #3570)
+ - obspy.clients:
+   * add a `request_hook` mechanism (see the new obspy.clients.hooks module)
+     letting a callable inspect and add headers to every outgoing request,
+     e.g. for bearer-token authentication. Supported by
+     obspy.clients.fdsn.Client, RoutingClient and MassDownloader, as well as
+     by every client built on obspy.clients.base.HTTPClient (e.g. syngine).
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
