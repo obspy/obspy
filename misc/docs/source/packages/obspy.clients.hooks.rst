@@ -3,15 +3,29 @@
 
     .. comment to end block
 
-    Classes & Functions
-    -------------------
+    The Hook Protocol
+    ------------------
+    The interface a request hook is written against: the request view it
+    receives, and the error it may raise.
+
     .. autosummary::
        :toctree: autogen
        :nosignatures:
 
-       RequestHookError
        HookRequest
+       RequestHookError
        RequestHookHandler
+
+    Included Hooks
+    ---------------
+    Ready-made hooks for common cases. Each is just a callable satisfying
+    the protocol above - a hook you write yourself works everywhere these
+    do.
+
+    .. autosummary::
+       :toctree: autogen
+       :nosignatures:
+
        BearerTokenHook
        LoggingHook
        chain

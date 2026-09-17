@@ -2,11 +2,15 @@
 """
 Request hooks shared by ObsPy's HTTP-based clients.
 
-A *request hook* is a callable that gets to inspect (and add headers to)
-every outgoing HTTP request a client makes, before it is sent. It is the
-mechanism ObsPy uses for anything that needs to attach something to a
-request based on where that request is going, the leading example being
-bearer-token authentication against one or more FDSN data centers.
+A *request hook* is any callable taking a single :class:`HookRequest` and
+returning nothing. It is invoked on every outgoing HTTP request a client
+makes, before that request is sent, and may inspect the request and add
+headers to it. This is the mechanism ObsPy uses for anything that needs to
+attach something to a request based on where that request is going. The
+leading example is bearer-token authentication against one or more FDSN
+data centers, but a hook is not tied to authentication in any way - it can
+add any header, for any reason, based on anything it can read off the
+request.
 
 ObsPy's HTTP clients are built on two different stacks:
 :class:`obspy.clients.fdsn.client.Client` uses :mod:`urllib.request`, while
@@ -50,7 +54,28 @@ if any, from the host the request is actually going to, so a single hook is
 enough for a federated query touching many data centers - including ones the
 caller never explicitly named.
 
-.. rubric:: Example
+.. rubric:: Example: a plain function hook
+
+Nothing here requires subclassing anything, or using any of the classes
+further down in this module - a hook can be as small as a function:
+
+>>> from obspy.clients.fdsn import Client
+>>> def add_project_header(request):
+...     request.set_header("X-Project-Id", "my-project")
+>>> client = Client("EARTHSCOPE",
+...                 request_hook=add_project_header)  # doctest: +SKIP
+
+.. rubric:: Included hooks
+
+For common cases, this module also includes a few ready-made hooks, so
+that callers don't have to write their own: :class:`BearerTokenHook` for
+bearer-token authentication, :class:`LoggingHook` for logging every
+outgoing request, and :func:`chain` for combining several hooks into one.
+None of these are privileged in any way - each is just a callable
+satisfying the same protocol described above, and a hook you write
+yourself works everywhere they do.
+
+.. rubric:: Example: BearerTokenHook
 
 >>> from obspy.clients.fdsn import Client, RoutingClient
 >>> from obspy.clients.hooks import BearerTokenHook
@@ -336,6 +361,11 @@ class BearerTokenHook(object):
     """
     Request hook attaching an ``Authorization: Bearer <token>`` header.
 
+    This is a convenience implementation of the request-hook protocol
+    described in the module docstring, not a special case of it - it
+    exists so that callers authenticating with a bearer token don't have
+    to write their own hook calling :meth:`~HookRequest.set_secret_header`.
+
     Scoped per host, so that a single instance can be shared across a
     federated query touching several data centers, each with its own
     token - and so that a token for one data center is never sent to
@@ -345,14 +375,22 @@ class BearerTokenHook(object):
     :param tokens: Either a mapping of host (netloc) to token, or a
         callable ``f(request) -> token or None`` taking a
         :class:`HookRequest` and returning the token to use, or ``None`` if
-        this request should not be authenticated. A callable is useful for
-        tokens that must be refreshed, fetched lazily, or resolved some
-        other dynamic way - note that a callable may be invoked
-        concurrently from several threads (see the module docstring) and
-        must handle that itself; a mapping is sugar for the common static
-        case and is looked up by :attr:`HookRequest.host`. See the module
-        docstring for a worked example delegating to an external
-        authentication SDK.
+        this request should not be authenticated. Note that this callable
+        is a *token resolver*, not a request hook itself - it returns a
+        token string (or ``None``) rather than mutating the request.
+        ``BearerTokenHook`` is the hook; it is what calls
+        :meth:`~HookRequest.set_secret_header` with the token this resolver
+        returns, together with the header name, the ``Bearer `` prefix, the
+        ``require_https`` guard, and the fail-open behaviour described
+        below.
+
+        A callable is useful for tokens that must be refreshed, fetched
+        lazily, or resolved some other dynamic way - note that a callable
+        may be invoked concurrently from several threads (see the module
+        docstring) and must handle that itself; a mapping is sugar for the
+        common static case and is looked up by :attr:`HookRequest.host`.
+        See the module docstring for a worked example delegating to an
+        external authentication SDK.
 
         The mapping is matched case-insensitively against the request's
         netloc - i.e. including an explicit port if the URL carries one,
@@ -392,6 +430,12 @@ class LoggingHook(object):
     """
     Request hook that logs every outgoing request. Never mutates a request.
 
+    Like :class:`BearerTokenHook`, this is a convenience implementation of
+    the request-hook protocol, not a special case of it - logging every
+    outgoing request is common enough to be worth a ready-made hook for,
+    but nothing here couldn't be written as a two-line function of your
+    own.
+
     Useful on its own, or composed with :func:`chain` alongside an
     authenticating hook, to get a record of every URL and host a federated
     download actually touched.
@@ -420,10 +464,15 @@ def chain(*hooks):
     e.g. an authenticating hook and a logging hook. Hooks run in the order
     given, each seeing the request as left by the previous one.
 
-    >>> from obspy.clients.hooks import BearerTokenHook, LoggingHook, chain
+    An included hook and a plain function hook compose the same way - the
+    ``chain`` below combines both:
+
+    >>> from obspy.clients.hooks import BearerTokenHook, chain
+    >>> def add_project_header(request):
+    ...     request.set_header("X-Project-Id", "my-project")
     >>> hook = chain(
     ...     BearerTokenHook({'service.earthscope.org': 'token'}),
-    ...     LoggingHook(),
+    ...     add_project_header,
     ... )
     """
     def _chained(request):
