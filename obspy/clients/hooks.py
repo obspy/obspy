@@ -62,6 +62,44 @@ caller never explicitly named.
 >>> routed = RoutingClient("eida-routing",
 ...                        request_hook=hook)  # doctest: +SKIP
 
+.. rubric:: Example: delegating to an authentication SDK
+
+The callable form of :class:`BearerTokenHook` is the way to plug in an
+external SDK that manages login state and token refresh, rather than a
+static token string. For example, with the ``earthscope-sdk`` package:
+
+.. code-block:: python
+
+    import threading
+
+    from earthscope_sdk import EarthScopeClient
+    from obspy.clients.fdsn import RoutingClient
+    from obspy.clients.hooks import BearerTokenHook
+
+    esc = EarthScopeClient()
+    lock = threading.Lock()
+
+    def earthscope_token(request):
+        # HookRequest.host is a netloc and may carry a port; the SDK
+        # matches on hostname alone.
+        host = request.host.partition(":")[0]
+        if not esc.ctx.settings.oauth2.is_host_allowed(host):
+            return None
+        # Serialize refreshes: this hook is called concurrently by the
+        # routing client and the mass downloader, and the SDK does not
+        # lock its own refresh path.
+        with lock:
+            esc.ctx.auth_flow.refresh_if_necessary()
+            return esc.ctx.auth_flow.access_token
+
+    client = RoutingClient("earthscope-federator",
+                           request_hook=BearerTokenHook(earthscope_token))
+
+The resolver is consulted on every request; ``refresh_if_necessary()`` is
+cheap when the cached token is still valid. If the user is not logged in,
+the SDK raises and ObsPy surfaces it as :exc:`RequestHookError` rather
+than silently downloading only the open data.
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
@@ -312,7 +350,9 @@ class BearerTokenHook(object):
         other dynamic way - note that a callable may be invoked
         concurrently from several threads (see the module docstring) and
         must handle that itself; a mapping is sugar for the common static
-        case and is looked up by :attr:`HookRequest.host`.
+        case and is looked up by :attr:`HookRequest.host`. See the module
+        docstring for a worked example delegating to an external
+        authentication SDK.
 
         The mapping is matched case-insensitively against the request's
         netloc - i.e. including an explicit port if the URL carries one,
