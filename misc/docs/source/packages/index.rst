@@ -56,6 +56,7 @@ categories.*
     obspy.clients.earthworm
     obspy.clients.fdsn
     obspy.clients.filesystem
+    obspy.clients.hooks
     obspy.clients.iris
     obspy.clients.neic
     obspy.clients.nrl

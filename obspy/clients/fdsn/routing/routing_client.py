@@ -24,6 +24,7 @@ import obspy
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 from ...base import HTTPClient
+from ...hooks import RequestHookError
 from .. import client
 from ..client import raise_on_error
 from ..header import FDSNException, URL_MAPPINGS, FDSNNoDataException
@@ -103,6 +104,11 @@ def _assert_attach_response_not_in_kwargs(f, *args, **kwargs):
 def _try_download_bulk(r):
     try:
         return _download_bulk(r)
+    except RequestHookError:
+        # Let a broken request hook fail loudly rather than being
+        # downgraded to a per-endpoint warning - see download_url()'s
+        # equivalent guard in obspy.clients.fdsn.client.
+        raise
     except Exception:
         reason = "".join(traceback.format_exception(*sys.exc_info()))
         warnings.warn(
@@ -120,7 +126,8 @@ def _download_bulk(r):
     credentials = r["credentials"].get(urlparse(r["endpoint"]).netloc, {})
     try:
         c = client.Client(r["endpoint"], debug=r["debug"],
-                          timeout=r["timeout"], **credentials)
+                          timeout=r["timeout"],
+                          request_hook=r["request_hook"], **credentials)
     # This should rarely happen but better safe than sorry.
     except FDSNException as e:  # pragma: no cover
         msg = e.args[0]
@@ -160,7 +167,8 @@ def _strip_protocol(url):
 # get_events() but also others).
 class BaseRoutingClient(HTTPClient):
     def __init__(self, debug=False, timeout=120, include_providers=None,
-                 exclude_providers=None, credentials=None):
+                 exclude_providers=None, credentials=None,
+                 request_hook=None):
         """
         :type routing_type: str
         :param routing_type: The type of
@@ -185,8 +193,16 @@ class BaseRoutingClient(HTTPClient):
             center specific credentials.
             You can also use a URL mapping as for the normal FDSN client
             instead of the URL.
+        :type request_hook: callable or None
+        :param request_hook: A request hook, applied to *every* data center
+            this client discovers (including the routing/federator query
+            itself). See :mod:`obspy.clients.hooks`. This is the natural way
+            to authenticate a federated query that touches several data
+            centers with a single, host-aware hook such as
+            :class:`~obspy.clients.hooks.BearerTokenHook`.
         """
-        HTTPClient.__init__(self, debug=debug, timeout=timeout)
+        HTTPClient.__init__(self, debug=debug, timeout=timeout,
+                            request_hook=request_hook)
         self.include_providers = include_providers
         self.exclude_providers = exclude_providers
 
@@ -274,9 +290,19 @@ class BaseRoutingClient(HTTPClient):
                 "bulk_str": v,
                 "data_type": data_type,
                 "kwargs": kwargs,
-                "credentials": self.credentials})
+                "credentials": self.credentials,
+                "request_hook": self._request_hook})
         pool = ThreadPool(processes=len(dl_requests))
-        results = pool.map(_try_download_bulk, dl_requests)
+        try:
+            results = pool.map(_try_download_bulk, dl_requests)
+        finally:
+            # Explitly close the thread pool as somehow this does not work
+            # automatically under linux. See #2342. In a `finally` so the
+            # pool is still closed if pool.map() itself raises - e.g. a
+            # RequestHookError propagating out of _try_download_bulk() -
+            # rather than being left running (and warning about it) if we
+            # only closed it on the return path below.
+            pool.close()
 
         # Merge all results into a single object.
         if data_type == "waveform":
@@ -292,10 +318,6 @@ class BaseRoutingClient(HTTPClient):
             if not _i:
                 continue
             collection += _i
-
-        # Explitly close the thread pool as somehow this does not work
-        # automatically under linux. See #2342.
-        pool.close()
 
         return collection
 

@@ -27,7 +27,8 @@ class Client(WaveformClient, HTTPClient):
     """
     def __init__(self,
                  base_url="https://service.earthscope.org/irisws/syngine/1",
-                 user_agent=DEFAULT_USER_AGENT, debug=False, timeout=20):
+                 user_agent=DEFAULT_USER_AGENT, debug=False, timeout=20,
+                 request_hook=None):
         """
         Initializes a Syngine Client.
 
@@ -39,9 +40,13 @@ class Client(WaveformClient, HTTPClient):
         :type debug: bool
         :param timeout: The socket timeout.
         :type timeout: float
+        :param request_hook: A request hook to invoke on every outgoing
+            request, or ``None``. See :mod:`obspy.clients.hooks`.
+        :type request_hook: callable or None
         """
         HTTPClient.__init__(self, debug=debug, timeout=timeout,
-                            user_agent=user_agent)
+                            user_agent=user_agent,
+                            request_hook=request_hook)
 
         # Make sure the base_url does not end with a slash.
         base_url = base_url.rstrip("/")

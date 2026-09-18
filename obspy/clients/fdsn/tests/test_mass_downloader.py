@@ -24,6 +24,7 @@ import numpy as np
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client
+from obspy.clients.hooks import RequestHookError
 from obspy.clients.fdsn.mass_downloader import (domain, Restrictions,
                                                 MassDownloader)
 from obspy.clients.fdsn.mass_downloader.utils import (
@@ -2185,6 +2186,18 @@ class TestClientDownloadHelper():
             testdata["channel_level_fdsn.txt"])
         c.get_availability()
 
+    def test_get_availability_request_hook_error_not_swallowed(self):
+        """
+        A RequestHookError raised by the client's get_stations() call must
+        propagate out of get_availability() rather than being logged and
+        swallowed like every other exception - see the dedicated except
+        clause there for why.
+        """
+        c = self._init_client()
+        c.client.get_stations.side_effect = RequestHookError("broken hook")
+        with pytest.raises(RequestHookError):
+            c.get_availability()
+
     def test_get_availability_with_multiple_channel_epochs(self, testdata):
         """
         Make sure to get rid of du
@@ -2600,6 +2613,48 @@ class TestDownloadHelper():
         # Make sure it is the same object.
         assert d._initialized_clients["https://service.earthscope.org"] \
             is client
+
+    @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
+                autospec=True)
+    @mock.patch("logging.Logger.info")
+    @mock.patch("logging.Logger.warning")
+    def test_request_hook_forwarded_to_auto_created_clients_only(
+            self, log_w, log_p, patch):
+        """
+        A MassDownloader-wide request_hook is forwarded to every Client it
+        constructs itself for a string provider - the same reasoning as
+        BaseRoutingClient (see test_base_routing_client.py's
+        test_request_hook_propagation), since MassDownloader's whole point
+        is fanning out to providers whose Client isn't built by the caller.
+        It must NOT be applied to a provider already passed in as an
+        initialized Client instance - that Client keeps whatever hook it
+        was constructed with instead.
+        """
+        def side_effect(self, *args, **kwargs):
+            self.services = {"dataselect": "dummy", "station": "dummy"}
+        patch.side_effect = side_effect
+
+        md_hook = mock.Mock(name="md_hook")
+        preexisting_hook = mock.Mock(name="preexisting_hook")
+        preexisting_client = Client(
+            "EARTHSCOPE", request_hook=preexisting_hook)
+
+        logger = logging.getLogger("obspy.clients.fdsn.mass_downloader")
+        _l = logger.level
+        logger.setLevel(logging.CRITICAL)
+        try:
+            d = MassDownloader(
+                providers=["GFZ", preexisting_client],
+                request_hook=md_hook)
+        finally:
+            logger.setLevel(_l)
+
+        assert d._initialized_clients["GFZ"]._request_hook is md_hook
+        assert d._initialized_clients[
+            "https://service.earthscope.org"] is preexisting_client
+        assert d._initialized_clients[
+            "https://service.earthscope.org"]._request_hook \
+            is preexisting_hook
 
     @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
                 autospec=True)

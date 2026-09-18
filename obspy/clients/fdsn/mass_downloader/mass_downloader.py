@@ -49,8 +49,15 @@ class MassDownloader(object):
     :param debug: Debug flag passed to the underlying FDSN web service clients.
     :type providers: list[str] or :class:`~obspy.clients.fdsn.client.Client`
         instances
+    :param request_hook: A request hook, passed on to every automatically
+        created :class:`~obspy.clients.fdsn.client.Client` (see
+        :mod:`obspy.clients.hooks`). Has no effect on providers already
+        passed in as initialized ``Client`` instances - those keep whatever
+        request hook they were constructed with.
+    :type request_hook: callable or None
     """
-    def __init__(self, providers=None, debug=False, configure_logging=True):
+    def __init__(self, providers=None, debug=False, configure_logging=True,
+                 request_hook=None):
         if configure_logging:
             logger.setLevel(logging.DEBUG)
             # Prevent propagating to higher loggers.
@@ -64,6 +71,7 @@ class MassDownloader(object):
             ch.setFormatter(formatter)
             logger.addHandler(ch)
         self.debug = debug
+        self._request_hook = request_hook
         # If not given, use all providers ObsPy knows. They will be sorted
         # alphabetically except that ORFEUS is second to last and IRIS last.
         # The reason for this order is that smaller data centers can be
@@ -302,7 +310,8 @@ class MassDownloader(object):
                 name, client = client_name.base_url, client_name
             else:
                 try:
-                    this_client = Client(client_name, debug=self.debug)
+                    this_client = Client(client_name, debug=self.debug,
+                                         request_hook=self._request_hook)
                     name, client = client_name, this_client
                 except utils.ERRORS as e:
                     if "timeout" in str(e).lower():

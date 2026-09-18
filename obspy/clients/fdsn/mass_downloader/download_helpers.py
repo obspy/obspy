@@ -25,6 +25,7 @@ import numpy as np
 from lxml.etree import XMLSyntaxError
 
 import obspy
+from obspy.clients.hooks import RequestHookError
 from obspy.core.util import Enum
 
 from . import utils
@@ -691,8 +692,13 @@ class ClientDownloadHelper(object):
         # Download it.
         s_time = timeit.default_timer()
         pool = ThreadPool(min(threads, len(arguments)))
-        results = pool.map(star_download_station, arguments)
-        pool.close()
+        try:
+            results = pool.map(star_download_station, arguments)
+        finally:
+            # In a `finally` so the pool is still closed if pool.map()
+            # itself raises - e.g. a RequestHookError propagating out of
+            # star_download_station() - rather than being left running.
+            pool.close()
         e_time = timeit.default_timer()
 
         results = [_i for _i in results if _i is not None]
@@ -863,10 +869,15 @@ class ClientDownloadHelper(object):
         pool = ThreadPool(min(threads_per_client, len(chunks)))
 
         d_start = timeit.default_timer()
-        pool.map(
-            star_download_mseed,
-            [(self.client, self.client_name, chunk) for chunk in chunks])
-        pool.close()
+        try:
+            pool.map(
+                star_download_mseed,
+                [(self.client, self.client_name, chunk) for chunk in chunks])
+        finally:
+            # In a `finally` so the pool is still closed if pool.map()
+            # itself raises - e.g. a RequestHookError propagating out of
+            # star_download_mseed() - rather than being left running.
+            pool.close()
         d_end = timeit.default_timer()
 
         self.logger.info("Client '%s' - Launching basic QC checks..." %
@@ -1125,6 +1136,11 @@ class ClientDownloadHelper(object):
                 "Client '{0}' - Failed getting availability: %s".format(
                     self.client_name), str(e))
             return
+        except RequestHookError:
+            # Let a broken request hook fail loudly rather than being
+            # downgraded to a per-client log message - see download_url()'s
+            # equivalent guard in obspy.clients.fdsn.client.
+            raise
         # This sometimes fires if a service returns some random stuff which
         # is not a valid station file.
         except Exception as e:
