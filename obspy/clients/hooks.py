@@ -70,10 +70,11 @@ further down in this module - a hook can be as small as a function:
 For common cases, this module also includes a few ready-made hooks, so
 that callers don't have to write their own: :class:`BearerTokenHook` for
 bearer-token authentication, :class:`LoggingHook` for logging every
-outgoing request, and :func:`chain` for combining several hooks into one.
-None of these are privileged in any way - each is just a callable
-satisfying the same protocol described above, and a hook you write
-yourself works everywhere they do.
+outgoing request (optionally including its headers, with credentials
+redacted), and :func:`chain` for combining several hooks into one. None
+of these are privileged in any way - each is just a callable satisfying
+the same protocol described above, and a hook you write yourself works
+everywhere they do.
 
 .. rubric:: Example: BearerTokenHook
 
@@ -185,6 +186,12 @@ class HookRequest(metaclass=ABCMeta):
         :meth:`set_secret_header`, including by an earlier hook in a
         :func:`chain`, on both backends. The one caveat is name
         capitalization, not visibility - see the class docstring.
+
+        Because this includes anything set via :meth:`set_secret_header`,
+        a hook that logs, prints, or otherwise exports these values must
+        redact the credential-bearing ones itself - see
+        :attr:`LoggingHook.DEFAULT_REDACT` for the header names ObsPy's own
+        included hook treats that way.
         """
 
     @abstractmethod
@@ -440,20 +447,66 @@ class LoggingHook(object):
     authenticating hook, to get a record of every URL and host a federated
     download actually touched.
 
+    With ``headers=True``, also logs the request's headers - including any
+    added by an earlier hook in a :func:`chain`, such as an
+    ``Authorization`` header attached by :class:`BearerTokenHook` - which is
+    the way to answer "did my auth hook actually attach a token?" without
+    writing a throwaway hook of your own. Because :attr:`HookRequest.headers`
+    deliberately includes headers set via
+    :meth:`~HookRequest.set_secret_header` (see that method's docstring),
+    values considered credentials are redacted by default; see ``redact``
+    below. Only headers set by a hook *earlier* in the chain are visible, so
+    ``chain(LoggingHook(headers=True), BearerTokenHook(...))`` logs the
+    request before the token is attached, while the reverse order logs it
+    (redacted) afterwards.
+
     :type logger: :class:`logging.Logger`
     :param logger: Logger to use. Defaults to a logger named
         ``"obspy.clients.hooks"``.
     :type level: int
     :param level: Logging level to log requests at. Defaults to
         :data:`logging.DEBUG`.
+    :type headers: bool
+    :param headers: If ``True``, also log the request's headers, one per
+        line, sorted by name. Defaults to ``False``.
+    :type redact: iterable of str or None
+    :param redact: Header names (matched case-insensitively) whose values
+        are replaced with ``"<redacted>"`` rather than logged as-is. Only
+        relevant when ``headers=True``. Defaults to
+        :attr:`DEFAULT_REDACT`; pass ``()`` to log every value verbatim -
+        not recommended for anything hitting a real data center.
     """
-    def __init__(self, logger=None, level=logging.DEBUG):
+    #: Header names (case-insensitive) redacted by default when
+    #: ``headers=True`` - the common carriers of a credential.
+    DEFAULT_REDACT = ("authorization", "proxy-authorization", "cookie",
+                      "set-cookie", "x-api-key")
+
+    def __init__(self, logger=None, level=logging.DEBUG, headers=False,
+                 redact=None):
         self._logger = logger or logging.getLogger("obspy.clients.hooks")
         self._level = level
+        self._headers = headers
+        self._redact = frozenset(
+            name.lower() for name in
+            (self.DEFAULT_REDACT if redact is None else redact))
 
     def __call__(self, request):
-        self._logger.log(
-            self._level, "%s %s", request.method, request.url)
+        if not self._headers:
+            self._logger.log(
+                self._level, "%s %s", request.method, request.url)
+            return
+        # Guard explicitly rather than relying on the logger to no-op on a
+        # disabled level - building the header block is not free, and
+        # nothing here should touch header values at all when nothing is
+        # going to be logged.
+        if not self._logger.isEnabledFor(self._level):
+            return
+        lines = ["%s %s" % (request.method, request.url)]
+        for name, value in sorted(request.headers.items()):
+            if name.lower() in self._redact:
+                value = "<redacted>"
+            lines.append("    %s: %s" % (name, value))
+        self._logger.log(self._level, "\n".join(lines))
 
 
 def chain(*hooks):

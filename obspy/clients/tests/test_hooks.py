@@ -173,6 +173,80 @@ class TestLoggingHookAndChain():
         messages = [r.message for r in caplog.records]
         assert any("GET" in m and URL in m for m in messages)
 
+    def test_logging_hook_default_omits_headers(self, caplog):
+        req = urllib_request.Request(URL)
+        req.add_header("X-Test", "header-value")
+        with caplog.at_level(logging.DEBUG, logger="obspy.clients.hooks"):
+            LoggingHook()(_UrllibHookRequest(req))
+        [message] = [r.message for r in caplog.records]
+        assert "header-value" not in message
+
+    def test_logging_hook_headers_true_lists_header_names(self, caplog):
+        req = urllib_request.Request(URL)
+        req.add_header("X-Test", "value")
+        with caplog.at_level(logging.DEBUG, logger="obspy.clients.hooks"):
+            LoggingHook(headers=True)(_UrllibHookRequest(req))
+        [message] = [r.message for r in caplog.records]
+        assert "X-test: value" in message
+
+    def test_logging_hook_redacts_authorization_by_default(self, caplog):
+        req = urllib_request.Request(URL)
+        req.add_unredirected_header("Authorization", "Bearer tok")
+        with caplog.at_level(logging.DEBUG, logger="obspy.clients.hooks"):
+            LoggingHook(headers=True)(_UrllibHookRequest(req))
+        [message] = [r.message for r in caplog.records]
+        assert "Authorization: <redacted>" in message
+        assert "tok" not in message
+
+    def test_chain_combining_auth_and_logging_redacts_the_token(
+            self, caplog):
+        # This is the ordering a caller naturally writes - authenticate,
+        # then log - and it must never put the token itself in the log.
+        req = urllib_request.Request(URL)
+        hook = chain(
+            BearerTokenHook({"example.com": "tok"}),
+            LoggingHook(headers=True),
+        )
+        with caplog.at_level(logging.DEBUG, logger="obspy.clients.hooks"):
+            hook(_UrllibHookRequest(req))
+        messages = [r.message for r in caplog.records]
+        assert any("Authorization: <redacted>" in m for m in messages)
+        assert not any("tok" in m for m in messages)
+
+    def test_logging_hook_redact_empty_shows_real_value(self, caplog):
+        req = urllib_request.Request(URL)
+        req.add_unredirected_header("Authorization", "Bearer tok")
+        with caplog.at_level(logging.DEBUG, logger="obspy.clients.hooks"):
+            LoggingHook(headers=True, redact=())(_UrllibHookRequest(req))
+        [message] = [r.message for r in caplog.records]
+        assert "Authorization: Bearer tok" in message
+
+    def test_logging_hook_redact_matches_case_insensitively_both_backends(
+            self, caplog):
+        ureq = urllib_request.Request(URL)
+        ureq.add_header("X-Api-Key", "secret")
+        preq = PreparedRequest()
+        preq.prepare(method="GET", url=URL, headers={"X-Api-Key": "secret"})
+        hook = LoggingHook(headers=True, redact=("x-api-key",))
+        with caplog.at_level(logging.DEBUG, logger="obspy.clients.hooks"):
+            hook(_UrllibHookRequest(ureq))
+            hook(_RequestsHookRequest(preq))
+        messages = [r.message for r in caplog.records]
+        assert len(messages) == 2
+        for message in messages:
+            assert "<redacted>" in message
+            assert "secret" not in message
+
+    def test_logging_hook_headers_true_skipped_when_level_disabled(
+            self, caplog):
+        req = urllib_request.Request(URL)
+        req.add_unredirected_header("Authorization", "Bearer tok")
+        # Set the level above DEBUG so the hook's own isEnabledFor() guard
+        # short-circuits before it ever touches header values.
+        with caplog.at_level(logging.INFO, logger="obspy.clients.hooks"):
+            LoggingHook(headers=True)(_UrllibHookRequest(req))
+        assert caplog.records == []
+
     def test_chain_runs_hooks_in_order_and_shares_state(self):
         calls = []
         hook = chain(
