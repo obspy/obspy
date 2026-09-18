@@ -54,18 +54,6 @@ class TestClient():
         assert p.call_args[1]["headers"] == \
             {'User-Agent': DEFAULT_TESTING_USER_AGENT}
 
-    def test_request_hook_is_stored(self):
-        """
-        The client accepts and forwards a request_hook to HTTPClient,
-        the same as fdsn.Client, RoutingClient and MassDownloader.
-        """
-        def hook(request):
-            pass
-
-        c = Client(user_agent=DEFAULT_TESTING_USER_AGENT,
-                   request_hook=hook)
-        assert c._request_hook is hook
-
     def test_get_model_info(self):
         """
         Actual test for the get_model_info() method.

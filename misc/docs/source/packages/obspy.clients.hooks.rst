@@ -16,6 +16,8 @@
        RequestHookError
        RequestHookHandler
 
+    .. comment to end block
+
     Included Hooks
     ---------------
     Ready-made hooks for common cases. Each is just a callable satisfying

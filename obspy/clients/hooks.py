@@ -93,9 +93,9 @@ refreshing rather than a fixed string - see the next example.
 
 .. rubric:: Example: delegating to an authentication SDK
 
-A mapping value may be a callable rather than a literal token string.
-That is the way to plug in an external SDK that manages login state and
-token refresh. For example, with the ``earthscope-sdk`` package:
+A mapping value may be a callable rather than a literal token string -
+the way to plug in an external SDK that manages login state and token
+refresh, e.g. ``earthscope-sdk``:
 
 .. code-block:: python
 
@@ -122,15 +122,13 @@ token refresh. For example, with the ``earthscope-sdk`` package:
     })
     client = RoutingClient("earthscope-federator", request_hook=hook)
 
-The hosts a provider applies to are its mapping keys, so
-``earthscope_token`` is only ever called for a request actually going to
-EarthScope - it does not have to check for itself, and its token cannot
-reach another data center. Static and dynamic entries mix freely, as
-above. The provider is consulted on every such request;
-``refresh_if_necessary()`` is cheap while the cached token is still
-valid. If the user is not logged in, the SDK raises and ObsPy surfaces it
-as :exc:`RequestHookError` rather than silently downloading only the
-open data.
+``earthscope_token`` is only ever called for a request to the host it is
+mapped to, so it never has to check for itself, and its token cannot
+reach another data center. It is consulted afresh on every such request -
+``refresh_if_necessary()`` is cheap once cached - and a raise (e.g. not
+logged in) surfaces as :exc:`RequestHookError` rather than silently
+downloading only the open data. Static and dynamic entries mix freely in
+one mapping, as above.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -143,7 +141,22 @@ import logging
 import urllib.request as urllib_request
 from urllib.parse import urlparse
 
-from obspy.clients.base import RequestHookError
+from obspy.clients.base import ClientException
+
+
+class RequestHookError(ClientException):
+    """
+    Raised when a request hook raises while processing a request.
+
+    Never swallowed by the generic exception handling ObsPy's clients apply
+    to every other kind of request failure - see the module docstring above
+    and, for where each client re-raises it rather than downgrading it,
+    :func:`~obspy.clients.fdsn.client.download_url`,
+    :func:`~obspy.clients.fdsn.routing.routing_client._try_download_bulk`
+    and
+    :meth:`~obspy.clients.fdsn.mass_downloader.download_helpers.ClientDownloadHelper.get_availability`.
+    """
+    pass
 
 
 class HookRequest(metaclass=ABCMeta):
@@ -419,10 +432,9 @@ class BearerTokenHook(object):
         between them, which is what makes refresh work - and is not
         consulted at all for a request suppressed by ``require_https``,
         so a plain-http request never triggers a token refresh. If it
-        raises, the exception is wrapped in
-        :exc:`~obspy.clients.base.RequestHookError` naming this hook and
-        the URL, never swallowed. See the module docstring for a worked
-        example delegating to an external authentication SDK.
+        raises, the exception is wrapped in :exc:`RequestHookError` naming
+        this hook and the URL, never swallowed. See the module docstring
+        for a worked example delegating to an external authentication SDK.
 
         Mapping keys are exact netlocs, matched case-insensitively - i.e.
         including an explicit port if the URL carries one, such as

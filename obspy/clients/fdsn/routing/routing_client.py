@@ -293,7 +293,16 @@ class BaseRoutingClient(HTTPClient):
                 "credentials": self.credentials,
                 "request_hook": self._request_hook})
         pool = ThreadPool(processes=len(dl_requests))
-        results = pool.map(_try_download_bulk, dl_requests)
+        try:
+            results = pool.map(_try_download_bulk, dl_requests)
+        finally:
+            # Explitly close the thread pool as somehow this does not work
+            # automatically under linux. See #2342. In a `finally` so the
+            # pool is still closed if pool.map() itself raises - e.g. a
+            # RequestHookError propagating out of _try_download_bulk() -
+            # rather than being left running (and warning about it) if we
+            # only closed it on the return path below.
+            pool.close()
 
         # Merge all results into a single object.
         if data_type == "waveform":
@@ -309,10 +318,6 @@ class BaseRoutingClient(HTTPClient):
             if not _i:
                 continue
             collection += _i
-
-        # Explitly close the thread pool as somehow this does not work
-        # automatically under linux. See #2342.
-        pool.close()
 
         return collection
 

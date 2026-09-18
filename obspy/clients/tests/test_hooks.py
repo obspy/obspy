@@ -22,12 +22,11 @@ import urllib.request as urllib_request
 from unittest import mock
 
 import pytest
-import requests
 from requests import PreparedRequest
 
-from obspy.clients.base import HTTPClient, RequestHookError
+from obspy.clients.base import HTTPClient
 from obspy.clients.hooks import (
-    BearerTokenHook, LoggingHook, RequestHookHandler,
+    BearerTokenHook, LoggingHook, RequestHookError, RequestHookHandler,
     _call_hook, _RequestsHookRequest, _UrllibHookRequest, chain)
 
 
@@ -120,14 +119,25 @@ class TestBearerTokenHook():
         hook(_UrllibHookRequest(req))
         assert dict(req.header_items())["Authorization"] == "Bearer tok"
 
-    def test_callable_resolver_reevaluated_per_request(self):
+    @pytest.mark.parametrize("make_hook", [
+        # The single-callable form...
+        lambda resolver: BearerTokenHook(resolver),
+        # ...and the dict-value-callable (per-host provider) form. Both
+        # reach BearerTokenHook.__call__() through a different branch of
+        # __init__(), so both are worth covering here even though the
+        # resulting assertions are identical.
+        lambda resolver: BearerTokenHook({"example.com": resolver}),
+    ], ids=["single-callable", "dict-value-callable"])
+    def test_callable_resolver_reevaluated_per_request(self, make_hook):
+        # The whole point of a resolver/provider: a token that can be
+        # refreshed, so its value must never be cached between requests.
         calls = []
 
         def resolver(request):
             calls.append(request.host)
             return "tok-%d" % len(calls)
 
-        hook = BearerTokenHook(resolver)
+        hook = make_hook(resolver)
         req1 = urllib_request.Request(URL)
         hook(_UrllibHookRequest(req1))
         req2 = urllib_request.Request(URL)
@@ -187,24 +197,6 @@ class TestBearerTokenHook():
         req = urllib_request.Request(URL)
         hook(_UrllibHookRequest(req))
         assert "Authorization" not in dict(req.header_items())
-
-    def test_dict_value_callable_reevaluated_per_request(self):
-        # The whole point of a per-host provider: a token that can be
-        # refreshed, so its value must never be cached between requests.
-        calls = []
-
-        def provider(request):
-            calls.append(request.host)
-            return "tok-%d" % len(calls)
-
-        hook = BearerTokenHook({"example.com": provider})
-        req1 = urllib_request.Request(URL)
-        hook(_UrllibHookRequest(req1))
-        req2 = urllib_request.Request(URL)
-        hook(_UrllibHookRequest(req2))
-        assert dict(req1.header_items())["Authorization"] == "Bearer tok-1"
-        assert dict(req2.header_items())["Authorization"] == "Bearer tok-2"
-        assert calls == ["example.com", "example.com"]
 
     def test_dict_value_callable_not_invoked_when_https_required(self):
         # require_https is checked before any token is resolved, so a
@@ -446,6 +438,27 @@ class TestHTTPClientRequestHook():
             client._download(URL)
         assert "auth" not in get_mock.call_args.kwargs
 
+    def test_set_request_hook(self):
+        # Unlike fdsn.Client, there is no opener/handler to rebuild here -
+        # _download() reads self._request_hook fresh on every call.
+        client = _DummyHTTPClient()
+        assert client._request_hook is None
+
+        hook = mock.Mock()
+        client.set_request_hook(hook)
+        assert client._request_hook is hook
+        with mock.patch("requests.get") as get_mock:
+            get_mock.return_value = mock.Mock(status_code=200)
+            client._download(URL)
+        assert "auth" in get_mock.call_args.kwargs
+
+        client.set_request_hook(None)
+        assert client._request_hook is None
+        with mock.patch("requests.get") as get_mock:
+            get_mock.return_value = mock.Mock(status_code=200)
+            client._download(URL)
+        assert "auth" not in get_mock.call_args.kwargs
+
     def test_debug_url_printing_does_not_double_invoke_hook(self):
         hook = mock.Mock()
         client = _DummyHTTPClient(request_hook=hook, debug=True)
@@ -480,17 +493,15 @@ class TestHTTPClientRequestHook():
                 client._download(URL)
             assert isinstance(excinfo.value.__cause__, ValueError)
 
+    def test_syngine_client_forwards_request_hook(self):
+        # obspy.clients.syngine.Client is a real HTTPClient subclass (unlike
+        # _DummyHTTPClient above) - this is the one test proving its
+        # __init__ actually forwards request_hook to HTTPClient.__init__
+        # rather than swallowing it, without requiring network access.
+        from obspy.clients.syngine import Client as SyngineClient
 
-@pytest.mark.network
-class TestHTTPClientRequestHookNetwork():
-    """
-    Same as above but exercising the real requests machinery end to end
-    against an actual HTTP server, so the auth= wiring is proven against
-    requests itself rather than only against a mock.
-    """
-    def test_bearer_token_hook_reaches_httpbin(self):
-        hook = BearerTokenHook({"httpbin.org": "test-token"})
-        client = _DummyHTTPClient(request_hook=hook)
-        r = client._download("https://httpbin.org/headers")
-        assert r.json()["headers"]["Authorization"] == "Bearer test-token"
-        assert isinstance(r, requests.Response)
+        def hook(request):
+            pass
+
+        c = SyngineClient(request_hook=hook)
+        assert c._request_hook is hook

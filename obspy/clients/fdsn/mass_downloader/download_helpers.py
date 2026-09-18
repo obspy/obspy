@@ -692,8 +692,13 @@ class ClientDownloadHelper(object):
         # Download it.
         s_time = timeit.default_timer()
         pool = ThreadPool(min(threads, len(arguments)))
-        results = pool.map(star_download_station, arguments)
-        pool.close()
+        try:
+            results = pool.map(star_download_station, arguments)
+        finally:
+            # In a `finally` so the pool is still closed if pool.map()
+            # itself raises - e.g. a RequestHookError propagating out of
+            # star_download_station() - rather than being left running.
+            pool.close()
         e_time = timeit.default_timer()
 
         results = [_i for _i in results if _i is not None]
@@ -864,10 +869,15 @@ class ClientDownloadHelper(object):
         pool = ThreadPool(min(threads_per_client, len(chunks)))
 
         d_start = timeit.default_timer()
-        pool.map(
-            star_download_mseed,
-            [(self.client, self.client_name, chunk) for chunk in chunks])
-        pool.close()
+        try:
+            pool.map(
+                star_download_mseed,
+                [(self.client, self.client_name, chunk) for chunk in chunks])
+        finally:
+            # In a `finally` so the pool is still closed if pool.map()
+            # itself raises - e.g. a RequestHookError propagating out of
+            # star_download_mseed() - rather than being left running.
+            pool.close()
         d_end = timeit.default_timer()
 
         self.logger.info("Client '%s' - Launching basic QC checks..." %

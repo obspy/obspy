@@ -1578,6 +1578,27 @@ class TestClientNoNetwork():
                 "https://service.earthscope.org/fdsnws/dataselect/1/"
                 "queryauth")
 
+    def test_set_request_hook_none_removes_handler(self):
+        """
+        set_request_hook(None) removes a previously installed handler again,
+        while leaving other handlers (e.g. digest auth) untouched - the
+        counterpart to test_set_request_hook() above, which only exercises
+        installing a hook.
+        """
+        client = Client(base_url="EARTHSCOPE", user_agent=USER_AGENT,
+                        user="nobody@earthscope.org", password="anonymous",
+                        _discover_services=False,
+                        request_hook=mock.Mock())
+        assert self._get_request_hook_handler(client) is not None
+
+        client.set_request_hook(None)
+        assert self._get_request_hook_handler(client) is None
+        assert client._request_hook is None
+        digest_handlers = [
+            h for h in client._url_opener.handlers
+            if isinstance(h, urllib_request.HTTPDigestAuthHandler)]
+        assert len(digest_handlers) == 1
+
     def test_request_hook_error_wrapping(self):
         """
         A hook that raises should surface as RequestHookError with the

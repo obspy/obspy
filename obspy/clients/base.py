@@ -86,15 +86,6 @@ class ClientHTTPException(ClientException,
     pass
 
 
-class RequestHookError(ClientException):
-    """
-    Raised when a request hook raises while processing a request.
-
-    See :mod:`obspy.clients.hooks`.
-    """
-    pass
-
-
 class BaseClient(object):
     """
     Base class for common methods.
@@ -161,6 +152,22 @@ class HTTPClient(RemoteBaseClient, metaclass=ABCMeta):
         self._user_agent = user_agent
         self._request_hook = request_hook
         RemoteBaseClient.__init__(self, debug=debug, timeout=timeout)
+
+    def set_request_hook(self, hook):
+        """
+        Set a request hook, invoked on every outgoing request from now on.
+
+        This will overwrite any previously set request hook. Unlike
+        :meth:`~obspy.clients.fdsn.client.Client.set_request_hook`, no
+        opener/handler needs rebuilding here - ``_download()`` reads
+        ``self._request_hook`` fresh on every call, so this is a plain
+        attribute assignment.
+
+        :type hook: callable or None
+        :param hook: See the ``request_hook`` parameter of :meth:`__init__`
+            and :mod:`obspy.clients.hooks`.
+        """
+        self._request_hook = hook
 
     @abstractmethod
     def _handle_requests_http_error(self, r):
