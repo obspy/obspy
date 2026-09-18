@@ -81,7 +81,7 @@ everywhere they do.
 >>> from obspy.clients.fdsn import Client, RoutingClient
 >>> from obspy.clients.hooks import BearerTokenHook
 >>> hook = BearerTokenHook({
-...     'service.earthscope.org': 'my-earthscope-token',
+...     '*.earthscope.org': 'my-earthscope-token',
 ...     'geofon.gfz.de': 'my-gfz-token',
 ... })
 >>> client = Client("EARTHSCOPE", request_hook=hook)  # doctest: +SKIP
@@ -117,12 +117,12 @@ refresh, e.g. ``earthscope-sdk``:
             return esc.ctx.auth_flow.access_token
 
     hook = BearerTokenHook({
-        'service.earthscope.org': earthscope_token,
+        '*.earthscope.org': earthscope_token,
         'geofon.gfz.de': 'my-static-gfz-token',
     })
     client = RoutingClient("earthscope-federator", request_hook=hook)
 
-``earthscope_token`` is only ever called for a request to the host it is
+``earthscope_token`` is only ever called for a request to a host it is
 mapped to, so it never has to check for itself, and its token cannot
 reach another data center. It is consulted afresh on every such request -
 ``refresh_if_necessary()`` is cheap once cached - and a raise (e.g. not
@@ -138,6 +138,7 @@ one mapping, as above.
 """
 from abc import ABCMeta, abstractmethod
 import logging
+import re
 import urllib.request as urllib_request
 from urllib.parse import urlparse
 
@@ -383,6 +384,26 @@ class RequestHookHandler(urllib_request.BaseHandler):
     https_request = http_request
 
 
+def _compile_host_pattern(pattern):
+    """
+    Compile a host pattern into a regex matching a whole netloc.
+
+    Only ``*`` (any run of characters, dots included) and ``?`` (any
+    single character) are metacharacters; every other character is
+    literal. This is deliberately *not* :func:`fnmatch.fnmatch`, which
+    would additionally read ``[`` as a character class - an IPv6 netloc
+    key such as ``"[fe80::1]:8080"`` would then match a host of ``"f"``,
+    and hand it that host's token.
+
+    The pattern is expected to be lowercased already, as is whatever it
+    is matched against, so the regex itself is case-sensitive and
+    behaves the same on every platform (unlike :func:`fnmatch.fnmatch`).
+    """
+    return re.compile("".join(
+        ".*" if char == "*" else "." if char == "?" else re.escape(char)
+        for char in pattern))
+
+
 class BearerTokenHook(object):
     """
     Request hook attaching an ``Authorization: Bearer <token>`` header.
@@ -415,8 +436,8 @@ class BearerTokenHook(object):
 
         Passing a single callable ``f(request) -> token or None`` in
         place of the whole mapping applies it to every host, with no
-        allowlist. Use that form when the hosts are not known up front or
-        need pattern matching; use the mapping form - whose keys double
+        allowlist. Use that form when the choice of token needs logic a
+        glob key cannot express; use the mapping form - whose keys double
         as the allowlist - otherwise.
 
         A callable in either position is a *token resolver*, not a
@@ -436,12 +457,39 @@ class BearerTokenHook(object):
         this hook and the URL, never swallowed. See the module docstring
         for a worked example delegating to an external authentication SDK.
 
-        Mapping keys are exact netlocs, matched case-insensitively - i.e.
-        including an explicit port if the URL carries one, such as
-        ``"example.com:8080"`` - since host names are not case-sensitive
-        but this lookup would otherwise be an exact string match. There
-        is no wildcard or glob matching on keys; use the single-callable
-        form if you need that.
+        Mapping keys are netlocs, matched case-insensitively, and are
+        either exact - including an explicit port if the URL carries one,
+        such as ``"example.com:8080"`` - or a glob pattern such as
+        ``"*.earthscope.org"``. In a pattern, ``*`` matches any run of
+        characters (dots included) and ``?`` any single one; every other
+        character, ``[`` included, is literal, so an IPv6 netloc key such
+        as ``"[fe80::1]:8080"`` means exactly itself rather than being
+        read as a character class the way :func:`fnmatch.fnmatch` would.
+
+        A pattern is matched against the whole netloc, so
+        ``"*.earthscope.org"`` covers ``service.earthscope.org`` and
+        ``a.b.earthscope.org``, but neither the bare ``earthscope.org``
+        (there is no leading dot for the ``*`` to match) nor
+        ``service.earthscope.org:8080`` (the port is part of the netloc).
+        Add the extra key, or write ``"*.earthscope.org:*"``, to cover
+        those too.
+
+        An exact key always wins over a pattern, and among matching
+        patterns the longest wins - ``"*.eu.earthscope.org"`` beats
+        ``"*.earthscope.org"`` - so which token a host gets never depends
+        on the order the mapping was written in.
+
+        A key is a plain glob, not a domain-aware matcher:
+        ``"*earthscope.org"``, with no dot after the ``*``, also matches
+        ``evilearthscope.org``. Keep the dot.
+
+        A pattern never matches a netloc that carries userinfo (a
+        ``"user:pw@host"`` prefix, which both backends pass through as
+        part of the netloc unchanged) - otherwise a pattern ending in
+        ``*``, such as ``"*.earthscope.org:*"``, could be satisfied by a
+        URL like ``https://a.earthscope.org:x@evil.com/`` and hand this
+        key's token to ``evil.com``. Only an exact key, naming that
+        netloc outright, can match one.
 
         A host that is not present in the mapping (or for which a
         callable returns ``None``) is left alone - the request goes out
@@ -464,13 +512,48 @@ class BearerTokenHook(object):
         else:
             _tokens = {host.lower(): token for host, token in tokens.items()}
             self._description = "hosts=%r" % (sorted(_tokens),)
+            # Compile the glob keys once, here, rather than on every
+            # request - and sort them longest-first so that a more
+            # specific pattern wins over a less specific one, with ties
+            # broken lexicographically. Both make the resolution below
+            # independent of the order the caller wrote the mapping in.
+            # Nothing mutates this afterwards, which is what makes the
+            # hook safe to share across the thread pools the routing
+            # clients and the mass downloader call it from.
+            _patterns = tuple(
+                (_compile_host_pattern(key), key)
+                for key in sorted(
+                    (key for key in _tokens if "*" in key or "?" in key),
+                    key=lambda key: (-len(key), key)))
 
             def _resolve(request):
+                # An exact netloc key wins over any pattern - and trying
+                # it first is also what keeps a literal key that a glob
+                # would misread (an IPv6 netloc, say) working.
+                #
                 # A mapping value is either a literal token or a token
                 # provider with the same signature as the whole-mapping
                 # resolver form. Only the provider mapped to the host the
                 # request is actually going to is ever invoked.
-                token = _tokens.get(request.host.lower())
+                host = request.host.lower()
+                try:
+                    token = _tokens[host]
+                except KeyError:
+                    token = None
+                    # A netloc may carry userinfo ("user:pw@host"), which
+                    # both backends hand through unsplit as part of
+                    # .host/.netloc. A pattern must not be allowed to
+                    # match across that "@" - otherwise a URL such as
+                    # "https://a.earthscope.org:x@evil.com/" would
+                    # satisfy "*.earthscope.org:*" and hand this host's
+                    # token to evil.com. An exact key is unaffected: it
+                    # would have to name that exact netloc to match at
+                    # all, which is the caller's own explicit choice.
+                    if "@" not in host:
+                        for regex, key in _patterns:
+                            if regex.fullmatch(host):
+                                token = _tokens[key]
+                                break
                 if callable(token):
                     token = token(request)
                 return token

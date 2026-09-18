@@ -172,6 +172,131 @@ class TestBearerTokenHook():
         hook(_UrllibHookRequest(other_port))
         assert "Authorization" not in dict(other_port.header_items())
 
+    def test_dict_glob_key_matches_subdomain(self):
+        hook = BearerTokenHook({"*.example.com": "tok"})
+        single = urllib_request.Request("https://sub.example.com/query")
+        hook(_UrllibHookRequest(single))
+        assert dict(single.header_items())["Authorization"] == "Bearer tok"
+
+        # "*" crosses dots, so a deeper subdomain matches too.
+        multi = urllib_request.Request("https://a.b.example.com/query")
+        hook(_UrllibHookRequest(multi))
+        assert dict(multi.header_items())["Authorization"] == "Bearer tok"
+
+    def test_dict_glob_key_does_not_match_bare_domain(self):
+        hook = BearerTokenHook({"*.example.com": "tok"})
+        req = urllib_request.Request("https://example.com/query")
+        hook(_UrllibHookRequest(req))
+        assert "Authorization" not in dict(req.header_items())
+
+    @pytest.mark.parametrize("tokens", [
+        {"sub.example.com": "exact", "*.example.com": "glob"},
+        {"*.example.com": "glob", "sub.example.com": "exact"},
+    ], ids=["exact-first", "glob-first"])
+    def test_dict_exact_key_beats_glob_key(self, tokens):
+        hook = BearerTokenHook(tokens)
+        req = urllib_request.Request("https://sub.example.com/query")
+        hook(_UrllibHookRequest(req))
+        assert dict(req.header_items())["Authorization"] == "Bearer exact"
+
+    @pytest.mark.parametrize("tokens", [
+        {"*.example.com": "short", "*.eu.example.com": "long"},
+        {"*.eu.example.com": "long", "*.example.com": "short"},
+    ], ids=["short-first", "long-first"])
+    def test_dict_longer_glob_key_wins(self, tokens):
+        hook = BearerTokenHook(tokens)
+        longer = urllib_request.Request("https://ws.eu.example.com/query")
+        hook(_UrllibHookRequest(longer))
+        assert dict(longer.header_items())["Authorization"] == "Bearer long"
+
+        shorter = urllib_request.Request("https://ws.example.com/query")
+        hook(_UrllibHookRequest(shorter))
+        assert dict(shorter.header_items())["Authorization"] == \
+            "Bearer short"
+
+    def test_dict_glob_key_matches_whole_netloc_including_port(self):
+        hook = BearerTokenHook({"*.example.com": "tok"})
+        req = urllib_request.Request("https://sub.example.com:8080/query")
+        hook(_UrllibHookRequest(req))
+        assert "Authorization" not in dict(req.header_items())
+
+        hook = BearerTokenHook({"*.example.com:*": "tok"})
+        req = urllib_request.Request("https://sub.example.com:8080/query")
+        hook(_UrllibHookRequest(req))
+        assert dict(req.header_items())["Authorization"] == "Bearer tok"
+
+    def test_dict_glob_question_mark_matches_one_character(self):
+        hook = BearerTokenHook({"ws?.example.com": "tok"})
+        one = urllib_request.Request("https://ws1.example.com/query")
+        hook(_UrllibHookRequest(one))
+        assert dict(one.header_items())["Authorization"] == "Bearer tok"
+
+        none = urllib_request.Request("https://ws.example.com/query")
+        hook(_UrllibHookRequest(none))
+        assert "Authorization" not in dict(none.header_items())
+
+        two = urllib_request.Request("https://ws12.example.com/query")
+        hook(_UrllibHookRequest(two))
+        assert "Authorization" not in dict(two.header_items())
+
+    def test_dict_bracket_in_key_is_literal(self):
+        # fnmatch would read "[fe80::1]" as a character class - matching
+        # a single-character host like "f" - and hand it this token.
+        # This hook must not do that: the key means exactly itself.
+        hook = BearerTokenHook({"[fe80::1]:8080": "tok"})
+        matching = urllib_request.Request("https://[fe80::1]:8080/query")
+        hook(_UrllibHookRequest(matching))
+        assert dict(matching.header_items())["Authorization"] == \
+            "Bearer tok"
+
+        other = urllib_request.Request("https://f/query")
+        hook(_UrllibHookRequest(other))
+        assert "Authorization" not in dict(other.header_items())
+
+    def test_dict_glob_key_with_callable_value(self):
+        calls = []
+
+        def provider(request):
+            calls.append(request.host)
+            return "tok"
+
+        hook = BearerTokenHook({"*.example.com": provider})
+        matching = urllib_request.Request("https://sub.example.com/query")
+        hook(_UrllibHookRequest(matching))
+        assert dict(matching.header_items())["Authorization"] == \
+            "Bearer tok"
+
+        other = urllib_request.Request("https://other.org/query")
+        hook(_UrllibHookRequest(other))
+        assert calls == ["sub.example.com"]
+        assert "Authorization" not in dict(other.header_items())
+
+    def test_dict_glob_key_is_case_insensitive(self):
+        hook = BearerTokenHook({"*.Example.COM": "tok"})
+        req = urllib_request.Request("https://sub.example.com/query")
+        hook(_UrllibHookRequest(req))
+        assert dict(req.header_items())["Authorization"] == "Bearer tok"
+
+    def test_repr_names_glob_hosts_without_leaking_tokens(self):
+        hook = BearerTokenHook({"*.example.com": "s3cret"})
+        text = repr(hook)
+        assert "BearerTokenHook" in text
+        assert "*.example.com" in text
+        assert "s3cret" not in text
+
+    def test_dict_glob_key_does_not_match_netloc_with_userinfo(self):
+        # ".host" on both backends hands through a "user:pw@host" netloc
+        # unsplit. A trailing "*" must not be allowed to cross the "@"
+        # and match the real host beyond it - that would hand this
+        # key's token to whatever host follows the "@".
+        hook = BearerTokenHook({"*.example.com:*": "tok"})
+        req = urllib_request.Request(
+            "https://sub.example.com:pw@evil.com/query")
+        assert _UrllibHookRequest(req).host == \
+            "sub.example.com:pw@evil.com"
+        hook(_UrllibHookRequest(req))
+        assert "Authorization" not in dict(req.header_items())
+
     def test_dict_value_callable_is_invoked_for_its_host(self):
         hook = BearerTokenHook({"example.com": lambda request: "tok"})
         req = urllib_request.Request(URL)
