@@ -162,6 +162,105 @@ class TestBearerTokenHook():
         hook(_UrllibHookRequest(other_port))
         assert "Authorization" not in dict(other_port.header_items())
 
+    def test_dict_value_callable_is_invoked_for_its_host(self):
+        hook = BearerTokenHook({"example.com": lambda request: "tok"})
+        req = urllib_request.Request(URL)
+        hook(_UrllibHookRequest(req))
+        assert dict(req.header_items())["Authorization"] == "Bearer tok"
+
+    def test_dict_mixes_static_and_callable_values(self):
+        hook = BearerTokenHook({
+            "example.com": lambda request: "dynamic",
+            "other.org": "static",
+        })
+        dynamic = urllib_request.Request(URL)
+        hook(_UrllibHookRequest(dynamic))
+        static = urllib_request.Request("https://other.org/query")
+        hook(_UrllibHookRequest(static))
+        assert dict(dynamic.header_items())["Authorization"] == \
+            "Bearer dynamic"
+        assert dict(static.header_items())["Authorization"] == \
+            "Bearer static"
+
+    def test_dict_value_callable_returning_none_fails_open(self):
+        hook = BearerTokenHook({"example.com": lambda request: None})
+        req = urllib_request.Request(URL)
+        hook(_UrllibHookRequest(req))
+        assert "Authorization" not in dict(req.header_items())
+
+    def test_dict_value_callable_reevaluated_per_request(self):
+        # The whole point of a per-host provider: a token that can be
+        # refreshed, so its value must never be cached between requests.
+        calls = []
+
+        def provider(request):
+            calls.append(request.host)
+            return "tok-%d" % len(calls)
+
+        hook = BearerTokenHook({"example.com": provider})
+        req1 = urllib_request.Request(URL)
+        hook(_UrllibHookRequest(req1))
+        req2 = urllib_request.Request(URL)
+        hook(_UrllibHookRequest(req2))
+        assert dict(req1.header_items())["Authorization"] == "Bearer tok-1"
+        assert dict(req2.header_items())["Authorization"] == "Bearer tok-2"
+        assert calls == ["example.com", "example.com"]
+
+    def test_dict_value_callable_not_invoked_when_https_required(self):
+        # require_https is checked before any token is resolved, so a
+        # plain-http request never triggers a token refresh.
+        calls = []
+
+        def provider(request):
+            calls.append(request.host)
+            return "tok"
+
+        hook = BearerTokenHook({"example.com": provider})
+        req = urllib_request.Request("http://example.com/query")
+        hook(_UrllibHookRequest(req))
+        assert calls == []
+        assert "Authorization" not in dict(req.header_items())
+
+    def test_dict_value_callable_not_invoked_for_another_host(self):
+        # A provider is scoped to its own key: a request to a different
+        # host must not even consult it, let alone carry its token.
+        calls = []
+
+        def provider(request):
+            calls.append(request.host)
+            return "tok"
+
+        hook = BearerTokenHook({"other.org": provider})
+        req = urllib_request.Request(URL)  # host: example.com
+        hook(_UrllibHookRequest(req))
+        assert calls == []
+        assert "Authorization" not in dict(req.header_items())
+
+    def test_dict_value_callable_error_names_the_hook_and_url(self):
+        # A provider that raises (e.g. the auth SDK, when the user is not
+        # logged in) must surface as RequestHookError keeping the
+        # original exception as __cause__, and must say which hook and
+        # which URL.
+        def provider(request):
+            raise ValueError("not logged in")
+
+        hook = BearerTokenHook({"example.com": provider})
+        req = _UrllibHookRequest(urllib_request.Request(URL))
+        with pytest.raises(RequestHookError) as excinfo:
+            _call_hook(hook, req, URL)
+        assert isinstance(excinfo.value.__cause__, ValueError)
+        assert "BearerTokenHook" in str(excinfo.value)
+        assert URL in str(excinfo.value)
+
+    def test_repr_names_hosts_without_leaking_tokens(self):
+        # repr() reaches error messages and tracebacks (see _call_hook),
+        # so it must name what the hook is scoped to and nothing more.
+        hook = BearerTokenHook({"example.com": "s3cret", "other.org": "t0k"})
+        text = repr(hook)
+        assert "BearerTokenHook" in text
+        assert "example.com" in text and "other.org" in text
+        assert "s3cret" not in text and "t0k" not in text
+
 
 class TestLoggingHookAndChain():
     def test_logging_hook_logs_and_does_not_mutate(self, caplog):

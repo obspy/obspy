@@ -88,11 +88,14 @@ everywhere they do.
 >>> routed = RoutingClient("eida-routing",
 ...                        request_hook=hook)  # doctest: +SKIP
 
+A mapping value may also be a callable, for a token that needs
+refreshing rather than a fixed string - see the next example.
+
 .. rubric:: Example: delegating to an authentication SDK
 
-The callable form of :class:`BearerTokenHook` is the way to plug in an
-external SDK that manages login state and token refresh, rather than a
-static token string. For example, with the ``earthscope-sdk`` package:
+A mapping value may be a callable rather than a literal token string.
+That is the way to plug in an external SDK that manages login state and
+token refresh. For example, with the ``earthscope-sdk`` package:
 
 .. code-block:: python
 
@@ -106,11 +109,6 @@ static token string. For example, with the ``earthscope-sdk`` package:
     lock = threading.Lock()
 
     def earthscope_token(request):
-        # HookRequest.host is a netloc and may carry a port; the SDK
-        # matches on hostname alone.
-        host = request.host.partition(":")[0]
-        if not esc.ctx.settings.oauth2.is_host_allowed(host):
-            return None
         # Serialize refreshes: this hook is called concurrently by the
         # routing client and the mass downloader, and the SDK does not
         # lock its own refresh path.
@@ -118,13 +116,21 @@ static token string. For example, with the ``earthscope-sdk`` package:
             esc.ctx.auth_flow.refresh_if_necessary()
             return esc.ctx.auth_flow.access_token
 
-    client = RoutingClient("earthscope-federator",
-                           request_hook=BearerTokenHook(earthscope_token))
+    hook = BearerTokenHook({
+        'service.earthscope.org': earthscope_token,
+        'geofon.gfz.de': 'my-static-gfz-token',
+    })
+    client = RoutingClient("earthscope-federator", request_hook=hook)
 
-The resolver is consulted on every request; ``refresh_if_necessary()`` is
-cheap when the cached token is still valid. If the user is not logged in,
-the SDK raises and ObsPy surfaces it as :exc:`RequestHookError` rather
-than silently downloading only the open data.
+The hosts a provider applies to are its mapping keys, so
+``earthscope_token`` is only ever called for a request actually going to
+EarthScope - it does not have to check for itself, and its token cannot
+reach another data center. Static and dynamic entries mix freely, as
+above. The provider is consulted on every such request;
+``refresh_if_necessary()`` is cheap while the cached token is still
+valid. If the user is not logged in, the SDK raises and ObsPy surfaces it
+as :exc:`RequestHookError` rather than silently downloading only the
+open data.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -379,33 +385,53 @@ class BearerTokenHook(object):
     another.
 
     :type tokens: dict or callable
-    :param tokens: Either a mapping of host (netloc) to token, or a
-        callable ``f(request) -> token or None`` taking a
-        :class:`HookRequest` and returning the token to use, or ``None`` if
-        this request should not be authenticated. Note that this callable
-        is a *token resolver*, not a request hook itself - it returns a
-        token string (or ``None``) rather than mutating the request.
-        ``BearerTokenHook`` is the hook; it is what calls
-        :meth:`~HookRequest.set_secret_header` with the token this resolver
-        returns, together with the header name, the ``Bearer `` prefix, the
-        ``require_https`` guard, and the fail-open behaviour described
-        below.
+    :param tokens: Either a mapping of host (netloc) to the token to use
+        for that host, or a single callable applied to every host.
 
-        A callable is useful for tokens that must be refreshed, fetched
-        lazily, or resolved some other dynamic way - note that a callable
-        may be invoked concurrently from several threads (see the module
-        docstring) and must handle that itself; a mapping is sugar for the
-        common static case and is looked up by :attr:`HookRequest.host`.
-        See the module docstring for a worked example delegating to an
-        external authentication SDK.
+        A mapping value is either a literal token string or a *token
+        provider* - a callable ``f(request) -> token or None`` taking the
+        :class:`HookRequest` and returning the token to use for this
+        particular request, or ``None`` to leave it unauthenticated. A
+        provider is what to use for a token that must be refreshed,
+        fetched lazily, or resolved some other dynamic way; a literal
+        string is the common static case. The two mix freely in one
+        mapping. Only the provider mapped to the host the request is
+        actually going to is ever invoked - a provider for one data
+        center is never consulted for a request to another, let alone its
+        token attached.
 
-        The mapping is matched case-insensitively against the request's
-        netloc - i.e. including an explicit port if the URL carries one,
-        such as ``"example.com:8080"`` - since host names are not
-        case-sensitive but this lookup would otherwise be an exact string
-        match.
+        Passing a single callable ``f(request) -> token or None`` in
+        place of the whole mapping applies it to every host, with no
+        allowlist. Use that form when the hosts are not known up front or
+        need pattern matching; use the mapping form - whose keys double
+        as the allowlist - otherwise.
 
-        A host that is not present in the mapping (or for which the
+        A callable in either position is a *token resolver*, not a
+        request hook itself: it returns a token string (or ``None``)
+        rather than mutating the request. ``BearerTokenHook`` is the
+        hook; it is what calls :meth:`~HookRequest.set_secret_header`
+        with the token the resolver returns, together with the header
+        name, the ``Bearer `` prefix, the ``require_https`` guard, and
+        the fail-open behaviour described below. Such a callable may be
+        invoked concurrently from several threads (see the module
+        docstring) and must handle that itself. It is consulted afresh
+        on every request that could carry its token - never cached
+        between them, which is what makes refresh work - and is not
+        consulted at all for a request suppressed by ``require_https``,
+        so a plain-http request never triggers a token refresh. If it
+        raises, the exception is wrapped in
+        :exc:`~obspy.clients.base.RequestHookError` naming this hook and
+        the URL, never swallowed. See the module docstring for a worked
+        example delegating to an external authentication SDK.
+
+        Mapping keys are exact netlocs, matched case-insensitively - i.e.
+        including an explicit port if the URL carries one, such as
+        ``"example.com:8080"`` - since host names are not case-sensitive
+        but this lookup would otherwise be an exact string match. There
+        is no wildcard or glob matching on keys; use the single-callable
+        form if you need that.
+
+        A host that is not present in the mapping (or for which a
         callable returns ``None``) is left alone - the request goes out
         unauthenticated rather than raising. This "fail open" behaviour is
         deliberate: most FDSN data centers do not require authentication,
@@ -418,11 +444,30 @@ class BearerTokenHook(object):
     def __init__(self, tokens, require_https=True):
         if callable(tokens):
             self._resolve = tokens
+            # Only a name, never the object's repr - a callable holding a
+            # token could put it in its own repr, and this ends up in
+            # error messages and tracebacks. See __repr__.
+            self._description = getattr(
+                tokens, "__name__", type(tokens).__name__)
         else:
             _tokens = {host.lower(): token for host, token in tokens.items()}
-            self._resolve = lambda request: _tokens.get(
-                request.host.lower())
+            self._description = "hosts=%r" % (sorted(_tokens),)
+
+            def _resolve(request):
+                # A mapping value is either a literal token or a token
+                # provider with the same signature as the whole-mapping
+                # resolver form. Only the provider mapped to the host the
+                # request is actually going to is ever invoked.
+                token = _tokens.get(request.host.lower())
+                if callable(token):
+                    token = token(request)
+                return token
+
+            self._resolve = _resolve
         self._require_https = require_https
+
+    def __repr__(self):
+        return "%s(%s)" % (type(self).__name__, self._description)
 
     def __call__(self, request):
         if self._require_https and request.scheme != "https":
