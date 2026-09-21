@@ -191,7 +191,7 @@ jobs:
           obspy-runtests --cov obspy --cov-report=xml:${GITHUB_WORKSPACE}/coverage.xml --cov-append --report ${{ env.runtest_options }}
 
       - name: upload coverage
-        uses: codecov/codecov-action@v7.0.0
+        uses: codecov/codecov-action@v7.1.1
         if: always() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure')
         with:
           flags: ${{ contains(matrix.options, 'network') && 'unittests_network' || 'unittests' }}
