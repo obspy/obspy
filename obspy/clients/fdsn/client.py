@@ -47,12 +47,20 @@ from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      FDSNInvalidRequestException)
 from .wadl_parser import WADLParser
 
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 import urllib.request as urllib_request
 import queue
 
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
+
+MSG_UNSAFE_JWT = (
+    'For security reasons, when a json web token (JWT) is provided for '
+    'authentication, only requests via https are allowed by default '
+    '(requested URL: {url}) to prevent leaking credentials. For special '
+    'scenarios where it might be needed and not problematic (internal '
+    'networks, VPNs, ..) you can use `Client(..., jwt_allow_http=True)` '
+    'to manually disable this security check.')
 
 
 class CustomRedirectHandler(urllib_request.HTTPRedirectHandler):
@@ -150,7 +158,8 @@ class Client(object):
                  user=None, password=None, user_agent=DEFAULT_USER_AGENT,
                  debug=False, timeout=120, service_mappings=None,
                  force_redirect=False, eida_token=None,
-                 _discover_services=True, use_gzip=True, jwt=None):
+                 _discover_services=True, use_gzip=True, jwt=None,
+                 jwt_allow_http=False):
         """
         Initializes an FDSN Web Service client.
 
@@ -238,6 +247,7 @@ class Client(object):
         self._force_redirect = force_redirect
         self.use_gzip = use_gzip
         self.jwt = jwt
+        self.jwt_allow_http = jwt_allow_http
 
         if jwt is not None and any(
                 item is not None for item in (user, password, eida_token)):
@@ -289,6 +299,10 @@ class Client(object):
         if not self._validate_base_url(base_url):
             msg = "The FDSN service base URL `{}` is not a valid URL."\
                   .format(base_url)
+            raise ValueError(msg)
+        # disallow sending JWT auth information via http
+        if urlsplit(base_url).scheme != 'https' and not self.jwt_allow_http:
+            msg = MSG_UNSAFE_JWT.format(url=base_url)
             raise ValueError(msg)
 
         self.base_url = base_url
@@ -1486,6 +1500,10 @@ class Client(object):
 
     def _download(self, url, return_string=False, data=None, use_gzip=None,
                   content_type=None):
+        # disallow sending JWT auth information via http
+        if urlsplit(url).scheme != 'https' and not self.jwt_allow_http:
+            msg = MSG_UNSAFE_JWT.format(url=url)
+            raise ValueError(msg)
         # make it possible to have a default for gzip set on client
         # initialization but also be able to override it here (for dataselect
         # requests)
