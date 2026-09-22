@@ -150,7 +150,7 @@ class Client(object):
                  user=None, password=None, user_agent=DEFAULT_USER_AGENT,
                  debug=False, timeout=120, service_mappings=None,
                  force_redirect=False, eida_token=None,
-                 _discover_services=True, use_gzip=True):
+                 _discover_services=True, use_gzip=True, jwt=None):
         """
         Initializes an FDSN Web Service client.
 
@@ -237,6 +237,14 @@ class Client(object):
         self.timeout = timeout
         self._force_redirect = force_redirect
         self.use_gzip = use_gzip
+        self.jwt = jwt
+
+        if jwt is not None and any(
+                item is not None for item in (user, password, eida_token)):
+            msg = ('Can not use a JWT authentication together with HTTP '
+                   'Digest Auth (user/password) or EIDA token auth '
+                   '(eida_token).')
+            raise ValueError(msg)
 
         # Cache for the webservice versions. This makes interactive use of
         # the client more convenient.
@@ -289,6 +297,9 @@ class Client(object):
         self._set_opener(user, password)
 
         self.request_headers = {"User-Agent": user_agent}
+        if self.jwt:
+            self.request_headers['Authorization'] = f'Bearer {self.jwt}'
+
         # Avoid mutable kwarg.
         if major_versions is None:
             major_versions = {}
