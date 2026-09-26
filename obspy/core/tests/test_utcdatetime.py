@@ -260,6 +260,11 @@ class TestUTCDateTime:
         assert dt == UTC(2008, 12, 29, 12, 23)
         dt = UTC("2009W011T12Z")
         assert dt == UTC(2008, 12, 29, 12)
+        # 1 January 2021 is a Friday, so ISO week 1 starts on Monday 4 January.
+        dt = UTC("2021-W01-1")
+        assert dt == UTC(2021, 1, 4)
+        dt = UTC("2024-W01-1")
+        assert dt == UTC(2024, 1, 1)
 
     def test_to_string(self):
         """
