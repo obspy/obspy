@@ -581,21 +581,15 @@ class UTCDateTime(object):
             # we got a week date: YYYYWwwD
             # remove week indicator 'W'
             date = date.replace('W', '')
-            date_pattern = "%Y%W%w"
+            date_pattern = "%Y%m%d"
             year = int(date[0:4])
-            # [Www] is the week number prefixed by the letter 'W', from W01
-            # through W53.
-            # strpftime %W == Week number of the year (Monday as the first day
-            # of the week) as a decimal number [00,53]. All days in a new year
-            # preceding the first Monday are considered to be in week 0.
-            week = int(date[4:6]) - 1
-            # [D] is the weekday number, from 1 through 7, beginning with
-            # Monday and ending with Sunday.
-            # strpftime %w == Weekday as a decimal number [0(Sunday),6]
+            week = int(date[4:6])
             day = int(date[6])
-            if day == 7:
-                day = 0
-            date = "%04d%02d%1d" % (year, week, day)
+            try:
+                iso = datetime.date.fromisocalendar(year, week, day)
+            except ValueError:
+                raise ValueError("Wrong or incomplete ISO8601:2004 date format")
+            date = iso.strftime("%Y%m%d")
         elif length_date == 7 and date.isdigit() and value.count('-') != 2:
             # we got a ordinal date: YYYYDDD
             date_pattern = "%Y%j"

@@ -8,6 +8,8 @@ Changes:
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
+ - obspy.core:
+   * ISO8601 week dates use the ISO week calendar. 2021-W01-1 is 4 January 2021.
 
 1.5.1 (doi: 10.5281/zenodo.22108563)
 ====================================
