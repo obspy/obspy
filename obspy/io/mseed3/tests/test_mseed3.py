@@ -15,6 +15,7 @@ from pymseed.util import timestr2nstime
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import Stats
 from obspy.io.mseed3.core import (
+    _MSEED3_ISFORMAT_PROBE_BYTES,
     _is_mseed3,
     _nanosecond_time_string,
     _read_mseed3,
@@ -82,6 +83,38 @@ class TestIsMSEED3:
 
     def test_rejects_missing_file(self, tmp_path):
         assert _is_mseed3(str(tmp_path / "does-not-exist.mseed3")) is False
+
+    @pytest.mark.parametrize("format_version", [2, 3])
+    def test_detects_record_larger_than_probe(self, format_version, tmp_path):
+        # A first record bigger than _MSEED3_ISFORMAT_PROBE_BYTES must still
+        # be detected: the header parses even though the buffer runs out
+        # partway through the data.
+        data = np.random.randint(-10**6, 10**6, 5000).astype(np.int32)
+        st = Stream([_make_trace(data, sampling_rate=100.0)])
+        buf = io.BytesIO()
+        _write_mseed3(
+            st,
+            buf,
+            max_record_length=16384,
+            format_version=format_version,
+            encoding="INT32",
+        )
+        raw = buf.getvalue()
+        assert len(raw) > _MSEED3_ISFORMAT_PROBE_BYTES
+
+        out = tmp_path / f"large_v{format_version}.mseed3"
+        out.write_bytes(raw)
+
+        assert _is_mseed3(raw) is True
+        assert _is_mseed3(io.BytesIO(raw)) is True
+        assert _is_mseed3(str(out)) is True
+
+    def test_accepts_header_only_prefix(self, testdata):
+        data = testdata["testdata-3channel-signal.mseed3"].read_bytes()
+        assert _is_mseed3(data[:64]) is True
+
+    def test_rejects_zero_filled_buffer(self):
+        assert _is_mseed3(b"\x00" * _MSEED3_ISFORMAT_PROBE_BYTES) is False
 
 
 class TestReadMSEED3:

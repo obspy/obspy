@@ -11,6 +11,7 @@ from typing import IO, Union
 import numpy as np
 from pymseed import (
     DataEncoding,
+    MiniSEEDError,
     MS3Record,
     MS3TraceList,
     nslc2sourceid,
@@ -21,8 +22,10 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict
 
-# Upper bound on bytes read for detecting if a file contains miniSEED.
-_MSEED3_ISFORMAT_PROBE_BYTES = 1 << 20
+# Bytes read from the start of a source when detecting if it contains
+# miniSEED. A record whose header parses but extends past this many bytes
+# is still detected; see _is_mseed3.
+_MSEED3_ISFORMAT_PROBE_BYTES = 8192
 
 
 def _supports_buffer_protocol(obj) -> bool:
@@ -114,36 +117,36 @@ def _is_mseed3(
     source: Union[str, os.PathLike, bytes, bytearray, memoryview, IO[bytes]],
 ) -> bool:
     """
-    Checks whether data at the start of ``source`` is readable as miniSEED
-    (version 2 or 3) by parsing the first record with pymseed.
+    Checks whether data at the start of ``source`` is miniSEED (version 2 or
+    3) by parsing the first record with pymseed.
 
-    Only the first record header is parsed; samples are not unpacked and CRC
-    validation is skipped for a lightweight format check.
+    At most ``_MSEED3_ISFORMAT_PROBE_BYTES`` are read. Samples are not
+    unpacked and the CRC is not checked. A valid header whose record extends
+    past the probe still counts as miniSEED.
 
     :type source: str, os.PathLike, bytes-like, or file-like object
     :param source: miniSEED data to be checked.
     :rtype: bool
-    :return: ``True`` if the first record parses successfully.
+    :return: ``True`` if the start of ``source`` is a miniSEED record.
     """
-    parse_kwargs = {"unpack_data": False, "validate_crc": False}
-
     try:
         if isinstance(source, (bytes, bytearray, memoryview)):
             chunk = bytes(source[:_MSEED3_ISFORMAT_PROBE_BYTES])
-            return MS3Record.parse(buffer=chunk, **parse_kwargs) is not None
-        if hasattr(source, "read"):
+        elif hasattr(source, "read"):
             chunk = source.read(_MSEED3_ISFORMAT_PROBE_BYTES)
-            return MS3Record.parse(buffer=chunk, **parse_kwargs) is not None
-        for _ in MS3Record.from_file(
-            os.fspath(source),
-            end_byte_offset=_MSEED3_ISFORMAT_PROBE_BYTES,
-            **parse_kwargs,
-        ):
-            return True
-        return False
+        else:
+            with open(source, "rb") as fh:
+                chunk = fh.read(_MSEED3_ISFORMAT_PROBE_BYTES)
+        MS3Record.parse(buffer=chunk, unpack_data=False, validate_crc=False)
+    except MiniSEEDError as e:
+        # A positive status is the number of bytes still needed to complete
+        # a record whose header parsed; negative statuses are real errors.
+        return e.status_code > 0
     except Exception:
-        # Any parse/IO error means "not mseed"; format probes must not raise.
+        # Any other parse/IO error means "not mseed"; format probes must not
+        # raise.
         return False
+    return True
 
 
 def _read_mseed3(
