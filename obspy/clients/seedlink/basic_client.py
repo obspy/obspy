@@ -31,7 +31,7 @@ class Client(object):
 
     :type server: str
     :param server: Server name or IP address to connect to (e.g.
-        "localhost", "rtserver.ipgp.fr")
+        "localhost", "rtserve.resif.fr")
     :type port: int
     :param port: Port at which the seedlink server is operating (default is
         `18000`).
@@ -74,7 +74,7 @@ class Client(object):
         Request waveform data from the seedlink server.
 
         >>> from obspy import UTCDateTime
-        >>> client = Client('rtserver.ipgp.fr')
+        >>> client = Client('rtserve.resif.fr')
         >>> t = UTCDateTime() - 1500
         >>> st = client.get_waveforms("G", "FDFM", "10", "BHZ", t, t + 5)
         >>> print(st)  # doctest: +ELLIPSIS
@@ -204,7 +204,7 @@ class Client(object):
         Supports ``fnmatch`` wildcards, e.g. ``*`` and ``?``, in ``network``,
         ``station``, ``location`` and ``channel``.
 
-        >>> client = Client('rtserver.ipgp.fr')
+        >>> client = Client('rtserve.resif.fr')
         >>> info = client.get_info(station="FDFM")
         >>> print(info)
         [('G', 'FDFM')]

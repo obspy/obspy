@@ -123,9 +123,24 @@ class WADLParser(object):
             name = "maxlongitude"
 
         style = param_doc.get("style")
-        if style != "query":
-            msg = "Unknown parameter style '%s' in WADL" % style
+        if style == "query":
+            # this is what we are interested in here, query parameters
+            pass
+        elif style in ("header", "matrix", "template", "plain"):
+            # these additional styles are defined by the WADL schema, but here
+            # we do not currently parse them
+            msg = f"Ignoring non-query parameter of style '{style}' in WADL"
             warnings.warn(msg)
+            return
+        else:
+            # these are styles not defined by the WADL schema.
+            # we should add validation against the WADL XMLSchema to not rely
+            # on hard coding what could be acceptable or not (although WADL
+            # schema does not seem to change over time, considering as of 2026
+            # the schema has 2009 in the namespace)
+            msg = f"Ignoring unknown parameter style '{style}' in WADL"
+            warnings.warn(msg)
+            return
 
         required = self._convert_boolean(param_doc.get("required"))
         if required is None:

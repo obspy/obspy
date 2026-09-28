@@ -223,9 +223,9 @@ class Client(WaveformClient, HTTPClient):
         ...                           eventid="GCMT:C201002270634A")
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
-        IU.ANMO.SE.MXZ | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
-        IU.ANMO.SE.MXN | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
-        IU.ANMO.SE.MXE | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
+        IU.ANMO.SE.MXZ | 2010-02-27T06:35:13... - ... | 4.0 Hz, 15520 samples
+        IU.ANMO.SE.MXN | 2010-02-27T06:35:13... - ... | 4.0 Hz, 15520 samples
+        IU.ANMO.SE.MXE | 2010-02-27T06:35:13... - ... | 4.0 Hz, 15520 samples
 
         :param model: Specify the model.
         :type model: str
@@ -421,7 +421,7 @@ class Client(WaveformClient, HTTPClient):
         IU.ANMO.SE.MXZ  | 1900-01-01T00:00:00... - ... | 4.0 Hz, 15520 samples
         IU.ANTO.SE.MXZ  | 1900-01-01T00:00:00... - ... | 4.0 Hz, 15520 samples
         XX.S0001.SE.MXZ | 1900-01-01T00:00:00... - ... | 4.0 Hz, 15520 samples
-        XX.S0002.SE.MXZ | 1900-01-01T00:00:00... - ... | 4.0 Hz, 15520 samples
+        XX.S0003.SE.MXZ | 1900-01-01T00:00:00... - ... | 4.0 Hz, 15520 samples
 
         :param model: Specify the model.
         :type model: str

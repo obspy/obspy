@@ -58,12 +58,12 @@ class TestClient():
         """
         Actual test for the get_model_info() method.
         """
-        info = self.c.get_model_info("test")
+        info = self.c.get_model_info("ak135f_5s")
 
         assert isinstance(info, obspy.core.AttribDict)
         # Check two random keys.
         assert info.dump_type == "displ_only"
-        assert info.time_scheme == "newmark2"
+        assert info.time_scheme == "symplec4"
         # Check that both arrays have been converted to numpy arrays.
         assert isinstance(info.slip, np.ndarray)
         assert isinstance(info.sliprate, np.ndarray)
@@ -193,13 +193,13 @@ class TestClient():
     def test_error_handling_arguments(self):
         # Floating points value
         with pytest.raises(ValueError):
-            self.c.get_waveforms(model="test", receiverlatitude="a")
+            self.c.get_waveforms(model="ak135f_5s", receiverlatitude="a")
         # Int.
         with pytest.raises(ValueError):
-            self.c.get_waveforms(model="test", kernelwidth="a")
+            self.c.get_waveforms(model="ak135f_5s", kernelwidth="a")
         # Time.
         with pytest.raises(TypeError):
-            self.c.get_waveforms(model="test", origintime="a")
+            self.c.get_waveforms(model="ak135f_5s", origintime="a")
 
     def test_source_mechanisms_mock(self):
         r = RequestsMockResponse()
@@ -250,7 +250,7 @@ class TestClient():
         syngine and rely on the service for the error detection.
         """
         # Wrong components.
-        msg = re.compile("HTTP code 400 when.*Unrecognized component",
+        msg = re.compile("HTTP code 422 when.*String should match pattern",
                          re.DOTALL)
         with pytest.raises(ClientHTTPException, match=msg):
             self.c.get_waveforms(
@@ -341,41 +341,44 @@ class TestClient():
         Use the 'test' model which does not produce useful seismograms but
         is quick to test.
         """
-        st = self.c.get_waveforms(model="test", network="IU", station="ANMO",
+        st = self.c.get_waveforms(model="ak135f_5s", network="IU",
+                                  station="ANMO",
                                   eventid="GCMT:C201002270634A",
                                   components="Z")
         assert len(st) == 1
         # Download exactly the same with a bulk request and check the result
         # is the same!
         st_bulk = self.c.get_waveforms_bulk(
-            model="test", bulk=[("IU", "ANMO")],
+            model="ak135f_5s", bulk=[("IU", "ANMO")],
             eventid="GCMT:C201002270634A", components="Z")
         assert len(st_bulk) == 1
         assert st == st_bulk
 
         # Test phase relative times. This tests that everything is correctly
         # encoded and what not.
-        st = self.c.get_waveforms(model="test", network="IU", station="ANMO",
+        st = self.c.get_waveforms(model="ak135f_5s", network="IU",
+                                  station="ANMO",
                                   eventid="GCMT:C201002270634A",
                                   starttime="P-10", endtime="P+20",
                                   components="Z")
         assert len(st) == 1
         st_bulk = self.c.get_waveforms_bulk(
-            model="test", bulk=[("IU", "ANMO")],
+            model="ak135f_5s", bulk=[("IU", "ANMO")],
             starttime="P-10", endtime="P+20",
             eventid="GCMT:C201002270634A", components="Z")
         assert len(st_bulk) == 1
         assert st == st_bulk
 
         # One to test a source mechanism
-        st = self.c.get_waveforms(model="test", network="IU", station="ANMO",
+        st = self.c.get_waveforms(model="ak135f_5s", network="IU",
+                                  station="ANMO",
                                   sourcemomenttensor=[1, 2, 3, 4, 5, 6],
                                   sourcelatitude=10, sourcelongitude=20,
                                   sourcedepthinmeters=100,
                                   components="Z")
         assert len(st) == 1
         st_bulk = self.c.get_waveforms_bulk(
-            model="test", bulk=[("IU", "ANMO")],
+            model="ak135f_5s", bulk=[("IU", "ANMO")],
             sourcemomenttensor=[1, 2, 3, 4, 5, 6],
             sourcelatitude=10, sourcelongitude=20,
             sourcedepthinmeters=100,
@@ -385,7 +388,7 @@ class TestClient():
 
         # One more to test actual time values.
         st = self.c.get_waveforms(
-            model="test", network="IU", station="ANMO",
+            model="ak135f_5s", network="IU", station="ANMO",
             origintime=obspy.UTCDateTime(2015, 1, 2, 3, 0, 5),
             starttime=obspy.UTCDateTime(2015, 1, 2, 3, 4, 5),
             endtime=obspy.UTCDateTime(2015, 1, 2, 3, 10, 5),
@@ -395,7 +398,7 @@ class TestClient():
             components="Z")
         assert len(st) == 1
         st_bulk = self.c.get_waveforms_bulk(
-            model="test", bulk=[("IU", "ANMO")],
+            model="ak135f_5s", bulk=[("IU", "ANMO")],
             origintime=obspy.UTCDateTime(2015, 1, 2, 3, 0, 5),
             starttime=obspy.UTCDateTime(2015, 1, 2, 3, 4, 5),
             endtime=obspy.UTCDateTime(2015, 1, 2, 3, 10, 5),
@@ -411,7 +414,7 @@ class TestClient():
         with NamedTemporaryFile() as tf:
             filename = tf.name
             st = self.c.get_waveforms(
-                model="test", network="IU", station="ANMO",
+                model="ak135f_5s", network="IU", station="ANMO",
                 eventid="GCMT:C201002270634A", starttime="P-10",
                 endtime="P+10", components="Z", filename=tf)
             # No return value.
@@ -423,7 +426,7 @@ class TestClient():
         # Save to an open file-like object.
         with io.BytesIO() as buf:
             st = self.c.get_waveforms(
-                model="test", network="IU", station="ANMO",
+                model="ak135f_5s", network="IU", station="ANMO",
                 eventid="GCMT:C201002270634A", starttime="P-10",
                 endtime="P+10", components="Z", filename=buf)
             # No return value.
@@ -434,20 +437,16 @@ class TestClient():
             assert len(st) == 1
 
     def test_reading_saczip_files(self):
-        with pytest.warns(UserWarning,
-                          match="Sample spacing read from SAC"):
-            st = self.c.get_waveforms(
-                model="test", network="IU", station="ANMO",
-                eventid="GCMT:C201002270634A", starttime="P-10",
-                endtime="P+10", components="Z", format="saczip")
+        st = self.c.get_waveforms(
+            model="ak135f_5s", network="IU", station="ANMO",
+            eventid="GCMT:C201002270634A", starttime="P-10",
+            endtime="P+10", components="Z", format="saczip")
         assert len(st) == 1
         # Same with bulk request.
-        with pytest.warns(UserWarning,
-                          match="Sample spacing read from SAC"):
-            st_bulk = self.c.get_waveforms_bulk(
-                model="test", bulk=[("IU", "ANMO")],
-                eventid="GCMT:C201002270634A", starttime="P-10",
-                endtime="P+10", components="Z", format="saczip")
+        st_bulk = self.c.get_waveforms_bulk(
+            model="ak135f_5s", bulk=[("IU", "ANMO")],
+            eventid="GCMT:C201002270634A", starttime="P-10",
+            endtime="P+10", components="Z", format="saczip")
         assert len(st_bulk) == 1
 
         assert st == st_bulk

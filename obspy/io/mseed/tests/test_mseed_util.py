@@ -1178,7 +1178,7 @@ class TestMSEEDUtil():
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             _read_mseed(filename)
-        assert len(w), 1
+        assert len(w) == 16
         assert w[0].message.args[0] == \
             "SK_MODS__HHZ_D: Warning: Number of blockettes in fixed header " \
             "(2) does not match the number parsed (1)"
@@ -1190,7 +1190,7 @@ class TestMSEEDUtil():
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             util.get_flags(filename)
-        assert len(w), 1
+        assert len(w) == 16
         assert w[0].message.args[0] == \
             "SK_MODS__HHZ_D: Warning: Number of blockettes in fixed header " \
             "(2) does not match the number parsed (1)"

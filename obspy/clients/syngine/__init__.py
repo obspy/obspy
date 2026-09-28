@@ -29,9 +29,9 @@ Then request some data.
 ...                           eventid="GCMT:C201002270634A")
 >>> print(st)  # doctest: +ELLIPSIS
 3 Trace(s) in Stream:
-IU.ANMO.SE.MXZ | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
-IU.ANMO.SE.MXN | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
-IU.ANMO.SE.MXE | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
+IU.ANMO.SE.MXZ | 2010-02-27T06:35:13... - ... | 4.0 Hz, 15520 samples
+IU.ANMO.SE.MXN | 2010-02-27T06:35:13... - ... | 4.0 Hz, 15520 samples
+IU.ANMO.SE.MXE | 2010-02-27T06:35:13... - ... | 4.0 Hz, 15520 samples
 >>> st.plot()  # doctest: +SKIP
 
 .. plot::
@@ -81,12 +81,12 @@ requests seismograms for all of these.
 ...     bulk=bulk, starttime="P-10", endtime="P+20")
 >>> print(st)  # doctest: +ELLIPSIS
 6 Trace(s) in Stream:
-XX.AA.SE.MXZ | 2010-02-27T06:48:11... - ... | 4.0 Hz, 120 samples
-XX.AA.SE.MXN | 2010-02-27T06:48:11... - ... | 4.0 Hz, 120 samples
-XX.AA.SE.MXE | 2010-02-27T06:48:11... - ... | 4.0 Hz, 120 samples
-XX.BB.SE.MXZ | 2010-02-27T06:48:15... - ... | 4.0 Hz, 120 samples
-XX.BB.SE.MXN | 2010-02-27T06:48:15... - ... | 4.0 Hz, 120 samples
-XX.BB.SE.MXE | 2010-02-27T06:48:15... - ... | 4.0 Hz, 120 samples
+XX.AA.SE.MXZ | 2010-02-27T06:48:10... - ... | 4.0 Hz, 120 samples
+XX.AA.SE.MXN | 2010-02-27T06:48:10... - ... | 4.0 Hz, 120 samples
+XX.AA.SE.MXE | 2010-02-27T06:48:10... - ... | 4.0 Hz, 120 samples
+XX.BB.SE.MXZ | 2010-02-27T06:48:14... - ... | 4.0 Hz, 120 samples
+XX.BB.SE.MXN | 2010-02-27T06:48:14... - ... | 4.0 Hz, 120 samples
+XX.BB.SE.MXE | 2010-02-27T06:48:14... - ... | 4.0 Hz, 120 samples
 
 
 Other Useful Methods

@@ -14,7 +14,7 @@ from obspy.clients.seedlink.basic_client import Client
 class TestClient():
 
     def init_client(self):
-        self.client = Client("rtserver.ipgp.fr")
+        self.client = Client("rtserve.resif.fr")
 
     @pytest.fixture(autouse=True, scope="function")
     def setup(self):

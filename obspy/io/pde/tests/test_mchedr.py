@@ -293,7 +293,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter("ignore")
                 catalog2 = _read_quakeml(tf)
-        assert len(catalog2), 1
+        assert len(catalog2) == 1
 
     def test_read_events(self, testdata):
         """
@@ -305,4 +305,4 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.'
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('always')
             catalog = read_events(filename)
-            assert len(catalog), 1
+            assert len(catalog) == 1

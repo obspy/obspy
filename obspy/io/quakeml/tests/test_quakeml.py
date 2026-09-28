@@ -349,7 +349,7 @@ class TestQuakeML():
         assert_no_extras(catalog)
         event = catalog[0]
 
-        assert len(event.focal_mechanisms), 2
+        assert len(event.focal_mechanisms) == 2
         # First focmec contains only one data used element.
         assert len(event.focal_mechanisms[0].moment_tensor.data_used) == 1
         du = event.focal_mechanisms[0].moment_tensor.data_used[0]
@@ -543,7 +543,7 @@ class TestQuakeML():
             tmpfile = tf.name
             catalog = _read_quakeml(filename)
             assert_no_extras(catalog)
-            assert len(catalog), 1
+            assert len(catalog) == 1
             _write_quakeml(catalog, tmpfile, validate=IS_RECENT_LXML)
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
@@ -551,7 +551,7 @@ class TestQuakeML():
                 warnings.simplefilter("ignore")
                 catalog2 = _read_quakeml(tmpfile)
                 assert_no_extras(catalog2)
-        assert len(catalog2), 1
+        assert len(catalog2) == 1
 
     def test_read_events(self, testdata):
         """
@@ -561,7 +561,7 @@ class TestQuakeML():
             tmpfile = tf.name
             catalog = read_events(testdata['neries_events.xml'])
             assert_no_extras(catalog)
-            assert len(catalog), 3
+            assert len(catalog) == 3
             catalog.write(tmpfile, format='QUAKEML')
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
@@ -569,7 +569,7 @@ class TestQuakeML():
                 warnings.simplefilter("ignore")
                 catalog2 = read_events(tmpfile)
                 assert_no_extras(catalog2)
-        assert len(catalog2), 3
+        assert len(catalog2) == 3
 
     @pytest.mark.skipif(not IS_RECENT_LXML, reason="lxml >= 2.3 is required")
     def test_enums(self, datapath):

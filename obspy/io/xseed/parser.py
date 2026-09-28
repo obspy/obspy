@@ -1762,7 +1762,7 @@ class Parser(object):
 
                 if getattr(b62, "polynomial_approximation_type", "M").upper() \
                         != "M":
-                    msg = "Stage _i: Only the MACLAURIN polynomial " \
+                    msg = "Stage %i: Only the MACLAURIN polynomial " \
                         "approximation type is currently supported." % _i
                     raise InvalidResponseError(msg)
 
