@@ -509,6 +509,11 @@ class TestReadMSEED3:
             st = _read_mseed3(data, skip_not_data=True)
         assert len(st) == 3
 
+        # Same limitation applies to a file-like source (from_filelike).
+        with pytest.warns(UserWarning, match="skip_not_data"):
+            st = _read_mseed3(io.BytesIO(data), skip_not_data=True)
+        assert len(st) == 3
+
     def test_validate_crc_off_recovers_bad_crc(self, testdata):
         # Corrupt the payload but not the header, so the record is readable
         # and only its CRC is wrong.
