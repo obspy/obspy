@@ -13,11 +13,15 @@ import numpy as np
 import pytest
 
 from obspy import Trace, read
-from obspy.io.mseed.core import _write_mseed
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import (NamedTemporaryFile, _get_entry_points,
-                                  DEFAULT_MODULES, WAVEFORM_ACCEPT_BYTEORDER)
-from obspy.core.util.misc import buffered_load_entry_point, _ENTRY_POINT_CACHE
+from obspy.core.util.base import (
+    DEFAULT_MODULES,
+    WAVEFORM_ACCEPT_BYTEORDER,
+    NamedTemporaryFile,
+    _get_entry_points,
+)
+from obspy.core.util.misc import _ENTRY_POINT_CACHE, buffered_load_entry_point
+from obspy.io.mseed.core import _write_mseed
 
 
 def _get_default_eps(group, subgroup=None):
@@ -165,8 +169,8 @@ class TestWaveformPlugins:
                         assert st[0].data.dtype.byteorder == '='
                     # check meta data
                     # some formats do not contain a calibration factor
-                    if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST', 'AH',
-                                      'GCF']:
+                    if format not in ['MSEED', 'MSEED3', 'WAV', 'TSPAIR',
+                                      'SLIST', 'AH', 'GCF']:
                         assert round(abs(st[0].stats.calib-0.199999), 5) == 0
                     else:
                         assert st[0].stats.calib == 1.0
