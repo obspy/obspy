@@ -366,6 +366,27 @@ class TestCrossCorrelation:
         np.testing.assert_allclose(cc, cc_large)
         np.testing.assert_allclose(cc, cc_small)
 
+    def test_correlate_naive_small_amplitudes_gain_independent(self):
+        """
+        Naive normalization must not depend on gain for tiny but nonzero
+        signals (see #3816).
+        """
+        a = np.linspace(-1, 1, 31) * 3e-9
+        b = np.cos(np.arange(31)) * 3e-9
+        cc1 = correlate(a, b, 10, demean=False, normalize='naive')
+        cc2 = correlate(2 * a, b, 10, demean=False, normalize='naive')
+        assert np.count_nonzero(cc1) > 0
+        np.testing.assert_allclose(cc1, cc2)
+        # exactly zero input still yields zeros instead of NaNs
+        cc0 = correlate(np.zeros(31), b, 10, demean=False, normalize='naive')
+        np.testing.assert_array_equal(cc0, 0)
+        # same for correlate_template
+        data = np.random.randn(200) * 1e-12
+        tmpl = data[50:80]
+        cc_t1 = correlate_template(data, tmpl, normalize='naive')
+        cc_t2 = correlate_template(data, 2 * tmpl, normalize='naive')
+        np.testing.assert_allclose(cc_t1, cc_t2)
+
     def test_correlate_template_nodemean_fastmatchedfilter(self):
         """
         Compare non-demeaned result against FMF derived result.
