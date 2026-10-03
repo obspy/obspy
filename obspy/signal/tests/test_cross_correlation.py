@@ -383,8 +383,8 @@ class TestCrossCorrelation:
         # same for correlate_template
         data = np.random.randn(200) * 1e-12
         tmpl = data[50:80]
-        cc_t1 = correlate_template(data, tmpl)
-        cc_t2 = correlate_template(data, 2 * tmpl)
+        cc_t1 = correlate_template(data, tmpl, normalize='naive')
+        cc_t2 = correlate_template(data, 2 * tmpl, normalize='naive')
         np.testing.assert_allclose(cc_t1, cc_t2)
 
     def test_correlate_template_nodemean_fastmatchedfilter(self):

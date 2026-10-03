@@ -6,10 +6,9 @@ Changes:
    * adjusted minimum dependency versions to Python >=3.12, numpy >=2.2,
      scipy >=1.15 and matplotlib >=3.9 (see #3570)
  - obspy.signal:
-   * cross correlation: fix gain-dependent discontinuity of normalized
-     correlation for small amplitude signals. Normalization is now only
-     skipped if the norm is exactly zero, not if it is smaller than machine
-     epsilon (see #3816)
+   * cross correlation: fix normalized correlation for small amplitude signals. 
+     Normalization is now only skipped if the norm is exactly zero, not if 
+     it is smaller than machine epsilon (see #3817)
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
 
