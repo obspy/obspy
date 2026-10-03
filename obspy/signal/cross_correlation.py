@@ -159,7 +159,7 @@ def correlate(a, b, shift, demean=True, normalize='naive', method='auto'):
     cc = _xcorr(a, b, shift, method)
     if normalize == 'naive':
         norm = (np.sum(a ** 2) * np.sum(b ** 2)) ** 0.5
-        if norm <= np.finfo(float).eps:
+        if norm == 0:
             # norm is zero
             # => cross-correlation function will have only zeros
             cc[:] = 0
@@ -257,7 +257,7 @@ def correlate_template(data, template, mode='valid', normalize='full',
         tnorm = np.sum(template ** 2)
         if normalize == 'naive':
             norm = (tnorm * np.sum(data ** 2)) ** 0.5
-            if norm <= np.finfo(float).eps:
+            if norm == 0:
                 cc[:] = 0
             elif cc.dtype == float:
                 cc /= norm
