@@ -264,6 +264,7 @@ def evaluate_at_bullen(layer, depth, radius_of_planet):
     elif depth == bot_depth:
         return bot_p
     else:
+        a_denominator = np.nan
         try:
             # The power law calculation has some stability issues with very
             # small layers. Catch them here to trigger the fallback
@@ -272,9 +273,13 @@ def evaluate_at_bullen(layer, depth, radius_of_planet):
                 b = math.log(top_p / bot_p) / \
                     math.log((radius_of_planet - top_depth) /
                              (radius_of_planet - bot_depth))
-                a_denominator = pow((radius_of_planet - top_depth), b)
+                # Let an overflow give inf here, which selects the linear
+                # fallback below. np.power follows np.errstate also for
+                # Python floats, where pow() would raise OverflowError.
+                with np.errstate(over="ignore"):
+                    a_denominator = np.power(radius_of_planet - top_depth, b)
                 a = top_p / a_denominator
-                answer = a * pow((radius_of_planet - depth), b)
+                answer = a * np.power(radius_of_planet - depth, b)
         except FloatingPointError:
             answer = np.nan
         if answer < 0 or math.isnan(answer) or math.isinf(answer):

@@ -6,7 +6,8 @@ import pytest
 
 from obspy.taup import _DEFAULT_VALUES
 from obspy.taup.slowness_layer import (SlownessLayer, SlownessModelError,
-                                       bullen_depth_for, create_from_vlayer)
+                                       bullen_depth_for, create_from_vlayer,
+                                       evaluate_at_bullen)
 from obspy.taup.velocity_layer import VelocityLayer
 
 
@@ -36,3 +37,23 @@ class TestBullenDepth:
         except SlownessModelError:
             pytest.fail('SlownessModelError was incorrectly raised.')
         assert not np.isnan(depth)
+
+
+class TestEvaluateAtBullen:
+    @pytest.mark.parametrize('depth', [11.0, np.float64(11.0)])
+    def test_overflow(self, depth):
+        """
+        A layer thicker than 2 km with a large power law exponent overflows
+        the power law and must fall back to linear interpolation (see #3433).
+        """
+        sl = np.array([(1100.0, 10.0, 1048.5, 12.01)], dtype=SlownessLayer)
+        p = evaluate_at_bullen(sl[0], depth, 6371.0)
+        expected = 1100.0 + (1048.5 - 1100.0) / 2.01 * (11.0 - 10.0)
+        assert p == pytest.approx(expected)
+
+    def test_power_law(self):
+        sl = np.array([(2000.0, 10.0, 1990.0, 50.0)], dtype=SlownessLayer)
+        b = np.log(2000.0 / 1990.0) / np.log(6361.0 / 6321.0)
+        expected = 2000.0 / 6361.0 ** b * 6341.0 ** b
+        p = evaluate_at_bullen(sl[0], 30.0, 6371.0)
+        assert p == pytest.approx(expected)
