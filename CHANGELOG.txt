@@ -8,6 +8,10 @@ Changes:
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
+ - obspy.taup:
+   * fix UnboundLocalError in Bullen slowness interpolation when the power
+     law overflows, now falls back to linear interpolation as intended
+     (see #3433)
 
 1.5.1 (doi: 10.5281/zenodo.22108563)
 ====================================
