@@ -1,6 +1,10 @@
 master
 ======
 
+Work on this release was in parts and among others supported by the following
+institutions/companies and grants (in alphabetical order):
+ - Observatories & Research Facilities for European Seismology  (ORFEUS), Call 2023/24
+
 Changes:
  - General:
    * adjusted minimum dependency versions to Python >=3.12, numpy >=2.2,
@@ -8,6 +12,10 @@ Changes:
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
+ - obspy.io.sitexml:
+   * new module for reading, validating and writing SiteXML site
+     characterization metadata, including CSV/Excel import and site
+     quality-index calculation (see #3737)
 
 1.5.1 (doi: 10.5281/zenodo.22108563)
 ====================================
