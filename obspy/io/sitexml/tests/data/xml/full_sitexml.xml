@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SERA_quakeml xmlns="http://www.orfeus-eu.org/xml/site/1" schemaVersion="1.3" publicID="quakeml:domain.ab/site/001">
     <creationTime>2025-09-20T12:42:17.000000Z</creationTime>
+    <revisionHistory>
+        <revision>
+            <revisionTime>2024-07-15T10:40:00.000000Z</revisionTime>
+            <description>Initial version</description>
+            <author>Some Author</author>
+            <version>1.0</version>
+        </revision>
+        <revision>
+            <revisionTime>2025-09-21T12:42:17.000000Z</revisionTime>
+            <description>Updated site description with geologicalUnit value</description>
+            <author>Another Author</author>
+            <version>1.1</version>
+        </revision>
+    </revisionHistory>
     <externalReference>
         <uri>http://www.domain.ab/SiteXML/report1</uri>
         <description>Report 1</description>
