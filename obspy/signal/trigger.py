@@ -89,7 +89,7 @@ def recursive_sta_lta_py(a, nsta, nlta):
     csta = 1. / nsta
     clta = 1. / nlta
     sta = 0.
-    lta = np.finfo(0.0).tiny  # avoid zero division
+    lta = 0.
     a = np.square(a)
     charfct = np.zeros(ndat, dtype=np.float64)
     icsta = 1 - csta
@@ -97,7 +97,9 @@ def recursive_sta_lta_py(a, nsta, nlta):
     for i in range(1, ndat):
         sta = csta * a[i] + icsta * sta
         lta = clta * a[i] + iclta * lta
-        charfct[i] = sta / lta
+        # match the C implementation: no absolute epsilon floor, so the
+        # result stays invariant under rescaling of the input amplitudes
+        charfct[i] = sta / lta if lta != 0 else np.nan
     charfct[:nlta] = 0
 
     return charfct
@@ -223,15 +225,14 @@ def classic_sta_lta_py(a, nsta, nlta):
     lta[nlta:] = lta[nlta:] - lta[:-nlta]
     lta /= nlta
 
+    # match the C implementation: no absolute epsilon floor on lta, so
+    # the result stays invariant under rescaling of the input amplitudes
+    with np.errstate(divide="ignore", invalid="ignore"):
+        charfct = sta / lta
     # Pad zeros
-    sta[:nlta - 1] = 0
+    charfct[:nlta - 1] = 0
 
-    # Avoid division by zero by setting zero values to tiny float
-    dtiny = np.finfo(0.0).tiny
-    idx = lta < dtiny
-    lta[idx] = dtiny
-
-    return sta / lta
+    return charfct
 
 
 def delayed_sta_lta(a, nsta, nlta):
