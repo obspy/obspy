@@ -577,6 +577,20 @@ class TestTrigger():
         ref = np.array([0.38012302, 0.37704431, 0.47674533, 0.67992292])
         assert np.allclose(ref, c2[99:103])
 
+    def test_sta_lta_py_scale_invariance(self):
+        """
+        STA/LTA is a ratio of energies, so rescaling the trace by a
+        constant must leave the characteristic function unchanged. The
+        Python versions used an absolute epsilon floor that broke this
+        for very small amplitudes (gh-3815).
+        """
+        x = (np.sin(np.arange(257) * 0.37)
+             + 0.2 * np.cos(np.arange(257) * 0.11))
+        for func in (classic_sta_lta_py, recursive_sta_lta_py):
+            scaled = func(x * 1e-155, 8, 40)
+            plain = func(x, 8, 40)
+            assert np.nanmax(np.abs(scaled - plain)) < 1e-12
+
 
 class TestEnergyRatio():
     # parameterize ranges are based on chosen value of "a" with length 10
