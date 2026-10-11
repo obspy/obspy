@@ -76,6 +76,7 @@
        sitexml
        tabular
        quality_index
+       scripts
        util
 
     .. comment to end block

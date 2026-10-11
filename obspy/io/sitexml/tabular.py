@@ -3,6 +3,9 @@
 Functions dealing with tabular SiteXML metadata imports from CSV and Excel
 files.
 
+See :doc:`/tutorial/code_snippets/sitexml_tabular_input` for the shared
+CSV/Excel table structure, accepted columns, and validation rules.
+
 :copyright:
     ORFEUS, 2026
 :license:
@@ -247,7 +250,7 @@ def add_velocity_profiles(sera_sites, velocity_profiles,
     Add velocity profiles from CSV or Excel tabular metadata to existing sites.
 
     The velocity-profile input uses the same columns as ``csv_to_sera_site``
-    and ``excel_to_sera_site`` sidecar velocity-profile inputs, including
+    and ``excel_to_sera_site`` velocity-profile table inputs, including
     ``siteID``, ``analysisID``, and ``velocityProfileID``. File type is
     detected from the input path extension. Directory inputs must contain only
     CSV files or only Excel files.

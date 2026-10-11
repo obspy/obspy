@@ -179,7 +179,7 @@ Velocity profiles can also be added later to existing SiteXML objects. Use
 :meth:`~obspy.io.sitexml.core.SERASite.add_velocity_profiles` when you
 already have ``VelocityProfile`` objects for one site and analysis. Use
 :func:`~obspy.io.sitexml.tabular.add_velocity_profiles` when the profiles
-are still in CSV or Excel form, or when one sidecar table may update
+are still in CSV or Excel form, or when one input table may update
 several sites and analyses:
 
 .. code-block:: python

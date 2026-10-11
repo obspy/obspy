@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Quality-index formula helpers and sidecar import utilities for SiteXML.
+Quality-index formula helpers and quality-index table import utilities for
+SiteXML.
+
+See :ref:`quality-indexes` for the calculation guide and examples.
 
 For more information refer to `SERA D7.2 Deliverable.
 <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_
@@ -438,8 +441,8 @@ def apply_quality_index_csv(sera_site_dict, quality_index_csv, delim=';'):
     a dataframe, translating file and parser failures to SiteXML exceptions,
     then delegates the calculation to
     :func:`~obspy.io.sitexml.quality_index.apply_quality_index_dataframe`.
-    The sidecar values are used immediately and are not stored on the SiteXML
-    objects.
+    The calculation input values are used immediately and are not stored on the
+    SiteXML objects.
 
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
@@ -469,8 +472,8 @@ def apply_quality_index_excel(
     ``path_or_file_object`` as a dataframe, translating file, sheet, and parser
     failures to SiteXML exceptions, then delegates the calculation to
     :func:`~obspy.io.sitexml.quality_index.apply_quality_index_dataframe`.
-    The sidecar values are used immediately and are not stored on the SiteXML
-    objects.
+    The calculation input values are used immediately and are not stored on the
+    SiteXML objects.
 
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
