@@ -1782,6 +1782,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         large_y = np.delete(large_y, 1)
         if num % 2 == 0:
             large_y = np.delete(large_y, -1)
+            if num < self.stats.npts:
+                # Combine the conjugate pair at the new Nyquist frequency.
+                large_y[-1] *= 2.0
         self.data = irfft(large_y) * (float(num) / float(self.stats.npts))
         self.stats.sampling_rate = sampling_rate
 
