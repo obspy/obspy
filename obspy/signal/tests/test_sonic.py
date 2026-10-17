@@ -3,13 +3,18 @@
 import io
 
 import numpy as np
+import pytest
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.signal.array_analysis import (array_processing,
                                          array_transff_freqslowness,
-                                         array_transff_wavenumber, get_spoint)
-from obspy.signal.util import util_lon_lat
+                                         array_transff_wavenumber,
+                                         get_geometry, get_spoint,
+                                         get_timeshift)
+from obspy.signal.headers import clibsignal
+from obspy.signal.invsim import cosine_taper
+from obspy.signal.util import next_pow_2, util_lon_lat
 
 
 class TestSonic():
@@ -143,6 +148,82 @@ class TestSonic():
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
         # XXX relative tolerance should be lower!
         assert np.allclose(ref, out[:, 1:], rtol=4e-5)
+
+    @pytest.mark.parametrize('coordsys', ['xy', 'lonlat'])
+    @pytest.mark.parametrize('prewhiten', [0, 1])
+    @pytest.mark.parametrize('nstat', [3, 11])
+    def test_sonic_bf_matches_covariance_matrix(self, nstat, prewhiten,
+                                                coordsys):
+        """
+        The conventional beamformer (method 0) in array_processing uses the
+        fact that the covariance matrix has rank one. Check that it gives the
+        same relative and absolute power maps as the explicit covariance
+        matrix calculation (steering vectors, R = ft ft.H, e.H R e) for
+        random array geometries, with a non-square slowness grid.
+        """
+        rng = np.random.RandomState(nstat * 10 + prewhiten)
+        fs = 50.
+        win_len, win_frac = 4., 0.5
+        st = Stream()
+        for _ in range(nstat):
+            tr = Trace(rng.randn(int(30 * fs)))
+            tr.stats.sampling_rate = fs
+            if coordsys == 'xy':
+                tr.stats.coordinates = AttribDict(
+                    x=rng.uniform(-0.5, 0.5), y=rng.uniform(-0.5, 0.5),
+                    elevation=0.)
+            else:
+                tr.stats.coordinates = AttribDict(
+                    longitude=rng.uniform(0, 0.01),
+                    latitude=rng.uniform(0, 0.01), elevation=0.)
+            st += tr
+        stime, etime = st[0].stats.starttime, st[0].stats.endtime
+        sll_x, slm_x, sll_y, slm_y, sl_s = -2.0, 2.0, -1.0, 3.0, 0.25
+        frqlow, frqhigh = 1., 10.
+        maps = []
+
+        def store(relpow_map, abspow_map, offset):
+            maps.append((relpow_map.copy(), abspow_map.copy(), offset))
+
+        array_processing(st, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
+                         sl_s, -1e99, -1e99, frqlow, frqhigh, stime, etime,
+                         prewhiten, coordsys=coordsys, method=0, store=store)
+        assert len(maps) > 3
+        assert maps[0][0].shape == (17, 17)
+
+        # reference: explicit steering vectors and covariance matrices
+        geometry = get_geometry(st, coordsys=coordsys)
+        gx, gy = maps[0][0].shape
+        timeshift = get_timeshift(geometry, sll_x, sll_y, sl_s, gx, gy)
+        nsamp = int(win_len * fs)
+        nfft = next_pow_2(nsamp)
+        deltaf = fs / nfft
+        nlow = max(1, int(frqlow / deltaf + 0.5))
+        nhigh = min(nfft // 2 - 1, int(frqhigh / deltaf + 0.5))
+        nf = nhigh - nlow + 1
+        steer = np.empty((nf, gx, gy, nstat), dtype=np.complex128)
+        clibsignal.calcSteer(nstat, gx, gy, nf, nlow, deltaf, timeshift,
+                             steer)
+        tap = cosine_taper(nsamp, p=0.22)
+        for relpow_map, abspow_map, offset in maps:
+            ft = np.empty((nstat, nf), dtype=np.complex128)
+            for i, tr in enumerate(st):
+                dat = tr.data[offset:offset + nsamp]
+                ft[i] = np.fft.rfft((dat - dat.mean()) * tap,
+                                    nfft)[nlow:nlow + nf]
+            r = np.ascontiguousarray(
+                ft.T[:, :, np.newaxis] * ft.T[:, np.newaxis, :].conj())
+            dpow = nstat * np.abs(np.diagonal(r, axis1=1, axis2=2).sum(0)
+                                  ).sum()
+            ref_rel = np.zeros((gx, gy))
+            ref_abs = np.zeros((gx, gy))
+            errcode = clibsignal.generalizedBeamformer(
+                ref_rel, ref_abs, steer, r, nstat, prewhiten, gx, gy, nf,
+                dpow, 0)
+            assert errcode == 0
+            # the time shift table is single precision
+            np.testing.assert_allclose(abspow_map, ref_abs, rtol=1e-5)
+            np.testing.assert_allclose(relpow_map, ref_rel, rtol=1e-5)
 
     def test_get_spoint(self):
         stime = UTCDateTime(1970, 1, 1, 0, 0)
