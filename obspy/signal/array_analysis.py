@@ -841,6 +841,61 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     return transff
 
 
+def _beamformer_bf_setup(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y,
+                         freqs):
+    """
+    Precompute the phase factors needed by :func:`_beamformer_bf`.
+
+    The time shift of station i for slowness (sx, sy) is
+    ``sx * x_i + sy * y_i``, so the phase factor for each grid point is the
+    product of a factor that depends only on sx and one that depends only
+    on sy. Storing these two small tables is much cheaper than storing the
+    full steering table (frequencies x grid_x x grid_y x stations).
+
+    :return: tuple of two arrays with shape (nf, nstat, grdpts_x) and
+        (nf, nstat, grdpts_y)
+    """
+    sx = sll_x + np.arange(grdpts_x) * sl_s
+    sy = sll_y + np.arange(grdpts_y) * sl_s
+    # same numerical precision as get_timeshift
+    tx = np.require(np.outer(geometry[:, 0], sx), dtype=np.float32)
+    ty = np.require(np.outer(geometry[:, 1], sy), dtype=np.float32)
+    phase = 2j * np.pi * np.asarray(freqs, dtype=np.float64)[:, None, None]
+    return np.exp(phase * tx[None]), np.exp(phase * ty[None])
+
+
+def _beamformer_bf(ft, phase_x, phase_y, nstat, prewhiten, dpow, relpow_map,
+                   abspow_map):
+    """
+    Conventional beamformer (method 0) for one time window.
+
+    This gives the same result as the covariance-matrix formulation
+    ``P(f) = e.H R(f) e`` with ``R(f) = ft ft.H``, which is used by
+    :func:`~obspy.signal.array_analysis.array_processing` for Capon, but
+    exploits that R has rank one: ``P(f) = |e.H ft|^2``. The cost therefore
+    grows linearly with the number of stations instead of quadratically.
+
+    :param ft: Fourier coefficients, shape (nstat, nf)
+    :param phase_x, phase_y: output of :func:`_beamformer_bf_setup`
+    :param relpow_map, abspow_map: output arrays, shape (grdpts_x, grdpts_y);
+        they are overwritten
+    """
+    relpow_map.fill(0.)
+    abspow_map.fill(0.)
+    nf = ft.shape[1]
+    for n in range(nf):
+        # sum over stations of ft * exp(+i 2 pi f (sx x + sy y)); the
+        # matrix product does the sum over stations for the whole grid
+        beam = (phase_x[n] * ft[:, n, np.newaxis]).T @ phase_y[n]
+        pow_n = beam.real ** 2 + beam.imag ** 2
+        abspow_map += pow_n
+        if prewhiten == 1:
+            # scale each frequency individually
+            relpow_map += pow_n / (pow_n.max() * nf * nstat)
+    if prewhiten != 1:
+        relpow_map += abspow_map / dpow
+
+
 def dump(pow_map, apow_map, i):
     """
     Example function to use with `store` kwarg in
@@ -949,9 +1004,15 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     nhigh = min(nfft // 2 - 1, nhigh)  # avoid using nyquist
     nf = nhigh - nlow + 1  # include upper and lower frequency
     # to speed up the routine a bit we estimate all steering vectors in advance
-    steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype=np.complex128)
-    clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
-                         deltaf, time_shift_table, steer)
+    if method != 0:
+        steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype=np.complex128)
+        clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
+                             deltaf, time_shift_table, steer)
+    else:
+        # conventional beamforming does not need the full steering table
+        phase_x, phase_y = _beamformer_bf_setup(
+            geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y,
+            (nlow + np.arange(nf)) * deltaf)
     _r = np.empty((nf, nstat, nstat), dtype=np.complex128)
     ft = np.empty((nstat, nf), dtype=np.complex128)
     newstart = stime
@@ -970,31 +1031,39 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         except IndexError:
             break
         ft = np.ascontiguousarray(ft, np.complex128)
-        relpow_map.fill(0.)
-        abspow_map.fill(0.)
-        # computing the covariances of the signal at different receivers
-        dpow = 0.
-        for i in range(nstat):
-            for j in range(i, nstat):
-                _r[:, i, j] = ft[i, :] * ft[j, :].conj()
-                if method == 1:
-                    _r[:, i, j] /= np.abs(_r[:, i, j].sum())
-                if i != j:
-                    _r[:, j, i] = _r[:, i, j].conjugate()
-                else:
-                    dpow += np.abs(_r[:, i, j].sum())
-        dpow *= nstat
-        if method == 1:
-            # P(f) = 1/(e.H R(f)^-1 e)
-            for n in range(nf):
-                _r[n, :, :] = np.linalg.pinv(_r[n, :, :], rcond=1e-6)
+        if method == 0:
+            # sum of the autospectra over stations and frequencies
+            dpow = nstat * np.abs(ft * ft.conj()).sum(axis=1).sum()
+            # equal to np.abs(_r[:, i, i].sum()) summed over i, because
+            # the autospectrum is real and positive
+            _beamformer_bf(ft, phase_x, phase_y, nstat, prewhiten, dpow,
+                           relpow_map, abspow_map)
+        else:
+            relpow_map.fill(0.)
+            abspow_map.fill(0.)
+            # computing the covariances of the signal at different receivers
+            dpow = 0.
+            for i in range(nstat):
+                for j in range(i, nstat):
+                    _r[:, i, j] = ft[i, :] * ft[j, :].conj()
+                    if method == 1:
+                        _r[:, i, j] /= np.abs(_r[:, i, j].sum())
+                    if i != j:
+                        _r[:, j, i] = _r[:, i, j].conjugate()
+                    else:
+                        dpow += np.abs(_r[:, i, j].sum())
+            dpow *= nstat
+            if method == 1:
+                # P(f) = 1/(e.H R(f)^-1 e)
+                for n in range(nf):
+                    _r[n, :, :] = np.linalg.pinv(_r[n, :, :], rcond=1e-6)
 
-        errcode = clibsignal.generalizedBeamformer(
-            relpow_map, abspow_map, steer, _r, nstat, prewhiten,
-            grdpts_x, grdpts_y, nf, dpow, method)
-        if errcode != 0:
-            msg = 'generalizedBeamforming exited with error %d'
-            raise Exception(msg % errcode)
+            errcode = clibsignal.generalizedBeamformer(
+                relpow_map, abspow_map, steer, _r, nstat, prewhiten,
+                grdpts_x, grdpts_y, nf, dpow, method)
+            if errcode != 0:
+                msg = 'generalizedBeamforming exited with error %d'
+                raise Exception(msg % errcode)
         ix, iy = np.unravel_index(relpow_map.argmax(), relpow_map.shape)
         relpow, abspow = relpow_map[ix, iy], abspow_map[ix, iy]
         if store is not None:

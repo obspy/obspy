@@ -8,6 +8,10 @@ Changes:
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
+   * array_processing: conventional beamforming (method=0) now scales
+     linearly instead of quadratically with the number of stations, and no
+     longer builds the full steering table or covariance matrices. Results
+     are unchanged (up to single-precision rounding).
 
 1.5.1 (doi: 10.5281/zenodo.22108563)
 ====================================
