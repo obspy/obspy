@@ -12,6 +12,41 @@ from scipy import signal
 from obspy.signal import freqattributes, util
 
 
+@pytest.mark.parametrize("full_window", [False, True])
+def test_spectrum_selected_interval(full_window):
+    """
+    Use only the requested samples with a full or interval-sized taper.
+    """
+    data = np.random.RandomState(42).normal(size=1024)
+    start, stop = 31, 287
+    window = np.hanning(len(data) if full_window else stop - start)
+    selected_window = window[start:stop] if full_window else window
+    _, expected = signal.periodogram(
+        data[start:stop], window=selected_window, nfft=512,
+        detrend=False, return_onesided=False)
+    actual = freqattributes.spectrum(data, window, 512, start, stop)
+    # Keep the existing convention of replacing DC by the first FFT bin.
+    expected[0] = expected[1]
+    np.testing.assert_allclose(actual, expected, rtol=1e-12, atol=1e-14)
+
+
+@pytest.mark.parametrize("overlap", [0., 0.25, 0.5, 0.75])
+def test_welch_selected_intervals(overlap):
+    """
+    Average distinct tapered intervals instead of the complete waveform.
+    """
+    data = np.random.RandomState(42).normal(size=1024)
+    window = np.hanning(128)
+    _, expected = signal.welch(
+        data, window=window, nperseg=len(window),
+        noverlap=int(overlap * len(window)), nfft=256,
+        detrend=False, return_onesided=False)
+    actual = freqattributes.welch(
+        data, window, 256, l=len(window), over=overlap)
+    expected[0] = expected[1]
+    np.testing.assert_allclose(actual, expected, rtol=1e-12, atol=1e-14)
+
+
 # only tests for windowed data are implemented currently
 
 class TestFreqTrace():

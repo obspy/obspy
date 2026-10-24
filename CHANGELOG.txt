@@ -6,6 +6,8 @@ Changes:
    * adjusted minimum dependency versions to Python >=3.12, numpy >=2.2,
      scipy >=1.15 and matplotlib >=3.9 (see #3570)
  - obspy.signal:
+   * honor the selected sample interval in freqattributes.spectrum and the
+     overlapping windows in freqattributes.welch (see #3491)
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
 
