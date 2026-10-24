@@ -36,17 +36,21 @@ def spectrum(data, win, nfft, n1=0, n2=0):
 
     :type data: :class:`~numpy.ndarray`
     :param data: Data to make spectrum of.
-    :param win: Window to multiply with given signal.
+    :param win: Window for the selected interval, or a window for the entire
+        signal which will be sliced to that interval.
     :param nfft: Number of points for FFT.
     :type n1: int, optional
     :param n1: Starting index, defaults to ``0``.
     :type n2: int, optional
-    :param n2: Ending index, defaults to ``0``.
+    :param n2: Ending index (exclusive), defaults to ``0`` (end of data).
     :return: Spectrum.
     """
     if (n2 == 0):
         n2 = len(data)
-    n = n2 - n1
+    if np.ndim(win) and len(win) == len(data):
+        win = win[n1:n2]
+    data = data[n1:n2]
+    n = len(data)
     u = pow(np.linalg.norm([win]), 2) / n
     xw = data * win
     px = pow(abs(fftpack.fft(xw, nfft)), 2) / (n * u)
@@ -76,15 +80,13 @@ def welch(data, win, nfft, l=0, over=0):  # NOQA
     """
     if (l == 0):  # NOQA
         l = len(data)  # NOQA
-    n1 = 0
-    n2 = l
     n0 = (1. - float(over)) * l
     nsect = 1 + int(np.floor((len(data) - l) / (n0)))
     px = 0
     for _i in range(nsect):
+        n1 = int(_i * n0)
+        n2 = n1 + l
         px = px + spectrum(data, win, nfft, n1, n2) / nsect
-        n1 = n1 + n0
-        n2 = n2 + n0
     return px
 
 
