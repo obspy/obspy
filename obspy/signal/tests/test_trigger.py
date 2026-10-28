@@ -13,7 +13,8 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from obspy import Stream, UTCDateTime, read
 from obspy.signal.trigger import (
-    ar_pick, classic_sta_lta, classic_sta_lta_py, coincidence_trigger, pk_baer,
+    ar_pick, classic_sta_lta, classic_sta_lta_py, coincidence_trigger,
+    delayed_sta_lta, pk_baer,
     recursive_sta_lta, recursive_sta_lta_py, trigger_onset, aic_simple,
     energy_ratio, modified_energy_ratio)
 from obspy.signal.util import clibsignal
@@ -81,6 +82,33 @@ class TestTrigger():
         with pytest.raises(ArgumentError):
             clibsignal.recstalta(
                 np.array([1], dtype=np.int32), charfct, ndat, 5, 10)
+
+    def test_delayed_sta_lta_stationary_noise(self):
+        """
+        On stationary noise the delayed STA/LTA ratio has to stay around 1
+        and must not drift towards nlta / nsta (see #3823).
+        """
+        np.random.seed(815)
+        a = np.random.randn(20000)
+        nsta, nlta = 50, 500
+        cft = delayed_sta_lta(a, nsta, nlta)
+        cft = cft[nsta + nlta + 50:]
+        assert 0.8 < np.median(cft) < 1.2
+        assert cft.max() < 3
+
+    def test_delayed_sta_lta_matches_direct_windows(self):
+        """
+        Compare the running averages with means over explicit windows.
+        """
+        np.random.seed(42)
+        a = np.random.randn(2000)
+        nsta, nlta = 20, 100
+        a2 = a ** 2
+        cft = delayed_sta_lta(a, nsta, nlta)
+        for i in range(nsta + nlta + 50, len(a)):
+            sta = a2[i - nsta + 1:i + 1].mean()
+            lta = a2[i - nsta - nlta:i - nsta].mean()
+            assert cft[i] == pytest.approx(sta / lta, rel=1e-6)
 
     def test_pk_baer(self, testdata):
         """

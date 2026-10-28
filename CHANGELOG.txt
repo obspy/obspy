@@ -1,3 +1,12 @@
+maintenance_1.5.x
+=================
+
+Changes:
+ - obspy.signal:
+   * trigger: fix `delayed_sta_lta` adding the sample that leaves the STA and
+     LTA windows instead of subtracting it, which made both averages grow
+     without bound (see #3823)
+
 1.5.1 (doi: 10.5281/zenodo.22108563)
 ====================================
 

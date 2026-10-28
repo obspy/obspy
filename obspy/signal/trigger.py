@@ -253,12 +253,19 @@ def delayed_sta_lta(a, nsta, nlta):
     #
     # compute the short time average (STA) and long time average (LTA)
     # don't start for STA at nsta because it's muted later anyway
+    # running means: add the sample entering the window and subtract the one
+    # leaving it; samples before the start of the trace count as zero
+    a2 = np.asarray(a, dtype=np.float64) ** 2
     sta = np.zeros(m, dtype=np.float64)
     lta = np.zeros(m, dtype=np.float64)
     for i in range(m):
-        sta[i] = (a[i] ** 2 + a[i - nsta] ** 2) / nsta + sta[i - 1]
-        lta[i] = (a[i - nsta - 1] ** 2 + a[i - nsta - nlta - 1] ** 2) / \
-            nlta + lta[i - 1]
+        sta_prev = sta[i - 1] if i > 0 else 0.0
+        lta_prev = lta[i - 1] if i > 0 else 0.0
+        sta_out = a2[i - nsta] if i >= nsta else 0.0
+        lta_in = a2[i - nsta - 1] if i >= nsta + 1 else 0.0
+        lta_out = a2[i - nsta - nlta - 1] if i >= nsta + nlta + 1 else 0.0
+        sta[i] = sta_prev + (a2[i] - sta_out) / nsta
+        lta[i] = lta_prev + (lta_in - lta_out) / nlta
     sta[0:nlta + nsta + 50] = 0
     lta[0:nlta + nsta + 50] = 1  # avoid division by zero
     return sta / lta
