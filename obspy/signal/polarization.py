@@ -125,6 +125,12 @@ def flinn(stream, noise_thres=0):
     Computes the azimuth, incidence, rectilinearity and planarity after the
     eigenstructure decomposition method of [Flinn1965b]_.
 
+    Incidence is measured from vertical up and ranges from 0 to 90 degrees.
+    Azimuth is measured clockwise from north and ranges from 0 to 360 degrees
+    (excluding 360), choosing the principal axis that points upward. These
+    angles describe the polarization axis, not the direction of propagation
+    or the backazimuth to a source.
+
     :param stream: ZNE sorted trace data
     :type stream: list
     :param noise_tresh: Variance of the noise sphere; data points are excluded
@@ -162,8 +168,7 @@ def flinn(stream, noise_thres=0):
             azimuth -= 180.0
         else:
             azimuth += 180.0
-    if azimuth > 180.0:
-        azimuth -= 180.0
+    azimuth %= 360.0
 
     return azimuth, incidence, rect, plan
 

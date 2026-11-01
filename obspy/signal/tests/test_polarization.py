@@ -207,6 +207,31 @@ class TestPolarization():
         assert np.allclose(out["timestamp"] - out["timestamp"][0],
                            np.arange(0, 92, 1))
 
+    @pytest.mark.parametrize("azimuth", [45., 135., 225., 315.])
+    @pytest.mark.parametrize("incidence", [30., 45., 60.])
+    @pytest.mark.parametrize("polarity", [-1., 1.])
+    def test_flinn_preserves_polarization_axis(
+            self, azimuth, incidence, polarity):
+        """The returned angle pair must preserve the 3D axis, see #3133."""
+        az, inc = np.deg2rad([azimuth, incidence])
+        direction = np.array([np.cos(inc), np.sin(inc) * np.cos(az),
+                              np.sin(inc) * np.sin(az)])
+        wave = np.sin(np.arange(2000) / 20.)
+        data = polarity * direction[:, np.newaxis] * wave
+
+        actual_az, actual_inc, rect, plan = polarization.flinn(data)
+        az, inc = np.deg2rad([actual_az, actual_inc])
+        actual = np.array([np.cos(inc), np.sin(inc) * np.cos(az),
+                           np.sin(inc) * np.sin(az)])
+        # Axis projectors ignore the arbitrary sign of an eigenvector, but
+        # catch changing just its horizontal components by 180 degrees.
+        np.testing.assert_allclose(np.outer(actual, actual),
+                                   np.outer(direction, direction), atol=1e-12)
+        assert 0 <= actual_az < 360
+        assert 0 <= actual_inc <= 90
+        assert np.isclose(rect, 1.)
+        assert np.isclose(plan, 1.)
+
     def test_polarization_vidale(self):
         st = _create_test_data()
         t = st[0].stats.starttime

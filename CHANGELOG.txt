@@ -6,6 +6,9 @@ Changes:
    * adjusted minimum dependency versions to Python >=3.12, numpy >=2.2,
      scipy >=1.15 and matplotlib >=3.9 (see #3570)
  - obspy.signal:
+   * polarization: preserve the three-dimensional Flinn axis by returning
+     the full azimuth range with the existing vertical-up incidence convention
+     (see #3133)
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
 
