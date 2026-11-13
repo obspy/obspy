@@ -3674,20 +3674,27 @@ def _is_pickle(filename):  # @UnusedVariable
     if isinstance(filename, str):
         try:
             with open(filename, 'rb') as fp:
-                if b"obspy.core.stream" in fp.read(100):
-                    fp.seek(0)
-                    st = pickle.load(fp)
-                    return True
-                else:
-                    return False
+                data = fp.read(22)
+            if data[0:1] == b'\x80' and b"obspy.core.stream" in data:
+                return True
         except Exception:
             return False
     else:
+        fp = filename
         try:
-            st = pickle.load(filename)
-        except Exception:
+            initial_pos = fp.tell()
+            data = fp.read(22)
+            if data[0:1] == b'\x80' and b"obspy.core.stream" in data:
+                return True
+        except AttributeError:
             return False
-    return isinstance(st, Stream)
+        finally:
+            # Reset pointer.
+            try:
+                fp.seek(initial_pos, 0)
+            except AttributeError:
+                pass
+    return False
 
 
 def _read_pickle(filename, **kwargs):  # @UnusedVariable
