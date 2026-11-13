@@ -41,7 +41,9 @@ class TestBaseRoutingClient():
 
             def _handle_requests_http_error(self, r):
                 raise NotImplementedError
-
+            def get_waveforms_bulk(self, bulk, **kwargs):
+                """Dummy method to allow mocking"""
+                pass
         cls._cls_object = _DummyBaseRoutingClient
         cls._cls = ("obspy.clients.fdsn.routing.routing_client."
                     "BaseRoutingClient")
@@ -214,3 +216,17 @@ class TestBaseRoutingClient():
             "Failed to download data of type 'station' from "
             "'https://example.com' due to:")
         assert "ValueError: random" in msg
+
+    def test_bulk_line_splitting(self):
+        # One endpoint with five lines should be split into chunks of 2, 2, and 1.
+        split = {"http://example.com": "a\nb\nc\nd\ne\n"}
+
+        with mock.patch(
+                "obspy.clients.fdsn.routing.routing_client.ThreadPool") as p:
+            p.return_value.map.return_value = [None, None, None]
+            c = self._cls_object(debug=False, timeout=240, max_bulk_lines=2)
+            c._download_waveforms(split=split)
+
+        items = p.return_value.map.call_args[0][1]
+        assert len(items) == 3
+        assert [len(req["bulk_str"].splitlines()) for req in items] == [2, 2, 1]
