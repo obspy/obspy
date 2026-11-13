@@ -38,14 +38,14 @@ class MassDownloader(object):
     implementations.
 
     :param providers: List of FDSN client names or service URLS. Will use
-        all FDSN implementations known to ObsPy except RASPISHAKE (generally
-        worse quality data) and IRISPH5 (active source / nodal experiments that
-        might match a very large amount of data occasionally) if set to None.
-        The order in the list also determines their priority, if data is
-        available at more then one provider it will always be downloaded from
-        the provider that comes first in the list. To include RASPISHAKE and
-        IRISPH5, you must set this parameter to
-        `obspy.clients.fdsn.header.URL_MAPPINGS` explicitly.
+        all FDSN implementations known to ObsPy except RASPISHAKE and
+        GEOSHAKE (generally worse quality data) and IRISPH5 (active source /
+        nodal experiments that might match a very large amount of data
+        occasionally) if set to None. The order in the list also determines
+        their priority, if data is available at more then one provider it
+        will always be downloaded from the provider that comes first in the
+        list. To include RASPISHAKE, GEOSHAKE and IRISPH5, you must set this
+        parameter to `obspy.clients.fdsn.header.URL_MAPPINGS` explicitly.
     :param debug: Debug flag passed to the underlying FDSN web service clients.
     :type providers: list[str] or :class:`~obspy.clients.fdsn.client.Client`
         instances
@@ -76,6 +76,10 @@ class MassDownloader(object):
             if "RASPISHAKE" in providers:
                 # exclude RASPISHAKE by default
                 del providers["RASPISHAKE"]
+
+            if "GEOSHAKE" in providers:
+                # exclude GEOSHAKE by default (uncalibrated MEMS sensors)
+                del providers["GEOSHAKE"]
 
             if "IRIS" in providers or "EARTHSCOPE" in providers:
                 has_earthscope = True
