@@ -36,6 +36,13 @@ from obspy.core.util.obspy_types import ObsPyException
 
 _headonly_warning_msg = (
     "Keyword headonly cannot be combined with starttime, endtime or dtype.")
+UNPICKLE_WARNING_MSG = (
+    "Unpickling is not secure. Only unpickle data you trust. It is possible "
+    "to construct malicious pickle data which will execute arbitrary code "
+    "during unpickling. Never unpickle data that could have come from an "
+    "untrusted source, or that could have been tampered with. This warning "
+    "can be suppressed with kwarg 'suppress_pickle_warning'. See "
+    "https://docs.python.org/3/library/pickle.html for more info.")
 
 
 @map_example_filename("pathname_or_url")
@@ -3697,7 +3704,8 @@ def _is_pickle(filename):  # @UnusedVariable
     return False
 
 
-def _read_pickle(filename, **kwargs):  # @UnusedVariable
+def _read_pickle(
+        filename, suppress_pickle_warning=False, **kwargs):  # @UnusedVariable
     """
     Read and return Stream from pickled ObsPy Stream file.
 
@@ -3717,6 +3725,9 @@ def _read_pickle(filename, **kwargs):  # @UnusedVariable
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
+    if not suppress_pickle_warning:
+        warnings.warn(UNPICKLE_WARNING_MSG)
+
     kwargs = {}
     # see seishub/client.py
     # https://api.mongodb.org/python/current/\

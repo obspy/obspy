@@ -1603,6 +1603,19 @@ class TestStream:
                 assert _is_pickle(bio)
                 assert patch_pickle_load.call_count == 0
 
+    def test_assure_read_pickle_shows_warning(self, testdata):
+        """
+        Tests the warning message that gets shown when _read_pickle is called
+        """
+        # no warning shown when suppressed manually
+        with pytest.raises(FileNotFoundError):
+            _read_pickle('/non/existing/file', suppress_pickle_warning=True)
+        # this should first show the warning and then fail not finding the file
+        msg = "Unpickling is not secure. Only unpickle data you trust."
+        with pytest.warns(UserWarning, match=msg):
+            with pytest.raises(FileNotFoundError):
+                _read_pickle('/non/existing/file')
+
     def test_get_gaps_2(self):
         """
         Test case for issue #73.
