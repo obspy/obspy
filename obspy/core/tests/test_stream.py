@@ -1452,9 +1452,11 @@ class TestStream:
             assert len(st2) == 3
             np.testing.assert_array_equal(st2[0].data, st[0].data)
             # use read() and automatically detect format
-            st2 = read(tf.name)
-            assert len(st2) == 3
-            np.testing.assert_array_equal(st2[0].data, st[0].data)
+            # this is supposed to not work anymore, since PICKLE is supposed to
+            # be skipped during file format detection
+            msg = 'Unknown format for file'
+            with pytest.raises(TypeError, match=msg):
+                read(tf.name)
 
     def test_read_pickle(self):
         """
@@ -1473,15 +1475,18 @@ class TestStream:
         bio = io.BytesIO()
         st = read()
         st.write(bio, "pickle")
-        # Read pickle without specifying format.
         bio.seek(0)
-        st_no_format = read(bio)
+        # Read pickle without specifying format.
+        # this is supposed to not work anymore, since PICKLE is supposed to
+        # be skipped during file format detection
+        msg = 'Unknown format for file'
+        with pytest.raises(TypeError, match=msg):
+            read(bio)
         # Read pickle with specifying format.
         bio.seek(0)
         st_with_format = read(bio, format="pickle")
-        # Test equalities.
-        assert st == _remove_format(st_no_format)
-        assert st_no_format == _remove_format(st_with_format)
+        # Test equality
+        assert st == _remove_format(st_with_format)
 
     def test_assure_pickle_not_used_during_autodetection(self, testdata):
         """
