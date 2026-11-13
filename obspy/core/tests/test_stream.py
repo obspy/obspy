@@ -1444,11 +1444,11 @@ class TestStream:
             # write using stream write method
             st.write(tf.name, format='PICKLE')
             # check and read directly
-            st2 = _read_pickle(tf.name)
+            st2 = _read_pickle(tf.name, suppress_pickle_warning=True)
             assert len(st2) == 3
             np.testing.assert_array_equal(st2[0].data, st[0].data)
             # use read() with given format
-            st2 = read(tf.name, format='PICKLE')
+            st2 = read(tf.name, format='PICKLE', suppress_pickle_warning=True)
             assert len(st2) == 3
             np.testing.assert_array_equal(st2[0].data, st[0].data)
             # use read() and automatically detect format
@@ -1484,7 +1484,7 @@ class TestStream:
             read(bio)
         # Read pickle with specifying format.
         bio.seek(0)
-        st_with_format = read(bio, format="pickle")
+        st_with_format = read(bio, format="pickle", suppress_pickle_warning=True)
         # Test equality
         assert st == _remove_format(st_with_format)
 
@@ -1513,8 +1513,9 @@ class TestStream:
             # with specifying PICKLE explicitly
             assert _is_pickle(filename)
             # try reading low level and high level
-            got1 = _read_pickle(filename)
-            got2 = read(filename, format="PICKLE")
+            got1 = _read_pickle(filename, suppress_pickle_warning=True)
+            got2 = read(filename, format="PICKLE",
+                        suppress_pickle_warning=True)
             for got in (got1, got2):
                 assert isinstance(got, Stream)
                 assert len(got) == 1
@@ -1552,9 +1553,9 @@ class TestStream:
             assert b'obspy.core.stream' in bio_data[:22]
             assert _is_pickle(bio)
             bio.seek(0)
-            got1 = _read_pickle(bio)
+            got1 = _read_pickle(bio, suppress_pickle_warning=True)
             bio.seek(0)
-            got2 = read(bio, format="PICKLE")
+            got2 = read(bio, format="PICKLE", suppress_pickle_warning=True)
             bio.seek(0)
             for got in (got1, got2):
                 assert isinstance(got, Stream)
