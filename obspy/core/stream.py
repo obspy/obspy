@@ -3702,6 +3702,13 @@ def _read_pickle(filename, **kwargs):  # @UnusedVariable
     Read and return Stream from pickled ObsPy Stream file.
 
     .. warning::
+        Unpickling is not secure. Only unpickle data you trust. It is possible
+        to construct malicious pickle data which will execute arbitrary code
+        during unpickling. Never unpickle data that could have come from an
+        untrusted source, or that could have been tampered with. See
+        https://docs.python.org/3/library/pickle.html for more info.
+
+    .. warning::
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
