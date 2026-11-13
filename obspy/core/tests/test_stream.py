@@ -1563,6 +1563,41 @@ class TestStream:
                     read(bio)
                 assert patch_pickle_load.call_count == 0
 
+    def test_assure_is_pickle_does_not_unpickle(self, testdata):
+        """
+        Regression test to make sure _is_pickle() does not call pickle.load but
+        rather just checks some magic bytes at the data start.
+        This is not as good as a check that the file really is a valid obspy
+        Stream pickle, but it has no safety issues because no unpickling is
+        done.
+
+        This is some duplicated code with respect to
+        test_assure_pickle_not_used_during_autodetection, but this is an
+        important check, so its worth to have some code duplication here.
+        """
+        # set up a temporary test file, BytesIO might be faster, but let's be
+        # conservative here because this is an important check and use a real
+        # file to avoid any other complications.
+        # also test on a bytesIO object too though.
+        num_samples = 20
+        data = np.random.randn(num_samples)
+        tr = Trace(data=data)
+        st = Stream([tr])
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            st.write(filename, format='PICKLE')
+            with mock.patch("pickle.load") as patch_pickle_load:
+                assert _is_pickle(filename)
+                assert patch_pickle_load.call_count == 0
+        # do the same tests with an io.BytesIO input with the pickle data for
+        # good measure
+        with io.BytesIO() as bio:
+            st.write(bio, format='PICKLE')
+            bio.seek(0)
+            with mock.patch("pickle.load") as patch_pickle_load:
+                assert _is_pickle(bio)
+                assert patch_pickle_load.call_count == 0
+
     def test_get_gaps_2(self):
         """
         Test case for issue #73.
