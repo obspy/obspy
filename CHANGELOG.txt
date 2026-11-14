@@ -9,6 +9,9 @@ Changes:
    * add GEOSHAKE (GeoShake Global Seismic Network, FDSN network GW) to
      URL_MAPPINGS; excluded from the mass downloader by default like
      RASPISHAKE (see #3805)
+ - obspy.io.hypodd:
+   * fix HYPODDPHA writer turning an arrival time_weight of 0 into 1.0
+     (see #3831)
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
