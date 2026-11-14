@@ -128,11 +128,11 @@ KEYWORDS = [
     'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK',
     'REFTEK130', 'RG-1.6', 'RT-130', 'RESP', 'response file', 'RT', 'SAC',
     'SAGE', 'scardec', 'scml', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2',
-    'SEG Y','SEISAN', 'Seismic Handler', 'seismology', 'seismogram',
-    'seismograms','shapefile', 'signal', 'SiteXML', 'slink', 'spectrogram',
-    'StationXML', 'taper','taup', 'travel time', 'trigger', 'VERCE', 'WAV',
-    'waveform', 'WaveServer','WaveServerV', 'WebDC', 'web service', 'WIN',
-    'Winston', 'XML-SEED','XSEED']
+    'SEG Y', 'SEISAN', 'Seismic Handler', 'seismology', 'seismogram',
+    'seismograms', 'shapefile', 'signal', 'SiteXML', 'slink', 'spectrogram',
+    'StationXML', 'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV',
+    'waveform', 'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'WIN',
+    'Winston', 'XML-SEED', 'XSEED']
 
 ENTRY_POINTS = {
     'console_scripts': [
@@ -585,15 +585,7 @@ ENTRY_POINTS = {
         'energyratio = obspy.signal.trigger:energy_ratio',
         'modifiedenergyratio = obspy.signal.trigger:modified_energy_ratio',
         ],
-    'obspy.plugin.sitexml': [
-    '   SITEXML = obspy.io.sitexml.sitexml',
-    ],
-    'obspy.plugin.sitexml.SITEXML': [
-        'isFormat = obspy.io.sitexml.sitexml:_is_sitexml',
-        'readFormat = obspy.io.sitexml.sitexml:read_sitexml',
-        'writeFormat = obspy.io.sitexml.sitexml:write_sitexml',
-    ],
-    }
+}
 
 
 # monkey patches for MS Visual Studio
