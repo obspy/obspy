@@ -1,0 +1,4 @@
+siteID;siteDescriptionID;station;latitude;longitude
+quakeml:domain.ab/site/001;quakeml:domain.ab/site_description/001;XX.ABCD;45.137174;5.998905
+quakeml:domain.ab/site/002;quakeml:domain.ab/site_description/002;YY.WXYZ;40.555907;22.988593
+quakeml:domain.ab/site/003;quakeml:domain.ab/site_description/003;;40.555907;22.988593

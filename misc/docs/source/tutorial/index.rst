@@ -62,6 +62,9 @@ Introduction to ObsPy
    code_snippets/quakeml_custom_tags
    code_snippets/stationxml_custom_tags
    code_snippets/stationxml_file_from_scratch
+   code_snippets/sitexml
+   code_snippets/sitexml_tabular_input
+   code_snippets/sitexml_quality_indexes
    code_snippets/easyseedlink
 
 

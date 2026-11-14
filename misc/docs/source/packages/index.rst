@@ -184,3 +184,14 @@ categories.*
     obspy.io.stationtxt
     obspy.io.stationxml
     obspy.io.xseed
+
+.. rubric:: Site Metadata Plug-ins
+
+*Modules for working directly with site characterization metadata and SERASiteXML
+documents.*
+
+.. autosummary::
+    :toctree: .
+    :nosignatures:
+
+    obspy.io.sitexml
