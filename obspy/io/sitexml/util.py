@@ -4,6 +4,8 @@
 This module provides enumerations defined in the
 SiteXML schema and other helper functions.
 
+:author:
+    Kiriaki Konstantinidou (kiriaki@itsak.gr), Apr 2026
 :copyright:
    ORFEUS, 2026
 :license:

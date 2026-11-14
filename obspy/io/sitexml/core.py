@@ -3,6 +3,8 @@
 """
 Provides the SERASite class.
 
+:author:
+    Kiriaki Konstantinidou (kiriaki@itsak.gr), Apr 2026
 :copyright:
     ORFEUS, 2026
 :license:

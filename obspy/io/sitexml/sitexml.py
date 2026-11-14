@@ -3,6 +3,8 @@
 Functions dealing with reading and writing SiteXML.
 Metadata is stored in a SERASite object.
 
+:author:
+    Kiriaki Konstantinidou (kiriaki@itsak.gr), Apr 2026
 :copyright:
     ORFEUS, 2026
 :license:

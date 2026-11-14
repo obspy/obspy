@@ -8,6 +8,8 @@ See :ref:`quality-indexes` for the calculation guide and examples.
 For more information refer to `SERA D7.2 Deliverable.
 <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_
 
+:author:
+    Kiriaki Konstantinidou (kiriaki@itsak.gr), Apr 2026
 :copyright:
     ORFEUS, 2026
 :license:

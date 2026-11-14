@@ -6,6 +6,8 @@ files.
 See :doc:`/tutorial/code_snippets/sitexml_tabular_input` for the shared
 CSV/Excel table structure, accepted columns, and validation rules.
 
+:author:
+    Kiriaki Konstantinidou (kiriaki@itsak.gr), Apr 2026
 :copyright:
     ORFEUS, 2026
 :license:

@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
 r"""
-SiteXML Command-Line Tools
-==========================
+SERASiteXML Command-Line Tools
+==============================
 
+:author:
+    Kiriaki Konstantinidou (kiriaki@itsak.gr), Apr 2026
+:copyright:
+    ORFEUS, 2026
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
+    
 .. contents:: Contents
     :local:
     :depth: 2
