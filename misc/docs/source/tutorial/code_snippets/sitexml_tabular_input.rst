@@ -11,7 +11,7 @@ SERASiteXML Tabular Input Reference
 This reference describes the shared CSV and Excel input format accepted by
 :func:`~obspy.io.sitexml.tabular.csv_to_sera_site` and
 :func:`~obspy.io.sitexml.tabular.excel_to_sera_site`, as well as the
-``csv2sitexml`` and ``excel2sitexml`` command-line tools.
+``obspy-csv2sitexml`` and ``obspy-excel2sitexml`` command-line tools.
 See :doc:`sitexml` for Python API workflows and
 :mod:`~obspy.io.sitexml.scripts` for command-line usage.
 

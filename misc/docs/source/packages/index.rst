@@ -40,6 +40,8 @@ categories.*
     obspy.imaging.scripts.plot
     obspy.imaging.scripts.mopad
     obspy.io.mseed.scripts.recordanalyzer
+    obspy.io.sitexml.scripts.csv2sitexml
+    obspy.io.sitexml.scripts.excel2sitexml
     obspy.io.xseed.scripts.dataless2xseed
     obspy.io.xseed.scripts.xseed2dataless
     obspy.io.xseed.scripts.dataless2resp

@@ -80,3 +80,15 @@
        util
 
     .. comment to end block
+
+    Scripts
+    -------
+    .. autosummary::
+       :template: script.rst
+       :toctree: autogen
+       :nosignatures:
+
+       scripts.csv2sitexml
+       scripts.excel2sitexml
+
+    .. comment to end block

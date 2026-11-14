@@ -3,6 +3,9 @@
 """
 A command-line program that converts SERASiteXML CSV metadata into
 SERASiteXML files.
+
+See :mod:`SERASiteXML Command-Line Tools <obspy.io.sitexml.scripts>`
+for input requirements and usage examples.
 """
 from argparse import ArgumentParser
 from pathlib import Path
@@ -31,7 +34,7 @@ def csv2sitexml(options):
 
 
 def main(argv=None):
-    parser = ArgumentParser(prog='csv2sitexml',
+    parser = ArgumentParser(prog='obspy-csv2sitexml',
                             description=__doc__.strip())
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s ' + __version__)

@@ -16,16 +16,16 @@ SERASiteXML Command-Line Tools
     :depth: 2
 
 
-This guide describes how to use the ``csv2sitexml`` and
-``excel2sitexml`` command-line tools to convert tabular site-characterization
+This guide describes how to use the ``obspy-csv2sitexml`` and
+``obspy-excel2sitexml`` command-line tools to convert tabular site-characterization
 metadata into SERASiteXML files.
 
 Availability
 ------------
 
 
-Installing ObsPy provides the ``csv2sitexml`` and ``excel2sitexml`` commands.
-Run ``csv2sitexml -h`` or ``excel2sitexml -h`` for help.
+Installing ObsPy provides the ``obspy-csv2sitexml`` and ``obspy-excel2sitexml`` commands.
+Run ``obspy-csv2sitexml -h`` or ``obspy-excel2sitexml -h`` for help.
 
 What The Tools Produce
 ----------------------
@@ -168,14 +168,14 @@ The minimal required ``site-description`` columns are:
     Required empty cells abort the input process.
 
 
-Running ``csv2sitexml``
------------------------
+Running ``obspy-csv2sitexml``
+-----------------------------
 
 
-Use ``csv2sitexml`` when your input metadata is split across CSV files.
+Use ``obspy-csv2sitexml`` when your input metadata is split across CSV files.
 In the table below you can find a summary of the supported input options.
 
-Use ``csv2sitexml -h``, to get a full list of supported options.
+Use ``obspy-csv2sitexml -h``, to get a full list of supported options.
 
 .. list-table::
     :header-rows: 1
@@ -232,7 +232,7 @@ Minimal CSV conversion:
 
 .. code-block:: bash
 
-    csv2sitexml \
+    obspy-csv2sitexml \
       -o site_owner.csv \
       -d site_description.csv \
       -out sitexml_output
@@ -243,7 +243,7 @@ calculation inputs:
 
 .. code-block:: bash
 
-    csv2sitexml \
+    obspy-csv2sitexml \
       -o site_owner.csv \
       -d site_description.csv \
       -a site_analysis.csv \
@@ -260,14 +260,14 @@ calculation inputs:
       is not used inside any text values in any of the columns.**
 
 
-Running ``excel2sitexml``
--------------------------
+Running ``obspy-excel2sitexml``
+-------------------------------
 
 
-Use ``excel2sitexml`` when your owner, site-description, analysis, and
+Use ``obspy-excel2sitexml`` when your owner, site-description, analysis, and
 quality-index tables are sheets in one workbook.
 
-Use ``excel2sitexml -h``, to get a full list of supported options.
+Use ``obspy-excel2sitexml -h``, to get a full list of supported options.
 
 .. list-table::
     :header-rows: 1
@@ -309,14 +309,14 @@ Minimal Excel conversion:
 
 .. code-block:: bash
 
-    excel2sitexml sera_site.xlsx -out sitexml_output
+    obspy-excel2sitexml sera_site.xlsx -out sitexml_output
 
 
 Excel conversion with velocity profiles:
 
 .. code-block:: bash
 
-    excel2sitexml sera_site.xlsx \
+    obspy-excel2sitexml sera_site.xlsx \
       -p velocity_profiles.xlsx \
       -out sitexml_output
 
@@ -349,7 +349,7 @@ From the root of an ObsPy source checkout, for example:
 
 .. code-block:: bash
 
-    csv2sitexml \
+    obspy-csv2sitexml \
       -o obspy/io/sitexml/tests/data/csv/site_owner.csv \
       -d obspy/io/sitexml/tests/data/csv/site_description.csv \
       -a obspy/io/sitexml/tests/data/csv/site_analysis.csv \
@@ -362,7 +362,7 @@ or:
 
 .. code-block:: bash
 
-    excel2sitexml obspy/io/sitexml/tests/data/xlsx/full_site.xlsx \
+    obspy-excel2sitexml obspy/io/sitexml/tests/data/xlsx/full_site.xlsx \
       -p obspy/io/sitexml/tests/data/xlsx/velocity_profiles.xlsx \
       -out sitexml_output
 
@@ -379,14 +379,14 @@ Use this when you only need owner and site-location metadata:
 
 .. code-block:: bash
 
-    csv2sitexml -o site_owner.csv -d site_description.csv -out sitexml_output
+    obspy-csv2sitexml -o site_owner.csv -d site_description.csv -out sitexml_output
 
 
 or:
 
 .. code-block:: bash
 
-    excel2sitexml sera_site.xlsx -out sitexml_output
+    obspy-excel2sitexml sera_site.xlsx -out sitexml_output
 
 
 SERASiteXML With Analysis
@@ -398,7 +398,7 @@ Vs30 but no velocity-profile layers:
 
 .. code-block:: bash
 
-    csv2sitexml \
+    obspy-csv2sitexml \
       -o site_owner.csv \
       -d site_description.csv \
       -a site_analysis.csv \
@@ -413,7 +413,7 @@ Use this when you have analysis metadata and velocity-profile layers:
 
 .. code-block:: bash
 
-    csv2sitexml \
+    obspy-csv2sitexml \
       -o site_owner.csv \
       -d site_description.csv \
       -a site_analysis.csv \
@@ -425,7 +425,7 @@ or:
 
 .. code-block:: bash
 
-    excel2sitexml sera_site.xlsx \
+    obspy-excel2sitexml sera_site.xlsx \
       -p velocity_profiles.xlsx \
       -out sitexml_output
 
@@ -443,7 +443,7 @@ Use this when you want the tool to calculate indicator quality indexes and
 
 .. code-block:: bash
 
-    csv2sitexml \
+    obspy-csv2sitexml \
       -o site_owner.csv \
       -d site_description.csv \
       -a site_analysis.csv \
@@ -456,7 +456,7 @@ For Excel, include a ``qualityIndex`` sheet in the main workbook:
 
 .. code-block:: bash
 
-    excel2sitexml sera_site.xlsx \
+    obspy-excel2sitexml sera_site.xlsx \
       -p velocity_profiles.xlsx \
       -out sitexml_output
 
