@@ -187,7 +187,7 @@ categories.*
 
 .. rubric:: Site Metadata Plug-ins
 
-*Modules for working directly with site characterization metadata and SiteXML
+*Modules for working directly with site characterization metadata and SERASiteXML
 documents.*
 
 .. autosummary::

@@ -1,7 +1,7 @@
 .. _sitexml-tabular-input-reference:
 
-SiteXML Tabular Input Reference
-===============================
+SERASiteXML Tabular Input Reference
+===================================
 
 .. contents:: Contents
     :local:
@@ -17,10 +17,10 @@ See :doc:`sitexml` for Python API workflows and
 
 .. important::
 
-    The input tables are organized to follow the SiteXML schema. Each table
-    corresponds to a major SiteXML object, and the columns in that table
+    The input tables are organized to follow the SERASiteXML schema. Each table
+    corresponds to a major SERASiteXML object, and the columns in that table
     correspond to the object's **elements** and **attributes**. At the
-    `SiteXML schema documentation <https://www.itsak.gr/SiteXML>`_ you
+    `SERASiteXML schema documentation <https://www.itsak.gr/SiteXML>`_ you
     can find descriptions, examples and allowed values for each column.
 
 
@@ -63,7 +63,7 @@ Resource Identifiers And Preferred IDs
 --------------------------------------
 
 
-SiteXML uses resource identifiers to connect the top-level site object with its
+SERASiteXML uses resource identifiers to connect the top-level site object with its
 nested site description, analyses, velocity profiles, owner, and contact
 metadata.
 
@@ -89,7 +89,7 @@ object ID.
 
 The most important relationship and preferred-ID columns are:
 
-- ``siteID`` identifies the top-level SiteXML site and is used as the key in
+- ``siteID`` identifies the top-level SERASiteXML site and is used as the key in
   dictionaries returned by CSV and Excel import.
 - ``siteDescriptionID`` identifies the site-description object. Analysis rows
   must repeat the corresponding ``siteDescriptionID`` so the analysis can be
@@ -127,11 +127,11 @@ If you provide preferred IDs:
 - ``preferredSiteAnalysisID``: the analysis CSV or Excel sheet must contain a
   matching ``analysisID``. If analysis metadata is omitted, the preferred
   analysis
-  ID is ignored with a warning and omitted from generated SiteXML.
+  ID is ignored with a warning and omitted from generated SERASiteXML.
 - ``preferredVelocityProfileID``: the velocity-profile table must
   contain a matching ``velocityProfileID``. If velocity-profile metadata is
   omitted, the preferred velocity-profile ID is ignored with a warning and
-  omitted from generated SiteXML.
+  omitted from generated SERASiteXML.
 
 .. important::
 
@@ -147,7 +147,7 @@ Common Site Indicator Metadata
 ------------------------------
 
 
-SiteXML supports seven (7) site indicators:
+SERASiteXML supports seven (7) site indicators:
 `siteClassEC8 <https://www.itsak.gr/SiteXML/#type_EC8IndicatorType>`_,
 `bedrockDepth <https://www.itsak.gr/SiteXML/#type_BedrockDepthIndicatorType>`_,
 `h800 <https://www.itsak.gr/SiteXML/#type_H800IndicatorType>`_,
@@ -293,7 +293,7 @@ This means you can use the site owner table with many sites that have the same
 owner.
 
 The data read from the Site Owner table is stored in
-`SiteXML element siteOwner <https://www.itsak.gr/SiteXML/#type_SiteOwnerType>`_.
+`SERASiteXML element siteOwner <https://www.itsak.gr/SiteXML/#type_SiteOwnerType>`_.
 
 .. list-table::
     :header-rows: 1
@@ -405,7 +405,7 @@ It is provided as a CSV file or as an Excel sheet named ``siteDescription`` with
 **one row per site**.
 
 The data read from the site-description table is stored in
-`SiteXML element siteDescription
+`SERASiteXML element siteDescription
 <https://www.itsak.gr/SiteXML/#type_SiteDescriptionType>`_.
 
 
@@ -425,7 +425,7 @@ Site And Location Columns
       - Example
     * - ``siteID``
       - **yes**
-      - Resource ID for the top-level SiteXML site. **This is necessary because
+      - Resource ID for the top-level SERASiteXML site. **This is necessary because
         it associates the siteDescription object with the site.**
       - ``quakeml:domain.ab/site/001``
     * - ``siteDescriptionID``
@@ -478,7 +478,7 @@ Site And Location Columns
       - ``Valley``
     * - ``overallQindex``
       - no
-      - Overall quality index of the site stored in SiteXML. Values must be in
+      - Overall quality index of the site stored in SERASiteXML. Values must be in
         the range [0..1]
       - ``0.41``
     * - ``preferredSiteAnalysisID``
@@ -498,7 +498,7 @@ Site And Location Columns
     The ``overallQindex`` can be either provided manually by the user using the
     site-description table or calculated by the tools if a quality-index input
     table
-    is provided. If neither is true, the produced SiteXML document won't have an
+    is provided. If neither is true, the produced SERASiteXML document won't have an
     ``overallQindex`` value.
 
 
@@ -582,7 +582,7 @@ Each row must identify three things:
 
 
 The data read from the analysis table are stored in
-`SiteXML element analysis <https://www.itsak.gr/SiteXML/#type_AnalysisType>`_.
+`SERASiteXML element analysis <https://www.itsak.gr/SiteXML/#type_AnalysisType>`_.
 
 
 .. _sitexml-tabular-analysis-relationship-and-log-count-columns:
@@ -731,7 +731,7 @@ identify three things:
 
 
 The data read from the velocity-profile  table are stored in multiple
-`SiteXML VelocityProfile elements
+`SERASiteXML VelocityProfile elements
 <https://www.itsak.gr/SiteXML/#type_VelocityProfile>`_.
 
 .. list-table::
@@ -904,10 +904,10 @@ Quality-Index Table
 
 
 The indicator-level quality indexes and the final overall quality index
-stored in SiteXML can be calculated during tabular import. The import
+stored in SERASiteXML can be calculated during tabular import. The import
 helpers read the required calculation parameters from an **optional** CSV or
 Excel table, apply them immediately, and **store only the schema-supported
-calculated results on the SiteXML objects**.
+calculated results on the SERASiteXML objects**.
 
 Quality-Index table is provided as a CSV file or as an Excel sheet named
 ``qualityIndex`` with **one row per site**.
@@ -927,7 +927,7 @@ these criteria values are **optional**.
 
 .. seealso::
 
-    For more information on the SiteXML quality indexes, please refer
+    For more information on the SERASiteXML quality indexes, please refer
 
     - to :ref:`quality-indexes` for formulas and calculation workflows
     - to the guidelines of `SERA deliverable D7.2

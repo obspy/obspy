@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Tests for SiteXML CSV and Excel import helpers.
+Tests for SERASiteXML CSV and Excel import helpers.
 
 :author:
     Kiriaki Konstantinidou (kiriaki@itsak.gr), 2026

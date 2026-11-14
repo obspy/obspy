@@ -35,13 +35,13 @@ from .util import (EC8Class, ResonanceFrequencyMethod, SiteXMLBaseNode,
 
 class ValueWithUncertainty(SiteXMLBaseNode):
     """
-    Numeric SiteXML value with an optional uncertainty of the same type.
+    Numeric SERASiteXML value with an optional uncertainty of the same type.
 
-    SiteXML stores a single symmetric ``uncertainty`` value next to the main
-    ``value``. ObsPy's
+    SERASiteXML stores a single symmetric ``uncertainty`` value next to the
+    main ``value``. ObsPy's
     :class:`~obspy.core.util.obspy_types.FloatWithUncertainties` stores lower
     and upper uncertainty values instead. This class intentionally keeps the
-    SiteXML representation simple and schema-shaped, while the conversion
+    SERASiteXML representation simple and schema-shaped, while the conversion
     helpers below make future ObsPy interoperability explicit.
     """
 
@@ -58,12 +58,13 @@ class ValueWithUncertainty(SiteXMLBaseNode):
     @classmethod
     def from_float_with_uncertainties(cls, value, valid_type=float):
         """
-        Convert an ObsPy ``FloatWithUncertainties`` to SiteXML form.
+        Convert an ObsPy ``FloatWithUncertainties`` to SERASiteXML form.
 
-        SiteXML can only represent symmetric uncertainty. Values with different
-        lower and upper uncertainties are rejected to avoid silent data loss.
+        SERASiteXML can only represent symmetric uncertainty. Values with
+        different lower and upper uncertainties are rejected to avoid silent
+        data loss.
         The ObsPy ``measurement_method`` metadata is not represented in
-        SiteXML's value/uncertainty pair and is therefore intentionally
+        SERASiteXML's value/uncertainty pair and is therefore intentionally
         ignored.
 
         .. rubric:: Example
@@ -82,7 +83,7 @@ class ValueWithUncertainty(SiteXMLBaseNode):
         upper = value.upper_uncertainty
         if lower != upper:
             raise SiteXMLValidationError(
-                "SiteXML value/uncertainty pairs only support symmetric "
+                "SERASiteXML value/uncertainty pairs only support symmetric "
                 "uncertainty"
             )
         return cls(valid_type(value), lower, valid_type=valid_type)
@@ -91,8 +92,8 @@ class ValueWithUncertainty(SiteXMLBaseNode):
         """
         Convert this value to ObsPy's ``FloatWithUncertainties`` type.
 
-        The SiteXML uncertainty, when present, is mapped to both lower and
-        upper ObsPy uncertainties.
+        The SERASiteXML uncertainty, when present, is mapped to both
+        lower and upper ObsPy uncertainties.
 
         .. rubric:: Example
 
@@ -218,7 +219,7 @@ class LiteratureSource(SiteXMLBaseNode):
 
 class Revision(SiteXMLBaseNode):
     """
-    One root-level SiteXML document revision entry.
+    One root-level SERASiteXML document revision entry.
 
     ``revision_time`` records when the described document revision occurred.
     It can differ from the root ``SERASite.created`` timestamp, which records
@@ -247,7 +248,7 @@ class Revision(SiteXMLBaseNode):
         :type version: str, optional
         :param version: Publisher-assigned version label.
         :type previous_version: str, optional
-        :param previous_version: URI of the previous published SiteXML
+        :param previous_version: URI of the previous published SERASiteXML
             document version.
         """
         self.revision_time = revision_time
@@ -257,12 +258,26 @@ class Revision(SiteXMLBaseNode):
         self.previous_version = previous_version
 
     def __str__(self):
-        return _pretty_str(self)
+        ret = ("Revision:\n"
+               "\tRevision Time: {revision_time},\n"
+               "\tDescription: {description},\n"
+               "\tAuthor: {author},\n"
+               "\tVersion: {version},\n"
+               "\tPrevious Version: {previous_version},\n")
+        ret = ret.format(
+            revision_time=self.revision_time,
+            description=self.description,
+            author=self.author if self.author else "None",
+            version=self.version if self.version else "None",
+            previous_version=(
+                self.previous_version if self.previous_version else "None")
+        )
+        return ret
 
 
 class SiteIndicator(SiteXMLBaseNode):
     """
-    Base class for SiteXML site-characterization indicator objects.
+    Base class for SERASiteXML site-characterization indicator objects.
 
     Includes metadata common to the site characterization indicators,
     like quality assessment metdata and the method used for the
@@ -341,8 +356,8 @@ class SiteIndicator(SiteXMLBaseNode):
         """
         Calculate Q_Index1 for this site indicator.
 
-        The input criteria are not stored in SiteXML. If ``assign`` is true,
-        store the calculated value in ``self.quality_index``.
+        The input criteria are not stored in SERASiteXML. If ``assign`` is
+        true, store the calculated value in ``self.quality_index``.
 
         See :func:`obspy.io.sitexml.quality_index.quality_index1` for the
         formula and accepted criterion values.
@@ -366,8 +381,7 @@ class SiteIndicator(SiteXMLBaseNode):
                "\t{name} value: {value},\n"
                "\tMethods: {methods},\n"
                "\tQuality index: {qindex},\n"
-               "\tLiterature source: {lit_source},\n"
-               "\tExternal reference: {external_ref},\n")
+               "\tLiterature source: {lit_source},\n")
         ret = ret.format(
             name=self.name,
             value=self.value if self.name != "velocityProfileSet" else "None",
@@ -376,11 +390,14 @@ class SiteIndicator(SiteXMLBaseNode):
             lit_source=(
                 str(self.literature_source)
                 if self.literature_source is not None
-                else "None"),
-            external_ref=(
-                _pretty_str(self.external_references)
-                if self.external_references else "None")
+                else "None")
         )
+        if self.external_references:
+            for i, reference in enumerate(self.external_references):
+                ret += (f"\tExternal reference # {i+1}: "
+                        f"{_pretty_str(reference)}\n")
+        else:
+            ret += "\tExternal reference: None,\n"
         return ret
 
 
@@ -908,7 +925,7 @@ class SERASiteOwner(SiteXMLBaseNode):
 
     ObsPy's :class:`~obspy.core.inventory.util.Person` and
     :class:`~obspy.core.inventory.util.Operator` classes are close, but not
-    identical, representations. SiteXML stores one required owner and one
+    identical, representations. SERASiteXML stores one required owner and one
     required contact person split into first name, last name, and email. ObsPy
     stores person names, agencies, and emails as lists, and operators can hold
     multiple contacts. The conversion helpers below keep those policy choices
@@ -1010,13 +1027,14 @@ class SERASiteOwner(SiteXMLBaseNode):
     @staticmethod
     def _split_obspy_person_name(name):
         """
-        Split an ObsPy full-name string into SiteXML first/last names.
+        Split an ObsPy full-name string into SERASiteXML first/last names.
         """
         parts = str(name).strip().split(None, 1)
         if len(parts) != 2:
             raise SiteXMLValidationError(
-                "Cannot derive SiteXML person_firstname and person_lastname "
-                "from an ObsPy Person name with fewer than two words"
+                "Cannot derive SERASiteXML person_firstname and "
+                "person_lastname from an ObsPy Person name with fewer "
+                "than two words"
             )
         return parts
 
@@ -1032,15 +1050,15 @@ class SERASiteOwner(SiteXMLBaseNode):
                     affiliation_department=None, affiliation_function=None):
         """
         Convert an ObsPy :class:`~obspy.core.inventory.util.Person`
-        to a SiteXML owner contact.
+        to a SERASiteXML owner contact.
 
         ``owner_codename`` and ``owner_fullname`` are required because ObsPy
         :class:`~obspy.core.inventory.util.Person` only represents the
-        contact person, not the SiteXML owner identity. If ``person_firstname``
-        and ``person_lastname`` are omitted, they are derived from the first
-        ObsPy person name. If ``person_mbox`` is omitted, the first ObsPy
-        email address is used. If ``institution_name`` is omitted, the first
-        ObsPy agency is used.
+        contact person, not the SERASiteXML owner identity. If
+        ``person_firstname`` and ``person_lastname`` are omitted, they are
+        derived from the first ObsPy person name. If ``person_mbox`` is
+        omitted, the first ObsPy email address is used. If ``institution_name``
+        is omitted, the first ObsPy agency is used.
 
         :rtype: :class:`~obspy.io.sitexml.core.SERASiteOwner`
 
@@ -1069,7 +1087,7 @@ class SERASiteOwner(SiteXMLBaseNode):
         if person_firstname is None or person_lastname is None:
             if not names:
                 raise SiteXMLValidationError(
-                    "Cannot derive SiteXML contact person from an ObsPy "
+                    "Cannot derive SERASiteXML contact person from an ObsPy "
                     "Person without names"
                 )
             derived_firstname, derived_lastname = (
@@ -1080,8 +1098,8 @@ class SERASiteOwner(SiteXMLBaseNode):
         if person_mbox is None:
             if not emails:
                 raise SiteXMLValidationError(
-                    "Cannot derive SiteXML person_mbox from an ObsPy Person "
-                    "without emails"
+                    "Cannot derive SERASiteXML person_mbox from an ObsPy "
+                    "Person without emails"
                 )
             person_mbox = emails[0]
 
@@ -1115,13 +1133,13 @@ class SERASiteOwner(SiteXMLBaseNode):
                       contact_index=None, **kwargs):
         """
         Convert an ObsPy :class:`~obspy.core.inventory.util.Operator`
-        to a SiteXML owner contact.
+        to a SERASiteXML owner contact.
 
         ``operator.agency`` is used as ``owner_fullname`` when no explicit
         value is provided. ``owner_codename`` defaults to ``operator.agency``
         when omitted, though callers should pass a short code when they have
         one. Operators with multiple contacts are rejected unless
-        ``contact_index`` selects which contact to convert, because SiteXML
+        ``contact_index`` selects which contact to convert, because SERASiteXML
         has a single contact person in
         :class:`~obspy.io.sitexml.core.SERASiteOwner`.
         Extra keyword arguments are forwarded to :meth:`from_person`.
@@ -1149,14 +1167,14 @@ class SERASiteOwner(SiteXMLBaseNode):
         contacts = list(operator.contacts)
         if not contacts:
             raise SiteXMLValidationError(
-                "Cannot derive SiteXML owner contact from an ObsPy Operator "
-                "without contacts"
+                "Cannot derive SERASiteXML owner contact from an ObsPy "
+                "Operator without contacts"
             )
         if contact_index is None:
             if len(contacts) != 1:
                 raise SiteXMLValidationError(
-                    "Cannot derive one SiteXML owner contact from an ObsPy "
-                    "Operator with multiple contacts; pass contact_index"
+                    "Cannot derive one SERASiteXML owner contact from an "
+                    "ObsPy Operator with multiple contacts; pass contact_index"
                 )
             contact_index = 0
 
@@ -1174,14 +1192,14 @@ class SERASiteOwner(SiteXMLBaseNode):
 
     def to_person(self):
         """
-        Convert this SiteXML owner contact to ObsPy's
+        Convert this SERASiteXML owner contact to ObsPy's
         :class:`~obspy.core.inventory.util.Person` type.
 
-        The SiteXML first and last names are joined into one ObsPy name. The
-        SiteXML institution name is mapped to the first ObsPy agency, when
-        present, and ``person_mbox`` is mapped to the first ObsPy email.
-        SiteXML person homepage and public IDs are not represented by ObsPy
-        :class:`~obspy.core.inventory.util.Person`.
+        The SERASiteXML first and last names are joined into one ObsPy name.
+        The SERASiteXML institution name is mapped to the first ObsPy agency,
+        when present, and ``person_mbox`` is mapped to the first ObsPy email.
+        SERASiteXML person homepage and public IDs are not represented by
+        ObsPy :class:`~obspy.core.inventory.util.Person`.
 
         :rtype: :class:`~obspy.core.inventory.util.Person`
 
@@ -1213,7 +1231,7 @@ class SERASiteOwner(SiteXMLBaseNode):
 
     def to_operator(self):
         """
-        Convert this SiteXML owner contact to ObsPy's
+        Convert this SERASiteXML owner contact to ObsPy's
         :class:`~obspy.core.inventory.util.Operator` type.
 
         ``owner_fullname`` is mapped to ``operator.agency``, the converted
@@ -1283,7 +1301,7 @@ class SERASiteOwner(SiteXMLBaseNode):
 class SiteDescription(SiteXMLBaseNode):
     """
     Location, QuakeML-STC-derived morphology indicators, and topographic
-    classification for a SiteXML site.
+    classification for a SERASiteXML site.
 
     Each ``SiteDescription`` should be assigned a unique resource identifier,
     which is used to associate it with one or more site
@@ -1656,7 +1674,7 @@ class SERASite(SiteXMLBaseNode):
         """
         :type resource_id: str or
             :class:`~obspy.core.event.resourceid.ResourceIdentifier`, required
-        :param resource_id: SERA SiteXML Unique Identifier (siteID).
+        :param resource_id: SERASiteXML Unique Identifier (siteID).
         :type site_owner:
             :class:`~obspy.io.sitexml.core.SERASiteOwner`, required
         :param site_owner: The site owner metadata.
@@ -1670,7 +1688,7 @@ class SERASite(SiteXMLBaseNode):
         :param analysis: The site characterization parameters
                             (VS30, resonance frequency, velocity profiles).
         :type created: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param created: Root-level SiteXML document creation time. This
+        :param created: Root-level SERASiteXML document creation time. This
             value is serialization metadata for the XML document itself, not
             the creation time of the underlying site metadata. When
             :func:`~obspy.io.sitexml.sitexml.write_sitexml` serializes a
@@ -1683,7 +1701,8 @@ class SERASite(SiteXMLBaseNode):
             characterization metadata.
         :type revision_history: list of
             :class:`~obspy.io.sitexml.core.Revision`, optional
-        :param revision_history: Root-level SiteXML document update history.
+        :param revision_history: Root-level SERASiteXML document update
+            history.
         """
         self.resource_id = resource_id
         self.site_owner = site_owner
@@ -1713,7 +1732,7 @@ class SERASite(SiteXMLBaseNode):
         :type version: str, optional
         :param version: Publisher-assigned version label.
         :type previous_version: str, optional
-        :param previous_version: URI of the previous published SiteXML
+        :param previous_version: URI of the previous published SERASiteXML
             document version.
         :rtype: :class:`~obspy.io.sitexml.core.Revision`
         """
@@ -1965,7 +1984,7 @@ class SERASite(SiteXMLBaseNode):
 
     def get_indicator_object(self, name):
         """
-        Return a site indicator object by SiteXML indicator name.
+        Return a site indicator object by SERASiteXML indicator name.
 
         Site-description indicators are read from ``site_description``.
         Analysis indicators are read from the preferred analysis, falling back
@@ -1976,7 +1995,7 @@ class SERASite(SiteXMLBaseNode):
         ``velocityProfileSet``.
 
         :type name: str
-        :param name: SiteXML indicator name.
+        :param name: SERASiteXML indicator name.
         :rtype: :class:`~obspy.io.sitexml.core.SiteIndicator` or None
 
         Example:
@@ -2072,7 +2091,7 @@ class SERASite(SiteXMLBaseNode):
 
     def add_site_indicator(self, site_indicators, analysisID=None):
         """
-        Add one or more site indicators to their SiteXML object location.
+        Add one or more site indicators to their SERASiteXML object location.
 
         Indicators are routed by their ``name`` field. Site-description
         indicators are assigned to ``site_description``. Analysis indicators
@@ -2271,10 +2290,10 @@ class SERASite(SiteXMLBaseNode):
         """
         Calculate Q_Index3 from externally assessed consistency values.
 
-        These consistency inputs are not stored in SiteXML. The denominator is
-        the number of provided consistency pairs. Each consistency value is
-        binary: ``0`` for no consistency and ``1`` for consistency. ``None``
-        means unavailable or not evaluated.
+        These consistency inputs are not stored in SERASiteXML. The
+        denominator is the number of provided consistency pairs. Each
+        consistency value is binary: ``0`` for no consistency and ``1``
+        for consistency. ``None`` means unavailable or not evaluated.
 
         See :func:`obspy.io.sitexml.quality_index.quality_index3` for the
         formula and consistency-pair definitions.
@@ -2325,7 +2344,7 @@ class SERASite(SiteXMLBaseNode):
 
     def get_sitexml_filename(self, creation_time=None):
         """
-        Return the default SiteXML filename for this site.
+        Return the default SERASiteXML filename for this site.
 
         Station-backed sites use the associated FDSN station code in
         ``network.station`` notation. Other sites use this site's resource ID.
@@ -2365,7 +2384,7 @@ class SERASite(SiteXMLBaseNode):
 
     def validate_references(self):
         """
-        Validate internal SiteXML object-graph references for one site.
+        Validate internal SERASiteXML object-graph references for one site.
 
         :rtype: None
         """
@@ -2429,14 +2448,14 @@ class SERASite(SiteXMLBaseNode):
     def __str__(self):
         output = ["\n#################\n"]
         if self.site_description.station_code:
-            title = ("Site Metadata (station: "
-                     + self.site_description.station_code + ")")
+            title = ("Site Metadata | station: "
+                     + self.site_description.station_code
+                     + " | resource_id: " + self.resource_id)
         else:
-            title = "Site Metadata"
+            title = "Site Metadata | resource_id: " + self.resource_id
         output.append(title)
         output.append("\n#################\n")
 
-        output.append("resource_id: " + self.resource_id + "\n")
         output.append(self.site_owner.__str__())
         output.append(self.site_description.__str__())
 

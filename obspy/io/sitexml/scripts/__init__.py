@@ -10,7 +10,7 @@ SERASiteXML Command-Line Tools
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
-    
+
 .. contents:: Contents
     :local:
     :depth: 2
@@ -18,7 +18,7 @@ SERASiteXML Command-Line Tools
 
 This guide describes how to use the ``csv2sitexml`` and
 ``excel2sitexml`` command-line tools to convert tabular site-characterization
-metadata into SiteXML files.
+metadata into SERASiteXML files.
 
 Availability
 ------------
@@ -31,15 +31,15 @@ What The Tools Produce
 ----------------------
 
 
-Both tools write **one SiteXML file per imported site** into an output folder.
-The generated XML is **schema-validated** before it is written.
+Both tools write **one SERASiteXML file per imported site** into an output
+folder. The generated XML is **schema-validated** before it is written.
 
 Default output filenames are:
 
 - ``Site_<network.station>_<DD-MM-YYYY>.xml`` for station-backed sites,
   for example ``Site_XX.ABCD_13-05-2026.xml``.
-- ``Site_<domain>.<site-id>_<DD-MM-YYYY>.xml`` for sites without a station code,
-  for example ``Site_domain.ab.003_13-05-2026.xml``.
+- ``Site_<domain>.<site-id>_<DD-MM-YYYY>.xml`` for sites without a station 
+  code, for example ``Site_domain.ab.003_13-05-2026.xml``.
 
 Existing files with the same generated name are overwritten.
 
@@ -50,11 +50,9 @@ Input Table Summary
 .. important::
 
     The input tables are organized to follow the
-    `SiteXML schema <https://www.itsak.gr/SiteXML>`_. Each table corresponds to
-    a
-    major SiteXML object, and the columns in that table correspond to the
-    object's
-    elements and attributes.
+    `SERASiteXML schema <https://www.itsak.gr/SiteXML>`_. Each table
+    corresponds to a major SERASiteXML object, and the columns in that
+    table correspond to the object's elements and attributes.
 
 
 CSV and Excel imports use the same logical tables:
@@ -77,7 +75,7 @@ CSV and Excel imports use the same logical tables:
       - `siteDescription
         <https://www.itsak.gr/SiteXML/#type_SiteDescriptionType>`_
       - **Required**
-      - One row per site; creates the top-level SiteXML site objects.
+      - One row per site; creates the top-level SERASiteXML site objects.
       - ``siteDescription``
     * - Analysis
       - `analysis <https://www.itsak.gr/SiteXML/#type_AnalysisType>`_
@@ -116,7 +114,7 @@ in separate file(s).
 
 
 For additional input-format and quality-index examples, see the
-:doc:`SiteXML tabular input reference
+:doc:`SERASiteXML tabular input reference
 </tutorial/code_snippets/sitexml_tabular_input>`.
 
 
@@ -124,7 +122,7 @@ Minimal Required Metadata
 -------------------------
 
 
-The smallest tabular input that can produce a valid SiteXML file contains:
+The smallest tabular input that can produce a valid SERASiteXML file contains:
 
 - one site-owner table;
 - one site-description table;
@@ -190,7 +188,7 @@ Use ``csv2sitexml -h``, to get a full list of supported options.
     * - Output folder
       - ``-out``
       - **yes**
-      - Folder where the generated SiteXML files will be written.
+      - Folder where the generated SERASiteXML files will be written.
     * - Site owner CSV
       - ``-o`` or ``--site-owner``
       - **yes**
@@ -198,7 +196,7 @@ Use ``csv2sitexml -h``, to get a full list of supported options.
     * - Site description CSV
       - ``-d`` or ``--site-description``
       - **yes**
-      - One row per site. Creates the top-level SiteXML site objects.
+      - One row per site. Creates the top-level SERASiteXML site objects.
     * - Analysis CSV
       - ``-a`` or ``--analysis``
       - no
@@ -215,7 +213,7 @@ Use ``csv2sitexml -h``, to get a full list of supported options.
       - Q_Index1 criteria and Q_Index3 consistency inputs.
 
 
-The minimal input that can produce SiteXML is ``site_owner.csv`` plus
+The minimal input that can produce SERASiteXML is ``site_owner.csv`` plus
 ``site_description.csv`` with their required columns.
 
 .. note::
@@ -282,7 +280,7 @@ Use ``excel2sitexml -h``, to get a full list of supported options.
     * - Output folder
       - ``-out``
       - **yes**
-      - Folder where the generated SiteXML files will be written.
+      - Folder where the generated SERASiteXML files will be written.
     * - Main Workbook
       - ``file path``
       - **yes**
@@ -373,8 +371,8 @@ Recommended Workflows
 ---------------------
 
 
-SiteXML with only Site Description
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SERASiteXML with only Site Description
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Use this when you only need owner and site-location metadata:
@@ -391,8 +389,8 @@ or:
     excel2sitexml sera_site.xlsx -out sitexml_output
 
 
-SiteXML With Analysis
-~~~~~~~~~~~~~~~~~~~~~
+SERASiteXML With Analysis
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Use this when you have analysis-level indicators such as resonance frequency or
@@ -407,8 +405,8 @@ Vs30 but no velocity-profile layers:
       -out sitexml_output
 
 
-SiteXML With Velocity Profiles
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SERASiteXML With Velocity Profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Use this when you have analysis metadata and velocity-profile layers:
@@ -435,8 +433,8 @@ or:
 Velocity-profile rows require both ``siteID`` and ``analysisID``, so velocity
 profiles are meaningful only with analysis metadata.
 
-SiteXML With Calculated Quality Indexes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SERASiteXML With Calculated Quality Indexes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Use this when you want the tool to calculate indicator quality indexes and
@@ -487,7 +485,7 @@ The tools validate that:
 - when both preferred IDs are provided, the preferred velocity profile belongs
   to
   the preferred analysis;
-- generated XML validates against the bundled SiteXML schema before it is
+- generated XML validates against the bundled SERASiteXML schema before it is
   written.
 
 The tools do not guess or generate missing relationship IDs. For example, they
@@ -513,7 +511,8 @@ If the command fails before writing XML, check:
 - CSV delimiter matches the file contents, usually ``;``;
 - CSV delimiter is not used inside any text values in any of the columns;
 - every required row value is filled;
-- every provided value conforms to the requirements set by the SiteXML schema;
+- every provided value conforms to the requirements set by the SERASiteXML
+  schema;
 - every resource identifier ID is unique;
 - every ``siteID``, ``siteDescriptionID``, ``analysisID``, and
   ``velocityProfileID``
@@ -524,11 +523,11 @@ If the command fails before writing XML, check:
 
 Warnings usually mean optional enrichment was skipped or an unresolved optional
 preferred ID was omitted from generated XML. Errors mean the input could not be
-converted into a valid, schema-validated SiteXML document.
+converted into a valid, schema-validated SERASiteXML document.
 
-See the :doc:`SiteXML tabular input reference
+See the :doc:`SERASiteXML tabular input reference
 </tutorial/code_snippets/sitexml_tabular_input>` for more details on tabular
 import and the
-`SiteXML schema documentation <https://www.itsak.gr/SiteXML>`_ for the
+`SERASiteXML schema documentation <https://www.itsak.gr/SiteXML>`_ for the
 accepted values in each column.
 """

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Functions dealing with tabular SiteXML metadata imports from CSV and Excel
-files.
+Functions dealing with tabular SERASiteXML metadata imports from CSV
+and Excel files.
 
 See :doc:`/tutorial/code_snippets/sitexml_tabular_input` for the shared
 CSV/Excel table structure, accepted columns, and validation rules.
@@ -50,7 +50,7 @@ def csv_to_sera_site(site_owner_csv,
                      quality_index_csv=None,
                      delim=';'):
     """
-    Function to import SiteXML metadata from CSV files.
+    Function to import SERASiteXML metadata from CSV files.
 
     :type site_owner_csv: str, pathlib.Path, or file-like object, required
     :param site_owner_csv: One line csv file with site owner metadata.
@@ -70,7 +70,7 @@ def csv_to_sera_site(site_owner_csv,
         CSV are ignored with a warning.
     :type quality_index_csv: str, pathlib.Path, or file-like object, optional
     :param quality_index_csv: CSV with extra quality-index calculation
-        inputs. Values are used immediately to calculate SiteXML quality
+        inputs. Values are used immediately to calculate SERASiteXML quality
         indexes and are not stored.
     :type delim: str, optional
     :param delim: CSV file delimiter. Default is semicolon-delimited.
@@ -151,7 +151,7 @@ def csv_to_sera_site(site_owner_csv,
 
 def excel_to_sera_site(path_or_file_object, velocity_profiles=None):
     """
-    Function to import SiteXML metadata from Excel files.
+    Function to import SERASiteXML metadata from Excel files.
 
     The Excel file should contain the following sheets:
 
@@ -258,7 +258,8 @@ def add_velocity_profiles(sera_sites, velocity_profiles,
     CSV files or only Excel files.
 
     :type sera_sites: :class:`~obspy.io.sitexml.core.SERASite` or dict
-    :param sera_sites: Existing SiteXML object or dictionary keyed by site ID.
+    :param sera_sites: Existing SERASiteXML object or dictionary keyed by
+        site ID.
     :type velocity_profiles: str or pathlib.Path, required
     :param velocity_profiles: CSV/Excel file or directory of CSV/Excel files.
     :type replace_existing: bool, optional
@@ -913,8 +914,9 @@ def _clear_preferred_ids_without_target_metadata(
                 warnings.warn(
                     f"Site {site_id} provides preferredSiteAnalysisID "
                     f"{preferred_id}, but analysis metadata was not provided. "
-                    "Ignoring preferredSiteAnalysisID for this import; the "
-                    "generated SiteXML will omit that unresolved preference.",
+                    f"Ignoring preferredSiteAnalysisID for this import; the "
+                    f"generated SERASiteXML will omit that unresolved "
+                    f"preference.",
                     UserWarning)
                 site_description.preferred_site_analysisID = None
 
@@ -928,15 +930,16 @@ def _clear_preferred_ids_without_target_metadata(
                 warnings.warn(
                     f"Site {site_id} provides preferredVelocityProfileID "
                     f"{preferred_id}, but {missing} was not provided. "
-                    "Ignoring preferredVelocityProfileID for this import; the "
-                    "generated SiteXML will omit that unresolved preference.",
+                    f"Ignoring preferredVelocityProfileID for this import; "
+                    f"the generated SERASiteXML will omit that unresolved "
+                    f"preference.",
                     UserWarning)
                 site_description.preferred_velocity_profileID = None
 
 
 def _csv_to_dataframe(path_or_file_object, label, delim=';'):
     """
-    Read CSV tabular metadata as a dataframe with SiteXML exceptions.
+    Read CSV tabular metadata as a dataframe with SERASiteXML exceptions.
 
     :rtype: :class:`pandas.DataFrame`
     """
@@ -958,7 +961,7 @@ def _csv_to_dataframe(path_or_file_object, label, delim=';'):
 def _excel_to_dataframe(path_or_file_object, label, sheet_name=0,
                         converters=None, missing_sheet_message=None):
     """
-    Read Excel tabular metadata as dataframe(s) with SiteXML exceptions.
+    Read Excel tabular metadata as dataframe(s) with SERASiteXML exceptions.
 
     :rtype: :class:`pandas.DataFrame` or dict
     """
@@ -989,7 +992,7 @@ def _excel_to_dataframe(path_or_file_object, label, sheet_name=0,
 
 def _read_dataframe_metadata(reader, *args, context, **kwargs):
     """
-    Convert dataframe metadata to SiteXML objects with phase context.
+    Convert dataframe metadata to SERASiteXML objects with phase context.
     """
     try:
         return reader(*args, **kwargs)

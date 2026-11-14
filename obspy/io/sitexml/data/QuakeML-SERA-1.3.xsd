@@ -69,7 +69,7 @@
 	<xs:complexType name="RootType">
 		<xs:annotation>
 			<xs:documentation>
-				Root-level for SiteXML documents.
+				Root-level for SERASiteXML documents.
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
@@ -85,7 +85,7 @@
 			<xs:element name="revisionHistory" type="RevisionHistoryType"
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
-					<xs:documentation>Structured update history for this SiteXML
+					<xs:documentation>Structured update history for this SERASiteXML
 						document. It records document-level provenance.
 					</xs:documentation>
 				</xs:annotation>
@@ -104,7 +104,7 @@
 			<xs:element name="analysis" type="AnalysisType" 
 						minOccurs="0" maxOccurs="unbounded">
 				<xs:annotation> 
-					<xs:documentation>Each SiteXML document may include more 
+					<xs:documentation>Each SERASiteXML document may include more
 						than one Analysis object.
 					</xs:documentation>
 				</xs:annotation>
@@ -129,7 +129,7 @@
 	<xs:complexType name="RevisionHistoryType">
 		<xs:annotation>
 			<xs:documentation>
-				Document-level revision history for a SiteXML file.
+				Document-level revision history for a SERASiteXML file.
 				Each revision describes a published or generated version of this
 				document.
 				<p><strong>Note: </strong>Document Revision metadata are not included 
@@ -146,7 +146,7 @@
 		<xs:annotation>
 			<xs:documentation>
 				One document revision entry. The entry should summarize what changed
-				in the SiteXML document, when the revision was made, optionally
+				in the SERASiteXML document, when the revision was made, optionally
 				<strong>(but strongly recommented)</strong> who
 				made it and where the previous version can be found.
 				<p><strong>Note: </strong>Document Revision metadata are not included 
@@ -190,7 +190,7 @@
 			<xs:element name="previousVersion" type="HttpURIType"
 						minOccurs="0" maxOccurs="1">
 				<xs:annotation>
-					<xs:documentation>URI of the previous published SiteXML document
+					<xs:documentation>URI of the previous published SERASiteXML document
 						version, when available.
 						<p><strong>Example: </strong>
 						https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml</p>
@@ -764,7 +764,7 @@
 	<xs:group name="SiteIndicatorMetadataGroup">
 		<xs:annotation>
 			<xs:documentation>
-				Common metadata for SiteXML site indicators. SiteXML groups an
+				Common metadata for SERASiteXML site indicators. SERASiteXML groups an
 				indicator value with its quality index, supporting literature
 				source, and supporting external reference inside the indicator
 				element.
@@ -859,7 +859,7 @@
 						available for this site.
 						<p><strong>Note: </strong>This counter is retained 
 						temporarily, but its exact meaning is ambiguous because 
-						SiteXML does not currently include the corresponding 
+						SERASiteXML does not currently include the corresponding
 						log objects. This element should be reviewed before the 
 						schema is distributed.</p>
 					</xs:documentation>
@@ -872,7 +872,7 @@
 						available for this site.
 						<p><strong>Note: </strong>This counter is retained 
 						temporarily, but its exact meaning is ambiguous because 
-						SiteXML does not currently include the corresponding 
+						SERASiteXML does not currently include the corresponding
 						log objects. This element should be reviewed before the 
 						schema is distributed.</p>
 					</xs:documentation>
@@ -885,7 +885,7 @@
 						available for this site.
 						<p><strong>Note: </strong>This counter is retained 
 						temporarily, but its exact meaning is ambiguous because 
-						SiteXML does not currently include the corresponding 
+						SERASiteXML does not currently include the corresponding
 						log objects. This element should be reviewed before the 
 						schema is distributed.</p>
 					</xs:documentation>
@@ -1142,7 +1142,7 @@
 		<xs:annotation>
 			<xs:documentation>
 				This type contains a URI and a description for external data that users
-				may want to reference in SiteXML. At the top level this describes external
+				may want to reference in SERASiteXML. At the top level this describes external
 				resources for the site/document; inside a site indicator it supports the
 				specific indicator value that contains it.
 				<p><strong>Note:</strong> This type follows the FDSN StationXML 

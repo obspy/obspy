@@ -1,21 +1,22 @@
 .. _quality-indexes:
 
-SiteXML Quality Indexes
-=======================
+SERASiteXML Quality Indexes
+===========================
 
 .. contents:: Contents
     :local:
     :depth: 2
 
 This advanced guide covers quality-index calculations through the Python API
-and CSV/Excel import tools. See :doc:`sitexml` for general SiteXML workflows
-and :doc:`sitexml_tabular_input` for the shared input table specification.
+and CSV/Excel import tools. See :doc:`sitexml` for general SERASiteXML
+workflows and :doc:`sitexml_tabular_input` for the shared input table
+specification.
 
 Overview
 --------
 
-The SiteXML quality indexes follow the guidelines of the `SERA deliverable D7.2
-<https://www.itsak.gr/SiteXML/
+The SERASiteXML quality indexes follow the guidelines of the `SERA deliverable
+D7.2 <https://www.itsak.gr/SiteXML/
 SERA_D7.2_Best-practice_for_site_characterization.pdf>`_ for describing the
 reliability and consistency of site-characterization
 metadata. ObsPy implements four related values:
@@ -25,11 +26,11 @@ metadata. ObsPy implements four related values:
 * Q_Index3 describes consistency between pairs of site indicators.
 * The overall quality index combines Q_Index2 and Q_Index3.
 
-SiteXML stores only the **calculated indicator-level quality indexes (Q_Index1)
-and the final overall quality index**. The extra calculation inputs for
-Q_Index1 criteria and Q_Index3 consistency checks are not part of the SiteXML
-object model. CSV and Excel imports can read these inputs from an optional
-quality-index input table and apply them immediately.
+SERASiteXML stores only the **calculated indicator-level quality indexes
+(Q_Index1) and the final overall quality index**. The extra calculation inputs
+for Q_Index1 criteria and Q_Index3 consistency checks are not part of the
+SERASiteXML object model. CSV and Excel imports can read these inputs from an
+optional quality-index input table and apply them immediately.
 
 Quality Index 1
 ---------------
@@ -173,10 +174,10 @@ Import From CSV Or Excel
 ------------------------
 
 The indicator-level quality indexes and the final overall quality index stored
-in SiteXML can be calculated during tabular import. The import helpers read the
-required calculation parameters from an optional CSV or Excel quality-index
+in SERASiteXML can be calculated during tabular import. The import helpers read
+the required calculation parameters from an optional CSV or Excel quality-index
 input table, apply them immediately, and store only the schema-supported
-calculated results on the imported SiteXML objects.
+calculated results on the imported SERASiteXML objects.
 
 Refer to :ref:`sitexml-tabular-quality-index-table` for the full column
 reference of the quality-index input table.
@@ -202,7 +203,7 @@ Automatic Calculation Of Overall QI
 Tabular import is conservative about the calculation of the overall quality
 index.
 
-While importing SiteXML metadata from CSV or Excel input files:
+While importing SERASiteXML metadata from CSV or Excel input files:
 
 * if the user provides indicator-level ``*_qualityIndex`` columns **but**
 * does not provide an ``overallQindex`` value **and**
@@ -227,7 +228,7 @@ Use one of these explicit workflows when the output XML should contain
 * provide the quality-index CSV file or Excel ``qualityIndex`` sheet, so
   ObsPy can calculate Q_Index1/Q_Index3-derived results during import;
 * call :meth:`~obspy.io.sitexml.core.SERASite.calculate_overall_quality_index`
-  yourself on the imported ``SERASite`` objects before writing SiteXML.
+  yourself on the imported ``SERASite`` objects before writing SERASiteXML.
 
 Other rules apply when calculating overall quality indexes through the
 Python API:
@@ -335,7 +336,7 @@ you can calculate and apply manually the quality indexes:
 Calculate the Overall Quality Index Explicitly
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After importing SiteXML metadata from CSV files with some indicator-level
+After importing SERASiteXML metadata from CSV files with some indicator-level
 ``*_qualityIndex`` values, calculate and store the overall quality index
 explicitly before producing XML output:
 
@@ -375,11 +376,11 @@ Apply quality-index inputs during CSV import
     print(site.site_description.ec8.quality_index)
     print(site.site_description.overall_quality_index)
 
-Apply quality-index inputs to existing SiteXML files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Apply quality-index inputs to existing SERASiteXML files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Quality-index inputs can be applied to existing SiteXML files,
-after reading them using Python API into a dictionary of SiteXML objects.
+Quality-index inputs can be applied to existing SERASiteXML files,
+after reading them using Python API into a dictionary of SERASiteXML objects.
 
 .. code-block:: python
 

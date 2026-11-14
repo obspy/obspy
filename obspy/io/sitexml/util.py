@@ -2,7 +2,7 @@
 """
 
 This module provides enumerations defined in the
-SiteXML schema and other helper functions.
+SERASiteXML schema and other helper functions.
 
 :author:
     Kiriaki Konstantinidou (kiriaki@itsak.gr), Apr 2026
@@ -21,29 +21,29 @@ from obspy.core.util import Enum
 from obspy.core.util.base import ComparingObject
 
 
-# SiteXML Specific Exceptions
+# SERASiteXML Specific Exceptions
 
 class SiteXMLError(Exception):
     """
-    Base class for SiteXML-specific exceptions.
+    Base class for SERASiteXML-specific exceptions.
     """
 
 
 class SiteXMLValidationError(SiteXMLError, ValueError):
     """
-    Raised when SiteXML content fails schema or structural validation.
+    Raised when SERASiteXML content fails schema or structural validation.
     """
 
 
 class SiteXMLImportError(SiteXMLError, ValueError):
     """
-    Raised when SiteXML metadata imports cannot be completed.
+    Raised when SERASiteXML metadata imports cannot be completed.
     """
 
 
 class SiteXMLIOError(SiteXMLError, OSError):
     """
-    Raised when SiteXML-related input paths or files cannot be accessed.
+    Raised when SERASiteXML-related input paths or files cannot be accessed.
     """
 
 
@@ -51,6 +51,9 @@ class SiteXMLBaseNode(ComparingObject):
     """
     The parent class for SERASite, SiteDescription, Analysis etc classes.
     """
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def copy(self):
         """
         Returns a deepcopy of the object.
@@ -307,7 +310,7 @@ def _pretty_str(obj):
     :rtype: str
     """
     return ", ".join(
-        f"{key}='{value}'" for key, value in vars(obj).items()
+        f"{key.lstrip('_')}='{value}'" for key, value in vars(obj).items()
         if value is not None
     )
 
@@ -448,9 +451,10 @@ def _scalar_property(attr_name, value_type=None,
 
 def _resource_id_property(attr_name, allow_none=True, allow_empty=True):
     """
-    Creates a property for SiteXML resource identifier fields.
+    Creates a property for SERASiteXML resource identifier fields.
 
-    The SiteXML API stores resource identifiers internally as plain strings.
+    The SERASiteXML API stores resource identifiers internally as plain
+    strings.
     ``ResourceIdentifier`` inputs are accepted as a convenience and are
     normalized to their ``.id`` string value on assignment.
 

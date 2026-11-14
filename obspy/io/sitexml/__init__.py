@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.io.sitexml - SiteXML read and write support for ObsPy
+obspy.io.sitexml - SERASiteXML read and write support for ObsPy
 =================================================================
 
 :author:
@@ -19,14 +19,15 @@ Overview
 --------
 
 ``obspy.io.sitexml`` provides tools for working with seismological station
-metadata stored in SiteXML files, published SiteXML URLs, and related tabular
-inputs. The module reads and writes SiteXML, validates XML files against the
-bundled schema, and imports metadata from CSV and Excel sources into the
-internal :class:`~obspy.io.sitexml.core.SERASite` object model.
+metadata stored in SERASiteXML files, published SERASiteXML URLs, and
+related tabular inputs. The module reads and writes SERASiteXML, validates
+XML files against the bundled schema, and imports metadata from CSV and
+Excel sources into the internal :class:`~obspy.io.sitexml.core.SERASite`
+object model.
 
 .. seealso::
 
-    The public SiteXML schema documentation is available at
+    The public SERASiteXML schema documentation is available at
     `https://www.itsak.gr/SiteXML/ <https://www.itsak.gr/SiteXML/>`_.
 
 The top-level metadata object is :class:`~obspy.io.sitexml.core.SERASite`.
@@ -39,17 +40,17 @@ edits, including adding analyses, setting preferred analysis/profile IDs,
 iterating site indicators, and adding velocity profiles to one analysis.
 
 The following illustration shows the relationships between the most basic 
-SiteXML objects.
+SERASiteXML objects.
 
 .. figure:: /_images/SERASite.png
 
 Common Workflows
 ----------------
 
-Read/Write SiteXML
-~~~~~~~~~~~~~~~~~~
+Read/Write SERASiteXML
+~~~~~~~~~~~~~~~~~~~~~~
 
-Read a local SiteXML file into a ``SERASite`` object:
+Read a local SERASiteXML file into a ``SERASite`` object:
 
 .. code-block:: python
 
@@ -69,7 +70,7 @@ then applies the same schema validation and parsing used for local files:
     sera_site = read_sitexml(
         "https://example.org/sitexml/Site_XX.ABCD.xml")
 
-Validate a SiteXML file against the bundled schema:
+Validate a SERASiteXML file against the bundled schema:
 
 .. code-block:: python
 
@@ -94,7 +95,7 @@ the current directory using a default filename pattern, for example
 ``Site_XX.ABCD_12-01-2026.xml``. The date in the filename is taken from the
 same serialization timestamp written to the root ``creationTime`` element.
 
-Add document revision history when the SiteXML file should record what
+Add document revision history when the SERASiteXML file should record what
 changed across published versions:
 
 .. code-block:: python
@@ -117,7 +118,7 @@ the two times can differ when metadata changes are exported later.
 Associate with StationXML
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Associate the current published SiteXML URL with the corresponding
+Associate the current published SERASiteXML URL with the corresponding
 StationXML:
 
 .. code-block:: python
@@ -136,14 +137,14 @@ StationXML:
 The helper adds a station-level StationXML ``ExternalReference`` and
 returns the updated :class:`~obspy.core.inventory.inventory.Inventory`.
 Read and write the StationXML outside the helper when file I/O is needed.
-Because SiteXML filenames can include the document creation date, an
-existing SiteXML reference for the same station is replaced by default so
-StationXML points at the current SiteXML file. References written by this
+Because SERASiteXML filenames can include the document creation date, an
+existing SERASiteXML reference for the same station is replaced by default so
+StationXML points at the current SERASiteXML file. References written by this
 helper are recognized by their standard description, and manually added
 references can also be replaced when their URL basename follows the
-default SiteXML filename pattern. Other station external
+default SERASiteXML filename pattern. Other station external
 references are preserved. Pass ``replace_existing=False`` to append
-SiteXML reference history instead.
+SERASiteXML reference history instead.
 
 Import from CSV/Excel
 ~~~~~~~~~~~~~~~~~~~~~
@@ -175,8 +176,8 @@ dictionary of ``SERASite`` objects keyed by the ``siteID``:
         "full_site.xlsx",
         velocity_profiles="velocity_profiles.xlsx")
 
-Velocity profiles can also be added later to existing SiteXML objects. Use
-:meth:`~obspy.io.sitexml.core.SERASite.add_velocity_profiles` when you
+Velocity profiles can also be added later to existing SERASiteXML objects.
+Use :meth:`~obspy.io.sitexml.core.SERASite.add_velocity_profiles` when you
 already have ``VelocityProfile`` objects for one site and analysis. Use
 :func:`~obspy.io.sitexml.tabular.add_velocity_profiles` when the profiles
 are still in CSV or Excel form, or when one input table may update
@@ -200,7 +201,7 @@ The ``sitexml`` package ships with XML, CSV, and Excel examples under
 ``obspy/io/sitexml/tests/data``. These files are useful for interactive
 exploration.
 
-Read a bundled SiteXML example:
+Read a bundled SERASiteXML example:
 
 .. code-block:: python
 
@@ -278,7 +279,7 @@ imported ``SERASite`` objects:
     print(sera_site.site_description.overall_quality_index)
 
 Apply quality-index inputs later to an existing dictionary, for
-example after reading SiteXML files:
+example after reading SERASiteXML files:
 
 .. code-block:: python
 
@@ -289,7 +290,7 @@ example after reading SiteXML files:
     apply_quality_index_csv(sites, "quality_index.csv", delim=";")
 
 Write a site dictionary created from a CSV or Excel import back to
-schema-validated SiteXML:
+schema-validated SERASiteXML:
 
 .. code-block:: python
 
@@ -297,7 +298,7 @@ schema-validated SiteXML:
 
     sitedict_to_sitexml(sites, "./output_folder")
 
-Write one imported site back to schema-validated SiteXML:
+Write one imported site back to schema-validated SERASiteXML:
 
 .. code-block:: python
 
@@ -308,13 +309,13 @@ Write one imported site back to schema-validated SiteXML:
 Uncertainty Values
 ------------------
 
-SiteXML value/uncertainty pairs are represented by
+SERASiteXML value/uncertainty pairs are represented by
 :class:`~obspy.io.sitexml.core.ValueWithUncertainty`. The class intentionally
-keeps the SiteXML shape: one numeric ``value`` and one optional symmetric
+keeps the SERASiteXML shape: one numeric ``value`` and one optional symmetric
 ``uncertainty``. ObsPy also provides
 :class:`~obspy.core.util.obspy_types.FloatWithUncertainties`, but that type
 stores separate lower and upper uncertainties, so using it directly would
-require a policy for asymmetric values that SiteXML cannot represent.
+require a policy for asymmetric values that SERASiteXML cannot represent.
 
 Use the conversion helpers when interoperability with ObsPy's float subtype is
 needed:
@@ -333,18 +334,19 @@ needed:
 
 Asymmetric ObsPy uncertainties are rejected during conversion to avoid silent
 data loss. The ObsPy ``measurement_method`` metadata is not represented in the
-SiteXML value/uncertainty pair.
+SERASiteXML value/uncertainty pair.
 
 Owner Contact Conversion
 ------------------------
 
-SiteXML owner metadata is represented by
+SERASiteXML owner metadata is represented by
 :class:`~obspy.io.sitexml.core.SERASiteOwner`. The closest ObsPy inventory
 types are :class:`~obspy.core.inventory.util.Person` and
-:class:`~obspy.core.inventory.util.Operator`, but the models are not identical:
-SiteXML has one required owner and one required contact person, while ObsPy
-persons can have multiple names, agencies, emails, and operators can have
-multiple contacts.
+:class:`~obspy.core.inventory.util.Operator`, but the models are not
+identical:
+SERASiteXML has one required owner and one required contact person, while
+ObsPy persons can have multiple names, agencies, emails, and operators can
+have multiple contacts.
 
 Use the conversion helpers when exchanging contact metadata with ObsPy
 inventory objects:
@@ -367,10 +369,10 @@ inventory objects:
 
 When converting from an ObsPy ``Operator`` with multiple contacts, pass
 ``contact_index`` to select the contact to use. Without an explicit selection,
-the conversion raises a SiteXML validation error to avoid silently discarding
-contacts. SiteXML public IDs, contact homepage metadata, and institution
-address fields are not represented by ObsPy ``Person`` and ``Operator`` in a
-fully round-trippable way.
+the conversion raises a SERASiteXML validation error to avoid silently
+discarding contacts. SERASiteXML public IDs, contact homepage metadata, and
+institution address fields are not represented by ObsPy ``Person`` and
+``Operator`` in a fully round-trippable way.
 
 Import Requirements
 -------------------
@@ -381,9 +383,10 @@ include owner code/name and contact person first name, last name, and email
 address. Site descriptions require a site ID, site-description ID, latitude,
 and longitude. Optional analysis and velocity-profile inputs may be omitted;
 when they are explicitly provided but malformed, the import raises a
-SiteXML-specific exception instead of silently ignoring the broken metadata.
+SERASiteXML-specific exception instead of silently ignoring the broken
+metadata.
 
-Reference metadata follows the current SiteXML terminology: literature
+Reference metadata follows the current SERASiteXML terminology: literature
 sources use required ``title`` and ``firstAuthor`` fields, and external
 resources use ``externalReference`` metadata with ``uri`` and
 ``description`` fields. Resource identifiers are stored internally as plain

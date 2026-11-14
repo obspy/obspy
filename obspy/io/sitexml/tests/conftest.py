@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-SiteXML test fixtures.
+SERASiteXML test fixtures.
 """
 import pytest
 
@@ -8,9 +8,9 @@ import pytest
 @pytest.fixture(scope='module')
 def testdata_recursive(datapath):
     """
-    Dictionary with full paths to SiteXML test files by filename.
+    Dictionary with full paths to SERASiteXML test files by filename.
 
-    SiteXML fixtures are grouped into format subdirectories, so this local
+    SERASiteXML fixtures are grouped into format subdirectories, so this local
     fixture indexes files recursively while keeping the familiar filename keys.
     """
     files = {

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-A command-line program that converts SiteXML Excel metadata into SiteXML files.
+A command-line program that converts SERASiteXML Excel metadata into
+SERASiteXML files.
 """
 from argparse import ArgumentParser
 from pathlib import Path
@@ -13,7 +14,7 @@ from obspy.io.sitexml.tabular import excel_to_sera_site
 
 def excel2sitexml(options):
     """
-    Import Excel metadata and write one SiteXML file per site.
+    Import Excel metadata and write one SERASiteXML file per site.
     """
     sera_site_dict = excel_to_sera_site(
         path_or_file_object=options.path_or_file_object,
@@ -21,7 +22,7 @@ def excel2sitexml(options):
     output_folder = Path(options.output_folder)
     output_folder.mkdir(parents=True, exist_ok=True)
     sitedict_to_sitexml(sera_site_dict, output_folder=output_folder)
-    print("Wrote %d SiteXML file(s) to %s." % (
+    print("Wrote %d SERASiteXML file(s) to %s." % (
         len(sera_site_dict), output_folder))
 
 

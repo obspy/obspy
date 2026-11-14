@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-A command-line program that converts SiteXML CSV metadata into SiteXML files.
+A command-line program that converts SERASiteXML CSV metadata into
+SERASiteXML files.
 """
 from argparse import ArgumentParser
 from pathlib import Path
@@ -13,7 +14,7 @@ from obspy.io.sitexml.tabular import csv_to_sera_site
 
 def csv2sitexml(options):
     """
-    Import CSV metadata and write one SiteXML file per site.
+    Import CSV metadata and write one SERASiteXML file per site.
     """
     sera_site_dict = csv_to_sera_site(
         site_owner_csv=options.site_owner,
@@ -25,7 +26,7 @@ def csv2sitexml(options):
     output_folder = Path(options.output_folder)
     output_folder.mkdir(parents=True, exist_ok=True)
     sitedict_to_sitexml(sera_site_dict, output_folder=output_folder)
-    print("Wrote %d SiteXML file(s) to %s." % (
+    print("Wrote %d SERASiteXML file(s) to %s." % (
         len(sera_site_dict), output_folder))
 
 
@@ -36,7 +37,7 @@ def main(argv=None):
                         version='%(prog)s ' + __version__)
     parser.add_argument(
         '-out', '--output-folder', required=True,
-        help='folder where the generated SiteXML files will be written. '
+        help='folder where the generated SERASiteXML files will be written. '
         'Existing files with the same name will be overwritten.')
     parser.add_argument(
         '-o', '--site-owner', required=True,

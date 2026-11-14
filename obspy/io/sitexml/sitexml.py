@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Functions dealing with reading and writing SiteXML.
+Functions dealing with reading and writing SERASiteXML.
 Metadata is stored in a SERASite object.
 
 :author:
@@ -34,14 +34,15 @@ from .core import (Analysis, BedrockDepth, EC8, GeologicalUnit, H800,
 from .util import (SiteXMLIOError, SiteXMLValidationError,
                    _split_station_code)
 
-# Define some constants for writing SiteXML files.
+# Define some constants for writing SERASiteXML files.
 SCHEMA_VERSION = "1.3"
 NAMESPACE = "http://www.orfeus-eu.org/xml/site/1"
 
 
 def _is_url(path_or_file_object):
     """
-    Return ``True`` for HTTP(S) URL strings accepted by the SiteXML reader.
+    Return ``True`` for HTTP(S) URL strings accepted by the SERASiteXML
+    reader.
 
     :rtype: bool
     """
@@ -63,13 +64,13 @@ def _url_to_bytesio(url):
         return io.BytesIO(response.content)
     except requests.RequestException as e:
         raise SiteXMLIOError(
-            "Could not retrieve SiteXML URL '%s': %s" % (url, e)
+            "Could not retrieve SERASiteXML URL '%s': %s" % (url, e)
         )
 
 
 def _ns(tagname):
     """
-    Return a namespaced SiteXML tag name for lxml lookups.
+    Return a namespaced SERASiteXML tag name for lxml lookups.
 
     :rtype: str
     """
@@ -78,7 +79,7 @@ def _ns(tagname):
 
 def _package_data_path(*parts):
     """
-    Resolve SiteXML package data in source trees and PyInstaller bundles.
+    Resolve SERASiteXML package data in source trees and PyInstaller bundles.
 
     :rtype: :class:`pathlib.Path`
     """
@@ -86,6 +87,7 @@ def _package_data_path(*parts):
     if package_path.exists():
         return package_path
 
+    # Required by PyInstaller bundles, which store data in a temporary folder
     bundle_root = getattr(sys, "_MEIPASS", None)
     if bundle_root is not None:
         bundle_path = Path(bundle_root) / "obspy" / "io" / "sitexml"
@@ -93,12 +95,13 @@ def _package_data_path(*parts):
         if bundle_path.exists():
             return bundle_path
 
+    # TODOs: Here it should probably return None
     return package_path
 
 
 def _get_version_from_xmldoc(xmldoc):
     """
-    Return SiteXML version string or ``None`` if parsing fails.
+    Return SERASiteXML version string or ``None`` if parsing fails.
 
     :rtype: str or None
     """
@@ -120,7 +123,7 @@ def _get_version_from_xmldoc(xmldoc):
 def _is_sitexml(path_or_file_object):
     """
     Simple function checking if the passed object contains a valid
-    SiteXML file. Returns True of False.
+    SERASiteXML file. Returns True of False.
 
     The test is not exhaustive -
     it only checks the root tag and the schema version.
@@ -145,7 +148,7 @@ def _is_sitexml(path_or_file_object):
         if version is None:
             return False
         if version != SCHEMA_VERSION:
-            warnings.warn("The SiteXML file has version %s, ObsPy can "
+            warnings.warn("The SERASiteXML file has version %s, ObsPy can "
                           "read version (%s)." % (
                               version, ", ".join(SCHEMA_VERSION)))
         return True
@@ -159,7 +162,7 @@ def _is_sitexml(path_or_file_object):
 
 def validate_sitexml(path_or_object):
     """
-    Checks if the given path is a valid SiteXML file.
+    Checks if the given path is a valid SERASiteXML file.
 
     Returns a tuple. The first item is a boolean describing if the validation
     was successful or not. The second item is a list of all found validation
@@ -174,9 +177,9 @@ def validate_sitexml(path_or_object):
     >>> from obspy.io.sitexml.sitexml import validate_sitexml
     >>> validates, errors = validate_sitexml("site.xml")  # doctest: +SKIP
     >>> if validates:  # doctest: +SKIP
-    ...     print("This is valid SiteXML file")
+    ...     print("This is valid SERASiteXML file")
     ... else:
-    ...     print("The provided SiteXML file fails to validate "
+    ...     print("The provided SERASiteXML file fails to validate "
     ...           "against the schema.")
 
     """
@@ -200,7 +203,7 @@ def validate_sitexml(path_or_object):
             "data", "QuakeML-SERA-%s.xsd" % version)
 
         if not schema_location.exists():
-            msg = "No schema file found to validate SiteXML version '%s'"
+            msg = "No schema file found to validate SERASiteXML version '%s'"
             raise SiteXMLValidationError(msg % version)
 
         xmlschema = etree.XMLSchema(etree.parse(str(schema_location)))
@@ -219,17 +222,17 @@ def validate_sitexml(path_or_object):
                 pass
 
 
-# ##### READ SiteXML functionality
+# ##### READ SERASiteXML functionality
 #
 def sitexml_to_sitedict(path_or_file_object, pattern="*.xml"):
     """
-    Read one SiteXML file or all matching files in a directory.
+    Read one SERASiteXML file or all matching files in a directory.
 
     The returned dictionary is keyed by each site's resource ID.
 
     :type path_or_file_object: str, pathlib.Path, or file-like object
-    :param path_or_file_object: SiteXML file, file-like object, or
-        directory containing SiteXML files.
+    :param path_or_file_object: SERASiteXML file, file-like object, or
+        directory containing SERASiteXML files.
     :type pattern: str, optional
     :param pattern: Glob pattern used when ``path_or_file_object`` is a
         directory. Defaults to ``"*.xml"``.
@@ -238,7 +241,8 @@ def sitexml_to_sitedict(path_or_file_object, pattern="*.xml"):
     def _add_site(sera_site_dict, sera_site):
         if sera_site.resource_id in sera_site_dict:
             raise SiteXMLValidationError(
-                f"Duplicate SiteXML site resource_id: {sera_site.resource_id}"
+                f"Duplicate SERASiteXML site resource_id: "
+                f"{sera_site.resource_id}"
             )
         sera_site_dict[sera_site.resource_id] = sera_site
 
@@ -260,20 +264,21 @@ def sitexml_to_sitedict(path_or_file_object, pattern="*.xml"):
         return sera_site_dict
 
     raise SiteXMLIOError(
-        f"Could not access SiteXML file or directory: {path_or_file_object}"
+        f"Could not access SERASiteXML file or directory:"
+        f" {path_or_file_object}"
     )
 
 
 def read_sitexml(path_or_file_object):
     """
-    Function reading a SiteXML file.
+    Function reading a SERASiteXML file.
 
     :type path_or_file_object: str, pathlib.Path, URL, or file-like object
     :param path_or_file_object: The file name, HTTP(S) URL, or
         file-like object to read from.
     :rtype: :class:`~obspy.io.sitexml.core.SERASite`
 
-    Returns a SERASite object with metadata read from the provided SiteXML
+    Returns a SERASite object with metadata read from the provided SERASiteXML
     file. Input can be a Path, a URL, or a file-like object.
 
     At least site owner and site description metadata should be present
@@ -293,7 +298,7 @@ def read_sitexml(path_or_file_object):
     validates, errors = validate_sitexml(path_or_file_object)
     if validates is False:
         msg = (
-            "The provided SiteXML file fails to validate against the "
+            "The provided SERASiteXML file fails to validate against the "
             "schema.\n"
         )
         for err in errors:
@@ -328,7 +333,7 @@ def read_sitexml(path_or_file_object):
     else:
         raise SiteXMLValidationError(
             "Missing site owner and/or site description in provided "
-            "SiteXML file."
+            "SERASiteXML file."
         )
 
     # Analysis element is optional
@@ -718,7 +723,7 @@ def _read_velocity_profile_set(analysis_element, analysis_obj):
         velocity_profile_set_element)
 
     # At least one velocity profile or a reference should be present in
-    # SiteXML in order to create the VelocityProfileSet object.
+    # SERASiteXML in order to create the VelocityProfileSet object.
     if len(velocity_profile_element_list) == 0 \
             and vp_literature_source is None \
             and not vp_external_references:
@@ -807,7 +812,7 @@ def _read_velocity_profile_data(vp_data_element):
 def _read_site_indicator(parent, site_indicator_name, site_indicator_cls,
                          value_with_uncertainty=False):
     """
-    Read one nested SiteXML site indicator into its API object.
+    Read one nested SERASiteXML site indicator into its API object.
 
     :rtype: :class:`~obspy.io.sitexml.core.SiteIndicator` or None
     """
@@ -955,14 +960,14 @@ def _read_external_reference(ref_element):
     return ExternalReference(uri=uri, description=description)
 
 
-# ##### WRITE SiteXML functionality
+# ##### WRITE SERASiteXML functionality
 #
 def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     """
-    Exports a dictionary of SERASite objects to SiteXML files.
+    Exports a dictionary of SERASite objects to SERASiteXML files.
 
     The files are written to a folder given with argument ``output_folder``.
-    The name of each SiteXML file uses
+    The name of each SERASiteXML file uses
     :meth:`~obspy.io.sitexml.core.SERASite.get_sitexml_filename`, currently
     ``Site_<station-or-site-id>_<DD-MM-YYYY>.xml``. The date is the same
     creation time written to the root ``creationTime`` element.
@@ -971,8 +976,8 @@ def sitedict_to_sitexml(sera_site_dict, output_folder="."):
         :class:`~obspy.io.sitexml.core.SERASite`, required
     :param sera_site_dict: Dictionary of SERASite objects.
     :type output_folder: str or pathlib.Path, optional
-    :param output_folder: Output folder to write the SiteXML files. If not
-        provided writes to the current folder.
+    :param output_folder: Output folder to write the SERASiteXML files.
+        If not provided writes to the current folder.
     :rtype: None
     """
     output_folder = Path(output_folder)
@@ -996,11 +1001,11 @@ def write_sitexml(sera_site, file_or_file_object=None, validate=True,
         optional
     :param file_or_file_object: The file or file-like object to be written
         to. If omitted or None, the file is written to the current directory
-        using a default SiteXML filename.
+        using a default SERASiteXML filename.
     :type validate: bool, optional
     :param validate: If True, the created document will be validated with
-        the SiteXML schema before being written. Defaults to True which is
-        the recommended usage.
+        the SERASiteXML schema before being written. Defaults to True which
+        is the recommended usage.
     :type creation_time: :class:`~obspy.core.utcdatetime.UTCDateTime` or
         convertible, optional
     :param creation_time: Creation time to stamp into the root
@@ -1015,8 +1020,9 @@ def write_sitexml(sera_site, file_or_file_object=None, validate=True,
     >>> write_sitexml(sera_site, validate=True)  # doctest: +SKIP
 
     """
-    # Validate cross-references in the in-memory SiteXML object graph before
-    # emitting XML, so broken internal IDs fail early with API-level errors.
+    # Validate cross-references in the in-memory SERASiteXML object graph
+    # before emitting XML, so broken internal IDs fail early with API-level
+    # errors.
     sera_site.validate_references()
 
     attribs = {"schemaVersion": SCHEMA_VERSION}
@@ -1436,21 +1442,22 @@ def _obj2tag(parent, tag_name, tag_value):
         etree.SubElement(parent, tag_name).text = str(tag_value)
 
 
-# ##### Associate SiteXML with the respective StationXML
+# ##### Associate SERASiteXML with the respective StationXML
 #
-_STATIONXML_SITEXML_DESCRIPTION = "SERA SiteXML site characterization"
+_STATIONXML_SITEXML_DESCRIPTION = "SERASiteXML site characterization"
 
 
 def _is_station_sitexml_uri(uri, station_code):
     """
-    Return whether ``uri`` looks like the official SiteXML file for station.
+    Return whether ``uri`` looks like the official SERASiteXML file for
+    station.
 
     :type uri: str or None
     :param uri: External-reference URI to inspect.
     :type station_code: str
     :param station_code: FDSN network and station code in ``network.station``
         notation. The full station code is matched against the default
-        SiteXML filename patterns.
+        SERASiteXML filename patterns.
     :rtype: bool
     """
     if not uri:
@@ -1466,7 +1473,7 @@ def _is_station_sitexml_uri(uri, station_code):
 
 def _is_managed_sitexml_reference(ref):
     """
-    Return whether ``ref`` was written by the SiteXML StationXML helper.
+    Return whether ``ref`` was written by the SERASiteXML StationXML helper.
 
     :type ref: :class:`~obspy.core.inventory.util.ExternalReference`
     :param ref: Station-level external reference to inspect.
@@ -1479,24 +1486,24 @@ def _is_managed_sitexml_reference(ref):
 def _add_station_sitexml_reference(station, station_code, sitexml_url,
                                    description, replace_existing):
     """
-    Add or replace the station-level SiteXML ``ExternalReference``.
+    Add or replace the station-level SERASiteXML ``ExternalReference``.
 
     :type station: :class:`~obspy.core.inventory.station.Station`
     :param station: StationXML station object whose ``external_references``
         list will be updated in place.
     :type station_code: str
     :param station_code: FDSN network and station code in ``network.station``
-        notation. Used to recognize existing default SiteXML filenames.
+        notation. Used to recognize existing default SERASiteXML filenames.
     :type sitexml_url: str
-    :param sitexml_url: URL of the SiteXML document to store in the new
+    :param sitexml_url: URL of the SERASiteXML document to store in the new
         external reference.
     :type description: str
     :param description: Complete external-reference description, including
         the ``added YYYY-MM-DD`` marker.
     :type replace_existing: bool
-    :param replace_existing: If ``True``, replace matching SiteXML references;
-        if ``False``, append the new reference unless its URL is already
-        present.
+    :param replace_existing: If ``True``, replace matching SERASiteXML
+        references; if ``False``, append the new reference unless its URL
+        is already present.
     :rtype: None
     """
     new_ref = ExternalReference(uri=sitexml_url, description=description)
@@ -1535,21 +1542,21 @@ def add_sitexml_reference(inventory, station_code, sitexml_url, *,
                           description=None, added_time=None,
                           replace_existing=True):
     """
-    Add a station-level SiteXML reference to a StationXML inventory.
+    Add a station-level SERASiteXML reference to a StationXML inventory.
 
-    Attach a SiteXML remote URL as a StationXML
+    Attach a SERASiteXML remote URL as a StationXML
     :class:`~obspy.core.inventory.util.ExternalReference`.
 
     Use ``station_code`` to select a
     :class:`~obspy.core.inventory.station.Station` object from ``inventory``,
-    add an ``ExternalReference`` pointing to the current URL of the SiteXML
-    file, and return the updated inventory. By default, an existing SiteXML
-    reference for the same station is replaced so the StationXML pointer
-    stays current when dated SiteXML filenames change.
+    add an ``ExternalReference`` pointing to the current URL of the SERASiteXML
+    file, and return the updated inventory. By default, an existing
+    SERASiteXML reference for the same station is replaced so the StationXML
+    pointer stays current when dated SERASiteXML filenames change.
 
     The ``ExternalReference.description`` is timestamped with either the
     date the reference is written or a date provided by the user with
-    ``added_time``. The helper does not read the SiteXML document to
+    ``added_time``. The helper does not read the SERASiteXML document to
     reuse its root ``creationTime`` for that purpose.
 
     :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
@@ -1558,10 +1565,10 @@ def add_sitexml_reference(inventory, station_code, sitexml_url, *,
     :param station_code: FDSN network and station code in ``network.station``
         notation.
     :type sitexml_url: str, required
-    :param sitexml_url: URL of the SiteXML document to reference.
+    :param sitexml_url: URL of the SERASiteXML document to reference.
     :type description: str, optional
     :param description: StationXML external-reference description. If
-        omitted, a SERA SiteXML description is used. The date the reference
+        omitted, a SERASiteXML description is used. The date the reference
         was added is appended to the description.
     :type added_time: :class:`~obspy.core.utcdatetime.UTCDateTime` or
         compatible, optional
@@ -1569,8 +1576,8 @@ def add_sitexml_reference(inventory, station_code, sitexml_url, *,
         the external-reference description. Defaults to the current UTC time.
     :type replace_existing: bool, optional
     :param replace_existing: If ``True`` (default), replace an existing
-        SiteXML station reference written by this helper or one whose URL
-        uses the default SiteXML filename pattern for ``station_code``. If
+        SERASiteXML station reference written by this helper or one whose URL
+        uses the default SERASiteXML filename pattern for ``station_code``. If
         ``False``, append a new reference unless the exact URL is already
         present.
 
@@ -1589,7 +1596,7 @@ def add_sitexml_reference(inventory, station_code, sitexml_url, *,
     """
     if not station_code:
         raise SiteXMLValidationError(
-            "Cannot add SiteXML reference without station_code."
+            "Cannot add SERASiteXML reference without station_code."
         )
     network_code, station_only_code = _split_station_code(station_code)
     matches = [

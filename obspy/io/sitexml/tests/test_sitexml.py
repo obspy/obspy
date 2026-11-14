@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Test suite for the SiteXML reader and writer.
+Test suite for the SERASiteXML reader and writer.
 
 :author:
     Kiriaki Konstantinidou (kiriaki@itsak.gr), 2026
@@ -41,7 +41,7 @@ from obspy.io.sitexml.util import SiteXMLIOError, SiteXMLValidationError
 
 class TestSiteXML():
     """
-    Test Suite for Read/Write SiteXML Documents
+    Test Suite for Read/Write SERASiteXML Documents
     """
     def _minimal_sera_site(self, station_code="XX.ABCD",
                            resource_id="quakeml:domain.ab/site/001"):
@@ -66,7 +66,8 @@ class TestSiteXML():
 
     def test_get_sitexml_filename(self):
         """
-        The default SiteXML filename is deterministic, with an optional date.
+        The default SERASiteXML filename is deterministic, with an optional
+        date.
         """
         station_site = self._minimal_sera_site(station_code="XX.ABCD")
         assert station_site.get_sitexml_filename() == "Site_XX.ABCD.xml"
@@ -150,7 +151,7 @@ class TestSiteXML():
         write_sitexml(site_002, tmp_path / "b.xml")
 
         with pytest.raises(
-                SiteXMLValidationError, match="Duplicate SiteXML site"):
+                SiteXMLValidationError, match="Duplicate SERASiteXML site"):
             sitexml_to_sitedict(tmp_path)
 
     def test_sitexml_to_sitedict_rejects_missing_path(self, tmp_path):
@@ -672,7 +673,7 @@ class TestSiteXML():
 
     def test_add_sitexml_reference(self):
         """
-        SiteXML URL is added as StationXML station ExternalReference.
+        SERASiteXML URL is added as StationXML station ExternalReference.
         """
         station = Station(
             code="ABCD", latitude=1.0, longitude=2.0, elevation=3.0)
@@ -691,11 +692,11 @@ class TestSiteXML():
         assert len(refs) == 1
         assert refs[0].uri == "https://example.org/site.xml"
         assert refs[0].description == (
-            "SERA SiteXML site characterization; added 2026-05-02")
+            "SERASiteXML site characterization; added 2026-05-02")
 
     def test_add_sitexml_reference_replaces_managed_reference(self):
         """
-        Existing helper-written SiteXML references are kept current.
+        Existing helper-written SERASiteXML references are kept current.
         """
         station = Station(
             code="ABCD", latitude=1.0, longitude=2.0, elevation=3.0)
@@ -703,7 +704,7 @@ class TestSiteXML():
             ExternalReference(
                 uri="https://example.org/sitexml/"
                     "Site_XX.ABCD_01-05-2026.xml",
-                description="SERA SiteXML site characterization; "
+                description="SERASiteXML site characterization; "
                     "added 2026-05-01"),
             ExternalReference(
                 uri="https://example.org/other.xml",
@@ -725,12 +726,12 @@ class TestSiteXML():
             "https://example.org/other.xml",
         ]
         assert refs[0].description == (
-            "SERA SiteXML site characterization; added 2026-05-02")
+            "SERASiteXML site characterization; added 2026-05-02")
 
     def test_add_sitexml_reference_replaces_manual_station_filename(
             self):
         """
-        Manual references using the default SiteXML filename are replaced.
+        Manual references using the default SERASiteXML filename are replaced.
         """
         station = Station(
             code="ABCD", latitude=1.0, longitude=2.0, elevation=3.0)
@@ -738,11 +739,11 @@ class TestSiteXML():
             ExternalReference(
                 uri="https://example.org/sitexml/"
                     "Site_XX.ABCD.xml",
-                description="Manually added SiteXML link"),
+                description="Manually added SERASiteXML link"),
             ExternalReference(
                 uri="https://example.org/sitexml/"
                     "Site_YY.ABCD_01-05-2026.xml",
-                description="Different station SiteXML link"),
+                description="Different station SERASiteXML link"),
         ]
         inventory = Inventory(
             networks=[Network(code="XX", stations=[station])],
@@ -759,11 +760,12 @@ class TestSiteXML():
             "https://example.org/sitexml/Site_YY.ABCD_01-05-2026.xml",
         ]
         assert station.external_references[0].description == (
-            "SERA SiteXML site characterization; added 2026-05-02")
+            "SERASiteXML site characterization; added 2026-05-02")
 
     def test_add_sitexml_reference_can_append_history(self):
         """
-        Replacement can be disabled when callers want to keep SiteXML history.
+        Replacement can be disabled when callers want to keep SERASiteXML
+        history.
         """
         station = Station(
             code="ABCD", latitude=1.0, longitude=2.0, elevation=3.0)
@@ -771,7 +773,7 @@ class TestSiteXML():
             ExternalReference(
                 uri="https://example.org/sitexml/"
                     "Site_XX.ABCD_01-05-2026.xml",
-                description="SERA SiteXML site characterization; "
+                description="SERASiteXML site characterization; "
                     "added 2026-05-01"),
         ]
         inventory = Inventory(
@@ -815,7 +817,7 @@ class TestSiteXML():
     def test_station_code_schema_rejects_invalid_notation(
             self, testdata_recursive):
         """
-        The SiteXML schema rejects the same invalid station notation.
+        The SERASiteXML schema rejects the same invalid station notation.
         """
         xml = testdata_recursive["full_site_description.xml"].read_text(
             encoding="utf-8")
@@ -828,7 +830,8 @@ class TestSiteXML():
     def test_station_code_schema_accepts_alphanumeric_notation(
             self, testdata_recursive):
         """
-        The SiteXML schema accepts uppercase alphanumeric station notation.
+        The SERASiteXML schema accepts uppercase alphanumeric station
+        notation.
         """
         xml = testdata_recursive["full_site_description.xml"].read_text(
             encoding="utf-8")
@@ -841,7 +844,7 @@ class TestSiteXML():
 
     def test_schema_accepts_revision_history(self, testdata_recursive):
         """
-        The SiteXML schema accepts root-level document revision history.
+        The SERASiteXML schema accepts root-level document revision history.
         """
         xml = testdata_recursive["minimal_sitexml.xml"].read_text(
             encoding="utf-8")
@@ -876,7 +879,7 @@ class TestSiteXML():
     def test_package_data_path_supports_pyinstaller_bundle(
             self, tmp_path, monkeypatch):
         """
-        SiteXML schema data can be resolved from a PyInstaller bundle.
+        SERASiteXML schema data can be resolved from a PyInstaller bundle.
         """
         bundle_schema = (
             tmp_path / "obspy" / "io" / "sitexml" / "data" /
@@ -912,7 +915,8 @@ class TestSiteXML():
 
     def test_value_with_uncertainty_to_float_with_uncertainties(self):
         """
-        SiteXML symmetric uncertainty maps to both ObsPy uncertainty sides.
+        SERASiteXML symmetric uncertainty maps to both ObsPy uncertainty
+        sides.
         """
         value = ValueWithUncertainty(12.5, uncertainty=0.4)
 
@@ -925,7 +929,8 @@ class TestSiteXML():
 
     def test_value_with_uncertainty_from_float_with_uncertainties(self):
         """
-        Symmetric ObsPy uncertainty can be represented as SiteXML uncertainty.
+        Symmetric ObsPy uncertainty can be represented as SERASiteXML
+        uncertainty.
         """
         value = FloatWithUncertainties(
             12.5, lower_uncertainty=0.4, upper_uncertainty=0.4)
@@ -947,7 +952,7 @@ class TestSiteXML():
 
     def test_site_owner_to_person(self):
         """
-        SiteXML contact metadata maps to ObsPy Person lists.
+        SERASiteXML contact metadata maps to ObsPy Person lists.
         """
         site_owner = SERASiteOwner(
             owner_codename="SITEOWNER",
@@ -966,7 +971,7 @@ class TestSiteXML():
 
     def test_site_owner_to_operator(self):
         """
-        SiteXML owner metadata maps to an ObsPy Operator with one contact.
+        SERASiteXML owner metadata maps to an ObsPy Operator with one contact.
         """
         site_owner = SERASiteOwner(
             owner_codename="SITEOWNER",
@@ -986,7 +991,7 @@ class TestSiteXML():
 
     def test_site_owner_from_person(self):
         """
-        ObsPy Person metadata can seed SiteXML owner contact metadata.
+        ObsPy Person metadata can seed SERASiteXML owner contact metadata.
         """
         person = Person(
             names=["Name Surname"],
@@ -1007,7 +1012,7 @@ class TestSiteXML():
 
     def test_site_owner_from_operator(self):
         """
-        ObsPy Operator metadata can seed SiteXML owner contact metadata.
+        ObsPy Operator metadata can seed SERASiteXML owner contact metadata.
         """
         operator = Operator(
             agency="Site Owner Full Name",
@@ -1043,7 +1048,7 @@ class TestSiteXML():
     def _assert_site_xml_equality(self, xml_file_buffer,
                                   expected_xml_file_buffer):
         """
-        Helper function comparing two BytesIO buffers contain SiteXML
+        Helper function comparing two BytesIO buffers contain SERASiteXML
         files.
         """
         new_lines = [_i.decode('utf-8').strip().replace("'", '"')
@@ -1089,7 +1094,7 @@ class TestSiteXML():
 
     def _write_and_compare(self, orig_filename, sera_site):
         """
-        Helper function for creating two BytesIO buffers contain SiteXML
+        Helper function for creating two BytesIO buffers contain SERASiteXML
         files to be compared by _assert_site_xml_equality().
 
         :type orig_filename: str
@@ -1138,7 +1143,7 @@ class TestSiteXML():
 
     def test_read_and_write_minimal_file(self, testdata_recursive):
         """
-        Test that reading and writing of a minimal SiteXML document,
+        Test that reading and writing of a minimal SERASiteXML document,
         with the least possible tags, works.
         """
         filename = testdata_recursive["minimal_sitexml.xml"]
@@ -1690,7 +1695,7 @@ class TestSiteXML():
 
     def test_read_and_write_full_file(self, testdata_recursive):
         """
-        Test that reading and writing of a full SiteXML document with all
+        Test that reading and writing of a full SERASiteXML document with all
         possible tags works.
         """
         filename = testdata_recursive["full_sitexml.xml"]
@@ -1701,7 +1706,7 @@ class TestSiteXML():
 
     def test_reading_and_writing_full_site_owner_tag(self, testdata_recursive):
         """
-        Tests reading and writing a full SiteXML <siteOwner> tag.
+        Tests reading and writing a full SERASiteXML <siteOwner> tag.
         """
         filename = testdata_recursive["full_site_owner.xml"]
         sera_site = read_sitexml(filename)
@@ -1743,7 +1748,7 @@ class TestSiteXML():
     def test_reading_and_writing_full_site_description_tag(
             self, testdata_recursive):
         """
-        Tests reading and writing a full SiteXML <siteDescription> tag.
+        Tests reading and writing a full SERASiteXML <siteDescription> tag.
         """
         filename = testdata_recursive["full_site_description.xml"]
         sera_site = read_sitexml(filename)
@@ -1841,8 +1846,8 @@ class TestSiteXML():
     def test_reading_and_writing_full_site_description_without_station_tag(
             self, testdata_recursive):
         """
-        Tests reading and writing a full SiteXML <siteDescription> tag for a
-        site without a station installation.
+        Tests reading and writing a full SERASiteXML <siteDescription> tag
+        for a site without a station installation.
         """
         filename = testdata_recursive[
             "full_site_description_without_station.xml"]
@@ -1886,7 +1891,7 @@ class TestSiteXML():
 
     def test_reading_and_writing_full_analysis_tag(self, testdata_recursive):
         """
-        Tests reading and writing a full SiteXML <analysis> tag.
+        Tests reading and writing a full SERASiteXML <analysis> tag.
         """
         filename = testdata_recursive["full_analysis.xml"]
         sera_site = read_sitexml(filename)
@@ -1968,7 +1973,7 @@ class TestSiteXML():
     def test_reading_and_writing_velocity_profile_tag(
             self, testdata_recursive):
         """
-        Tests reading and writing a full SiteXML <velocityProfileSet> tag.
+        Tests reading and writing a full SERASiteXML <velocityProfileSet> tag.
         """
         filename = testdata_recursive["full_analysis.xml"]
         sera_site = read_sitexml(filename)

@@ -1,22 +1,22 @@
-====================
-Working With SiteXML
-====================
+========================
+Working With SERASiteXML
+========================
 
-SiteXML stores site-characterization metadata for seismic stations and
-locations. ObsPy reads local SiteXML files and published SiteXML URLs into
-:class:`~obspy.io.sitexml.core.SERASite` objects, writes those objects back to
-schema-validated XML, and can build the same objects from CSV or Excel input
-tables.
+SERASiteXML stores site-characterization metadata for seismic stations and
+locations. ObsPy reads local SERASiteXML files and published SERASiteXML URLs
+into :class:`~obspy.io.sitexml.core.SERASite` objects, writes those objects
+back to schema-validated XML, and can build the same objects from CSV or Excel
+input tables.
 
 The examples below use the small fixtures bundled with ObsPy. They are
 convenient for learning the file layout before using project-specific files.
 
-Reading And Validating SiteXML
-------------------------------
+Reading And Validating SERASiteXML
+----------------------------------
 
-Use :func:`~obspy.io.sitexml.sitexml.read_sitexml` to read one SiteXML file or
-HTTP(S) URL. The returned object contains the owner, the site description, and
-optional analysis objects.
+Use :func:`~obspy.io.sitexml.sitexml.read_sitexml` to read one SERASiteXML file
+or HTTP(S) URL. The returned object contains the owner, the site description,
+and optional analysis objects.
 
 .. code-block:: python
 
@@ -31,9 +31,9 @@ optional analysis objects.
     print(site.site_description.station_code)
     print(len(site.analysis))
 
-For a published SiteXML document, pass the URL directly. ObsPy retrieves the
-remote XML and uses the same schema validation and parser as it does for local
-files.
+For a published SERASiteXML document, pass the URL directly. ObsPy retrieves
+the remote XML and uses the same schema validation and parser as it does for
+local files.
 
 .. code-block:: python
 
@@ -41,7 +41,7 @@ files.
 
     site = read_sitexml("https://example.org/sitexml/Site_XX.ABCD.xml")
 
-SiteXML validation is available separately with
+SERASiteXML validation is available separately with
 :func:`~obspy.io.sitexml.sitexml.validate_sitexml`. It returns a boolean and a
 list of schema-validation errors.
 
@@ -54,8 +54,8 @@ list of schema-validation errors.
         for error in errors:
             print(error)
 
-Writing SiteXML
----------------
+Writing SERASiteXML
+-------------------
 
 Use :func:`~obspy.io.sitexml.sitexml.write_sitexml` to write one
 ``SERASite``. Validation is enabled by default, so schema problems are reported
@@ -75,9 +75,9 @@ the current directory using the default filename pattern described in
 Reading Or Writing Site Dictionaries
 ------------------------------------
 
-A directory of SiteXML files can be read as a dictionary keyed by
+A directory of SERASiteXML files can be read as a dictionary keyed by
 ``SERASite.resource_id``. The reverse helper writes each site to its default
-SiteXML filename.
+SERASiteXML filename.
 
 .. code-block:: python
 
@@ -95,10 +95,10 @@ SiteXML filename.
 
 .. _sitexml-filenames-and-revision-history:
 
-SiteXML filenames and revision history
---------------------------------------
+SERASiteXML filenames and revision history
+------------------------------------------
 
-SiteXML filenames identify the site and, for ObsPy generated files, **the
+SERASiteXML filenames identify the site and, for ObsPy generated files, **the
 publication date**. For a station-backed site, the base filename is built
 from ``Site_`` and the ``network.station`` code stored in
 ``SiteDescription.station_code``:
@@ -109,7 +109,7 @@ from ``Site_`` and the ``network.station`` code stored in
     Site_XX.ABCD_05-05-2026.xml         # Default filename - publication date
 
 For sites without an associated station code, the base filename is derived from
-the ``SERASite.resource_id`` using the compact SiteXML site identifier:
+the ``SERASite.resource_id`` using the compact SERASiteXML site identifier:
 
 .. code-block:: text
 
@@ -138,7 +138,7 @@ will be appended in the base filename.
     is not necessarily the date when the site was measured, or
     characterized.
 
-SiteXML can also store optional document revision history.
+SERASiteXML can also store optional document revision history.
 ``SERASite.created`` records when this XML file is generated, while each
 ``Revision.revision_time`` records when the described document revision
 occurred. These times can differ when metadata changes are reviewed, migrated,
@@ -160,7 +160,7 @@ URL of the previous published version.
 Resource Identifiers And Preferred IDs
 --------------------------------------
 
-SiteXML uses resource identifiers to connect the top-level site object with
+SERASiteXML uses resource identifiers to connect the top-level site object with
 its nested site description, analyses, velocity profiles, owner, and contact
 metadata. ObsPy stores these identifiers internally as plain strings. Values
 passed as ObsPy ``ResourceIdentifier`` objects are accepted as input
@@ -243,11 +243,11 @@ objects are attached to the site before updating the preferred IDs.
 Reference Validation And Preserving User Intent
 -----------------------------------------------
 
-SiteXML contains internal references between objects: a top-level site points
-to one site description, each analysis points back to that site description,
-velocity-profile rows belong to a specific analysis, and preferred IDs select
-one analysis or velocity profile. **ObsPy validates these relationships, but
-it does not repair them by guessing what the user meant.**
+SERASiteXML contains internal references between objects: a top-level site
+points to one site description, each analysis points back to that site
+description, velocity-profile rows belong to a specific analysis, and preferred
+IDs select one analysis or velocity profile. **ObsPy validates these
+relationships, but it does not repair them by guessing what the user meant.**
 
 This is a deliberate design choice. When a site has several analyses or
 velocity profiles, a missing or inconsistent ID is ambiguous. Automatically
@@ -294,7 +294,7 @@ with a warning, because there is no analysis or velocity-profile object to
 reference. If analysis metadata is present but velocity-profile metadata is
 omitted, ``preferredSiteAnalysisID`` is preserved when valid, while
 ``preferredVelocityProfileID`` is ignored with a warning. The ignored preferred
-values are not written to generated SiteXML.
+values are not written to generated SERASiteXML.
 
 If you want ObsPy to set preferred relationships for you, use the explicit
 object helpers. These helpers validate the selected objects before changing
@@ -322,16 +322,16 @@ use that same lookup behavior.
   preferred IDs back into ``SiteDescription`` and do not change the XML
   metadata unless you explicitly assign those fields.
 
-Creating A SiteXML File From Scratch
-------------------------------------
+Creating A SERASiteXML File From Scratch
+----------------------------------------
 
-Creating a SiteXML file directly in Python is useful when metadata already
+Creating a SERASiteXML file directly in Python is useful when metadata already
 exists in application objects or another structured source. It is not always
 shorter than preparing CSV or Excel input, but it keeps the object graph
-explicit and lets ObsPy validate the result against the bundled SiteXML schema
-when writing.
+explicit and lets ObsPy validate the result against the bundled SERASiteXML
+schema when writing.
 
-A minimal SiteXML document needs a top-level
+A minimal SERASiteXML document needs a top-level
 :class:`~obspy.io.sitexml.core.SERASite`, a required
 :class:`~obspy.io.sitexml.core.SERASiteOwner`, and a required
 :class:`~obspy.io.sitexml.core.SiteDescription`. Analyses and site indicators
@@ -341,11 +341,11 @@ they should be stable and unique, and relationship fields such as
 objects.
 
 The following illustration shows the relationships between the most basic
-SiteXML objects.
+SERASiteXML objects.
 
 .. figure:: /_images/SERASite.png
 
-The following example creates a small SiteXML site with owner/contact
+The following example creates a small SERASiteXML site with owner/contact
 metadata, location metadata, a few site-description indicators, one analysis,
 and a Vs30 indicator:
 
@@ -392,7 +392,7 @@ and a Vs30 indicator:
 
     site.add_revision(
         revision_time="2026-05-02T12:00:00Z",
-        description="Created initial SiteXML document.",
+        description="Created initial SERASiteXML document.",
         author="Some Author (email@example.com)")
 
     with TemporaryDirectory() as tmpdir:
@@ -409,7 +409,7 @@ revision fields are described in :ref:`sitexml-filenames-and-revision-history`.
 
 When creating or editing a ``SERASite`` object in Python, use
 ``SERASite.iter_site_indicators()`` to apply shared metadata to a selected set
-of existing indicators. The iterator yields SiteXML indicator names such as
+of existing indicators. The iterator yields SERASiteXML indicator names such as
 ``siteClassEC8``, ``bedrockDepth``, and ``h800``.
 
 .. code-block:: python
@@ -503,19 +503,20 @@ column and the same layer columns used by CSV import.
     site = sites["quakeml:domain.ab/site/001"]
     print(site.site_description.station_code)
 
-Associating SiteXML With StationXML
------------------------------------
+Associating SERASiteXML With StationXML
+---------------------------------------
 
-SiteXML can be associated with the corresponding StationXML by adding the
-current published SiteXML URL as a station-level StationXML
-``ExternalReference``. The SiteXML file itself stores the station association
-in ``SiteDescription.station_code`` using ``network.station`` notation, for
-example ``XX.ABCD``. Because SiteXML filenames can include a publication date
-(:ref:`sitexml-filenames-and-revision-history`), the StationXML reference is
-treated as the current pointer to the latest published SiteXML document.
+SERASiteXML can be associated with the corresponding StationXML by adding the
+current published SERASiteXML URL as a station-level StationXML
+``ExternalReference``. The SERASiteXML file itself stores the station
+association in ``SiteDescription.station_code`` using ``network.station``
+notation, for example ``XX.ABCD``. Because SERASiteXML filenames can include
+a publication date (:ref:`sitexml-filenames-and-revision-history`), the
+StationXML reference is treated as the current pointer to the latest published
+SERASiteXML document.
 
 Use :func:`~obspy.io.sitexml.sitexml.add_sitexml_reference` to add or
-update the StationXML reference that points to the SiteXML URL.
+update the StationXML reference that points to the SERASiteXML URL.
 
 Inventory Input
 ~~~~~~~~~~~~~~~
@@ -575,16 +576,16 @@ want to export the updated StationXML.
 Keeping The Reference Current
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``sitexml_url`` should be the URL where the current SiteXML document is
-published.
+The ``sitexml_url`` should be the URL where the current SERASiteXML document
+is published.
 By default, :func:`~obspy.io.sitexml.sitexml.add_sitexml_reference`
-replaces an existing SiteXML station reference instead of appending another
+replaces an existing SERASiteXML station reference instead of appending another
 dated URL. It replaces references written by this helper and manually added
-references whose URL basename follows the default SiteXML station filename
+references whose URL basename follows the default SERASiteXML station filename
 pattern, for example ``Site_XX.ABCD_02-05-2026.xml``. Other station external
 references are left untouched.
 
-If the StationXML file should preserve a history of SiteXML URLs, disable
+If the StationXML file should preserve a history of SERASiteXML URLs, disable
 replacement explicitly:
 
 .. code-block:: python
@@ -603,9 +604,9 @@ Reference Description And Date
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The StationXML ``ExternalReference.description`` records when the reference was
-added, for example ``SERA SiteXML site characterization; added 2026-05-02``.
+added in the form ``added YYYY-MM-DD``.
 By default the added date is the current UTC date. If you need reproducible
-output or want to use the SiteXML document creation date, pass
+output or want to use the SERASiteXML document creation date, pass
 ``added_time``. If the default external-reference text is not specific enough,
 pass a custom ``description``; the added-date marker is appended to the custom
 text:
@@ -616,7 +617,7 @@ text:
         inventory,
         station_code="XX.ABCD",
         sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
-        description="SERA SiteXML site characterization for XX.ABCD",
+        description="SERASiteXML site characterization for XX.ABCD",
         added_time=UTCDateTime(2026, 5, 2))
 
     inventory.write("XX.ABCD.stationxml.xml", format="STATIONXML")
@@ -625,18 +626,18 @@ Bare station codes such as ``ABCD`` should not be used for this association,
 because StationXML station codes are only unique together with their network
 code.
 
-Updating a SiteXML file
------------------------
+Updating a SERASiteXML file
+---------------------------
 
-Existing SiteXML files can be read from a local path or from a published
+Existing SERASiteXML files can be read from a local path or from a published
 HTTP(S) URL, modified in memory, and written back to a new XML file. This is
 useful when one indicator needs to be corrected or when new site
 characterization metadata become available.
 
 Use :meth:`~obspy.io.sitexml.core.SERASite.add_site_indicator` to add or
 replace site indicators. The method routes each indicator to the correct
-SiteXML object location by its indicator name. For example, ``EC8`` is written
-to ``site.site_description.ec8`` and ``BedrockDepth`` is written to
+SERASiteXML object location by its indicator name. For example, ``EC8`` is
+written to ``site.site_description.ec8`` and ``BedrockDepth`` is written to
 ``site.site_description.bedrock_depth``.
 
 .. code-block:: python
@@ -650,7 +651,7 @@ to ``site.site_description.ec8`` and ``BedrockDepth`` is written to
     # Use either a local file path ...
     site = read_sitexml("Site_XX.ABCD_01-05-2026.xml")
 
-    # ... or a published SiteXML URL.
+    # ... or a published SERASiteXML URL.
     # site = read_sitexml(
     #     "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml")
 
@@ -703,10 +704,10 @@ For details on ``revisionHistory``, ``creationTime``, and dated output names
 such as ``Site_XX.ABCD_05-05-2026.xml``, see
 :ref:`sitexml-filenames-and-revision-history`.
 
-Adding Velocity Profiles To Existing SiteXML
---------------------------------------------
+Adding Velocity Profiles To Existing SERASiteXML
+------------------------------------------------
 
-Sometimes a SiteXML document already exists, but the velocity profiles are
+Sometimes a SERASiteXML document already exists, but the velocity profiles are
 available later as a CSV or Excel input table. Use
 :func:`~obspy.io.sitexml.tabular.add_velocity_profiles` to merge those
 profiles into the existing object tree without rebuilding the whole site from
@@ -769,7 +770,7 @@ analysis has no ``velocityProfileSet`` yet, the helper creates one.
 Quality Indexes
 ---------------
 
-SiteXML can store optional indicator-level quality indexes and an overall
+SERASiteXML can store optional indicator-level quality indexes and an overall
 quality index. These describe the reliability and consistency of site
 characterization metadata and can be provided directly or calculated through
 the Python API and optional CSV/Excel quality-index inputs.

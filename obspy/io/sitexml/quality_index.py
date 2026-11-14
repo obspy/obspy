@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 Quality-index formula helpers and quality-index table import utilities for
-SiteXML.
+SERASiteXML.
 
-See :ref:`quality-indexes` for the calculation guide and examples.
+See :doc:`/tutorial/code_snippets/sitexml_quality_indexes` for the
+calculation guide and examples.
 
 For more information refer to `SERA D7.2 Deliverable.
 <https://www.itsak.gr/SiteXML/SERA_D7.2_Best-practice_for_site_characterization.pdf>`_
@@ -70,7 +71,7 @@ def quality_index1(method=None, evaluation=None, reliability=None,
     Standalone formula helper for Q_Index1.
 
     .. note::
-        For object-oriented SiteXML workflows, prefer
+        For object-oriented SERASiteXML workflows, prefer
         :meth:`~obspy.io.sitexml.core.SiteIndicator.calculate_quality_index1`,
         which can also store the result on the indicator object.
 
@@ -177,7 +178,7 @@ def quality_index2(sera_site):
     Standalone formula helper for Q_Index2.
 
     .. note::
-        For object-oriented SiteXML workflows, prefer
+        For object-oriented SERASiteXML workflows, prefer
         :meth:`~obspy.io.sitexml.core.SERASite.calculate_quality_index2`.
 
     This function calculates the Quality Index #2 for a site,
@@ -267,7 +268,7 @@ def quality_index3(f0_vs30=None, f0_bedrock_depth=None, f0_h800=None,
     Standalone formula helper for Q_Index3.
 
     .. note::
-        For object-oriented SiteXML workflows, prefer
+        For object-oriented SERASiteXML workflows, prefer
         :meth:`~obspy.io.sitexml.core.SERASite.calculate_quality_index3`.
 
     This function calculates the Quality Index #3 for a site,
@@ -325,7 +326,7 @@ def overall_quality_index(quality_index2=0, quality_index3=0):
     Standalone formula helper for the overall quality index.
 
     .. note::
-        For object-oriented SiteXML workflows, prefer
+        For object-oriented SERASiteXML workflows, prefer
         :meth:`~obspy.io.sitexml.core.SERASite.calculate_overall_quality_index`.
 
     This function calculates the overall quality index for a site,
@@ -365,10 +366,10 @@ def apply_quality_index_dataframe(sera_site_dict, df_quality_index):
     This is the dataframe-level quality-index API. Use it when quality-index
     calculation inputs are already available as a :class:`pandas.DataFrame`,
     for example after custom loading, cleaning, or programmatic construction.
-    The input dataframe is not stored on the SiteXML objects. Q_Index1 criteria
-    and Q_Index3 consistency values are used immediately to calculate indicator
-    quality indexes and overall quality index. Q_Index1 criteria for an
-    existing indicator replace any quality index already stored on that
+    The input dataframe is not stored on the SERASiteXML objects. Q_Index1
+    criteria and Q_Index3 consistency values are used immediately to calculate
+    indicator quality indexes and overall quality index. Q_Index1 criteria for
+    an existing indicator replace any quality index already stored on that
     indicator. Missing criteria leave existing indicator quality indexes
     unchanged. The ``siteID`` column is required. Rows with empty ``siteID``
     values or unknown site IDs are skipped with a warning because quality-index
@@ -439,12 +440,12 @@ def apply_quality_index_csv(sera_site_dict, quality_index_csv, delim=';'):
     """
     Apply CSV quality-index calculation inputs to existing SERASite objects.
 
-    This is the CSV file convenience wrapper. It reads ``quality_index_csv`` as
-    a dataframe, translating file and parser failures to SiteXML exceptions,
-    then delegates the calculation to
+    This is the CSV file convenience wrapper. It reads ``quality_index_csv``
+    as a dataframe, translating file and parser failures to SERASiteXML
+    exceptions, then delegates the calculation to
     :func:`~obspy.io.sitexml.quality_index.apply_quality_index_dataframe`.
-    The calculation input values are used immediately and are not stored on the
-    SiteXML objects.
+    The calculation input values are used immediately and are not stored on
+    the SERASiteXML objects.
 
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
@@ -472,10 +473,10 @@ def apply_quality_index_excel(
 
     This is the Excel file convenience wrapper. It reads one sheet from
     ``path_or_file_object`` as a dataframe, translating file, sheet, and parser
-    failures to SiteXML exceptions, then delegates the calculation to
+    failures to SERASiteXML exceptions, then delegates the calculation to
     :func:`~obspy.io.sitexml.quality_index.apply_quality_index_dataframe`.
-    The calculation input values are used immediately and are not stored on the
-    SiteXML objects.
+    The calculation input values are used immediately and are not stored on
+    the SERASiteXML objects.
 
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
