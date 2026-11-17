@@ -1,3 +1,9 @@
+1.5.2rc2
+========
+
+Changes:
+ - fix issue with autodetection
+
 1.5.1 (doi: 10.5281/zenodo.22108563)
 ====================================
 
