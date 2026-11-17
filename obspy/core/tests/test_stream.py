@@ -1484,7 +1484,8 @@ class TestStream:
             read(bio)
         # Read pickle with specifying format.
         bio.seek(0)
-        st_with_format = read(bio, format="pickle", suppress_pickle_warning=True)
+        st_with_format = read(
+            bio, format="pickle", suppress_pickle_warning=True)
         # Test equality
         assert st == _remove_format(st_with_format)
 
