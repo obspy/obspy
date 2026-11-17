@@ -160,7 +160,8 @@ def _strip_protocol(url):
 # get_events() but also others).
 class BaseRoutingClient(HTTPClient):
     def __init__(self, debug=False, timeout=120, include_providers=None,
-                 exclude_providers=None, credentials=None):
+                 exclude_providers=None, credentials=None,
+                 max_bulk_lines=100):
         """
         :type routing_type: str
         :param routing_type: The type of
@@ -185,10 +186,15 @@ class BaseRoutingClient(HTTPClient):
             center specific credentials.
             You can also use a URL mapping as for the normal FDSN client
             instead of the URL.
+        :type max_bulk_lines: int
+        :param max_bulk_lines: If the bulk request is larger than this number
+            of lines, it will be split into multiple requests. Defaults to
+            100 to match `fdsnws_fetch`.
         """
         HTTPClient.__init__(self, debug=debug, timeout=timeout)
         self.include_providers = include_providers
         self.exclude_providers = exclude_providers
+        self.max_bulk_lines = max_bulk_lines
 
         # Parse credentials.
         self.credentials = {}
@@ -275,6 +281,23 @@ class BaseRoutingClient(HTTPClient):
                 "data_type": data_type,
                 "kwargs": kwargs,
                 "credentials": self.credentials})
+
+        # Split requests if necessary.
+        if self.max_bulk_lines:
+            new_dl_requests = []
+            for req in dl_requests:
+                lines = req["bulk_str"].strip().splitlines()
+                if len(lines) <= self.max_bulk_lines:
+                    new_dl_requests.append(req)
+                    continue
+                # Split!
+                for i in range(0, len(lines), self.max_bulk_lines):
+                    new_req = req.copy()
+                    new_req["bulk_str"] = "\n".join(
+                        lines[i:i + self.max_bulk_lines])
+                    new_dl_requests.append(new_req)
+            dl_requests = new_dl_requests
+
         pool = ThreadPool(processes=len(dl_requests))
         results = pool.map(_try_download_bulk, dl_requests)
 
