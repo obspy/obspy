@@ -53,11 +53,13 @@ ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
-                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
+                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y',
                             'SEGY', 'SU', 'SEG2', 'WAV', 'WIN', 'CSS',
                             'NNSA_KB_CORE', 'AH', 'PDAS', 'KINEMETRICS_EVT',
                             'GCF', 'DMX', 'ALSEP_PSE', 'ALSEP_WTN',
                             'ALSEP_WTH', 'CYBERSHAKE']
+# plugins that get skipped during file format autodetection
+WAVEFORM_NO_AUTODETECTION = ['PICKLE']
 EVENT_PREFERRED_ORDER = ['QUAKEML', 'SCML', 'NLLOC_HYP']
 INVENTORY_PREFERRED_ORDER = ['STATIONXML', 'SEED', 'RESP', 'SCML']
 # waveform plugins accepting a byteorder keyword
@@ -517,6 +519,9 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     if not format:
         # auto detect format - go through all known formats in given sort order
         for format_ep in eps.values():
+            # exclude some formats from autodetection of file format
+            if format_ep.name in WAVEFORM_NO_AUTODETECTION:
+                continue
             # search isFormat for given entry point
             is_format = buffered_load_entry_point(
                 format_ep.dist.name,

@@ -16,7 +16,8 @@ from obspy import Trace, read
 from obspy.io.mseed.core import _write_mseed
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import (NamedTemporaryFile, _get_entry_points,
-                                  DEFAULT_MODULES, WAVEFORM_ACCEPT_BYTEORDER)
+                                  DEFAULT_MODULES, WAVEFORM_ACCEPT_BYTEORDER,
+                                  WAVEFORM_NO_AUTODETECTION)
 from obspy.core.util.misc import buffered_load_entry_point, _ENTRY_POINT_CACHE
 
 
@@ -58,6 +59,7 @@ class TestWaveformPlugins:
                     'isFormat')
                 assert not False, is_format(tmpfile)
 
+    @pytest.mark.filterwarnings("ignore:Unpickling is not secure")
     def test_read_and_write(self):
         """
         Tests read and write methods for all waveform plug-ins.
@@ -106,9 +108,12 @@ class TestWaveformPlugins:
                         if format == 'Q':
                             outfile += '.QHD'
                         # read in again using auto detection
-                        st = read(outfile)
-                        assert len(st) == 1
-                        assert st[0].stats._format == format
+                        # does not work for file formats that are excluded from
+                        # autodetection
+                        if format not in WAVEFORM_NO_AUTODETECTION:
+                            st = read(outfile)
+                            assert len(st) == 1
+                            assert st[0].stats._format == format
                         # read in using format argument
                         st = read(outfile, format=format)
                         assert len(st) == 1
@@ -117,21 +122,27 @@ class TestWaveformPlugins:
                         # it needs multiple files
                         if format not in ['Q']:
                             # file handler without format
-                            with open(outfile, 'rb') as fp:
-                                st = read(fp)
-                            assert len(st) == 1
-                            assert st[0].stats._format == format
+                            # does not work for file formats that are excluded
+                            # from autodetection
+                            if format not in WAVEFORM_NO_AUTODETECTION:
+                                with open(outfile, 'rb') as fp:
+                                    st = read(fp)
+                                assert len(st) == 1
+                                assert st[0].stats._format == format
                             # file handler with format
                             with open(outfile, 'rb') as fp:
                                 st = read(fp, format=format)
                             assert len(st) == 1
                             assert st[0].stats._format == format
                             # BytesIO without format
-                            with open(outfile, 'rb') as fp:
-                                temp = io.BytesIO(fp.read())
-                            st = read(temp)
-                            assert len(st) == 1
-                            assert st[0].stats._format == format
+                            # does not work for file formats that are excluded
+                            # from autodetection
+                            if format not in WAVEFORM_NO_AUTODETECTION:
+                                with open(outfile, 'rb') as fp:
+                                    temp = io.BytesIO(fp.read())
+                                st = read(temp)
+                                assert len(st) == 1
+                                assert st[0].stats._format == format
                             # BytesIO with format
                             with open(outfile, 'rb') as fp:
                                 temp = io.BytesIO(fp.read())
@@ -148,9 +159,15 @@ class TestWaveformPlugins:
                                 temp2.write(dummy_bytes)
                                 temp2.write(temp.read())
                                 temp2.seek(len(dummy_bytes))
-                                st = read(outfile, format=autodetect)
-                                assert len(st) == 1
-                                assert st[0].stats._format == format
+                                # does not work for file formats that are
+                                # excluded from autodetection
+                                if (format in WAVEFORM_NO_AUTODETECTION and
+                                        autodetect is None):
+                                    pass
+                                else:
+                                    st = read(outfile, format=autodetect)
+                                    assert len(st) == 1
+                                    assert st[0].stats._format == format
                         # Q files consist of two files - deleting additional
                         # file
                         if format == 'Q':
@@ -279,6 +296,7 @@ class TestWaveformPlugins:
                               false_positives])
             raise Exception(msg)
 
+    @pytest.mark.filterwarnings("ignore:Unpickling is not secure")
     def test_read_thread_safe(self):
         """
         Tests for race conditions. Reading n_threads (currently 30) times
@@ -358,6 +376,7 @@ class TestWaveformPlugins:
                     os.remove(outfile[:-4] + '.QBN')
                     os.remove(outfile[:-4] + '.QHD')
 
+    @pytest.mark.filterwarnings("ignore:Unpickling is not secure")
     @pytest.mark.filterwarnings('ignore:Detected non contiguous data array')
     def test_issue_193(self):
         """
@@ -447,6 +466,7 @@ class TestWaveformPlugins:
             with pytest.raises(TypeError):
                 read(tmpfile)
 
+    @pytest.mark.filterwarnings("ignore:Unpickling is not secure")
     def test_deepcopy(self):
         """
         Test for issue #689: deepcopy did not work for segy. In order to

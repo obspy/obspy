@@ -1444,17 +1444,19 @@ class TestStream:
             # write using stream write method
             st.write(tf.name, format='PICKLE')
             # check and read directly
-            st2 = _read_pickle(tf.name)
+            st2 = _read_pickle(tf.name, suppress_pickle_warning=True)
             assert len(st2) == 3
             np.testing.assert_array_equal(st2[0].data, st[0].data)
             # use read() with given format
-            st2 = read(tf.name, format='PICKLE')
+            st2 = read(tf.name, format='PICKLE', suppress_pickle_warning=True)
             assert len(st2) == 3
             np.testing.assert_array_equal(st2[0].data, st[0].data)
             # use read() and automatically detect format
-            st2 = read(tf.name)
-            assert len(st2) == 3
-            np.testing.assert_array_equal(st2[0].data, st[0].data)
+            # this is supposed to not work anymore, since PICKLE is supposed to
+            # be skipped during file format detection
+            msg = 'Unknown format for file'
+            with pytest.raises(TypeError, match=msg):
+                read(tf.name)
 
     def test_read_pickle(self):
         """
@@ -1473,15 +1475,148 @@ class TestStream:
         bio = io.BytesIO()
         st = read()
         st.write(bio, "pickle")
-        # Read pickle without specifying format.
         bio.seek(0)
-        st_no_format = read(bio)
+        # Read pickle without specifying format.
+        # this is supposed to not work anymore, since PICKLE is supposed to
+        # be skipped during file format detection
+        msg = 'Unknown format for file'
+        with pytest.raises(TypeError, match=msg):
+            read(bio)
         # Read pickle with specifying format.
         bio.seek(0)
-        st_with_format = read(bio, format="pickle")
-        # Test equalities.
-        assert st == _remove_format(st_no_format)
-        assert st_no_format == _remove_format(st_with_format)
+        st_with_format = read(
+            bio, format="pickle", suppress_pickle_warning=True)
+        # Test equality
+        assert st == _remove_format(st_with_format)
+
+    def test_assure_pickle_not_used_during_autodetection(self, testdata):
+        """
+        Tests that format "PICKLE" is skipped during high-level read with
+        format autodetection.
+
+        Since pickle is unsafe when faced with files from untrusted sources, we
+        want to avoid pickle being used automatically during file format auto
+        detection, such that to read a file using pickle users always have to
+        explicitly opt-in by specifying the format PICKLE during reading data.
+        """
+        # set up a temporary test file, BytesIO might be faster, but let's be
+        # conservative here because this is an important check and use a real
+        # file to avoid any other complications.
+        # also test on a bytesIO object too though.
+        num_samples = 20
+        data = np.random.randn(num_samples)
+        tr = Trace(data=data)
+        st = Stream([tr])
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            st.write(filename, format='PICKLE')
+            # 1) first let's verify that file format check and reading work
+            # with specifying PICKLE explicitly
+            assert _is_pickle(filename)
+            # try reading low level and high level
+            got1 = _read_pickle(filename, suppress_pickle_warning=True)
+            got2 = read(filename, format="PICKLE",
+                        suppress_pickle_warning=True)
+            for got in (got1, got2):
+                assert isinstance(got, Stream)
+                assert len(got) == 1
+                assert len(got[0]) == num_samples
+                np.testing.assert_array_equal(got[0].data, data)
+            # 2) now the actual test here: make sure that during a high-level
+            # read without specifying the format (i.e. autodetecting the
+            # format), PICKLE format is not checked for or used to read. That
+            # means a valid pickle file should in such a case run into an
+            # unknown file format exception.
+            # mock.patch actually can not work here for _is_pickle and
+            # _read_pickle because these functions get stored in a cache as
+            # soon as entry points get looked up once (by function
+            # buffered_load_entry_point). so mock would only be able to patch
+            # them out if this is the only test that runs, but since other
+            # tests run before in most cases, these functions are already
+            # cached when mock is trying to patch them.
+            # Therefore, the only reliable way to tell that PICKLE was not used
+            # as a plugin format is to patch out pickle.load itself, which is
+            # used in _read_pickle.
+            msg = 'Unknown format for file'
+            with mock.patch(
+                    "pickle.load", return_value=st) as patch_pickle_load:
+                with pytest.raises(TypeError, match=msg):
+                    read(filename)
+                assert patch_pickle_load.call_count == 0
+        # do the same tests with an io.BytesIO input with the pickle data for
+        # good measure
+        with io.BytesIO() as bio:
+            st.write(bio, format='PICKLE')
+            bio.seek(0)
+            bio_data = bio.read()
+            bio.seek(0)
+            assert bio_data[0:1] == b'\x80'
+            assert b'obspy.core.stream' in bio_data[:22]
+            assert _is_pickle(bio)
+            bio.seek(0)
+            got1 = _read_pickle(bio, suppress_pickle_warning=True)
+            bio.seek(0)
+            got2 = read(bio, format="PICKLE", suppress_pickle_warning=True)
+            bio.seek(0)
+            for got in (got1, got2):
+                assert isinstance(got, Stream)
+                assert len(got) == 1
+                assert len(got[0]) == num_samples
+                np.testing.assert_array_equal(got[0].data, data)
+            msg = 'Unknown format for file'
+            with mock.patch(
+                    "pickle.load", return_value=st) as patch_pickle_load:
+                with pytest.raises(TypeError, match=msg):
+                    read(bio)
+                assert patch_pickle_load.call_count == 0
+
+    def test_assure_is_pickle_does_not_unpickle(self, testdata):
+        """
+        Regression test to make sure _is_pickle() does not call pickle.load but
+        rather just checks some magic bytes at the data start.
+        This is not as good as a check that the file really is a valid obspy
+        Stream pickle, but it has no safety issues because no unpickling is
+        done.
+
+        This is some duplicated code with respect to
+        test_assure_pickle_not_used_during_autodetection, but this is an
+        important check, so its worth to have some code duplication here.
+        """
+        # set up a temporary test file, BytesIO might be faster, but let's be
+        # conservative here because this is an important check and use a real
+        # file to avoid any other complications.
+        # also test on a bytesIO object too though.
+        num_samples = 20
+        data = np.random.randn(num_samples)
+        tr = Trace(data=data)
+        st = Stream([tr])
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            st.write(filename, format='PICKLE')
+            with mock.patch("pickle.load") as patch_pickle_load:
+                assert _is_pickle(filename)
+                assert patch_pickle_load.call_count == 0
+        # do the same tests with an io.BytesIO input with the pickle data for
+        # good measure
+        with io.BytesIO() as bio:
+            st.write(bio, format='PICKLE')
+            bio.seek(0)
+            with mock.patch("pickle.load") as patch_pickle_load:
+                assert _is_pickle(bio)
+                assert patch_pickle_load.call_count == 0
+
+    def test_assure_read_pickle_shows_warning(self, testdata):
+        """
+        Tests the warning message that gets shown when _read_pickle is called
+        """
+        # no warning shown when suppressed manually
+        with pytest.raises(FileNotFoundError):
+            _read_pickle('/non/existing/file', suppress_pickle_warning=True)
+        # this should first show the warning and then fail not finding the file
+        msg = "Unpickling is not secure. Only unpickle data you trust."
+        with pytest.warns(UserWarning, match=msg):
+            with pytest.raises(FileNotFoundError):
+                _read_pickle('/non/existing/file')
 
     def test_get_gaps_2(self):
         """
