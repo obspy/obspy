@@ -1,8 +1,20 @@
-1.5.2rc2
-========
+1.5.2 (doi: 10.5281/zenodo.24314001)
+====================================
 
-Changes:
- - fix issue with autodetection
+Critical security fix:
+
+Up until now, PICKLE file format was included in the automatic file format
+detection cycle for waveform files. So, trying to read a file maliciously
+forged by a third party relying on file format autodetection (e.g.
+obspy.read('some_malicious_file') i.e. without explicitly specifying the file
+format) could lead to execution of arbitrary code.
+This release now excludes PICKLE file format from file format autodetection.
+
+For more information, see:
+
+ - https://github.com/obspy/obspy-pickle-vulnerability
+ - PR #3833
+ - https://discourse.obspy.org/c/announcements
 
 1.5.1 (doi: 10.5281/zenodo.22108563)
 ====================================
