@@ -167,7 +167,7 @@ class Restrictions(object):
     :param sanitize: Sanitize makes sure that each MiniSEED file also has an
          associated StationXML file, otherwise the MiniSEED files will be
          deleted afterwards. This is potentially not desirable for large noise
-         data sets.
+         data sets, defaults to ``False``.
     :type sanitize: bool
     :param minimum_interstation_distance_in_m: The minimum inter-station
         distance. Data from any new station closer to any existing station
@@ -189,7 +189,7 @@ class Restrictions(object):
                  exclude_networks=tuple(), exclude_stations=tuple(),
                  limit_stations_to_inventory=None,
                  reject_channels_with_gaps=True, minimum_length=0.9,
-                 sanitize=True, minimum_interstation_distance_in_m=1000,
+                 sanitize=False, minimum_interstation_distance_in_m=1000,
                  channel_priorities=("HH[ZNE12]", "BH[ZNE12]",
                                      "MH[ZNE12]", "EH[ZNE12]",
                                      "LH[ZNE12]", "HL[ZNE12]",
@@ -231,6 +231,10 @@ class Restrictions(object):
         self.exclude_networks = exclude_networks
         self.exclude_stations = exclude_stations
         self.reject_channels_with_gaps = reject_channels_with_gaps
+        if not 0.0 <= minimum_length <= 1.0:
+            raise ValueError(
+                "'minimum_length' and must be between 0.0 and 1.0."
+            )
         self.minimum_length = minimum_length
         self.sanitize = bool(sanitize)
 
