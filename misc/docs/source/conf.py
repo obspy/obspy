@@ -95,9 +95,11 @@ exclude_patterns = [
 nitpicky = True
 nitpick_ignore = [
     ('py:class', 'optional'),
+    ('py:class', 'required'),
     ('py:class', 'file'),
     ('py:class', 'file-like object'),
     ('py:class', 'open file'),
+    ('py:class', 'URL'),
     ('py:class', 'valid matplotlib color'),
     ('py:class', 'valid matplotlib colormap'),
     ('py:class', 'same class as original object'),
@@ -134,6 +136,7 @@ intersphinx_mapping = {
     'cartopy': ('https://cartopy.readthedocs.io/stable/', None),
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
     'sqlalchemy': ('https://docs.sqlalchemy.org/en/latest/', None),
+    'pandas': ('https://pandas.pydata.org/docs/', None),
     'requests': ('https://docs.python-requests.org/en/latest/', None)
 }
 
