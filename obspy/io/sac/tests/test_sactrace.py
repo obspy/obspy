@@ -375,7 +375,7 @@ class TestSACTrace():
                 warnings.simplefilter('always', UserWarning)
                 setattr(sac, hdr, too_long)
                 assert len(w) == 1
-                assert w[0].category == UserWarning
+                assert w[0].category is UserWarning
                 assert 'Alphanumeric headers longer than 8' in str(w[0])
             assert sac._hs[_hd.STRHDRS.index(hdr)].decode() == too_long[:8]
             assert getattr(sac, hdr) == too_long[:8].strip()

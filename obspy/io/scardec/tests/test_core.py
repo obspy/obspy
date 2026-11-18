@@ -43,9 +43,9 @@ class TestScardec():
                 cat.write(temp_filename, format="SCARDEC")
 
                 assert len(w) == 2
-                assert w[0].category == UserWarning
+                assert w[0].category is UserWarning
                 assert 'No moment wave magnitude found' in str(w[0])
-                assert w[1].category == UserWarning
+                assert w[1].category is UserWarning
                 assert 'No derived origin attached' in str(w[1])
 
             with open(temp_filename, "rb") as fh:
@@ -92,9 +92,9 @@ class TestScardec():
                 new_data = tf.read()
 
                 assert len(w) == 2
-                assert w[0].category == UserWarning
+                assert w[0].category is UserWarning
                 assert 'No moment wave magnitude found' in str(w[0])
-                assert w[1].category == UserWarning
+                assert w[1].category is UserWarning
                 assert 'No derived origin attached' in str(w[1])
 
         # Test file header
@@ -138,9 +138,9 @@ class TestScardec():
                         new_data = buf2.read()
 
                 assert len(w) == 2
-                assert w[0].category == UserWarning
+                assert w[0].category is UserWarning
                 assert 'No moment wave magnitude found' in str(w[0])
-                assert w[1].category == UserWarning
+                assert w[1].category is UserWarning
                 assert 'No derived origin attached' in str(w[1])
 
         # Test file header

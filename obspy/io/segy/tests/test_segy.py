@@ -195,7 +195,7 @@ class TestSEGY():
                 f.close()
                 # A relative tolerance of 1E-6 is considered good enough.
                 rms1 = rms(data, new_data)
-                assert True == (rms1 < 1E-6)
+                assert rms1 < 1E-6
 
     def test_pack_and_unpack_very_small_ibm_floats(self):
         """
@@ -225,7 +225,7 @@ class TestSEGY():
                 f.close()
                 # A relative tolerance of 1E-6 is considered good enough.
                 rms1 = rms(data, new_data)
-                assert True == (rms1 < 1E-6)
+                assert rms1 < 1E-6
 
     def test_pack_and_unpack_ibm_special_cases(self):
         """

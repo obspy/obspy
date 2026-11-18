@@ -199,7 +199,7 @@ class TestClient():
         assert minradius["doc_title"] == (
             "Specify minimum distance from the geographic point defined by "
             "latitude and longitude")
-        assert minradius["type"] == float
+        assert minradius["type"] is float
         assert minradius["options"] == []
 
     def test_iris_event_catalog_availability(self):

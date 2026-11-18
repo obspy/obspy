@@ -180,7 +180,7 @@ class TestTauPyPlotting:
                                        show=False)
             assert len(w) == 1
             assert str(w[0].message) == expected_message
-            assert w[0].category == UserWarning
+            assert w[0].category is UserWarning
         finally:
             plt.close(fig)
         # cartesian pot attempted in polar axes
