@@ -1,0 +1,7 @@
+# Minimum-supported versions of the numerical stack for the uv `mindepversion`
+# CI variant. Used as a pip constraints file (`-c`), so it caps these versions
+# without adding them as direct requirements. This is the pip/uv counterpart of
+# the pins in .github/test_mindepversion_conda_env.yml -- keep the two in sync.
+numpy==2.2.*
+scipy==1.15.*
+matplotlib==3.10.*

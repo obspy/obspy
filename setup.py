@@ -72,10 +72,32 @@ LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
 DOCSTRING = __doc__.split("\n")
 
 # check for MSVC
+# sys.argv is scanned for an explicit build_ext compiler selection
+# (``--compiler=<name>`` or ``build_ext -c <name>``). A bare ``-c`` must NOT be
+# treated as a compiler selector: PEP 517 build frontends (e.g. uv) launch the
+# build backend via ``python -c ...``, which leaves ``-c`` in sys.argv. The
+# previous check keyed off a bare ``-c`` and therefore silently disabled MSVC
+# handling under those frontends, producing
+# ``LNK2001: unresolved external symbol PyInit_<name>`` on Windows.
+_KNOWN_COMPILERS = {'msvc', 'mingw32', 'cygwin', 'bcpp', 'unix'}
+
+
+def _requested_compiler():
+    argv = sys.argv
+    for i, arg in enumerate(argv):
+        if arg.startswith('--compiler='):
+            return arg.split('=', 1)[1]
+        if arg in ('--compiler', '-c') and i + 1 < len(argv) \
+                and argv[i + 1] in _KNOWN_COMPILERS:
+            return argv[i + 1]
+    return None
+
+
+_requested_compiler_name = _requested_compiler()
 if platform.system() == "Windows" and (
-        'msvc' in sys.argv or
-        '-c' not in sys.argv and
-        get_default_compiler() == 'msvc'):
+        _requested_compiler_name == 'msvc' or
+        (_requested_compiler_name is None
+         and get_default_compiler() == 'msvc')):
     IS_MSVC = True
 else:
     IS_MSVC = False
@@ -103,7 +125,9 @@ EXTRAS_REQUIRES = {
         'packaging',
         'pyproj',
         'pytest',
-        'pytest-json-report',
+        # required by `obspy-runtests --cov`
+        'pytest-cov',
+        'pytest-json-report>=1.4',
     ],
     'geo': ['geographiclib'],
     'imaging': ['cartopy'],
@@ -587,11 +611,23 @@ ENTRY_POINTS = {
 
 # monkey patches for MS Visual Studio
 if IS_MSVC:
-    # remove 'init' entry in exported symbols
+    # ObsPy's C extensions are ctypes libraries, not CPython extension
+    # modules, so they must NOT export a PyInit_<name> symbol. Modern
+    # setuptools defines its own get_export_symbols on
+    # setuptools.command.build_ext.build_ext, which re-adds PyInit_<name>
+    # for plain Extension instances -- and that subclass method is the one
+    # actually invoked during the build. Patching only the distutils base
+    # class (as before) is therefore not reliably effective and leads to
+    # `LNK2001: unresolved external symbol PyInit_<name>` on Windows,
+    # depending on the build frontend (e.g. pip vs uv). Patch the setuptools
+    # command class directly so the override always wins, and keep patching
+    # the distutils base for older setuptools/toolchains.
     def _get_export_symbols(self, ext):
         return ext.export_symbols
-    from distutils.command.build_ext import build_ext
-    build_ext.get_export_symbols = _get_export_symbols
+    from setuptools.command.build_ext import build_ext as _st_build_ext
+    _st_build_ext.get_export_symbols = _get_export_symbols
+    from distutils.command.build_ext import build_ext as _du_build_ext
+    _du_build_ext.get_export_symbols = _get_export_symbols
 
 
 # helper function for collecting export symbols from .def files

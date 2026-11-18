@@ -1,0 +1,20 @@
+# Optional feature + test dependencies for the uv `default` CI variant.
+# Installed on top of core ObsPy (`.`, i.e. install_requires); this is the
+# pip/uv counterpart of .github/test_conda_env.yml. It mirrors setup.py's
+# `all` extra (the flat union of every EXTRAS_REQUIRES entry) so the uv job
+# exercises the same optional stack as the conda job, without reaching into
+# the user-facing `.[all]` extra. Keep this in sync with test_conda_env.yml
+# and EXTRAS_REQUIRES in setup.py.
+#
+# geo
+geographiclib
+# imaging
+cartopy
+# io.shapefile (pyshp!=3.0.0 for the tests: doctest workaround, see #3600)
+pyshp!=3.0.0
+# tests
+packaging
+pyproj
+pytest
+pytest-cov
+pytest-json-report>=1.4

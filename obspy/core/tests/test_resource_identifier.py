@@ -619,7 +619,7 @@ class TestResourceIdentifier:
         # since we cannot control which IDs python uses, skip the test if
         # no overlapping ids were created.
         if not used_ids1 & used_ids2:
-            self.skipTest('setup requires reuse of python ids')
+            pytest.skip('setup requires reuse of python ids')
 
         # Iterate over first list of ids. Referred objects should be None
         for rid in rid_list1:
