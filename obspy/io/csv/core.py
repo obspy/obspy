@@ -187,7 +187,7 @@ def _read_csv(fname, skipheader=0, default=None, names=None,
                 else:
                     dep = float(row['dep']) * 1000
                 if math.isnan(dep):
-                    raise
+                    raise ValueError('depth is NaN')
             except Exception:
                 dep = None
             author = _string(row, 'author')
@@ -207,14 +207,14 @@ def _read_csv(fname, skipheader=0, default=None, names=None,
                 # add zero to eliminate negative zeros in magnitudes
                 mag = float(row['mag']) + 0
                 if math.isnan(mag):
-                    raise
+                    raise ValueError('magnitude is NaN')
             except Exception:
                 magnitudes = []
             else:
                 try:
                     magtype = row['magtype']
                     if magtype.lower() in ('', 'none', 'null', 'nan'):
-                        raise
+                        raise ValueError('invalid magnitude type')
                 except Exception:
                     magtype = default.get('magtype')
                 magauthor = _string(row, 'magauthor')

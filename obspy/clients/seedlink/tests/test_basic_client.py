@@ -36,15 +36,17 @@ class TestClient():
         # getting a result depends on two things.. how long backwards the ring
         # buffer stores data and how close to realtime the data is available,
         # so check some different offsets and see if we get some data
+        last_exc = None
         for offset in (3600, 2000, 1000, 500):
             try:
                 _test_offset_from_realtime(offset)
-            except AssertionError:
+            except AssertionError as exc:
+                last_exc = exc
                 continue
             else:
                 break
         else:
-            raise
+            raise last_exc
 
     def test_get_info(self):
         """
@@ -100,15 +102,17 @@ class TestClient():
         # getting a result depends on two things.. how long backwards the ring
         # buffer stores data and how close to realtime the data is available,
         # so check some different offsets and see if we get some data
+        last_exc = None
         for offset in (3600, 2000, 1000, 500):
             try:
                 _test_offset_from_realtime(offset)
-            except AssertionError:
+            except AssertionError as exc:
+                last_exc = exc
                 continue
             else:
                 break
         else:
-            raise
+            raise last_exc
 
 
 @mock.patch("obspy.clients.seedlink.basic_client.Client._multiselect_request")
