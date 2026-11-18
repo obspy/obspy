@@ -1,0 +1,40 @@
+name: ObsPy
+version: 1.0.3-py27_3
+
+channels:
+  - http://repo.continuum.io/pkgs/free/
+  - https://conda.anaconda.org/conda-forge
+  - https://conda.anaconda.org/obspy
+
+specs:
+  - python 2.7*
+  - conda
+  - mkl 2017.0.1         [win]
+  - nomkl                [not win]
+  - ipython
+  - jupyter
+  - obspy 1.0.3
+  - numpy 1.13.1         [not linux32]
+  - numpy 1.10.4         [linux32]
+  - scipy 0.19.1         [not linux32]
+  - scipy 0.17.1         [linux32]
+  - matplotlib 1.5.3     [not linux32]
+  - matplotlib 1.5.1     [linux32]
+# newer basemap not yet in defaults and conda-forge has no linux32 builds
+# basemap 1.0.7 -> numpy 1.10*|1.7*|1.8*|1.9*
+# matplotlib 1.5.3 -> numpy 1.11
+  - basemap 1.1.0        [not linux32]
+  - basemap 1.0.7        [linux32]
+# unfortunately no basemap-data-hires for linux32, because conda-forge is not packaging for linux32
+  - basemap-data-hires   [not linux32]
+  - sqlalchemy
+  - gdal
+# - cryptography   # starting with obspy 1.1.0
+# - jsonschema     # starting with obspy 1.1.0
+  - geographiclib        [linux64]
+
+license_file: ../anaconda_eula_and_obspy_license_notice.txt
+
+welcome_image: ../obspy_logo_full_tall_164x314.png  [win]
+header_image: ../obspy_powered_wide_170x70.png      [win]
+icon_image: ../obspy_logo_no_text_highres.png       [win]
