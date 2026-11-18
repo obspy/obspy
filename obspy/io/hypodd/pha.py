@@ -218,7 +218,8 @@ def _write_pha(catalog, filename, eventid_map=None,
                            evid=evid)
         lines.append(line)
         weights = {str(arrival.pick_id): arrival.time_weight
-                   for arrival in ori.arrivals if arrival.time_weight}
+                   for arrival in ori.arrivals
+                   if arrival.time_weight is not None}
         for pick in event.picks:
             weight = weights.get(str(pick.resource_id), 1.)
             line = PHA2.format(p=pick, relt=pick.time - ori.time,

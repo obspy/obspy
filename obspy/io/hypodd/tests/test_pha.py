@@ -130,6 +130,16 @@ class TestPHA():
                 filedata2 = f.read()
         assert filedata2.replace(' ', '') == filedata.replace(' ', '')
 
+    def test_write_pha_zero_weight(self):
+        cat = read_events(self.fname)
+        cat[0].origins[0].arrivals[1].time_weight = 0.
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            cat.write(tempfile, 'HYPODDPHA')
+            cat2 = read_events(tempfile)
+        assert cat2[0].origins[0].arrivals[0].time_weight == 1.
+        assert cat2[0].origins[0].arrivals[1].time_weight == 0.
+
     def test_write_pha_minimal(self):
         ori = Origin(time=UTCDateTime(0), latitude=42, longitude=43,
                      depth=10000)
