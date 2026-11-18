@@ -259,6 +259,36 @@ class TestResponse:
         np.testing.assert_allclose(amp, exp_amp, rtol=1E-3)
         np.testing.assert_allclose(phase, exp_ph, rtol=1E-3)
 
+    def test_response_list_stage_phase_wrapping(self):
+        """
+        Phase of a response list stage must be unwrapped before interpolation,
+        otherwise a cubic spline oscillates wildly across +/-180 deg wraps
+        (see #3585).
+        """
+        # true phase: smooth ramp 0 -> -540 deg (three wraps) over 0.1-50 Hz
+        f = np.logspace(-1, np.log10(50), 20)
+        span = np.log10(f[-1]) - np.log10(f[0])
+        true_unwrapped = -540.0 * (np.log10(f) - np.log10(f[0])) / span
+        wrapped = (true_unwrapped + 180) % 360 - 180
+        elems = [ResponseListElement(float(fr), 1.0, float(p))
+                 for fr, p in zip(f, wrapped)]
+        resp = Response(
+            instrument_sensitivity=InstrumentSensitivity(1.0, 1.0, "M/S", "V"),
+            response_stages=[ResponseListResponseStage(
+                1, 1.0, 1.0, "M/S", "V", response_list_elements=elems)])
+
+        freqs = np.logspace(-1, np.log10(50), 500)
+        with CatchAndAssertWarnings():
+            cpx = resp.get_evalresp_response_for_frequencies(freqs,
+                                                             output="VEL")
+        out = np.degrees(np.unwrap(np.angle(cpx)))
+        # the interpolated (unwrapped) phase must stay within the tabulated
+        # envelope and remain monotonic - the old cubic-on-wrapped spline
+        # overshoots the +/-180 wraps and violates both.
+        assert out.min() >= true_unwrapped.min() - 15.0
+        assert out.max() <= true_unwrapped.max() + 15.0
+        assert np.max(np.diff(out)) < 5.0
+
     def test_response_with_no_units_in_stage_1(self, testdata):
         """
         ObsPy has some heuristics to deal with this particular degenerate case.
