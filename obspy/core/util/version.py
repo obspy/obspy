@@ -207,5 +207,82 @@ def _normalize_version(version):
     return version
 
 
+def cmp_obspy_version(x, y):
+    """
+    Compare two ObsPy version number strings.
+
+    Similar to python builtin :py:func:`cmp()`.
+    The return value is negative if ``x < y``, zero if ``x == y`` and
+    strictly positive if ``x > y``.
+
+    The return type is ``int`` for comparisons that only involve well defined
+    release (or release candidate) versions. The return type is ``float`` for
+    comparisons that involve at least one development version.
+    In case of two development versions based on the same point release (e.g.
+    "1.0.1.post0+62.g3718497307.dirty" and "1.0.1.post0+55.gcdc54dbd9a")
+    the return value is also zero (type ``float``).
+
+    >>> a = "1.0.0"
+    >>> b = "1.0.1"
+    >>> c = "1.0.1.post0+62.g3718497307.dirty"
+    >>> d = "1.0.1.post0+55.gcdc54dbd9a"
+    >>> cmp_obspy_version(a, b)
+    -1
+    >>> cmp_obspy_version(a, c)
+    -1.0
+    >>> cmp_obspy_version(b, c)
+    -1.0
+    >>> cmp_obspy_version(b, b)
+    0
+    >>> cmp_obspy_version(c, d)
+    0.0
+
+    :type x: str
+    :type y: str
+    :rtype: int or float
+    """
+    def _version_tuple(version_string):
+        """
+        Convert string representation of ObsPy version into a tuple for
+        comparison.
+
+        >>> version = "1.0.1"
+        >>> _version_tuple(version)
+        (1, 0, 1)
+        >>> version = "1.0.1.post0+135.gf5ad840dce"
+        >>> _version_tuple(version)
+        (1, 0, 1, u'post0+135.gf5ad840dce')
+        """
+        return tuple(map(int, version_string.split(".", 3)[:3]) +
+                     version_string.split(".", 3)[3:])
+    x = _version_tuple(x)
+    y = _version_tuple(y)
+
+    # when comparing two development versions: only compare the point release
+    # both are based on
+    if len(x) == 4 and len(y) == 4:
+        _x = x[:3]
+        _y = y[:3]
+    # otherwise compare full tuple -- if a development version is involved it
+    # will compare greater than the point release it is based on
+    else:
+        _x = x
+        _y = y
+
+    if _x < _y:
+        result = -1
+    elif _x == _y:
+        result = 0
+    elif _x > _y:
+        result = 1
+
+    # change result type to float if at least one development version is
+    # involved
+    if len(x) == 4 or len(y) == 4:
+        result = float(result)
+
+    return result
+
+
 if __name__ == "__main__":
     print(get_git_version())
