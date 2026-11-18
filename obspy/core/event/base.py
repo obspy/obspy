@@ -683,6 +683,16 @@ class WaveformStreamID(__WaveformStreamID):
             self.location_code if self.location_code else "",
             self.channel_code if self.channel_code else "")
 
+    def __eq__(self, other):
+        # Two ids describe the same stream if their SEED identifiers match. An
+        # unset (None) and an empty ("") code are equivalent here, just like in
+        # get_seed_string()/id, so that a round-trip through a seed string
+        # still compares equal (see #3658). Stored values are left untouched.
+        if not isinstance(other, WaveformStreamID):
+            return super().__eq__(other)
+        return (self.get_seed_string() == other.get_seed_string() and
+                self.resource_uri == other.resource_uri)
+
     id = property(get_seed_string)
 
 
