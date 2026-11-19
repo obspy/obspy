@@ -534,15 +534,22 @@ class TestReadMSEED3:
         assert len(st) == 3
         assert all(tr.stats.npts == THREECH_NPTS for tr in st)
 
-    def test_skip_not_data_warns_for_non_path(self, testdata):
-        # pymseed only honors skip_not_data for a file path, so a buffer
-        # request must not pass silently.
+    def test_skip_not_data_buffer(self, testdata):
+        # Buffer sources honor skip_not_data, for leading and trailing junk.
         data = testdata["testdata-3channel-signal.mseed3"].read_bytes()
-        with pytest.warns(UserWarning, match="skip_not_data"):
-            st = _read_mseed3(data, skip_not_data=True)
-        assert len(st) == 3
+        junk = b"# not miniSEED\n" * 20
+        padded = junk + data + junk
+        for source in (padded, bytearray(padded), memoryview(padded)):
+            with pytest.raises((IOError, OSError)):
+                _read_mseed3(source)
+            st = _read_mseed3(source, skip_not_data=True)
+            assert len(st) == 3
+            assert all(tr.stats.npts == THREECH_NPTS for tr in st)
 
-        # Same limitation applies to a file-like source (from_filelike).
+    def test_skip_not_data_warns_for_filelike(self, testdata):
+        # pymseed does not support skip_not_data for a file-like source
+        # (from_filelike), so the request must not pass silently.
+        data = testdata["testdata-3channel-signal.mseed3"].read_bytes()
         with pytest.warns(UserWarning, match="skip_not_data"):
             st = _read_mseed3(io.BytesIO(data), skip_not_data=True)
         assert len(st) == 3

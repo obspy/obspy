@@ -199,8 +199,8 @@ def _read_mseed3(
     :param skip_not_data: If True, skip bytes that are not miniSEED instead of
         treating them as an error, e.g. to read records embedded in a full SEED
         volume or a file with a leading text header.
-        LIMITATION: only supported when reading from a file path; for a
-        buffer or file-like source it is ignored, with a warning.
+        LIMITATION: only supported when reading from a file path or a
+        buffer; for a file-like source it is ignored, with a warning.
         Default is False.
     :type skip_not_data: bool
     :param validate_crc: If True, verify the CRC of each miniSEED v3 record and
@@ -271,14 +271,14 @@ def _read_mseed3(
         "split_version": split_version,
     }
 
-    # pymseed only accepts skip_not_data when reading from a file path; say
-    # so rather than silently ignoring it for a buffer or file-like source.
-    if isinstance(source, (str, os.PathLike)):
+    # pymseed only accepts skip_not_data when reading from a file path or a
+    # buffer; say so rather than silently ignoring it for a file-like source.
+    if read_tracelist != MS3TraceList.from_filelike:
         common_kwargs["skip_not_data"] = skip_not_data
     elif skip_not_data:
         warnings.warn(
-            "skip_not_data is only supported when reading from a file path, "
-            f"ignoring it for {type(source).__name__}"
+            "skip_not_data is only supported when reading from a file path "
+            f"or buffer, ignoring it for {type(source).__name__}"
         )
 
     # Details requires a record list
