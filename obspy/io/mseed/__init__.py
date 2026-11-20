@@ -75,7 +75,7 @@ each parameter.
 
 Reading a file is implemented using :func:`numpy.memmap()`. Deleting a miniseed
 file while it is still being used by the software may result in undefined
-behaviour on non-UNIX style systems. 
+behaviour on non-UNIX style systems.
 
 Writing
 -------
