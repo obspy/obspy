@@ -114,6 +114,7 @@ URL_MAPPINGS = {
     "ETH": "https://eida.ethz.ch",
     "EMSC": "https://www.seismicportal.eu",
     "GEOFON": "https://geofon.gfz.de",
+    "GEOSHAKE": "https://api.geoshake.org",
     "GEONET": "https://service.geonet.org.nz",
     "GFZ": "https://geofon.gfz.de",
     "ICGC": "https://ws.icgc.cat",

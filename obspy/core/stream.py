@@ -36,6 +36,13 @@ from obspy.core.util.obspy_types import ObsPyException
 
 _headonly_warning_msg = (
     "Keyword headonly cannot be combined with starttime, endtime or dtype.")
+UNPICKLE_WARNING_MSG = (
+    "Unpickling is not secure. Only unpickle data you trust. It is possible "
+    "to construct malicious pickle data which will execute arbitrary code "
+    "during unpickling. Never unpickle data that could have come from an "
+    "untrusted source, or that could have been tampered with. This warning "
+    "can be suppressed with kwarg 'suppress_pickle_warning'. See "
+    "https://docs.python.org/3/library/pickle.html for more info.")
 
 
 @map_example_filename("pathname_or_url")
@@ -3674,25 +3681,40 @@ def _is_pickle(filename):  # @UnusedVariable
     if isinstance(filename, str):
         try:
             with open(filename, 'rb') as fp:
-                if b"obspy.core.stream" in fp.read(100):
-                    fp.seek(0)
-                    st = pickle.load(fp)
-                    return True
-                else:
-                    return False
+                data = fp.read(22)
+            if data[0:1] == b'\x80' and b"obspy.core.stream" in data:
+                return True
         except Exception:
             return False
     else:
+        fp = filename
         try:
-            st = pickle.load(filename)
-        except Exception:
+            initial_pos = fp.tell()
+            data = fp.read(22)
+            if data[0:1] == b'\x80' and b"obspy.core.stream" in data:
+                return True
+        except AttributeError:
             return False
-    return isinstance(st, Stream)
+        finally:
+            # Reset pointer.
+            try:
+                fp.seek(initial_pos, 0)
+            except AttributeError:
+                pass
+    return False
 
 
-def _read_pickle(filename, **kwargs):  # @UnusedVariable
+def _read_pickle(
+        filename, suppress_pickle_warning=False, **kwargs):  # @UnusedVariable
     """
     Read and return Stream from pickled ObsPy Stream file.
+
+    .. warning::
+        Unpickling is not secure. Only unpickle data you trust. It is possible
+        to construct malicious pickle data which will execute arbitrary code
+        during unpickling. Never unpickle data that could have come from an
+        untrusted source, or that could have been tampered with. See
+        https://docs.python.org/3/library/pickle.html for more info.
 
     .. warning::
         This function should NOT be called directly, it registers via the
@@ -3703,6 +3725,9 @@ def _read_pickle(filename, **kwargs):  # @UnusedVariable
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
+    if not suppress_pickle_warning:
+        warnings.warn(UNPICKLE_WARNING_MSG)
+
     kwargs = {}
     # see seishub/client.py
     # https://api.mongodb.org/python/current/\
