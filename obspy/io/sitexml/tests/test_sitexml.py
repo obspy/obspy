@@ -12,7 +12,6 @@ Test suite for the SERASiteXML reader and writer.
 import io
 import re
 import warnings
-from pathlib import Path
 
 import pytest
 from lxml import etree
@@ -66,38 +65,24 @@ class TestSiteXML():
 
     def test_get_sitexml_filename(self):
         """
-        The default SERASiteXML filename is deterministic, with an optional
-        date.
+        The default SERASiteXML filename depends only on the site identifier.
         """
         station_site = self._minimal_sera_site(station_code="XX.ABCD")
         assert station_site.get_sitexml_filename() == "Site_XX.ABCD.xml"
-        assert station_site.get_sitexml_filename(
-            obspy.UTCDateTime(2026, 1, 12, 3, 4, 5)) == (
-                "Site_XX.ABCD_12-01-2026.xml")
 
         non_station_site = self._minimal_sera_site(station_code=None)
         assert non_station_site.get_sitexml_filename() == (
             "Site_domain.ab.001.xml")
-        assert non_station_site.get_sitexml_filename(
-            obspy.UTCDateTime(2026, 1, 12, 3, 4, 5)) == (
-                "Site_domain.ab.001_12-01-2026.xml")
 
-    def test_sitedict_to_sitexml_uses_dated_site_filename(
+    def test_sitedict_to_sitexml_uses_default_filenames(
             self, tmp_path, monkeypatch):
         output_calls = []
-        creation_time = obspy.UTCDateTime(2026, 5, 9, 12, 0, 0)
 
-        def fake_write_sitexml(sera_site, filename, validate,
-                               creation_time=None):
-            output_calls.append((sera_site, filename, validate,
-                                 creation_time))
+        def fake_write_sitexml(sera_site, filename, validate):
+            output_calls.append((sera_site, filename, validate))
 
         monkeypatch.setattr(
             sitexml_module, "write_sitexml", fake_write_sitexml)
-        monkeypatch.setattr(
-            sitexml_module.obspy, "UTCDateTime",
-            lambda *args, **kwargs: creation_time)
-
         station_site = self._minimal_sera_site(
             "XX.ABCD", resource_id="quakeml:domain.ab/site/001")
         non_station_site = self._minimal_sera_site(
@@ -108,13 +93,11 @@ class TestSiteXML():
             "quakeml:domain.ab/site/without_station": non_station_site,
         }, output_folder=tmp_path)
 
-        assert [tmp_path / "Site_XX.ABCD_09-05-2026.xml",
-                tmp_path / (
-                    "Site_domain.ab.without_station_09-05-2026.xml")] == [
-                    Path(filename) for _, filename, _, _ in output_calls]
-        assert [validate for _, _, validate, _ in output_calls] == [True, True]
-        assert [time for _, _, _, time in output_calls] == [
-            creation_time, creation_time]
+        assert output_calls == [
+            (station_site, tmp_path / "Site_XX.ABCD.xml", True),
+            (non_station_site,
+             tmp_path / "Site_domain.ab.without_station.xml", True),
+        ]
 
     def test_sitexml_to_sitedict_reads_single_file(self, tmp_path):
         sera_site = self._minimal_sera_site()
@@ -703,7 +686,7 @@ class TestSiteXML():
         station.external_references = [
             ExternalReference(
                 uri="https://example.org/sitexml/"
-                    "Site_XX.ABCD_01-05-2026.xml",
+                    "versions/v1/Site_XX.ABCD.xml",
                 description="SERASiteXML site characterization; "
                     "added 2026-05-01"),
             ExternalReference(
@@ -717,12 +700,12 @@ class TestSiteXML():
         add_sitexml_reference(
             inventory,
             "XX.ABCD",
-            "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+            "https://example.org/sitexml/Site_XX.ABCD.xml",
             added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0))
 
         refs = station.external_references
         assert [ref.uri for ref in refs] == [
-            "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+            "https://example.org/sitexml/Site_XX.ABCD.xml",
             "https://example.org/other.xml",
         ]
         assert refs[0].description == (
@@ -737,12 +720,12 @@ class TestSiteXML():
             code="ABCD", latitude=1.0, longitude=2.0, elevation=3.0)
         station.external_references = [
             ExternalReference(
-                uri="https://example.org/sitexml/"
+                uri="https://example.org/sitexml/archive/"
                     "Site_XX.ABCD.xml",
                 description="Manually added SERASiteXML link"),
             ExternalReference(
                 uri="https://example.org/sitexml/"
-                    "Site_YY.ABCD_01-05-2026.xml",
+                    "Site_YY.ABCD.xml",
                 description="Different station SERASiteXML link"),
         ]
         inventory = Inventory(
@@ -752,12 +735,12 @@ class TestSiteXML():
         add_sitexml_reference(
             inventory,
             "XX.ABCD",
-            "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+            "https://example.org/sitexml/Site_XX.ABCD.xml",
             added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0))
 
         assert [ref.uri for ref in station.external_references] == [
-            "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
-            "https://example.org/sitexml/Site_YY.ABCD_01-05-2026.xml",
+            "https://example.org/sitexml/Site_XX.ABCD.xml",
+            "https://example.org/sitexml/Site_YY.ABCD.xml",
         ]
         assert station.external_references[0].description == (
             "SERASiteXML site characterization; added 2026-05-02")
@@ -772,7 +755,7 @@ class TestSiteXML():
         station.external_references = [
             ExternalReference(
                 uri="https://example.org/sitexml/"
-                    "Site_XX.ABCD_01-05-2026.xml",
+                    "versions/v1/Site_XX.ABCD.xml",
                 description="SERASiteXML site characterization; "
                     "added 2026-05-01"),
         ]
@@ -783,13 +766,13 @@ class TestSiteXML():
         add_sitexml_reference(
             inventory,
             "XX.ABCD",
-            "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+            "https://example.org/sitexml/Site_XX.ABCD.xml",
             added_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0),
             replace_existing=False)
 
         assert [ref.uri for ref in station.external_references] == [
-            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml",
-            "https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+            "https://example.org/sitexml/versions/v1/Site_XX.ABCD.xml",
+            "https://example.org/sitexml/Site_XX.ABCD.xml",
         ]
 
     def test_station_code_requires_network_station_notation(self):
@@ -855,10 +838,10 @@ class TestSiteXML():
             <revisionTime>2026-05-02T12:00:00Z</revisionTime>
             <description>Updated velocity profile and quality indexes.
             </description>
-            <author>ORFEUS</author>
+            <author>Some Author</author>
             <version>2026-05-02</version>
             <previousVersion>"""
-            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml"
+            "https://example.org/sitexml/versions/v1/Site_XX.ABCD.xml"
             """</previousVersion>
         </revision>
     </revisionHistory>"""
@@ -1324,19 +1307,19 @@ class TestSiteXML():
         revision = Revision(
             revision_time="2026-05-02T12:00:00Z",
             description="Updated velocity profile.",
-            author="ORFEUS",
+            author="Some Author",
             version=20260502,
             previous_version=(
                 "https://example.org/sitexml/"
-                "Site_XX.ABCD_01-05-2026.xml"))
+                "versions/v1/Site_XX.ABCD.xml"))
 
         assert revision.revision_time == obspy.UTCDateTime(
             2026, 5, 2, 12, 0, 0)
         assert revision.description == "Updated velocity profile."
-        assert revision.author == "ORFEUS"
+        assert revision.author == "Some Author"
         assert revision.version == "20260502"
         assert revision.previous_version == (
-            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml")
+            "https://example.org/sitexml/versions/v1/Site_XX.ABCD.xml")
 
         with pytest.raises(SiteXMLValidationError):
             Revision(None, "Updated velocity profile.")
@@ -1353,11 +1336,11 @@ class TestSiteXML():
             Revision(
                 revision_time=obspy.UTCDateTime(2026, 5, 2, 12, 0, 0),
                 description="Updated velocity profile and quality indexes.",
-                author="ORFEUS",
+                author="Some Author",
                 version="2026-05-02",
                 previous_version=(
                     "https://example.org/sitexml/"
-                    "Site_XX.ABCD_01-05-2026.xml")),
+                    "versions/v1/Site_XX.ABCD.xml")),
         ]
 
         xml_buffer = io.BytesIO()
@@ -1372,10 +1355,10 @@ class TestSiteXML():
             2026, 5, 2, 12, 0, 0)
         assert revision.description == (
             "Updated velocity profile and quality indexes.")
-        assert revision.author == "ORFEUS"
+        assert revision.author == "Some Author"
         assert revision.version == "2026-05-02"
         assert revision.previous_version == (
-            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml")
+            "https://example.org/sitexml/versions/v1/Site_XX.ABCD.xml")
 
     def test_sera_site_add_revision(self):
         """
@@ -1386,20 +1369,20 @@ class TestSiteXML():
         revision = sera_site.add_revision(
             revision_time="2026-05-02T12:00:00Z",
             description="Updated velocity profile.",
-            author="ORFEUS",
+            author="Some Author",
             version="2026-05-02",
             previous_version=(
                 "https://example.org/sitexml/"
-                "Site_XX.ABCD_01-05-2026.xml"))
+                "versions/v1/Site_XX.ABCD.xml"))
 
         assert sera_site.revision_history == [revision]
         assert revision.revision_time == obspy.UTCDateTime(
             2026, 5, 2, 12, 0, 0)
         assert revision.description == "Updated velocity profile."
-        assert revision.author == "ORFEUS"
+        assert revision.author == "Some Author"
         assert revision.version == "2026-05-02"
         assert revision.previous_version == (
-            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml")
+            "https://example.org/sitexml/versions/v1/Site_XX.ABCD.xml")
 
     def test_write_sitexml_uses_serialization_time(self):
         sera_site = SERASite(
@@ -1430,29 +1413,17 @@ class TestSiteXML():
         assert before <= written_creation_time <= after
         assert sera_site.created == written_creation_time
 
-    def test_write_sitexml_none_uses_default_filename(
-            self, tmp_path, monkeypatch):
+    def test_write_sitexml_requires_output_target(self, tmp_path, monkeypatch):
         sera_site = self._minimal_sera_site(station_code="XX.ABCD")
         monkeypatch.chdir(tmp_path)
 
-        before = obspy.UTCDateTime()
-        write_sitexml(sera_site, None, validate=True)
-        after = obspy.UTCDateTime()
+        with pytest.raises(TypeError):
+            write_sitexml(sera_site)
+        with pytest.raises(TypeError, match="must be supplied"):
+            write_sitexml(sera_site, None)
 
-        filename = tmp_path / sera_site.get_sitexml_filename(sera_site.created)
-        assert filename.exists()
-
-        root = etree.parse(str(filename)).getroot()
-        written_creation_time = obspy.UTCDateTime(
-            root.find(
-                "{http://www.orfeus-eu.org/xml/site/1}creationTime"
-            ).text)
-
-        assert before <= written_creation_time <= after
-        assert sera_site.created == written_creation_time
-        assert filename.name == (
-            "Site_XX.ABCD_%s.xml" %
-            written_creation_time.strftime("%d-%m-%Y"))
+        assert list(tmp_path.iterdir()) == []
+        assert sera_site.created is None
 
     def test_write_sitexml_uses_provided_creation_time(self):
         sera_site = self._minimal_sera_site()

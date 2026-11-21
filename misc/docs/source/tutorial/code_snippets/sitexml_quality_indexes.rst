@@ -386,7 +386,7 @@ after reading them using Python API into a dictionary of SERASiteXML objects.
 
     from obspy.io.sitexml.quality_index import apply_quality_index_csv
 
-    sites = sitexml_to_sitedict(filename)
+    sites = sitexml_to_sitedict(input_folder)
     apply_quality_index_csv(sites, data_dir / "quality_index.csv", delim=";")
 
     site = sites["quakeml:domain.ab/site/001"]

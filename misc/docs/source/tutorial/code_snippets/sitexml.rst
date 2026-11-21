@@ -65,19 +65,18 @@ before the file is accepted.
 
     from obspy.io.sitexml.sitexml import write_sitexml
 
-    write_sitexml(site, validate=True)
     write_sitexml(site, "./site.xml", validate=True)
 
-When no output path or file-like object is supplied, ObsPy writes the file in
-the current directory using the default filename pattern described in
-:ref:`sitexml-filenames-and-revision-history` **dated with current date**.
+Supply an output filename or writable file-like object when calling
+``write_sitexml()``.
+
 
 Reading Or Writing Site Dictionaries
 ------------------------------------
 
 A directory of SERASiteXML files can be read as a dictionary keyed by
-``SERASite.resource_id``. The reverse helper writes each site to its default
-SERASiteXML filename.
+``SERASite.resource_id``. The reverse helper writes each site to its **default
+SERASiteXML filename**. See below for the default filename convention.
 
 .. code-block:: python
 
@@ -87,7 +86,7 @@ SERASiteXML filename.
     from obspy.io.sitexml.sitexml import (
         sitedict_to_sitexml, sitexml_to_sitedict)
 
-    sites = sitexml_to_sitedict(filename)
+    sites = sitexml_to_sitedict(input_folder)
 
     with TemporaryDirectory() as tmpdir:
         sitedict_to_sitexml(sites, tmpdir)
@@ -98,45 +97,33 @@ SERASiteXML filename.
 SERASiteXML filenames and revision history
 ------------------------------------------
 
-SERASiteXML filenames identify the site and, for ObsPy generated files, **the
-publication date**. For a station-backed site, the base filename is built
-from ``Site_`` and the ``network.station`` code stored in
-``SiteDescription.station_code``:
+Default SERASiteXML filenames identify the site. For a station-backed site,
+the base filename is built from ``Site_`` and the ``network.station`` code
+stored in ``SiteDescription.station_code``:
 
 .. code-block:: text
 
-    Site_XX.ABCD.xml                    # Default filename - no date
-    Site_XX.ABCD_05-05-2026.xml         # Default filename - publication date
-
+    Site_XX.ABCD.xml                    # Default filename
+    
 For sites without an associated station code, the base filename is derived from
 the ``SERASite.resource_id`` using the compact SERASiteXML site identifier:
 
 .. code-block:: text
 
-    quakeml:example.org/site/001
-    Site_example.org.001.xml
-    Site_example.org.001_05-05-2026.xml
-
+    quakeml:example.org/site/001        # SERASite.resource_id
+    Site_example.org.001.xml            # Default filename
+    
 Use
 :meth:`~obspy.io.sitexml.core.SERASite.get_sitexml_filename` when you need to
-preview or choose the default filename yourself. If you provide a date, this
-will be appended in the base filename.
+preview or choose the default filename yourself.
 
 .. code-block:: python
 
     output_file = site.get_sitexml_filename()
     # Output filename is Site_XX.ABCD.xml
 
-    output_file = site.get_sitexml_filename("2026-05-02")
-    # Output filename is Site_XX.ABCD_02-05-2026.xml
-
     write_sitexml(site, output_file, validate=True)
 
-.. note::
-
-    The date appended to the filename is the document's publication date. It
-    is not necessarily the date when the site was measured, or
-    characterized.
 
 SERASiteXML can also store optional document revision history.
 ``SERASite.created`` records when this XML file is generated, while each
@@ -510,10 +497,11 @@ SERASiteXML can be associated with the corresponding StationXML by adding the
 current published SERASiteXML URL as a station-level StationXML
 ``ExternalReference``. The SERASiteXML file itself stores the station
 association in ``SiteDescription.station_code`` using ``network.station``
-notation, for example ``XX.ABCD``. Because SERASiteXML filenames can include
-a publication date (:ref:`sitexml-filenames-and-revision-history`), the
-StationXML reference is treated as the current pointer to the latest published
-SERASiteXML document.
+notation, for example ``XX.ABCD``. When adding or updating a reference
+manually, you can optionally append the reference update date to its
+``description``. This records when the StationXML reference was refreshed.
+The ``add_sitexml_reference()`` helper appends this date automatically as
+``added YYYY-MM-DD``.
 
 Use :func:`~obspy.io.sitexml.sitexml.add_sitexml_reference` to add or
 update the StationXML reference that points to the SERASiteXML URL.
@@ -543,7 +531,7 @@ do not want to contact an FDSN data center:
     inventory = add_sitexml_reference(
         inventory,
         station_code="XX.ABCD",
-        sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+        sitexml_url="https://example.org/sitexml/Site_XX.ABCD.xml",
         added_time=UTCDateTime(2026, 5, 2))
     inventory.write("XX.ABCD.with_sitexml.stationxml.xml",
                     format="STATIONXML")
@@ -565,7 +553,7 @@ then pass it to the helper:
     inventory = add_sitexml_reference(
         inventory,
         station_code="XX.ABCD",
-        sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml")
+        sitexml_url="https://example.org/sitexml/Site_XX.ABCD.xml")
 
     station = inventory.select(network="XX", station="ABCD")[0][0]
     print(station.external_references[-1].description)
@@ -579,14 +567,16 @@ Keeping The Reference Current
 The ``sitexml_url`` should be the URL where the current SERASiteXML document
 is published.
 By default, :func:`~obspy.io.sitexml.sitexml.add_sitexml_reference`
-replaces an existing SERASiteXML station reference instead of appending another
-dated URL. It replaces references written by this helper and manually added
-references whose URL basename follows the default SERASiteXML station filename
-pattern, for example ``Site_XX.ABCD_02-05-2026.xml``. Other station external
-references are left untouched.
+replaces matching SERASiteXML station references and refreshes the description
+and its date, including when the published URL stays the same. It matches
+references with the same URL, references carrying the helper's standard
+SERASiteXML description, and references whose URL basename follows the
+SERASiteXML station filename pattern, for example ``Site_XX.ABCD.xml``.
+Other station external references are preserved.
 
-If the StationXML file should preserve a history of SERASiteXML URLs, disable
-replacement explicitly:
+To retain existing references and append a reference to a different
+SERASiteXML URL, pass ``replace_existing=False``. If the exact URL is already
+present, this option preserves the existing entry and its description date:
 
 .. code-block:: python
 
@@ -597,34 +587,41 @@ replacement explicitly:
     inventory = add_sitexml_reference(
         inventory,
         station_code="XX.ABCD",
-        sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+        sitexml_url="https://example.org/sitexml/Site_XX.ABCD.xml",
         replace_existing=False)
 
 Reference Description And Date
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The StationXML ``ExternalReference.description`` records when the reference was
-added in the form ``added YYYY-MM-DD``.
-By default the added date is the current UTC date. If you need reproducible
-output or want to use the SERASiteXML document creation date, pass
-``added_time``. If the default external-reference text is not specific enough,
-pass a custom ``description``; the added-date marker is appended to the custom
-text:
+The helper appends ``added YYYY-MM-DD`` to the StationXML
+``ExternalReference.description`` whenever it adds or replaces a reference.
+The date defaults to the current UTC date. Pass ``added_time`` to choose the
+reference update date explicitly. 
+
+.. note::
+    
+    Please note that the ``added_time`` is not necessarily the same with
+    the SERASiteXML document's ``creationTime``.
+
+Pass ``description`` to provide custom reference text. The helper appends
+the date marker to this text too:
 
 .. code-block:: python
+
+    from obspy import UTCDateTime
 
     inventory = add_sitexml_reference(
         inventory,
         station_code="XX.ABCD",
-        sitexml_url="https://example.org/sitexml/Site_XX.ABCD_02-05-2026.xml",
+        sitexml_url="https://example.org/sitexml/Site_XX.ABCD.xml",
         description="SERASiteXML site characterization for XX.ABCD",
         added_time=UTCDateTime(2026, 5, 2))
 
     inventory.write("XX.ABCD.stationxml.xml", format="STATIONXML")
 
-Bare station codes such as ``ABCD`` should not be used for this association,
-because StationXML station codes are only unique together with their network
-code.
+The resulting description is
+``SERASiteXML site characterization for XX.ABCD; added 2026-05-02``.
+
 
 Updating a SERASiteXML file
 ---------------------------
@@ -649,11 +646,11 @@ written to ``site.site_description.ec8`` and ``BedrockDepth`` is written to
     from obspy.io.sitexml.sitexml import read_sitexml, write_sitexml
 
     # Use either a local file path ...
-    site = read_sitexml("Site_XX.ABCD_01-05-2026.xml")
+    site = read_sitexml("Site_XX.ABCD.xml")
 
     # ... or a published SERASiteXML URL.
     # site = read_sitexml(
-    #     "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml")
+    #     "https://example.org/sitexml/Site_XX.ABCD.xml")
 
     updated_ec8 = EC8(
         "C",
@@ -683,12 +680,12 @@ written to ``site.site_description.ec8`` and ``BedrockDepth`` is written to
     site.add_revision(
         revision_time=revision_time,
         description="Updated EC8 class and added bedrock depth.",
-        author="ORFEUS",
+        author="Some Author",
         version="2026-05-05",
         previous_version=(
-            "https://example.org/sitexml/Site_XX.ABCD_01-05-2026.xml")))
+            "https://example.org/sitexml/versions/v1/Site_XX.ABCD.xml"))
 
-    output_file = site.get_sitexml_filename(revision_time)
+    output_file = site.get_sitexml_filename()
     write_sitexml(site, output_file, validate=True)
 
 Adding an indicator to a slot that is already populated replaces the old
@@ -700,8 +697,7 @@ the previous indicator. Add fresh assessment metadata to the replacement
 indicator, or edit the existing indicator directly if the original assessment
 metadata still applies.
 
-For details on ``revisionHistory``, ``creationTime``, and dated output names
-such as ``Site_XX.ABCD_05-05-2026.xml``, see
+For details on filenames and ``revisionHistory`` see
 :ref:`sitexml-filenames-and-revision-history`.
 
 Adding Velocity Profiles To Existing SERASiteXML

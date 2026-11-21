@@ -87,13 +87,14 @@ Write a ``SERASite`` object back to XML:
 
     from obspy.io.sitexml.sitexml import write_sitexml
 
-    write_sitexml(sera_site, validate=True)
+    write_sitexml(sera_site, sera_site.get_sitexml_filename(), validate=True)
     write_sitexml(sera_site, "site_out.xml", validate=True)
 
-When no output path or file-like object is supplied, the file is written in
-the current directory using a default filename pattern, for example
-``Site_XX.ABCD_12-01-2026.xml``. The date in the filename is taken from the
-same serialization timestamp written to the root ``creationTime`` element.
+Supply an output filename or writable file-like object to ``write_sitexml()``.
+Use ``SERASite.get_sitexml_filename()`` to derive a filename from the station
+code or site resource ID, for example ``Site_XX.ABCD.xml`` or
+``Site_domain.ab.003.xml``. The root ``creationTime`` records the serialization
+timestamp.
 
 Add document revision history when the SERASiteXML file should record what
 changed across published versions:
@@ -103,13 +104,13 @@ changed across published versions:
     sera_site.add_revision(
         revision_time="2026-05-02T12:00:00Z",
         description="Updated velocity profile and quality indexes.",
-        author="ORFEUS",
+        author="Some Author",
         version="2026-05-02",
         previous_version=(
             "https://example.org/sitexml/"
-            "Site_XX.ABCD_01-05-2026.xml"))
+            "versions/v1/Site_XX.ABCD.xml"))
 
-    write_sitexml(sera_site, validate=True)
+    write_sitexml(sera_site, sera_site.get_sitexml_filename(), validate=True)
 
 ``creationTime`` records when a particular XML file is generated.
 ``Revision.revision_time`` records when one document revision occurred;
@@ -130,19 +131,18 @@ StationXML:
     inventory = add_sitexml_reference(
         inventory,
         station_code="XX.ABCD",
-        sitexml_url=("Site_XX.ABCD_12-01-2026.xml"))
+        sitexml_url="https://example.org/sitexml/Site_XX.ABCD.xml")
     inventory.write("XX.ABCD.with_sitexml.stationxml.xml",
                     format="STATIONXML")
 
 The helper adds a station-level StationXML ``ExternalReference`` and
 returns the updated :class:`~obspy.core.inventory.inventory.Inventory`.
 Read and write the StationXML outside the helper when file I/O is needed.
-Because SERASiteXML filenames can include the document creation date, an
-existing SERASiteXML reference for the same station is replaced by default so
-StationXML points at the current SERASiteXML file. References written by this
-helper are recognized by their standard description, and manually added
-references can also be replaced when their URL basename follows the
-default SERASiteXML filename pattern. Other station external
+An existing SERASiteXML reference for the same station is replaced by
+default so StationXML points at the current published SERASiteXML URL.
+References written by this helper are recognized by their standard description,
+and manually added references can also be replaced when their URL basename
+follows the default SERASiteXML filename pattern. Other station external
 references are preserved. Pass ``replace_existing=False`` to append
 SERASiteXML reference history instead.
 
@@ -298,13 +298,16 @@ schema-validated SERASiteXML:
 
     sitedict_to_sitexml(sites, "./output_folder")
 
+Each file uses the name returned by ``SERASite.get_sitexml_filename()``,
+derived from the station code or site resource ID.
+
 Write one imported site back to schema-validated SERASiteXML:
 
 .. code-block:: python
 
     from obspy.io.sitexml.sitexml import write_sitexml
 
-    write_sitexml(sera_site, validate=True)
+    write_sitexml(sera_site, sera_site.get_sitexml_filename(), validate=True)
 
 Uncertainty Values
 ------------------

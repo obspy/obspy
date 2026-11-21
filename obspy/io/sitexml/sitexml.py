@@ -969,8 +969,8 @@ def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     The files are written to a folder given with argument ``output_folder``.
     The name of each SERASiteXML file uses
     :meth:`~obspy.io.sitexml.core.SERASite.get_sitexml_filename`, currently
-    ``Site_<station-or-site-id>_<DD-MM-YYYY>.xml``. The date is the same
-    creation time written to the root ``creationTime`` element.
+    ``Site_<station-or-site-id>.xml``. Each document's root
+    ``creationTime`` records its serialization time.
 
     :type sera_site_dict: dict of
         :class:`~obspy.io.sitexml.core.SERASite`, required
@@ -982,26 +982,20 @@ def sitedict_to_sitexml(sera_site_dict, output_folder="."):
     """
     output_folder = Path(output_folder)
     for sera_site in sera_site_dict.values():
-        creation_time = obspy.UTCDateTime()
-        output_file = output_folder / sera_site.get_sitexml_filename(
-            creation_time)
-        write_sitexml(
-            sera_site, output_file, validate=True,
-            creation_time=creation_time)
+        output_file = output_folder / sera_site.get_sitexml_filename()
+        write_sitexml(sera_site, output_file, validate=True)
 
 
-def write_sitexml(sera_site, file_or_file_object=None, validate=True,
+def write_sitexml(sera_site, file_or_file_object, validate=True,
                   creation_time=None):
     """
     Writes a sera_site object to a buffer.
 
     :type sera_site: :class:`~obspy.io.sitexml.core.SERASite`, required
     :param sera_site: The sitexml instance to be written.
-    :type file_or_file_object: str, pathlib.Path, file-like object, or None,
-        optional
-    :param file_or_file_object: The file or file-like object to be written
-        to. If omitted or None, the file is written to the current directory
-        using a default SERASiteXML filename.
+    :type file_or_file_object: str, pathlib.Path, or file-like object, required
+    :param file_or_file_object: The output filename or writable file-like
+        object. A target must be supplied. None raises TypeError.
     :type validate: bool, optional
     :param validate: If True, the created document will be validated with
         the SERASiteXML schema before being written. Defaults to True which
@@ -1017,9 +1011,13 @@ def write_sitexml(sera_site, file_or_file_object=None, validate=True,
     Example
 
     >>> from obspy.io.sitexml.sitexml import write_sitexml
-    >>> write_sitexml(sera_site, validate=True)  # doctest: +SKIP
+    >>> write_sitexml(sera_site, "site.xml", validate=True)  # doctest: +SKIP
 
     """
+    if file_or_file_object is None:
+        raise TypeError("An output filename or writable file-like object "
+                        "must be supplied.")
+
     # Validate cross-references in the in-memory SERASiteXML object graph
     # before emitting XML, so broken internal IDs fail early with API-level
     # errors.
@@ -1040,9 +1038,6 @@ def write_sitexml(sera_site, file_or_file_object=None, validate=True,
         creation_time = obspy.UTCDateTime(creation_time)
     sera_site.created = creation_time
     etree.SubElement(root, "creationTime").text = str(creation_time)
-
-    if file_or_file_object is None:
-        file_or_file_object = sera_site.get_sitexml_filename(creation_time)
 
     _write_revision_history(root, sera_site.revision_history)
 

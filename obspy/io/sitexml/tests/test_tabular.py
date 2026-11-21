@@ -437,12 +437,11 @@ class TestSiteXMLCSVImport():
             "--output-folder", str(output_folder),
         ])
 
-        date_text = obspy.UTCDateTime().strftime("%d-%m-%Y")
         assert result == 0
         assert sorted(path.name for path in output_folder.glob("*.xml")) == [
-            "Site_XX.ABCD_%s.xml" % date_text,
-            "Site_YY.WXYZ_%s.xml" % date_text,
-            "Site_domain.ab.003_%s.xml" % date_text,
+            "Site_XX.ABCD.xml",
+            "Site_YY.WXYZ.xml",
+            "Site_domain.ab.003.xml",
         ]
 
     def test_csv2sitexml_main_ignores_preferred_ids_without_analysis(
@@ -457,9 +456,8 @@ class TestSiteXMLCSVImport():
                 "--output-folder", str(output_folder),
             ])
 
-        date_text = obspy.UTCDateTime().strftime("%d-%m-%Y")
         site_dict = sitexml_to_sitedict(
-            output_folder / ("Site_XX.ABCD_%s.xml" % date_text))
+            output_folder / ("Site_XX.ABCD.xml"))
         site = site_dict["quakeml:domain.ab/site/001"]
 
         assert result == 0
@@ -484,9 +482,8 @@ class TestSiteXMLCSVImport():
                 "--output-folder", str(output_folder),
             ])
 
-        date_text = obspy.UTCDateTime().strftime("%d-%m-%Y")
         site_dict = sitexml_to_sitedict(
-            output_folder / ("Site_XX.ABCD_%s.xml" % date_text))
+            output_folder / ("Site_XX.ABCD.xml"))
         site = site_dict["quakeml:domain.ab/site/001"]
 
         assert result == 0
@@ -509,9 +506,8 @@ class TestSiteXMLCSVImport():
                 "--output-folder", str(output_folder),
             ])
 
-        date_text = obspy.UTCDateTime().strftime("%d-%m-%Y")
         site_dict = sitexml_to_sitedict(
-            output_folder / ("Site_XX.ABCD_%s.xml" % date_text))
+            output_folder / ("Site_XX.ABCD.xml"))
         site = site_dict["quakeml:domain.ab/site/001"]
 
         assert result == 0
@@ -605,11 +601,10 @@ class TestSiteXMLCSVImport():
             "--output-folder", str(output_folder),
         ])
 
-        date_text = obspy.UTCDateTime().strftime("%d-%m-%Y")
         assert result == 0
         assert sorted(path.name for path in output_folder.glob("*.xml")) == [
-            "Site_XX.ABCD_%s.xml" % date_text,
-            "Site_YY.WXYZ_%s.xml" % date_text,
+            "Site_XX.ABCD.xml",
+            "Site_YY.WXYZ.xml",
         ]
 
     def test_excel_to_sera_site_applies_quality_index_sheet(

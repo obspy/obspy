@@ -2342,14 +2342,14 @@ class SERASite(SiteXMLBaseNode):
 
         return value
 
-    def get_sitexml_filename(self, creation_time=None):
+    def get_sitexml_filename(self):
         """
         Return the default SERASiteXML filename for this site.
 
         Station-backed sites use the associated FDSN station code in
         ``network.station`` notation. Other sites use this site's resource ID.
-        When ``creation_time`` is provided, the serialization date is appended
-        to the deterministic ``Site_<station-or-site-id>.xml`` base filename.
+        The filename has the deterministic form
+        ``Site_<station-or-site-id>.xml``.
 
         :rtype: str
 
@@ -2357,8 +2357,6 @@ class SERASite(SiteXMLBaseNode):
 
         >>> site.get_sitexml_filename()  # doctest: +SKIP
         'Site_XX.ABCD.xml'
-        >>> site.get_sitexml_filename("2026-05-02T12:00:00Z")  # doctest: +SKIP
-        'Site_XX.ABCD_02-05-2026.xml'
         """
         station_code = self.site_description.station_code
         if station_code:
@@ -2373,12 +2371,6 @@ class SERASite(SiteXMLBaseNode):
                     r"[^A-Za-z0-9]+", "_", resource_id
                 ).strip("_")
         filename = "Site_%s" % filename
-
-        # Append serialization date
-        if creation_time is not None:
-            creation_time = obspy.UTCDateTime(creation_time)
-            date_text = creation_time.strftime("%d-%m-%Y")
-            filename = "%s_%s" % (filename, date_text)
 
         return filename + ".xml"
 
