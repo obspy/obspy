@@ -2169,3 +2169,28 @@ class TestSiteXML():
 
         # Write deep copied object site2 and compare to the original file.
         self._write_and_compare(filename, site2)
+
+    def test_print_literature_and_external_references():
+        source = LiteratureSource("Title", "Author", year=2026)
+        assert str(source) == '"Title"; "Author"; 2026'
+        full_source = LiteratureSource(
+            "Some title", "Author A.",
+            secondary_authors="Author B., Author C.",
+            booktitle="Some magazine", year=2018, language="en",
+            doi="10.1007/s10518-017-0135-5")
+        assert str(full_source) == (
+            '"Some title"; "Author A., Author B., Author C."; '
+            '"Some magazine"; 2018; 10.1007/s10518-017-0135-5')
+        assert str(LiteratureSource("Title", "Author")) == '"Title"; "Author"'
+        references = [
+            ExternalReference("https://example.org/1", "First"),
+            ExternalReference("https://example.org/2", "Second")]
+        output = str(EC8("A", literature_source=source,
+                         external_references=references))
+        assert '\tLiterature source: "Title"; "Author"; 2026\n' in output
+        assert ("\tExternal reference # 1: https://example.org/1; First\n"
+                "\tExternal reference # 2: https://example.org/2; Second\n"
+                ) in output
+        empty_output = str(EC8("A"))
+        assert "\tLiterature source: None,\n" in empty_output
+        assert "\tExternal reference: None,\n" in empty_output

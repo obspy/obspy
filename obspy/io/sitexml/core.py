@@ -28,7 +28,7 @@ from .util import (EC8Class, ResonanceFrequencyMethod, SiteXMLBaseNode,
                    SiteXMLValidationError, TopographySchemaA,
                    TopographySchemaB, VelocityS30Method, Vs30ManualIndex,
                    Vs30MethodCombined, _enum_list_property, _enum_property,
-                   _pretty_str, _resource_id_property, _scalar_property,
+                   _resource_id_property, _scalar_property,
                    _split_station_code, _wrapped_list_property,
                    _wrapped_property)
 
@@ -192,7 +192,13 @@ class LiteratureSource(SiteXMLBaseNode):
         self.doi = doi
 
     def __str__(self):
-        return _pretty_str(self)
+        authors = ", ".join(author for author in (
+            self.first_author, self.secondary_authors) if author)
+        fields = [f'"{self.title}"', f'"{authors}"']
+        if self.booktitle:
+            fields.append(f'"{self.booktitle}"')
+        fields.extend(str(value) for value in (self.year, self.doi) if value)
+        return "; ".join(fields)
 
     @property
     def year(self):
@@ -380,22 +386,22 @@ class SiteIndicator(SiteXMLBaseNode):
         ret = ("{name} parameters:\n"
                "\t{name} value: {value},\n"
                "\tMethods: {methods},\n"
-               "\tQuality index: {qindex},\n"
-               "\tLiterature source: {lit_source},\n")
+               "\tQuality index: {qindex},\n")
         ret = ret.format(
             name=self.name,
             value=self.value if self.name != "velocityProfileSet" else "None",
             methods=self.methods,     # iterate over methods for printing
             qindex=self.quality_index,
-            lit_source=(
-                str(self.literature_source)
-                if self.literature_source is not None
-                else "None")
         )
+        if self.literature_source is not None:
+            ret += f"\tLiterature source: {self.literature_source}\n"
+        else:
+            ret += "\tLiterature source: None,\n"
         if self.external_references:
             for i, reference in enumerate(self.external_references):
-                ret += (f"\tExternal reference # {i+1}: "
-                        f"{_pretty_str(reference)}\n")
+                details = "; ".join(str(value) for value in (
+                    reference.uri, reference.description) if value)
+                ret += f"\tExternal reference # {i+1}: {details}\n"
         else:
             ret += "\tExternal reference: None,\n"
         return ret

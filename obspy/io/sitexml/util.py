@@ -303,18 +303,6 @@ provided in `SERA Deliverable 7.1, Appendix III.
 """
 
 
-def _pretty_str(obj):
-    """
-    Return a compact representation of non-empty public object attributes.
-
-    :rtype: str
-    """
-    return ", ".join(
-        f"{key.lstrip('_')}='{value}'" for key, value in vars(obj).items()
-        if value is not None
-    )
-
-
 # Setters and getters for class attributes with validation
 
 def _enum_property(attr_name, enum_type):
