@@ -9,6 +9,8 @@
     'obspy.imaging.scripts.plot': 'obspy-plot',
     'obspy.imaging.scripts.mopad': 'obspy-mopad',
     'obspy.io.mseed.scripts.recordanalyzer': 'obspy-mseed-recordanalyzer',
+    'obspy.io.sitexml.scripts.csv2sitexml': 'obspy-csv2sitexml',
+    'obspy.io.sitexml.scripts.excel2sitexml': 'obspy-excel2sitexml',
     'obspy.io.xseed.scripts.dataless2xseed': 'obspy-dataless2xseed',
     'obspy.io.xseed.scripts.xseed2dataless': 'obspy-xseed2dataless',
     'obspy.io.xseed.scripts.dataless2resp': 'obspy-dataless2resp'

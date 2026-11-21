@@ -40,6 +40,8 @@ categories.*
     obspy.imaging.scripts.plot
     obspy.imaging.scripts.mopad
     obspy.io.mseed.scripts.recordanalyzer
+    obspy.io.sitexml.scripts.csv2sitexml
+    obspy.io.sitexml.scripts.excel2sitexml
     obspy.io.xseed.scripts.dataless2xseed
     obspy.io.xseed.scripts.xseed2dataless
     obspy.io.xseed.scripts.dataless2resp
@@ -184,3 +186,14 @@ categories.*
     obspy.io.stationtxt
     obspy.io.stationxml
     obspy.io.xseed
+
+.. rubric:: Site Metadata Plug-ins
+
+*Modules for working directly with site characterization metadata and SERASiteXML
+documents.*
+
+.. autosummary::
+    :toctree: .
+    :nosignatures:
+
+    obspy.io.sitexml
