@@ -8,6 +8,10 @@ Changes:
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
+ - obspy.core:
+   * added an HTML representation (`_repr_html_`) for
+     :class:`~obspy.core.trace.Trace`, when ``jinja2`` is installed.
+     (see #3833)
 
 1.5.1 (doi: 10.5281/zenodo.22108563)
 ====================================
