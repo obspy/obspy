@@ -15,6 +15,7 @@
 
 /obspy/core        @megies @trichter @d-chambers
 /obspy/geodetics
+/obspy/html_templates      @scott-huberty
 /obspy/imaging
 /obspy/realtime
 /obspy/scripts
