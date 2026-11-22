@@ -1,20 +1,23 @@
-import functools
+"""
+Jinja templates for HTML reprs.
 
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
+"""
+import jinja2
 
-@functools.lru_cache(maxsize=2)
-def _get_html_templates_env():
-    # For _html_repr_()
-    import jinja2
+autoescape = jinja2.select_autoescape(
+    default=True,
+    default_for_string=True
+)
 
-    templates_env = jinja2.Environment(
-        loader=jinja2.PackageLoader(
-            package_name="obspy.html_templates", package_path="repr"
-        ),
-        autoescape=jinja2.select_autoescape(default=True, default_for_string=True),
-    )
-
-    return templates_env
-
-
-def _get_html_template(name):
-    return _get_html_templates_env().get_template(name)
+repr_templates_env = jinja2.Environment(
+    loader=jinja2.PackageLoader(
+        package_name='obspy.html_templates',
+        package_path='repr'
+    ),
+    autoescape=autoescape
+)
