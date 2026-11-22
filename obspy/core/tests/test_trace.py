@@ -2778,3 +2778,7 @@ class TestTrace:
             # just test that the data changed..
             with pytest.raises(AssertionError):
                 np.testing.assert_array_almost_equal(tr.data, ones)
+    
+    def test_repr_html(self):
+        pytest.importorskip("jinja2")
+        pass

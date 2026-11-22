@@ -25,6 +25,7 @@ from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.misc import (flat_not_masked_contiguous, get_window_times,
                                   limit_numpy_fft_cache)
+from obspy.html_templates import _get_html_template
 
 
 class Stats(AttribDict):
@@ -456,6 +457,10 @@ class Trace(object):
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
+    
+    def _repr_html_(self):
+        template = _get_html_template("trace.html.jinja")
+        return template.render(inst=self, trace_id=self.id)
 
     def __len__(self):
         """
