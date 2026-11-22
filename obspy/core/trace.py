@@ -457,6 +457,24 @@ class Trace(object):
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
 
+    def _repr_html_(self):
+        try:
+            from obspy.html_templates import repr_templates_env
+            template = repr_templates_env.get_template("trace.html.jinja")
+        except ImportError:
+            return
+        return template.render(
+            trace_id=self.id,
+            network=self.stats.network,
+            station=self.stats.station,
+            location=self.stats.location,
+            channel=self.stats.channel,
+            start_time=str(self.stats.starttime),
+            end_time=str(self.stats.endtime),
+            sampling_rate=f"{self.stats.sampling_rate:g}",
+            n_points=self.stats.npts,
+            )
+
     def __len__(self):
         """
         Return number of data samples of the current trace.

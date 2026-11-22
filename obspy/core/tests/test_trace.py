@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import math
 import pickle
+import sys
 import warnings
 from copy import deepcopy
 from unittest import mock
@@ -2778,3 +2779,57 @@ class TestTrace:
             # just test that the data changed..
             with pytest.raises(AssertionError):
                 np.testing.assert_array_almost_equal(tr.data, ones)
+
+    def test_repr_html(self):
+        """
+        Tests the HTML representation of the Trace class.
+        """
+        pytest.importorskip("jinja2")
+
+        header = dict(
+            network="BK",
+            station="CMB",
+            location="00",
+            channel="LKS",
+            sampling_rate=100.0,
+            starttime=UTC("2004-06-16T00:00:00"),
+            endtime=UTC("2004-06-16T00:10:00"),
+            npts=10,
+        )
+        tr = Trace(data=np.arange(10), header=header)
+        html = tr._repr_html_()
+        # Syntax checks
+        assert html.startswith("<table")
+        assert html.endswith("</table>")
+        assert html.count("<tr>") == html.count("</tr>")
+        assert html.count("<td>") == html.count("</td>")
+        # Correctness checks
+        key_to_label = dict(
+            starttime="Start time",
+            endtime="End time",
+            sampling_rate="Sampling rate",
+            npts="Samples"
+            )
+
+        for key in header.keys():
+            label = key_to_label.get(key, key)
+            assert f"<th>{label.capitalize()}</th>" in html
+
+        assert "<td>BK.CMB.00.LKS</td>" in html
+        assert f"<td>{tr.stats.starttime}</td>" in html
+        assert f"<td>{tr.stats.endtime}</td>" in html
+        assert f"<td>{tr.stats.sampling_rate:g} Hz</td>" in html
+        assert f"<td>{tr.stats.npts}</td>" in html
+
+        # Make sure a default trace doesn't error
+        tr_orig = Trace()
+        html_orig = tr_orig._repr_html_()
+        assert "<td>...</td>" in html_orig  # trace ID
+        assert "<td>1 Hz</td>" in html_orig
+
+        # Jinja2 is optional.
+        mods = {"jinja2": None,
+                "obspy.html_templates": None,
+                "obspy.html_templates._templates": None}
+        with mock.patch.dict(sys.modules, mods):
+            assert Trace()._repr_html_() is None

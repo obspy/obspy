@@ -100,6 +100,7 @@ INSTALL_REQUIRES = [
 # Extra dependencies
 EXTRAS_REQUIRES = {
     'tests': [
+        "jinja2",
         'packaging',
         'pyproj',
         'pytest',
