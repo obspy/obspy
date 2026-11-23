@@ -40,6 +40,19 @@ class TestPPSD:
         plt.draw()
         fig.savefig(image_path, dpi=50)
 
+    def test_ppsd_plot_into_existing_axes(self, _ppsd):
+        """PPSD.plot can render into caller-owned subplot axes."""
+        fig, axes = plt.subplots(3, 1)
+        other = plt.figure()
+        for ax in axes:
+            result = _ppsd.plot(axes=[ax], show=False, show_coverage=False)
+            assert result is fig
+        assert all(ax.collections for ax in axes)
+        assert not other.axes
+        assert len(fig.axes) == 6  # Three histograms and their colorbars.
+        plt.close(other)
+        plt.close(fig)
+
     def test_ppsd_plot_cumulative(self, ignore_numpy_errors, image_path,
                                   _ppsd):
         """

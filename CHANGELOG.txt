@@ -10,6 +10,7 @@ Changes:
      URL_MAPPINGS; excluded from the mass downloader by default like
      RASPISHAKE (see #3805)
  - obspy.signal:
+   * allow PPSD.plot() to draw into existing subplot axes (see #3838)
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
 
