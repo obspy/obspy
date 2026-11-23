@@ -1882,7 +1882,7 @@ class PPSD(object):
              max_percentage=None, period_lim=(0.01, 179), show_mode=False,
              show_mean=False, cmap=obspy_sequential, cumulative=False,
              cumulative_number_of_colors=20, xaxis_frequency=False,
-             show_earthquakes=None):
+             show_earthquakes=None, fig=None, axes=None):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -1954,17 +1954,33 @@ class PPSD(object):
         :type xaxis_frequency: bool
         :param xaxis_frequency: If set to `True`, the x axis will be frequency
             in Hertz as opposed to the default of period in seconds.
+        :type fig: :class:`matplotlib.figure.Figure`, optional
+        :param fig: Existing figure to draw the PPSD plot into. If omitted, a
+            new figure is created.
+        :type axes: list of :class:`matplotlib.axes.Axes`, optional
+        :param axes: Existing axes to draw into. The first axis is used for the
+            histogram and the second axis is used for coverage when
+            ``show_coverage=True``. If omitted, axes are created in ``fig``.
         """
         import matplotlib.pyplot as plt
         self.__check_histogram()
-        fig = plt.figure()
+        if fig is None:
+            fig = plt.figure()
         fig.ppsd = AttribDict()
 
-        if show_coverage:
-            ax = fig.add_axes([0.12, 0.3, 0.90, 0.6])
-            ax2 = fig.add_axes([0.15, 0.17, 0.7, 0.04])
+        if axes is None:
+            if show_coverage:
+                ax = fig.add_axes([0.12, 0.3, 0.90, 0.6])
+                ax2 = fig.add_axes([0.15, 0.17, 0.7, 0.04])
+            else:
+                ax = fig.add_subplot(111)
+                ax2 = None
         else:
-            ax = fig.add_subplot(111)
+            if len(axes) < 1 or show_coverage and len(axes) < 2:
+                raise ValueError("axes must contain one axis, or two with "
+                                 "show_coverage=True")
+            ax = axes[0]
+            ax2 = axes[1] if show_coverage else None
 
         if show_percentiles:
             # for every period look up the approximate place of the percentiles
@@ -2082,7 +2098,7 @@ class PPSD(object):
                 color_limits = (0, max_percentage)
                 fig.ppsd.color_limits = color_limits
 
-            self._plot_histogram(fig=fig)
+            self._plot_histogram(fig=fig, ax=ax)
 
         if xaxis_frequency:
             ax.set_xlabel('Frequency [Hz]')
@@ -2120,7 +2136,7 @@ class PPSD(object):
                 plt.draw()
                 return fig
 
-    def _plot_histogram(self, fig, draw=False, filename=None):
+    def _plot_histogram(self, fig, ax=None, draw=False, filename=None):
         """
         Reuse a previously created figure returned by `plot(show=False)`
         and plot the current histogram stack (pre-computed using
@@ -2131,7 +2147,8 @@ class PPSD(object):
         data from a new stack.
         """
         import matplotlib.pyplot as plt
-        ax = fig.axes[0]
+        if ax is None:
+            ax = fig.axes[0]
         xlim = ax.get_xlim()
         if "quadmesh" in fig.ppsd:
             fig.ppsd.pop("quadmesh").remove()
