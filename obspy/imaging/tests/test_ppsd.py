@@ -42,12 +42,16 @@ class TestPPSD:
 
     def test_ppsd_plot_into_existing_axes(self, _ppsd):
         """PPSD.plot can render into caller-owned subplot axes."""
-        fig, axes = plt.subplots(2, 1)
-        result = _ppsd.plot(fig=fig, axes=axes, show=False,
-                            show_coverage=False, show_noise_models=False)
-        assert result is fig
-        assert axes[0].images or axes[0].collections
-        assert not axes[1].images and not axes[1].collections
+        fig, axes = plt.subplots(3, 1)
+        other = plt.figure()
+        for ax in axes:
+            result = _ppsd.plot(axes=[ax], show=False, show_coverage=False)
+            assert result is fig
+        assert all(ax.collections for ax in axes)
+        assert not other.axes
+        assert len(fig.axes) == 6  # Three histograms and their colorbars.
+        plt.close(other)
+        plt.close(fig)
 
     def test_ppsd_plot_cumulative(self, ignore_numpy_errors, image_path,
                                   _ppsd):

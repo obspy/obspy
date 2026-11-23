@@ -1955,8 +1955,9 @@ class PPSD(object):
         :param xaxis_frequency: If set to `True`, the x axis will be frequency
             in Hertz as opposed to the default of period in seconds.
         :type fig: :class:`matplotlib.figure.Figure`, optional
-        :param fig: Existing figure to draw the PPSD plot into. If omitted, a
-            new figure is created.
+        :param fig: Existing figure to draw into. When only axes are supplied,
+            their figure is used. With neither argument, a new figure is
+            created.
         :type axes: list of :class:`matplotlib.axes.Axes`, optional
         :param axes: Existing axes to draw into. The first axis is used for the
             histogram and the second axis is used for coverage when
@@ -1964,11 +1965,10 @@ class PPSD(object):
         """
         import matplotlib.pyplot as plt
         self.__check_histogram()
-        if fig is None:
-            fig = plt.figure()
-        fig.ppsd = AttribDict()
-
+        owns_figure = fig is None and axes is None
         if axes is None:
+            if fig is None:
+                fig = plt.figure()
             if show_coverage:
                 ax = fig.add_axes([0.12, 0.3, 0.90, 0.6])
                 ax2 = fig.add_axes([0.15, 0.17, 0.7, 0.04])
@@ -1976,11 +1976,20 @@ class PPSD(object):
                 ax = fig.add_subplot(111)
                 ax2 = None
         else:
-            if len(axes) < 1 or show_coverage and len(axes) < 2:
+            if len(axes) < (2 if show_coverage else 1):
                 raise ValueError("axes must contain one axis, or two with "
                                  "show_coverage=True")
             ax = axes[0]
             ax2 = axes[1] if show_coverage else None
+            if fig is None:
+                fig = ax.figure
+            if ax.figure is not fig or (ax2 is not None and
+                                        ax2.figure is not fig):
+                raise ValueError("The supplied axes must belong to one figure")
+
+        ax.ppsd = AttribDict()
+        if axes is None:
+            fig.ppsd = ax.ppsd
 
         if show_percentiles:
             # for every period look up the approximate place of the percentiles
@@ -2088,15 +2097,15 @@ class PPSD(object):
                 # Set default only if cumulative is not True.
                 max_percentage = 30
 
-            fig.ppsd.cumulative = cumulative
-            fig.ppsd.cmap = cmap
-            fig.ppsd.label = label
-            fig.ppsd.max_percentage = max_percentage
-            fig.ppsd.grid = grid
-            fig.ppsd.xaxis_frequency = xaxis_frequency
+            ax.ppsd.cumulative = cumulative
+            ax.ppsd.cmap = cmap
+            ax.ppsd.label = label
+            ax.ppsd.max_percentage = max_percentage
+            ax.ppsd.grid = grid
+            ax.ppsd.xaxis_frequency = xaxis_frequency
             if max_percentage is not None:
                 color_limits = (0, max_percentage)
-                fig.ppsd.color_limits = color_limits
+                ax.ppsd.color_limits = color_limits
 
             self._plot_histogram(fig=fig, ax=ax)
 
@@ -2127,16 +2136,17 @@ class PPSD(object):
         # Catch underflow warnings due to plotting on log-scale.
         with np.errstate(all="ignore"):
             if filename is not None:
-                plt.savefig(filename)
-                plt.close()
+                fig.savefig(filename)
+                if owns_figure:
+                    plt.close(fig)
             elif show:
-                plt.draw()
+                fig.canvas.draw_idle()
                 plt.show()
             else:
-                plt.draw()
+                fig.canvas.draw_idle()
                 return fig
 
-    def _plot_histogram(self, fig, ax=None, draw=False, filename=None):
+    def _plot_histogram(self, fig, draw=False, filename=None, ax=None):
         """
         Reuse a previously created figure returned by `plot(show=False)`
         and plot the current histogram stack (pre-computed using
@@ -2146,14 +2156,13 @@ class PPSD(object):
         :meth:`plot()` call, so this routine can only be used to update with
         data from a new stack.
         """
-        import matplotlib.pyplot as plt
         if ax is None:
             ax = fig.axes[0]
         xlim = ax.get_xlim()
-        if "quadmesh" in fig.ppsd:
-            fig.ppsd.pop("quadmesh").remove()
+        if "quadmesh" in ax.ppsd:
+            ax.ppsd.pop("quadmesh").remove()
 
-        if fig.ppsd.cumulative:
+        if ax.ppsd.cumulative:
             data = self.current_histogram_cumulative * 100.0
         else:
             # avoid divison with zero in case of empty stack
@@ -2162,27 +2171,27 @@ class PPSD(object):
                 (self.current_histogram_count or 1))
 
         xedges = self.period_xedges
-        if fig.ppsd.xaxis_frequency:
+        if ax.ppsd.xaxis_frequency:
             xedges = 1.0 / xedges
 
-        if "meshgrid" not in fig.ppsd:
-            fig.ppsd.meshgrid = np.meshgrid(xedges, self.db_bin_edges)
+        if "meshgrid" not in ax.ppsd:
+            ax.ppsd.meshgrid = np.meshgrid(xedges, self.db_bin_edges)
         ppsd = ax.pcolormesh(
-            fig.ppsd.meshgrid[0], fig.ppsd.meshgrid[1], data.T,
-            cmap=fig.ppsd.cmap, zorder=-1)
-        fig.ppsd.quadmesh = ppsd
+            ax.ppsd.meshgrid[0], ax.ppsd.meshgrid[1], data.T,
+            cmap=ax.ppsd.cmap, zorder=-1)
+        ax.ppsd.quadmesh = ppsd
 
-        if "colorbar" not in fig.ppsd:
-            cb = plt.colorbar(ppsd, ax=ax)
-            cb.mappable.set_clim(*fig.ppsd.color_limits)
-            cb.set_label(fig.ppsd.label)
-            fig.ppsd.colorbar = cb
+        if "colorbar" not in ax.ppsd:
+            cb = fig.colorbar(ppsd, ax=ax)
+            cb.mappable.set_clim(*ax.ppsd.color_limits)
+            cb.set_label(ax.ppsd.label)
+            ax.ppsd.colorbar = cb
 
-        if fig.ppsd.max_percentage is not None:
-            ppsd.set_clim(*fig.ppsd.color_limits)
+        if ax.ppsd.max_percentage is not None:
+            ppsd.set_clim(*ax.ppsd.color_limits)
 
-        if fig.ppsd.grid:
-            if fig.ppsd.cmap.name == "viridis":
+        if ax.ppsd.grid:
+            if ax.ppsd.cmap.name == "viridis":
                 color = {"color": "0.7"}
             else:
                 color = {}
@@ -2192,10 +2201,10 @@ class PPSD(object):
         ax.set_xlim(*xlim)
 
         if filename is not None:
-            plt.savefig(filename)
+            fig.savefig(filename)
         elif draw:
             with np.errstate(under="ignore"):
-                plt.draw()
+                fig.canvas.draw_idle()
         return fig
 
     def _get_plot_title(self):
