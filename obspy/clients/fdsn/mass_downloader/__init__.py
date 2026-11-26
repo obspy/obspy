@@ -296,14 +296,18 @@ will be evaluated to determine the filename. **If the function returns**
 be downloaded again; keep in mind that in that case no station data will be
 downloaded for that channel.** If it returns a string, the MiniSEED file will
 be saved to that path. Utilize closures to use any other parameters in the
-function. This hypothetical function checks if the file is already in a
-database and otherwise returns a string which will be interpreted as a
-filename.
+function.
 
+In the example below, ``is_in_db`` is a hypothetical placeholder function that
+you must define yourself to check whether the data already exists in your
+database, and ``ROOT`` is a placeholder for your target directory path:
+
+>>> import os
 >>> def get_mseed_storage(network, station, location, channel, starttime,
 ...                       endtime):
 ...     # Returning True means that neither the data nor the StationXML file
 ...     # will be downloaded.
+...     # Note: `is_in_db` and `ROOT` are user-defined placeholders.
 ...     if is_in_db(network, station, location, channel, starttime, endtime):
 ...         return True
 ...     # If a string is returned the file will be saved in that location.
@@ -352,7 +356,7 @@ to ``"some_folder/BW/FURT.xml"``.
     If the StationXML file already exists, it will be opened to see what is in
     the file. In case it does not contain all necessary channels, it will be
     deleted and **only those channels needed in the current run will be
-    downloaded again**. Pass a custom function to the ``stationxml_path``
+    downloaded again**. Pass a custom function to the ``stationxml_storage``
     argument if you require different behavior as documented in the
     following section.
 
@@ -377,13 +381,16 @@ same as two first options for the ``stationxml_storage`` argument.
 
 The next example illustrates a complex use case where the availability of each
 channel's station information is queried in some database and only those
-channels that do not exist yet will be downloaded. Use closures to pass more
-arguments to the function.
+channels that do not exist yet will be downloaded. As above, ``is_in_db`` and
+``ROOT`` are user-defined placeholders (and ``os`` must be imported). Use
+closures to pass more arguments to the function.
 
+>>> import os
 >>> def get_stationxml_storage(network, station, channels, starttime, endtime):
 ...     available_channels = []
 ...     missing_channels = []
 ...     for location, channel in channels:
+...         # Note: `is_in_db` and `ROOT` are user-defined placeholders.
 ...         if is_in_db(network, station, location, channel, starttime,
 ...                     endtime):
 ...             available_channels.append((location, channel))
@@ -401,14 +408,14 @@ Step 3: Start the Download
 
 The final step is to actually start the download. Pass the previously created
 domain, restrictions, and path settings and off you go. Two more parameters of
-interest are the ``chunk_size_in_mb`` setting which controls how much data is
-requested per thread, client and request. ``threads_per_clients`` control how
-many threads are used to download data in parallel per data center - 3 is a
-value in agreement with some data centers.
+interest are the ``download_chunk_size_in_mb`` setting which controls how much
+data is requested per thread, client and request. ``threads_per_client``
+controls how many threads are used to download data in parallel per data center
+- 3 is a value in agreement with some data centers.
 
 
 >>> mdl = MassDownloader()  # doctest: +SKIP
->>> mdl.download(domain, restrictions, chunk_size_in_mb=50,
+>>> mdl.download(domain, restrictions, download_chunk_size_in_mb=50,
 ...              threads_per_client=3, mseed_storage=mseed_storage,
 ...              stationxml_storage=stationxml_storage)  # doctest: +SKIP
 
