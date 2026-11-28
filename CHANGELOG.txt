@@ -5,12 +5,34 @@ Changes:
  - General:
    * adjusted minimum dependency versions to Python >=3.12, numpy >=2.2,
      scipy >=1.15 and matplotlib >=3.9 (see #3570)
+ - obspy.clients.fdsn:
+   * add GEOSHAKE (GeoShake Global Seismic Network, FDSN network GW) to
+     URL_MAPPINGS; excluded from the mass downloader by default like
+     RASPISHAKE (see #3805)
  - obspy.core:
    * fix Trace.resample amplitude at the new Nyquist frequency when
      downsampling to an even number of samples
  - obspy.signal:
    * spectral estimation: add getter functions for rotational noise models
      (see #3732)
+
+1.5.2 (doi: 10.5281/zenodo.24314001)
+====================================
+
+Critical security fix:
+
+Up until now, PICKLE file format was included in the automatic file format
+detection cycle for waveform files. So, trying to read a file maliciously
+forged by a third party relying on file format autodetection (e.g.
+obspy.read('some_malicious_file') i.e. without explicitly specifying the file
+format) could lead to execution of arbitrary code.
+This release now excludes PICKLE file format from file format autodetection.
+
+For more information, see:
+
+ - https://github.com/obspy/obspy-pickle-vulnerability
+ - PR #3833
+ - https://discourse.obspy.org/c/announcements
 
 1.5.1 (doi: 10.5281/zenodo.22108563)
 ====================================
