@@ -1656,6 +1656,15 @@ class TestTrace:
         assert tr_4.stats.sampling_rate == 10.0
         assert tr_4.stats.starttime == tr.stats.starttime
 
+    def test_resample_nyquist_amplitude(self):
+        """
+        Downsampling preserves the windowed amplitude at the new Nyquist.
+        """
+        tr = Trace(np.tile([1., 0., -1., 0.], 4),
+                   header={'sampling_rate': 16.})
+        tr.resample(8.)
+        np.testing.assert_allclose(tr.data, np.tile([0.5, -0.5], 4))
+
     def test_method_chaining(self):
         """
         Tests that method chaining works for all methods on the Trace object
